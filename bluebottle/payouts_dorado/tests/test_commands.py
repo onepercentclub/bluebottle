@@ -1,6 +1,8 @@
 from future import standard_library
+
 standard_library.install_aliases()
 import json
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -20,9 +22,7 @@ class ExportKeysTest(TestCase):
         super(ExportKeysTest, self).setUp()
         for tenant in get_tenant_model().objects.all():
             connection.set_tenant(tenant)
-            user = BlueBottleUserFactory.create(
-                email='test@example.com'
-            )
+            user = BlueBottleUserFactory.create(email='test@example.com')
             Token.objects.create(user=user)
 
     def test_all(self):
@@ -42,9 +42,7 @@ class ExportKeysTest(TestCase):
     def test_tenant(self):
         out = StringIO()
         tenant = get_tenant_model().objects.all()[0]
-        call_command(
-            'export_keys', 'test@example.com', '--tenant', tenant.client_name, stdout=out
-        )
+        call_command('export_keys', 'test@example.com', '--tenant', tenant.client_name, stdout=out)
         result = json.loads(out.getvalue())
 
         self.assertEqual(len(result), 1)

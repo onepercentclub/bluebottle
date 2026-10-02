@@ -30,7 +30,7 @@ activity.settings(
     number_of_shards=1,
     number_of_replicas=0,
     # Geofeature translations × locations can exceed the ES default (10000).
-    **{'index.mapping.nested_objects.limit': 50000}
+    **{'index.mapping.nested_objects.limit': 50000},
 )
 
 
@@ -94,11 +94,13 @@ def geofeatures_for_geolocation(geolocation):
     primary_id = geolocation.geofeature_id
     country = geolocation.country
     for geofeature in geolocation.geofeatures.all():
-        geofeatures.extend(get_translated_geofeature_list(
-            geofeature,
-            country=country,
-            is_primary=geofeature.pk == primary_id,
-        ))
+        geofeatures.extend(
+            get_translated_geofeature_list(
+                geofeature,
+                country=country,
+                is_primary=geofeature.pk == primary_id,
+            )
+        )
     return geofeatures
 
 
@@ -133,21 +135,26 @@ class ActivityDocument(Document):
     archived = fields.BooleanField()
 
     def get_queryset(self):
-        return super(ActivityDocument, self).get_queryset().select_related(
-            'initiative',
-            'owner',
-            'image',
-            'initiative__owner',
-            'office_location',
-            'office_location__country',
-            'office_location__subregion',
-            'office_location__subregion__region',
-        ).prefetch_related(
-            'segments',
-            'segments__segment_type',
-            'initiative__categories',
-            'initiative__activity_managers',
-            'contributors',
+        return (
+            super(ActivityDocument, self)
+            .get_queryset()
+            .select_related(
+                'initiative',
+                'owner',
+                'image',
+                'initiative__owner',
+                'office_location',
+                'office_location__country',
+                'office_location__subregion',
+                'office_location__subregion__region',
+            )
+            .prefetch_related(
+                'segments',
+                'segments__segment_type',
+                'initiative__categories',
+                'initiative__activity_managers',
+                'contributors',
+            )
         )
 
     def get_indexing_queryset(self):
@@ -162,35 +169,38 @@ class ActivityDocument(Document):
     def prepare_archived(self, instance):
         return False
 
-    current_status = fields.NestedField(properties={
-        'name': fields.KeywordField(),
-        'label': fields.KeywordField(),
-        'description': fields.KeywordField(),
-    })
+    current_status = fields.NestedField(
+        properties={
+            'name': fields.KeywordField(),
+            'label': fields.KeywordField(),
+            'description': fields.KeywordField(),
+        }
+    )
 
-    image = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'type': fields.KeywordField(),
-        'name': fields.KeywordField(),
-    })
+    image = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'type': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
 
-    owner = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'full_name': TextField()
-    })
+    owner = fields.NestedField(properties={'id': fields.KeywordField(), 'full_name': TextField()})
 
-    initiative = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'title': TextField(),
-        'pitch': TextField(),
-        'story': TextField(attr='story.html'),
-        'owner': fields.KeywordField(attr='owner.id'),
-        'activity_managers': fields.NestedField(
-            properties={
-                'id': fields.KeywordField(),
-            }
-        )
-    })
+    initiative = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'title': TextField(),
+            'pitch': TextField(),
+            'story': TextField(attr='story.html'),
+            'owner': fields.KeywordField(attr='owner.id'),
+            'activity_managers': fields.NestedField(
+                properties={
+                    'id': fields.KeywordField(),
+                }
+            ),
+        }
+    )
 
     theme = fields.NestedField(
         attr='theme',
@@ -198,16 +208,12 @@ class ActivityDocument(Document):
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
             'language': fields.KeywordField(),
-        }
+        },
     )
 
     categories = fields.NestedField(
         attr='categories',
-        properties={
-            'id': fields.KeywordField(),
-            'title': fields.KeywordField(),
-            'language': fields.KeywordField()
-        }
+        properties={'id': fields.KeywordField(), 'title': fields.KeywordField(), 'language': fields.KeywordField()},
     )
     position = fields.GeoPointField()
 
@@ -253,17 +259,19 @@ class ActivityDocument(Document):
             'country': TextField(attr='country.name'),
             'country_code': TextField(attr='country.alpha2_code'),
             'formatted_address': TextField(),
-            'geofeatures': fields.NestedField(properties={
-                'id': fields.LongField(),
-                'name': TextField(),
-                'place_name': TextField(),
-                'language': fields.KeywordField(),
-                'feature_type': fields.KeywordField(),
-                'is_primary': fields.BooleanField(),
-                'country': TextField(),
-                'country_code': TextField(),
-            }),
-        }
+            'geofeatures': fields.NestedField(
+                properties={
+                    'id': fields.LongField(),
+                    'name': TextField(),
+                    'place_name': TextField(),
+                    'language': fields.KeywordField(),
+                    'feature_type': fields.KeywordField(),
+                    'is_primary': fields.BooleanField(),
+                    'country': TextField(),
+                    'country_code': TextField(),
+                }
+            ),
+        },
     )
 
     geofeature = fields.NestedField(
@@ -285,7 +293,7 @@ class ActivityDocument(Document):
             'id': fields.LongField(),
             'name': fields.TextField(),
             'logo': fields.TextField(),
-        }
+        },
     )
 
     office = fields.NestedField(
@@ -293,7 +301,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
-        }
+        },
     )
 
     office_subregion = fields.NestedField(
@@ -301,7 +309,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
-        }
+        },
     )
 
     office_region = fields.NestedField(
@@ -309,7 +317,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
-        }
+        },
     )
 
     office_restriction = fields.NestedField(
@@ -319,7 +327,7 @@ class ActivityDocument(Document):
             'office': fields.LongField(),
             'office_subregion': fields.LongField(),
             'office_region': fields.LongField(),
-        }
+        },
     )
 
     contributors = fields.KeywordField()
@@ -356,9 +364,7 @@ class ActivityDocument(Document):
             return model.objects.filter(initiative__theme=related_instance.master)
 
     class Django:
-        related_models = (
-            Initiative, Theme, Theme.translations.field.model, Segment, Location
-        )
+        related_models = (Initiative, Theme, Theme.translations.field.model, Segment, Location)
         model = Activity
 
     date_field = None
@@ -370,7 +376,7 @@ class ActivityDocument(Document):
             using=using or cls._doc_type.using,
             index=index or cls._doc_type.index,
             doc_type=[cls],
-            model=cls._doc_type.model
+            model=cls._doc_type.model,
         )
 
     def prepare_current_status(self, instance):
@@ -383,26 +389,16 @@ class ActivityDocument(Document):
 
     def prepare_image(self, instance):
         if instance.image:
-            return {
-                'id': instance.pk,
-                'file': instance.image.file.name,
-                'type': 'activity'
-            }
+            return {'id': instance.pk, 'file': instance.image.file.name, 'type': 'activity'}
         elif instance.initiative and instance.initiative.image:
-            return {
-                'id': instance.initiative.pk,
-                'file': instance.initiative.image.file.name,
-                'type': 'initiative'
-            }
+            return {'id': instance.initiative.pk, 'file': instance.initiative.image.file.name, 'type': 'initiative'}
 
     def prepare_manager(self, instance):
         managers = [
             instance.owner.pk,
         ]
         if instance.initiative:
-            managers.append(
-                instance.initiative.owner.pk
-            )
+            managers.append(instance.initiative.owner.pk)
 
             for manager in instance.initiative.activity_managers.all():
                 managers.append(manager.pk)
@@ -413,8 +409,8 @@ class ActivityDocument(Document):
 
     def prepare_contributors(self, instance):
         return [
-            contributor.user.pk for contributor
-            in instance.contributors.filter(status__in=('succeeded', 'accepted'))
+            contributor.user.pk
+            for contributor in instance.contributors.filter(status__in=('succeeded', 'accepted'))
             if contributor.user
         ]
 
@@ -432,15 +428,15 @@ class ActivityDocument(Document):
 
     def prepare_activity_type(self, instance):
         mapping = {
-            "dateactivity": "time",
-            "deadlineactivity": "time",
-            "periodicactivity": "time",
-            "scheduleactivity": "time",
-            "registereddateactivity": "time",
-            "funding": "funding",
-            "collectactivity": "collect",
-            "deed": "deed",
-            "grantapplication": "grantapplication",
+            'dateactivity': 'time',
+            'deadlineactivity': 'time',
+            'periodicactivity': 'time',
+            'scheduleactivity': 'time',
+            'registereddateactivity': 'time',
+            'funding': 'funding',
+            'collectactivity': 'collect',
+            'deed': 'deed',
+            'grantapplication': 'grantapplication',
         }
         return mapping[str(instance.__class__.__name__.lower())]
 
@@ -463,30 +459,30 @@ class ActivityDocument(Document):
         if hasattr(instance, 'location') and instance.location:
             geolocation = instance.location
             primary = geolocation.geofeature
-            locations.append({
-                'id': geolocation.id,
-                'name': primary.place_name if primary else geolocation.formatted_address,
-                'location_hint': getattr(instance, 'location_hint', None),
-                'locality': locality_from_geolocation(geolocation),
-                'country_code': geolocation.country.alpha2_code if geolocation.country else None,
-                'country': geolocation.country.name if geolocation.country else None,
-                'type': 'location'
-            })
+            locations.append(
+                {
+                    'id': geolocation.id,
+                    'name': primary.place_name if primary else geolocation.formatted_address,
+                    'location_hint': getattr(instance, 'location_hint', None),
+                    'locality': locality_from_geolocation(geolocation),
+                    'country_code': geolocation.country.alpha2_code if geolocation.country else None,
+                    'country': geolocation.country.name if geolocation.country else None,
+                    'type': 'location',
+                }
+            )
         if hasattr(instance, 'office_location') and instance.office_location:
-            locations.append({
-                'id': instance.office_location.pk,
-                'name': instance.office_location.name,
-                'locality': instance.office_location.city,
-                'country_code': (
-                    instance.office_location.country.alpha2_code if
-                    instance.office_location.country else None
-                ),
-                'country': (
-                    instance.office_location.country.name if
-                    instance.office_location.country else None
-                ),
-                'type': 'office'
-            })
+            locations.append(
+                {
+                    'id': instance.office_location.pk,
+                    'name': instance.office_location.name,
+                    'locality': instance.office_location.city,
+                    'country_code': (
+                        instance.office_location.country.alpha2_code if instance.office_location.country else None
+                    ),
+                    'country': (instance.office_location.country.name if instance.office_location.country else None),
+                    'type': 'office',
+                }
+            )
 
         return locations
 
@@ -496,7 +492,7 @@ class ActivityDocument(Document):
             'restriction': instance.office_restriction,
             'office': office.id if office else None,
             'subregion': office.subregion.id if office and office.subregion_id else None,
-            'region': office.subregion.region.id if office and office.subregion and office.subregion.region else None
+            'region': office.subregion.region.id if office and office.subregion and office.subregion.region else None,
         }
 
     def prepare_expertise(self, instance):
@@ -552,11 +548,7 @@ class ActivityDocument(Document):
 
         org = instance.host_organization
         logo_url = None
-        if (
-            org.logo
-            and org.logo.name
-            and org.logo.storage.exists(org.logo.name)
-        ):
+        if org.logo and org.logo.name and org.logo.storage.exists(org.logo.name):
             try:
                 logo_url = tenant_url(org.logo.url)
             except (ValueError, AttributeError, FileNotFoundError):

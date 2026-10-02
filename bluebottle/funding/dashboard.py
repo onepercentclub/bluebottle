@@ -11,7 +11,7 @@ from bluebottle.segments.filters import segment_filter
 
 class RecentFunding(DashboardModule):
     title = _('Recently submitted funding activities')
-    title_url = "{}?status[]=submitted".format(reverse('admin:funding_funding_changelist'))
+    title_url = '{}?status[]=submitted'.format(reverse('admin:funding_funding_changelist'))
     template = 'dashboard/recent_funding.html'
     limit = 5
     column = 0
@@ -21,12 +21,12 @@ class RecentFunding(DashboardModule):
         user = context.request.user
         activities = region_manager_filter(activities, user)
         activities = segment_filter(activities, user)
-        self.children = activities[:self.limit]
+        self.children = activities[: self.limit]
 
 
 class PayoutsReadyForApprovalDashboardModule(DashboardModule):
     title = _('Payouts ready for approval')
-    title_url = "{}?status[]=draft&status[]=new".format(reverse('admin:funding_payout_changelist'))
+    title_url = '{}?status[]=draft&status[]=new'.format(reverse('admin:funding_payout_changelist'))
     template = 'dashboard/payouts_ready_for_approval.html'
     limit = 5
     column = 0
@@ -36,7 +36,7 @@ class PayoutsReadyForApprovalDashboardModule(DashboardModule):
         user = context.request.user
         payouts = region_manager_filter(payouts, user)
         payouts = segment_filter(payouts, user)
-        self.children = payouts[:self.limit]
+        self.children = payouts[: self.limit]
 
 
 class BankAccountsDashboardModule(DashboardModule):
@@ -47,10 +47,9 @@ class BankAccountsDashboardModule(DashboardModule):
         self.children = [
             {
                 'name': '{} {}'.format(provider.name.title(), _('Bank Accounts')),
-                'url':
-                    'admin:funding_stripe_externalaccount_changelist'
-                    if provider.name == 'stripe'
-                    else 'admin:funding_{0}_{0}bankaccount_changelist'.format(provider.name.lower())
+                'url': 'admin:funding_stripe_externalaccount_changelist'
+                if provider.name == 'stripe'
+                else 'admin:funding_{0}_{0}bankaccount_changelist'.format(provider.name.lower()),
             }
             for provider in PaymentProvider.objects.all()
         ]
@@ -64,17 +63,15 @@ class PaymentDashboardModule(DashboardModule):
         self.children = [
             {
                 'name': '{} {}'.format(provider.name.title(), _('Payments')),
-                'url':
-                    'admin:funding_stripe_stripepayment_changelist'
-                    if provider.name == 'stripe'
-                    else 'admin:funding_{0}_{0}payment_changelist'.format(provider.name.lower())
+                'url': 'admin:funding_stripe_stripepayment_changelist'
+                if provider.name == 'stripe'
+                else 'admin:funding_{0}_{0}payment_changelist'.format(provider.name.lower()),
             }
             for provider in PaymentProvider.objects.all()
         ]
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):
-
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
         self.children.append(RecentFunding())

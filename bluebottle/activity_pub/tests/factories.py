@@ -4,8 +4,19 @@ from datetime import timedelta
 from django.utils import timezone
 
 from bluebottle.activity_pub.models import (
-    Organization, Inbox, Outbox, PublicKey, PrivateKey, Follow, Person, Place, Event,
-    DoGoodEvent, SubEvent, Address, Image
+    Organization,
+    Inbox,
+    Outbox,
+    PublicKey,
+    PrivateKey,
+    Follow,
+    Person,
+    Place,
+    Event,
+    DoGoodEvent,
+    SubEvent,
+    Address,
+    Image,
 )
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
 
@@ -112,7 +123,7 @@ class EventFactory(factory.DjangoModelFactory):
                 organizer=obj.organizer,
                 place=obj.place,
                 start=obj.start,
-                end=obj.start + timedelta(hours=2)
+                end=obj.start + timedelta(hours=2),
             )
 
 

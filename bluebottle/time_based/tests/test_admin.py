@@ -19,11 +19,14 @@ from bluebottle.time_based.admin import (
 )
 from bluebottle.time_based.models import DateActivity, ScheduleActivity, Skill
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, DateRegistrationFactory,
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DateParticipantFactory,
+    DateRegistrationFactory,
     DeadlineActivityFactory,
     InterestFactory,
-    ScheduleActivityFactory, ScheduleRegistrationFactory,
+    ScheduleActivityFactory,
+    ScheduleRegistrationFactory,
 )
 
 
@@ -52,9 +55,7 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         inline = ActivityInterestAdminInline(InterestFactory._meta.model, AdminSite())
         request = RequestFactory().get('/')
         request.user = self.staff_member
-        queryset = inline.get_queryset(request).filter(
-            activity=activity
-        )
+        queryset = inline.get_queryset(request).filter(activity=activity)
         self.assertEqual(list(queryset), [activity_interest])
 
     def test_slot_inline_shows_slot_interests(self):
@@ -73,9 +74,7 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         inline = SlotInterestAdminInline(InterestFactory._meta.model, AdminSite())
         request = RequestFactory().get('/')
         request.user = self.staff_member
-        queryset = inline.get_queryset(request).filter(
-            slot=slot
-        )
+        queryset = inline.get_queryset(request).filter(slot=slot)
         self.assertEqual(list(queryset), [slot_interest])
 
     def test_delete_interest_from_activity_inline(self):
@@ -85,18 +84,13 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         url = reverse('admin:time_based_deadlineactivity_change', args=(activity.pk,))
         page = self.app.get(url)
         form = page.forms['deadlineactivity_form']
-        delete_field = next(
-            name for name in form.fields if name.endswith('-DELETE')
-            and name.startswith('interests-')
-        )
+        delete_field = next(name for name in form.fields if name.endswith('-DELETE') and name.startswith('interests-'))
         form[delete_field] = True
         page = form.submit()
         if 'confirm' in page.forms:
             page = page.forms['confirm'].submit()
 
-        self.assertFalse(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertFalse(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
 
 class ScheduleActivityAdminRegistrationFieldsTest(BluebottleTestCase):
@@ -156,7 +150,7 @@ class ScheduleActivityAdminRegistrationWarningTest(BluebottleAdminTestCase):
 
         self.assertEqual(page.status_code, 200)
         self.assertIn(
-            "change between teams/individuals anymore because there are already registrations",
+            'change between teams/individuals anymore because there are already registrations',
             page.text,
         )
 
@@ -178,15 +172,11 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         page = page.click('Delete')
         self.assertFalse(
             "your account doesn't have permission to delete the following types of objects" in page.text,
-            "Deleting an activity should not result in an error."
+            'Deleting an activity should not result in an error.',
         )
-        self.assertTrue(
-            "All of the following related items will be deleted" in page.text
-        )
+        self.assertTrue('All of the following related items will be deleted' in page.text)
         page = page.forms[1].submit().follow()
-        self.assertTrue(
-            "0 Activities on a date" in page.text
-        )
+        self.assertTrue('0 Activities on a date' in page.text)
         self.assertEqual(DateActivity.objects.count(), 0)
 
 
@@ -280,17 +270,17 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
             initiative=self.initiative,
             title='Original Activity',
             description=json.dumps({'html': 'Original description', 'delta': ''}),
-            slots=[]
+            slots=[],
         )
         slot1 = DateActivitySlotFactory.create(
             activity=activity,
             start=now().replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=5),
-            capacity=10
+            capacity=10,
         )
         DateActivitySlotFactory.create(
             activity=activity,
             start=now().replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=6),
-            capacity=15
+            capacity=15,
         )
         registration = DateRegistrationFactory.create(activity=activity)
         DateParticipantFactory.create(slot=slot1, activity=activity, registration=registration)
@@ -346,10 +336,7 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         self.supporter = BlueBottleUserFactory.create()
         self.registration = DateRegistrationFactory.create(status='accepted')
         slot = self.registration.activity.slots.first()
-        self.participant = DateParticipantFactory.create(
-            registration=self.registration,
-            slot=slot
-        )
+        self.participant = DateParticipantFactory.create(registration=self.registration, slot=slot)
 
     def test_adjusting_contribution(self):
         self.url = reverse('admin:time_based_dateparticipant_change', args=(self.participant.id,))
@@ -370,17 +357,12 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(self.url)
         self.assertEqual(page.status, '200 OK')
 
-        link = page.html.find("a", {'class': 'private-document-link'})
+        link = page.html.find('a', {'class': 'private-document-link'})
 
-        self.assertTrue(
-            link.attrs['href'].startswith(
-                reverse('registration-document', args=(self.registration.pk,))
-            )
-        )
+        self.assertTrue(link.attrs['href'].startswith(reverse('registration-document', args=(self.registration.pk,))))
 
 
 class TestSkillAdmin(BluebottleAdminTestCase):
-
     def setUp(self):
         super(TestSkillAdmin, self).setUp()
         self.site = AdminSite()
@@ -401,39 +383,13 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         super().setUp()
-        self.activity1 = DateActivityFactory.create(
-            capacity=None,
-            slots=[]
-        )
-        DateActivitySlotFactory.create(
-            activity=self.activity1,
-            start=now() + timedelta(days=4),
-            capacity=2
-        )
-        DateActivitySlotFactory.create(
-            activity=self.activity1,
-            start=now() + timedelta(days=4),
-            capacity=3
-        )
-        DateActivitySlotFactory.create(
-            activity=self.activity1,
-            start=now() - timedelta(days=3),
-            capacity=None
-        )
-        self.activity2 = DateActivityFactory.create(
-            capacity=5,
-            slots=[]
-        )
-        DateActivitySlotFactory.create(
-            activity=self.activity2,
-            start=now() + timedelta(days=5),
-            capacity=None
-        )
-        DateActivitySlotFactory.create(
-            activity=self.activity2,
-            start=now() - timedelta(days=1),
-            capacity=None
-        )
+        self.activity1 = DateActivityFactory.create(capacity=None, slots=[])
+        DateActivitySlotFactory.create(activity=self.activity1, start=now() + timedelta(days=4), capacity=2)
+        DateActivitySlotFactory.create(activity=self.activity1, start=now() + timedelta(days=4), capacity=3)
+        DateActivitySlotFactory.create(activity=self.activity1, start=now() - timedelta(days=3), capacity=None)
+        self.activity2 = DateActivityFactory.create(capacity=5, slots=[])
+        DateActivitySlotFactory.create(activity=self.activity2, start=now() + timedelta(days=5), capacity=None)
+        DateActivitySlotFactory.create(activity=self.activity2, start=now() - timedelta(days=1), capacity=None)
         self.app.set_user(self.staff_member)
 
     def test_adjusting_contribution(self):
@@ -457,16 +413,11 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         super().setUp()
-        self.activity = DateActivityFactory.create(
-            slots=[]
-        )
+        self.activity = DateActivityFactory.create(slots=[])
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
         self.activity.refresh_from_db()
-        self.slot = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=now() - datetime.timedelta(days=1)
-        )
+        self.slot = DateActivitySlotFactory.create(activity=self.activity, start=now() - datetime.timedelta(days=1))
         self.activity.states.publish(save=True)
         self.url = reverse('admin:time_based_dateactivityslot_change', args=(self.slot.id,))
         self.app.set_user(self.staff_member)
@@ -476,28 +427,22 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(page.status, '200 OK')
         page = page.click('Repeat this slot')
 
-        warning = page.html.find("div", {'class': 'warning'})
+        warning = page.html.find('div', {'class': 'warning'})
         self.assertEqual(
             warning.text.strip(),
-            (
-                'Ensure the time slot details are correct before repeating, as bulk changes won’t '
-                'be possible later.'
-            )
+            ('Ensure the time slot details are correct before repeating, as bulk changes won’t be possible later.'),
         )
         form = page.forms[1]
-        form["interval"] = "day"
-        form["end"] = str((now() + datetime.timedelta(days=4)).date())
+        form['interval'] = 'day'
+        form['end'] = str((now() + datetime.timedelta(days=4)).date())
         page = form.submit()
-        self.assertEqual(
-            page.location,
-            f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
-        )
+        self.assertEqual(page.location, f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/')
         page = page.follow()
         self.assertContains(page, '6 Results')
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(
             [s.start.date() for s in self.activity.slots.all()],
-            [datetime.date.today() + timedelta(days=offset) for offset in range(-1, 5)]
+            [datetime.date.today() + timedelta(days=offset) for offset in range(-1, 5)],
         )
 
     def test_duplicate_reopen(self):
@@ -505,13 +450,10 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(self.url)
         page = page.click('Repeat this slot')
         form = page.forms[1]
-        form["interval"] = "day"
-        form["end"] = str((now() + datetime.timedelta(days=4)).date())
+        form['interval'] = 'day'
+        form['end'] = str((now() + datetime.timedelta(days=4)).date())
         page = form.submit()
-        self.assertEqual(
-            page.location,
-            f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
-        )
+        self.assertEqual(page.location, f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/')
         page = page.follow()
         self.assertContains(page, '6 Results')
         self.activity.refresh_from_db()

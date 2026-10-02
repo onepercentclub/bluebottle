@@ -4,10 +4,7 @@ from builtins import str
 
 from django.contrib.auth.models import Group
 from django.http import Http404
-from rest_framework import (
-    generics, response, permissions, authentication, exceptions,
-    renderers, parsers
-)
+from rest_framework import generics, response, permissions, authentication, exceptions, renderers, parsers
 from rest_framework import pagination
 
 from bluebottle.members.models import Member
@@ -25,19 +22,24 @@ class SCIMPaginator(pagination.LimitOffsetPagination):
     offset_query_param = 'startIndex'
 
     def get_paginated_response(self, data):
-        return response.Response({
-            'totalResults': self.count,
-            'startIndex': self.offset + 1,
-            'Resources': data,
-            'itemsPerPage': self.limit,
-            'schemas': ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
-        })
+        return response.Response(
+            {
+                'totalResults': self.count,
+                'startIndex': self.offset + 1,
+                'Resources': data,
+                'itemsPerPage': self.limit,
+                'schemas': ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
+            }
+        )
 
     def get_offset(self, request):
         try:
-            return pagination._positive_int(
-                request.query_params[self.offset_query_param],
-            ) - 1
+            return (
+                pagination._positive_int(
+                    request.query_params[self.offset_query_param],
+                )
+                - 1
+            )
         except (KeyError, ValueError):
             return 0
 
@@ -65,18 +67,21 @@ class SCIMParser(parsers.JSONParser):
 
 
 class SCIMViewMixin(object):
-    authentication_classes = (SCIMAuthentication, )
-    permission_classes = (permissions.IsAuthenticated, )
+    authentication_classes = (SCIMAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
     pagination_class = SCIMPaginator
-    renderer_classes = (SCIMRenderer, )
-    parser_classes = (SCIMParser, parsers.JSONParser,)
-    filter_backends = (SCIMFilter, )
+    renderer_classes = (SCIMRenderer,)
+    parser_classes = (
+        SCIMParser,
+        parsers.JSONParser,
+    )
+    filter_backends = (SCIMFilter,)
 
     def initial(self, request, *args, **kwargs):
         settings = SCIMPlatformSettings.load()
 
         if not settings.enabled:
-            raise exceptions.PermissionDenied(detail="Scim is not enabled")
+            raise exceptions.PermissionDenied(detail='Scim is not enabled')
 
         return super().initial(request, *args, **kwargs)
 
@@ -84,9 +89,9 @@ class SCIMViewMixin(object):
         if isinstance(exc, Http404):
             status_code = 404
             data = {
-                'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
                 'status': status_code,
-                'detail': 'The resource was not found'
+                'detail': 'The resource was not found',
             }
         else:
             try:
@@ -105,8 +110,8 @@ class SCIMViewMixin(object):
 
                 data = {
                     'scimType': error_code,
-                    'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                    'status': status_code
+                    'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
+                    'status': status_code,
                 }
 
                 if isinstance(exc.detail, dict):
@@ -184,9 +189,9 @@ class ResourceTypeRetrieveView(StaticRetrieveAPIView):
 
 
 class UserListView(SCIMViewMixin, generics.ListCreateAPIView):
-    queryset = Member.objects.filter(
-        is_superuser=False, is_anonymized=False
-    ).exclude(email='devteam+accounting@onepercentclub.com')
+    queryset = Member.objects.filter(is_superuser=False, is_anonymized=False).exclude(
+        email='devteam+accounting@onepercentclub.com'
+    )
 
     serializer_class = SCIMMemberSerializer
 
@@ -198,14 +203,11 @@ class UserListView(SCIMViewMixin, generics.ListCreateAPIView):
             # can continue as normal
             if 'remote_id' in serializer.validated_data:
                 serializer.instance = Member.objects.get(
-                    remote_id=serializer.validated_data['remote_id'],
-                    scim_external_id__isnull=True
+                    remote_id=serializer.validated_data['remote_id'], scim_external_id__isnull=True
                 )
         except Member.DoesNotExist:
             try:
-                serializer.instance = Member.objects.get(
-                    email__iexact=serializer.validated_data['email']
-                )
+                serializer.instance = Member.objects.get(email__iexact=serializer.validated_data['email'])
             except Member.DoesNotExist:
                 pass
 
@@ -213,9 +215,9 @@ class UserListView(SCIMViewMixin, generics.ListCreateAPIView):
 
 
 class UserDetailView(SCIMViewMixin, generics.RetrieveUpdateDestroyAPIView):
-    queryset = Member.objects.filter(
-        is_superuser=False, is_anonymized=False
-    ).exclude(email='devteam+accounting@onepercentclub.com')
+    queryset = Member.objects.filter(is_superuser=False, is_anonymized=False).exclude(
+        email='devteam+accounting@onepercentclub.com'
+    )
 
     serializer_class = SCIMMemberSerializer
 
@@ -224,10 +226,20 @@ class UserDetailView(SCIMViewMixin, generics.RetrieveUpdateDestroyAPIView):
 
 
 class GroupListView(SCIMViewMixin, generics.ListAPIView):
-    queryset = Group.objects.exclude(name__in=('Anonymous', 'Authenticated', ))
+    queryset = Group.objects.exclude(
+        name__in=(
+            'Anonymous',
+            'Authenticated',
+        )
+    )
     serializer_class = SCIMGroupSerializer
 
 
 class GroupDetailView(SCIMViewMixin, generics.RetrieveUpdateAPIView):
-    queryset = Group.objects.exclude(name__in=('Anonymous', 'Authenticated', ))
+    queryset = Group.objects.exclude(
+        name__in=(
+            'Anonymous',
+            'Authenticated',
+        )
+    )
     serializer_class = SCIMGroupSerializer

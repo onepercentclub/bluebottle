@@ -54,10 +54,7 @@ class SiteLinkAdminTestCase(BluebottleAdminTestCase):
 
     def test_adding_sitelinks(self):
         url = reverse('admin:cms_linkgroup_change', args=(self.link_group.id,))
-        PageFactory.create(
-            slug='info',
-            language=self.link_group.site_links.language.code
-        )
+        PageFactory.create(slug='info', language=self.link_group.site_links.language.code)
         page = self.app.get(url)
         form = page.forms[1]
         form['links-0-title'] = 'Some page'

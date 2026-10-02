@@ -14,12 +14,7 @@ def to_webfinger(actor):
     return {
         'subject': actor.webfinger_uri,
         'aliases': [data['id']],
-        'links': [{
-            'rel': 'self',
-            'type': "application/activity+json",
-            'href': data['id']
-        }]
-
+        'links': [{'rel': 'self', 'type': 'application/activity+json', 'href': data['id']}],
     }
 
 
@@ -29,12 +24,7 @@ class WebFingerSerializer(serializers.Serializer):
         return {
             'subject': obj.webfinger_uri,
             'aliases': [data['id']],
-            'links': [{
-                'rel': 'self',
-                'type': "application/activity+json",
-                'href': data['id']
-            }]
-
+            'links': [{'rel': 'self', 'type': 'application/activity+json', 'href': data['id']}],
         }
 
 

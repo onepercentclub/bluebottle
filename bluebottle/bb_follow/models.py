@@ -23,9 +23,7 @@ class Follow(models.Model):
         return self.id
 
     def validate_unique(self, exclude=None):
-        qs = Follow.objects.filter(
-            user=self.user, content_type=self.content_type,
-            object_id=self.object_id)
+        qs = Follow.objects.filter(user=self.user, content_type=self.content_type, object_id=self.object_id)
         if qs.count() > 0:
             return False
         return True

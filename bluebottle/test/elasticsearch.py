@@ -68,10 +68,7 @@ class ElasticsearchTestCase(BluebottleTestCase):
     @classmethod
     def setUpClass(cls):
         super(ElasticsearchTestCase, cls).setUpClass()
-        cls._auto_refresh_restore = [
-            (doc, doc.django.auto_refresh)
-            for doc in registry.get_documents()
-        ]
+        cls._auto_refresh_restore = [(doc, doc.django.auto_refresh) for doc in registry.get_documents()]
         for doc, _value in cls._auto_refresh_restore:
             doc.django.auto_refresh = False
         ensure_search_indices()

@@ -25,32 +25,36 @@ from bluebottle.utils.validators import FileExtensionValidator, FileMimetypeVali
 
 class ResultPage(TranslatableModel):
     image = models.ImageField(
-        _('Header image'), blank=True, null=True,
-
+        _('Header image'),
+        blank=True,
+        null=True,
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    content = PlaceholderField('content', plugins=[
-        'ProjectMapBlockPlugin',
-        'QuotesBlockPlugin',
-        'PeopleBlockPlugin',
-        'ActivitiesBlockPlugin',
-        'ShareResultsBlockPlugin',
-        'StatsBlockPlugin',
-        'SupporterTotalBlockPlugin',
-    ])
+    content = PlaceholderField(
+        'content',
+        plugins=[
+            'ProjectMapBlockPlugin',
+            'QuotesBlockPlugin',
+            'PeopleBlockPlugin',
+            'ActivitiesBlockPlugin',
+            'ShareResultsBlockPlugin',
+            'StatsBlockPlugin',
+            'SupporterTotalBlockPlugin',
+        ],
+    )
 
     translations = TranslatedFields(
         title=models.CharField(_('Title'), max_length=40),
         slug=models.SlugField(_('Slug'), max_length=40),
-        description=models.CharField(_('Description'), max_length=45, blank=True, null=True)
+        description=models.CharField(_('Description'), max_length=45, blank=True, null=True),
     )
 
     class Meta:
@@ -63,25 +67,27 @@ class ResultPage(TranslatableModel):
 
 
 class HomePage(SingletonModel, TranslatableModel):
-    content = PlaceholderField('content', plugins=[
-        'CategoriesBlockPlugin',
-        'LinksBlockPlugin',
-        'LogosBlockPlugin',
-        'PlainTextBlockPlugin',
-        'ImagePlainTextBlockPlugin',
-        'ImageBlockPlugin',
-        'SlidesBlockPlugin',
-        'StepsBlockPlugin',
-        'ActivitiesBlockPlugin',
-        'ProjectMapBlockPlugin',
-        'HomepageStatisticsBlockPlugin',
-        'NewsBlockPlugin',
-        'QuotesBlockPlugin',
-        'PeopleBlockPlugin',
-        'DonateButtonBlockPlugin',
-        'PollBlockPlugin',
-
-    ])
+    content = PlaceholderField(
+        'content',
+        plugins=[
+            'CategoriesBlockPlugin',
+            'LinksBlockPlugin',
+            'LogosBlockPlugin',
+            'PlainTextBlockPlugin',
+            'ImagePlainTextBlockPlugin',
+            'ImageBlockPlugin',
+            'SlidesBlockPlugin',
+            'StepsBlockPlugin',
+            'ActivitiesBlockPlugin',
+            'ProjectMapBlockPlugin',
+            'HomepageStatisticsBlockPlugin',
+            'NewsBlockPlugin',
+            'QuotesBlockPlugin',
+            'PeopleBlockPlugin',
+            'DonateButtonBlockPlugin',
+            'PollBlockPlugin',
+        ],
+    )
     translations = TranslatedFields()
 
     class Meta:
@@ -97,13 +103,15 @@ class HomePage(SingletonModel, TranslatableModel):
 
 
 class LinkPermission(models.Model):
-    permission = models.CharField(max_length=255, null=False,
-                                  help_text=_('A dot separated app name and permission codename.'))
-    present = models.BooleanField(null=False, default=True,
-                                  help_text=_('Should the permission be present or not to access the link?'))
+    permission = models.CharField(
+        max_length=255, null=False, help_text=_('A dot separated app name and permission codename.')
+    )
+    present = models.BooleanField(
+        null=False, default=True, help_text=_('Should the permission be present or not to access the link?')
+    )
 
     def __str__(self):
-        return u"{0} - {1}".format(self.permission, self.present)
+        return '{0} - {1}'.format(self.permission, self.present)
 
 
 class SiteLinks(models.Model):
@@ -111,10 +119,10 @@ class SiteLinks(models.Model):
     has_copyright = models.BooleanField(null=False, default=True)
 
     class Meta:
-        verbose_name_plural = _("Site links")
+        verbose_name_plural = _('Site links')
 
     def __str__(self):
-        return u"Site Links {0}".format(self.language.code.upper())
+        return 'Site Links {0}'.format(self.language.code.upper())
 
 
 class LinkGroup(SortableMixin):
@@ -141,7 +149,7 @@ class Link(SortableMixin):
     groups = models.ManyToManyField(
         'auth.Group',
         blank=True,
-        help_text=_('Groups that can see this link. Leave empty if it should be visible to everyone.')
+        help_text=_('Groups that can see this link. Leave empty if it should be visible to everyone.'),
     )
     highlight = models.BooleanField(default=False, help_text=_('Display the link as a button'))
     open_in_new_tab = models.BooleanField(default=False, blank=False, help_text=_('Open the link in a new browser tab'))
@@ -161,19 +169,15 @@ class Stat(SortableMixin, models.Model):
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
         ('participants', _('Participants')),
-
         ('activities_succeeded', _('Activities succeeded')),
         ('assignments_succeeded', _('Tasks succeeded')),
         ('events_succeeded', _('Events succeeded')),
         ('fundings_succeeded', _('Funding activities succeeded')),
-
         ('assignment_members', _('Task applicants')),
         ('event_members', _('Event participants')),
-
         ('assignments_online', _('Tasks online')),
         ('events_online', _('Events online')),
         ('fundings_online', _('Funding activities online')),
-
         ('donations', _('Donations')),
         ('donated_total', _('Donated total')),
         ('pledged_total', _('Pledged total')),
@@ -181,15 +185,16 @@ class Stat(SortableMixin, models.Model):
         ('activities_online', _('Activities Online')),
         ('votes_cast', _('Votes casts')),
         ('time_spent', _('Time spent')),
-        ('members', _("Number of members"))
+        ('members', _('Number of members')),
     ]
 
-    type = models.CharField(
-        max_length=25,
-        choices=STAT_CHOICES
+    type = models.CharField(max_length=25, choices=STAT_CHOICES)
+    value = models.CharField(
+        max_length=63,
+        null=True,
+        blank=True,
+        help_text=_("Use this for 'manual' input or the override the calculated value."),
     )
-    value = models.CharField(max_length=63, null=True, blank=True,
-                             help_text=_('Use this for \'manual\' input or the override the calculated value.'))
     block = models.ForeignKey('cms.StatsContent', related_name='stats', null=True, on_delete=models.CASCADE)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
     title = models.CharField(max_length=63)
@@ -208,15 +213,17 @@ class Quote(models.Model):
     role = models.CharField(max_length=60, null=True, blank=True)
     quote = models.TextField()
     image = ImageField(
-        _("Image"), max_length=255, blank=True, null=True,
+        _('Image'),
+        max_length=255,
+        blank=True,
+        null=True,
         upload_to='quote_images/',
-
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     class JSONAPIMeta:
@@ -231,15 +238,17 @@ class Person(models.Model):
     phone_number = models.CharField(_('Phone number'), max_length=60, null=True, blank=True)
 
     avatar = ImageField(
-        _("Image"), max_length=255, blank=True, null=True,
+        _('Image'),
+        max_length=255,
+        blank=True,
+        null=True,
         upload_to='people_images/',
-
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     class JSONAPIMeta:
@@ -300,7 +309,7 @@ class NewsContent(TitledContent):
         verbose_name = _('News items')
 
     def __str__(self):
-        return str(_("News items"))
+        return str(_('News items'))
 
 
 class StatsContent(TitledContent):
@@ -325,18 +334,16 @@ class HomepageStatisticsContent(TitledContent):
     year = models.IntegerField(blank=True, null=True)
 
     class StatTypeChoices(DjangoChoices):
-        all = ChoiceItem('all', label=_("All"))
-        office_subregion = ChoiceItem('office_subregion', label=_("Group"))
-        office_region = ChoiceItem('office_region', label=_("Region"))
+        all = ChoiceItem('all', label=_('All'))
+        office_subregion = ChoiceItem('office_subregion', label=_('Group'))
+        office_region = ChoiceItem('office_region', label=_('Region'))
 
     stat_type = models.CharField(
-        _("Statistics view"),
+        _('Statistics view'),
         max_length=100,
         choices=StatTypeChoices.choices,
         default=StatTypeChoices.all,
-        help_text=_(
-            'Set the default statistics view. Users will see this first but can switch views anytime.'
-        )
+        help_text=_('Set the default statistics view. Users will see this first but can switch views anytime.'),
     )
 
     class Meta:
@@ -353,27 +360,21 @@ class ActivitiesContent(TitledContent):
     type = 'activities'
 
     ACTIVITY_TYPES = (
-        ('highlighted', _("Highlighted")),
-        ('matching', _("Matching preferences")),
-        ('time_based', _("Time based")),
-        ('deed', _("Deeds")),
-        ('funding', _("Crowdfunding")),
-        ('collect', _("Collecting")),
+        ('highlighted', _('Highlighted')),
+        ('matching', _('Matching preferences')),
+        ('time_based', _('Time based')),
+        ('deed', _('Deeds')),
+        ('funding', _('Crowdfunding')),
+        ('collect', _('Collecting')),
     )
 
-    action_text = models.CharField(max_length=80,
-                                   default=_('Find more activities'),
-                                   blank=True, null=True)
-    action_link = models.CharField(max_length=100, default="/initiatives/activities/list",
-                                   blank=True, null=True)
+    action_text = models.CharField(max_length=80, default=_('Find more activities'), blank=True, null=True)
+    action_link = models.CharField(max_length=100, default='/initiatives/activities/list', blank=True, null=True)
 
     preview_template = 'admin/cms/preview/activities.html'
 
     activity_type = models.CharField(
-        max_length=30,
-        choices=ACTIVITY_TYPES,
-        default='highlighted',
-        blank=True, null=True
+        max_length=30, choices=ACTIVITY_TYPES, default='highlighted', blank=True, null=True
     )
 
     class Meta:
@@ -390,10 +391,7 @@ class DonateButtonContent(TitledContent):
     type = 'donate'
 
     funding = models.ForeignKey(
-        'funding.Funding',
-        verbose_name=_('Campaign'),
-        on_delete=models.CASCADE,
-        limit_choices_to={'status': 'open'}
+        'funding.Funding', verbose_name=_('Campaign'), on_delete=models.CASCADE, limit_choices_to={'status': 'open'}
     )
     button_text = models.CharField(max_length=80, null=True, blank=True)
 
@@ -415,7 +413,7 @@ class PollContent(ContentItem):
         'voting.Poll',
         verbose_name=_('Poll'),
         on_delete=models.CASCADE,
-        limit_choices_to={'status__in': ['open', 'closed']}
+        limit_choices_to={'status__in': ['open', 'closed']},
     )
 
     class Meta:
@@ -430,11 +428,8 @@ class PollContent(ContentItem):
 
 class ProjectsContent(TitledContent):
     type = 'projects'
-    action_text = models.CharField(max_length=80,
-                                   default=_('Start your own project'),
-                                   blank=True, null=True)
-    action_link = models.CharField(max_length=100, default="/start-project",
-                                   blank=True, null=True)
+    action_text = models.CharField(max_length=80, default=_('Start your own project'), blank=True, null=True)
+    action_link = models.CharField(max_length=100, default='/start-project', blank=True, null=True)
 
     from_homepage = models.BooleanField(default=False)
 
@@ -455,7 +450,7 @@ class ShareResultsContent(TitledContent):
     share_text = models.CharField(
         max_length=100,
         default='',
-        help_text="{amount}, {fundraisers}, {events}, {tasks}, {hours}, {people} will be replaced by live statistics"
+        help_text='{amount}, {fundraisers}, {events}, {tasks}, {hours}, {people} will be replaced by live statistics',
     )
 
     class Meta:
@@ -469,20 +464,19 @@ class ProjectsMapContent(TitledContent):
     type = 'projects-map'
 
     class MapTypeChoices(DjangoChoices):
-
-        all = ChoiceItem('all', label=_("Global"))
-        office_subregion = ChoiceItem('office_subregion', label=_("Group"))
-        office_region = ChoiceItem('office_region', label=_("Region"))
+        all = ChoiceItem('all', label=_('Global'))
+        office_subregion = ChoiceItem('office_subregion', label=_('Group'))
+        office_region = ChoiceItem('office_region', label=_('Region'))
 
     map_type = models.CharField(
-        _("Map view"),
+        _('Map view'),
         max_length=100,
         choices=MapTypeChoices.choices,
         default=MapTypeChoices.all,
         help_text=_(
             'Set the default map view that shows where all activities are taking place. '
             'Users will see this first but can switch views anytime.'
-        )
+        ),
     )
 
     class Meta:
@@ -524,26 +518,29 @@ class SlidesContent(TitledContent):
 class Step(SortableMixin, models.Model):
     block = models.ForeignKey('cms.StepsContent', related_name='steps', on_delete=models.CASCADE)
     image = ImageField(
-        _("Image"), max_length=255, blank=True, null=True,
+        _('Image'),
+        max_length=255,
+        blank=True,
+        null=True,
         upload_to='step_images/',
-
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
+            validate_file_infection,
         ],
         help_text=_(
-            "You can upload an image with a 16:9 aspect ratio for best results or an illustration/icon as a square."
+            'You can upload an image with a 16:9 aspect ratio for best results or an illustration/icon as a square.'
         ),
     )
-    header = models.CharField(_("Header"), max_length=100)
-    text = models.CharField(_("Text"), max_length=400, null=True, blank=True)
-    link = models.CharField(_("Link"), max_length=100, blank=True, null=True)
+    header = models.CharField(_('Header'), max_length=100)
+    text = models.CharField(_('Text'), max_length=400, null=True, blank=True)
+    link = models.CharField(_('Link'), max_length=100, blank=True, null=True)
     link_text = models.CharField(max_length=40, blank=True, null=True)
 
-    external = models.BooleanField(_("Open in new tab"), default=False, blank=False,
-                                   help_text=_('Open the link in a new browser tab'))
+    external = models.BooleanField(
+        _('Open in new tab'), default=False, blank=False, help_text=_('Open the link in a new browser tab')
+    )
 
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
@@ -555,11 +552,8 @@ class Step(SortableMixin, models.Model):
 
 
 class StepsContent(TitledContent):
-    action_text = models.CharField(max_length=40,
-                                   default=_('Start your own project'),
-                                   blank=True, null=True)
-    action_link = models.CharField(max_length=100, default="/start-project",
-                                   blank=True, null=True)
+    action_text = models.CharField(max_length=40, default=_('Start your own project'), blank=True, null=True)
+    action_link = models.CharField(max_length=100, default='/start-project', blank=True, null=True)
 
     type = 'steps'
 
@@ -605,15 +599,17 @@ class CategoriesContent(TitledContent):
 class Logo(SortableMixin, models.Model):
     block = models.ForeignKey('cms.LogosContent', related_name='logos', on_delete=models.CASCADE)
     image = ImageField(
-        _("Image"), max_length=255, blank=True, null=True,
+        _('Image'),
+        max_length=255,
+        blank=True,
+        null=True,
         upload_to='logo_images/',
-
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
     link = models.CharField(max_length=100, blank=True, null=True)
     open_in_new_tab = models.BooleanField(default=True, blank=False, help_text=_('Open the link in a new browser tab'))
@@ -643,21 +639,21 @@ class LogosContent(TitledContent):
 class ContentLink(SortableMixin, models.Model):
     block = models.ForeignKey('cms.LinksContent', related_name='links', on_delete=models.CASCADE)
     image = ImageField(
-        _("Image"), max_length=255, blank=True, null=True,
+        _('Image'),
+        max_length=255,
+        blank=True,
+        null=True,
         upload_to='link_images/',
-
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
     open_in_new_tab = models.BooleanField(default=False)
     action_text = models.CharField(max_length=40)
-    action_link = models.CharField(
-        max_length=100, blank=True, null=True
-    )
+    action_link = models.CharField(max_length=100, blank=True, null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:
@@ -699,13 +695,13 @@ class WelcomeContent(ContentItem):
 
 
 class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
-
     def validate_file_extension(value):
         import os
+
         ext = os.path.splitext(value.name)[1]
         valid_extensions = ['.woff2']
         if ext not in valid_extensions:
-            raise ValidationError(u'File not supported!')
+            raise ValidationError('File not supported!')
 
     SHARE_ACTIVITIES_CHOICES = (
         ('supplier', _('Supplier')),
@@ -718,7 +714,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         help_text=_('Allow sharing and/or receiving activities with other connected partners.'),
         default=[],
         max_length=100,
-        blank=True
+        blank=True,
     )
 
     @property
@@ -737,106 +733,96 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     def is_linking_activities(self):
         return Following.objects.filter(adoption_type='link').exists()
 
-    platform_name = models.CharField(
-        _('Platform name'),
-        max_length=255,
-        default='New platform'
-    )
+    platform_name = models.CharField(_('Platform name'), max_length=255, default='New platform')
 
     organization = models.ForeignKey(
         'organizations.Organization',
         verbose_name=_('GoodUp Connect name'),
-        null=True, blank=True, on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         help_text=_(
-            "This is the name other partners will see when you send connection "
+            'This is the name other partners will see when you send connection '
             "requests or share activities. Use your organisation's official name "
-            "to ensure partners recognise you."
-        )
+            'to ensure partners recognise you.'
+        ),
     )
 
     action_color = ColorField(
-        _('Action colour'), null=True, blank=True,
-        help_text=_(
-            'Colour for action buttons and links'
-        )
+        _('Action colour'), null=True, blank=True, help_text=_('Colour for action buttons and links')
     )
     action_text_color = ColorField(
-        _('Action text colour'), null=True, blank=True,
-        help_text=_(
-            'If the action colour is quite light, you could set this to a darker colour for better contrast'
-        )
+        _('Action text colour'),
+        null=True,
+        blank=True,
+        help_text=_('If the action colour is quite light, you could set this to a darker colour for better contrast'),
     )
     alternative_link_color = ColorField(
-        _('Alternative link colour'), null=True, blank=True,
+        _('Alternative link colour'),
+        null=True,
+        blank=True,
         default=None,
-        help_text=_(
-            'If the action colour is quite light, you can set this colour to use for text links'
-        )
+        help_text=_('If the action colour is quite light, you can set this colour to use for text links'),
     )
 
-    terminated = models.BooleanField(
-        _("Terminated"),
-        default=False,
-        help_text=_('Is the platform terminated?')
-    )
+    terminated = models.BooleanField(_('Terminated'), default=False, help_text=_('Is the platform terminated?'))
 
     @property
     def link_color(self):
         return self.alternative_link_color or self.action_color
 
     description_color = ColorField(
-        _('Description colour'), null=True, blank=True,
-        help_text=_(
-            'Colour for descriptive and secondary buttons'
-        )
+        _('Description colour'), null=True, blank=True, help_text=_('Colour for descriptive and secondary buttons')
     )
     description_text_color = ColorField(
-        _('Description text colour'), null=True, blank=True,
+        _('Description text colour'),
+        null=True,
+        blank=True,
         help_text=_(
             'If the description colour is quite light, you could set this to a darker colour for better contrast'
-        )
+        ),
     )
     footer_color = ColorField(
-        _('Footer colour'), null=True, blank=True,
-        default='#3b3b3b',
-        help_text=_(
-            'Colour for platform footer'
-        )
+        _('Footer colour'), null=True, blank=True, default='#3b3b3b', help_text=_('Colour for platform footer')
     )
     footer_text_color = ColorField(
-        _('Footer text colour'), null=True, blank=True,
-        help_text=_(
-            'If the footer colour is quite light, you could set this to a darker colour for better contrast'
-        )
+        _('Footer text colour'),
+        null=True,
+        blank=True,
+        help_text=_('If the footer colour is quite light, you could set this to a darker colour for better contrast'),
     )
 
     footer_banner = models.ImageField(
         _('Footer banner'),
         help_text=_('Banner shown just above the footer'),
-        null=True, blank=True, upload_to='site_content/',
+        null=True,
+        blank=True,
+        upload_to='site_content/',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     title_font = models.FileField(
-        _('Title font'), null=True, blank=True,
-        help_text=_(
-            'Font to use for titles. Should be .woff2 type'
-        ),
-        validators=[validate_file_extension]
+        _('Title font'),
+        null=True,
+        blank=True,
+        help_text=_('Font to use for titles. Should be .woff2 type'),
+        validators=[validate_file_extension],
     )
 
     body_font = models.FileField(
-        _('Body font'), null=True, blank=True,
+        _('Body font'),
+        null=True,
+        blank=True,
         help_text=_(
             'Font to use for paragraph texts. Should be .woff2 type. Deprecated: '
             'Do not override body font for new tenants'
         ),
-        validators=[validate_file_extension]
+        validators=[validate_file_extension],
     )
 
     contact_email = models.EmailField(null=True, blank=True)
@@ -846,44 +832,40 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     powered_by_text = models.CharField(max_length=100, null=True, blank=True)
     powered_by_link = models.CharField(max_length=100, null=True, blank=True)
     powered_by_logo = models.ImageField(
-        null=True, blank=True, upload_to='site_content/',
+        null=True,
+        blank=True,
+        upload_to='site_content/',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
     logo = models.FileField(
-        null=True, blank=True, upload_to='site_content/',
-        validators=[
-            FileExtensionValidator(allowed_extensions=['svg']),
-            validate_file_infection
-        ]
+        null=True,
+        blank=True,
+        upload_to='site_content/',
+        validators=[FileExtensionValidator(allowed_extensions=['svg']), validate_file_infection],
     )
     favicon = models.ImageField(
-        null=True, blank=True, upload_to='site_content/',
-
+        null=True,
+        blank=True,
+        upload_to='site_content/',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     translations = TranslatedFields(
-        metadata_title=models.CharField(
-            max_length=100, null=True, blank=True),
-        metadata_description=models.TextField(
-            null=True, blank=True),
-        metadata_keywords=models.CharField(
-            max_length=300, null=True, blank=True),
+        metadata_title=models.CharField(max_length=100, null=True, blank=True),
+        metadata_description=models.TextField(null=True, blank=True),
+        metadata_keywords=models.CharField(max_length=300, null=True, blank=True),
         start_page=models.CharField(
-            max_length=100,
-            null=True,
-            blank=True,
-            help_text=_('Slug of the start initiative page')
+            max_length=100, null=True, blank=True, help_text=_('Slug of the start initiative page')
         ),
     )
 
@@ -897,6 +879,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
 
         if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):
             from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+
             ActivityPubOrganization.objects.from_model(self.organization)
 
         super().save(*args, **kwargs)
@@ -910,6 +893,7 @@ class PlainTextItem(TitledContent):
     """
     Just a plain text block
     """
+
     text = models.TextField()
     objects = ContentItemManager()
     preview_template = 'admin/cms/preview/default.html'
@@ -929,9 +913,10 @@ class ImagePlainTextItem(TitledContent):
     """
     A snippet of HTML text to display on a page.
     """
+
     text = QuillField()
     image = PluginImageField(
-        _("Image"),
+        _('Image'),
         upload_to='pages',
         null=True,
         blank=True,
@@ -939,40 +924,27 @@ class ImagePlainTextItem(TitledContent):
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
-    video_url = models.URLField(
-        _("Video URL"),
-        max_length=255,
-        null=True,
-        blank=True
-    )
-    action_text = models.CharField(
-        max_length=80,
-        blank=True,
-        null=True
-    )
-    action_link = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True
-    )
+    video_url = models.URLField(_('Video URL'), max_length=255, null=True, blank=True)
+    action_text = models.CharField(max_length=80, blank=True, null=True)
+    action_link = models.CharField(max_length=100, blank=True, null=True)
     preview_template = 'admin/cms/preview/default.html'
 
     ALIGN_CHOICES = (
-        ('left', _("Left")),
-        ('right', _("Right")),
+        ('left', _('Left')),
+        ('right', _('Right')),
     )
 
     RATIO_CHOICES = (
-        ("0.5", _("1:2 (Text twice as wide)")),
-        ("1", _("1:1 (Equal width)")),
-        ("2", _("2:1 (Media twice as wide)")),
+        ('0.5', _('1:2 (Text twice as wide)')),
+        ('1', _('1:1 (Equal width)')),
+        ('2', _('2:1 (Media twice as wide)')),
     )
 
-    align = models.CharField(_("Picture placement"), max_length=10, choices=ALIGN_CHOICES, default="right")
-    ratio = models.CharField(_("Picture / Text ratio"), max_length=10, choices=RATIO_CHOICES, default='0.5')
+    align = models.CharField(_('Picture placement'), max_length=10, choices=ALIGN_CHOICES, default='right')
+    ratio = models.CharField(_('Picture / Text ratio'), max_length=10, choices=RATIO_CHOICES, default='0.5')
     objects = ContentItemManager()
 
     class Meta(object):
@@ -990,8 +962,9 @@ class ImageItem(TitledContent):
     """
     A single image to display on the page
     """
+
     image = PluginImageField(
-        _("Image"),
+        _('Image'),
         upload_to='pages',
         null=True,
         blank=True,
@@ -999,15 +972,10 @@ class ImageItem(TitledContent):
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
-    video_url = models.URLField(
-        _("Video URL"),
-        max_length=255,
-        null=True,
-        blank=True
-    )
+    video_url = models.URLField(_('Video URL'), max_length=255, null=True, blank=True)
     preview_template = 'admin/cms/preview/default.html'
 
     objects = ContentItemManager()
@@ -1019,7 +987,7 @@ class ImageItem(TitledContent):
     def __str__(self):
         if self.image:
             return self.image.name
-        return f"Image/video {self.pk}"
+        return f'Image/video {self.pk}'
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image'

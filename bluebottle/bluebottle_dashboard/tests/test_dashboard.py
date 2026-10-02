@@ -49,13 +49,10 @@ class CustomAppDashboardTestCase(BluebottleAdminTestCase):
 
 
 class DashboardWidgetTestCase(BluebottleAdminTestCase):
-
     def setUp(self):
         super(DashboardWidgetTestCase, self).setUp()
         self.dashboard = UserDashboardModuleFactory.create(
-            title='Links',
-            user=self.superuser,
-            module='jet.dashboard.modules.LinkList'
+            title='Links', user=self.superuser, module='jet.dashboard.modules.LinkList'
         )
         self.widget_admin_url = reverse('jet-dashboard:update_module', args=(self.dashboard.id,))
 
@@ -69,7 +66,7 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
             'layout': 'stacked',
             'children-TOTAL_FORMS': 0,
             'children-INITIAL_FORMS': 0,
-            '_save': 'Save'
+            '_save': 'Save',
         }
 
         response = self.client.post(self.widget_admin_url, data, format='multipart')
@@ -86,7 +83,7 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
             'layout': 'stacked',
             'children-TOTAL_FORMS': 0,
             'children-INITIAL_FORMS': 0,
-            '_save': 'Save'
+            '_save': 'Save',
         }
         response = self.client.post(self.widget_admin_url, data, format='multipart')
         self.assertEqual(response.status_code, 302)
@@ -132,9 +129,7 @@ class AdminMenuTestCase(BluebottleAdminTestCase):
         request = RequestFactory().get(self.admin_url)
         request.user = self.staff_member
         menu_groups = get_menu_items({'user': self.staff_member, 'request': request})
-        initiatives_menu = next(
-            group for group in menu_groups if group['app_label'] == 'activities'
-        )
+        initiatives_menu = next(group for group in menu_groups if group['app_label'] == 'activities')
         self.assertTrue(initiatives_menu['has_perms'])
         self.assertEqual(str(initiatives_menu['label']), 'Initiatives & Activities')
 

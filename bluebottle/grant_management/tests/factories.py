@@ -3,11 +3,14 @@ from builtins import object
 from moneyed import Money
 
 from bluebottle.grant_management.models import (
-    GrantApplication, GrantDonor, GrantFund, GrantDeposit, GrantWithdrawal, GrantPayment
+    GrantApplication,
+    GrantDonor,
+    GrantFund,
+    GrantDeposit,
+    GrantWithdrawal,
+    GrantPayment,
 )
-from bluebottle.grant_management.models import (
-    GrantProvider, GrantPayout
-)
+from bluebottle.grant_management.models import GrantProvider, GrantPayout
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -50,7 +53,6 @@ class GrantFundFactory(factory.DjangoModelFactory):
 
 
 class GrantPayoutFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = GrantPayout
 

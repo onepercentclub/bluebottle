@@ -4,9 +4,7 @@ from mock import patch
 
 from bluebottle.clients.utils import get_user_site_links
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory, GroupFactory
-from bluebottle.test.factory_models.cms import (
-    SiteLinksFactory, LinkFactory, LinkGroupFactory
-)
+from bluebottle.test.factory_models.cms import SiteLinksFactory, LinkFactory, LinkGroupFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.models import Language
@@ -32,8 +30,9 @@ class TestSiteLinks(BluebottleTestCase):
 
     def _add_link(self, group_name='main', **kwargs):
         if group_name not in self.link_groups:
-            self.link_groups[group_name] = LinkGroupFactory.create(title='{} Group'.format(group_name), name=group_name,
-                                                                   site_links=self.site_links)
+            self.link_groups[group_name] = LinkGroupFactory.create(
+                title='{} Group'.format(group_name), name=group_name, site_links=self.site_links
+            )
 
         return LinkFactory.create(link_group=self.link_groups[group_name], **kwargs)
 
@@ -51,7 +50,7 @@ class TestSiteLinks(BluebottleTestCase):
             'isHighlighted': False,
             'openInNewTab': False,
             'title': 'About us',
-            'sequence': 1
+            'sequence': 1,
         }
         self.assertEqual(main['title'], 'main Group')
         self.assertEqual(link1, expected1)
@@ -85,8 +84,7 @@ class TestSiteLinks(BluebottleTestCase):
         # Now create NL site links
         language_nl = Language.objects.get(code='nl')
         site_links = SiteLinksFactory.create(language=language_nl)
-        link_group = LinkGroupFactory.create(title='NL Group', name='main-nl',
-                                             site_links=site_links)
+        link_group = LinkGroupFactory.create(title='NL Group', name='main-nl', site_links=site_links)
         LinkFactory.create(link_group=link_group, title='Project List NL', link='/initiatives/link')
 
         # Test language specific site links are loaded if available

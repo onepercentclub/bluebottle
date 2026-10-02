@@ -1,22 +1,24 @@
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
+    ActivityOwnerPermission,
+    ActivityTypePermission,
+    ActivityStatusPermission,
+    DeleteActivityPermission,
+    ContributorPermission,
+    ActivitySegmentPermission,
+    ActivityManagerPermission,
 )
 from bluebottle.activities.views import RelatedContributorListView, ActivityDetailView
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
-    DeedSerializer, DeedTransitionSerializer, DeedParticipantSerializer,
-    DeedParticipantTransitionSerializer
+    DeedSerializer,
+    DeedTransitionSerializer,
+    DeedParticipantSerializer,
+    DeedParticipantTransitionSerializer,
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
-)
-from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin, ExportView, IcalView
-)
+from bluebottle.utils.permissions import OneOf, ResourcePermission, ResourceOwnerPermission
+from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, ExportView, IcalView
 
 
 class DeedListView(JsonApiViewMixin, ListCreateAPIView):
@@ -34,7 +36,7 @@ class DeedDetailView(ActivityDetailView):
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
         ActivitySegmentPermission,
-        DeleteActivityPermission
+        DeleteActivityPermission,
     )
 
     queryset = Deed.objects.all()
@@ -47,26 +49,20 @@ class DeedTransitionList(TransitionList):
 
 
 class DeedRelatedParticipantList(RelatedContributorListView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
 
     queryset = DeedParticipant.objects.prefetch_related('user')
     serializer_class = DeedParticipantSerializer
 
 
 class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),)
     queryset = DeedParticipant.objects.all()
     serializer_class = DeedParticipantSerializer
 
 
 class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),)
     queryset = DeedParticipant.objects.all()
     serializer_class = DeedParticipantSerializer
 
@@ -88,9 +84,7 @@ class ParticipantExportView(ExportView):
     filename = 'participants'
 
     def get_instances(self):
-        return self.get_object().contributors.instance_of(
-            DeedParticipant
-        )
+        return self.get_object().contributors.instance_of(DeedParticipant)
 
 
 class DeedIcalView(IcalView):

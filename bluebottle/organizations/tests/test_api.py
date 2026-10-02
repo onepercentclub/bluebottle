@@ -1,5 +1,5 @@
-
 from future import standard_library
+
 standard_library.install_aliases()
 from urllib.parse import urlencode
 import json
@@ -9,9 +9,7 @@ from rest_framework import status
 
 from bluebottle.organizations.models import Organization
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.organizations import (
-    OrganizationContactFactory, OrganizationFactory
-)
+from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
@@ -28,30 +26,15 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
         self.user_1 = BlueBottleUserFactory.create()
-        self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
+        self.user_1_token = 'JWT {0}'.format(self.user_1.get_jwt_token())
 
         self.user_2 = BlueBottleUserFactory.create()
 
-        self.organization_1 = OrganizationFactory.create(
-            owner=self.user_1,
-            name='Evil Knight'
-        )
-        self.organization_2 = OrganizationFactory.create(
-            owner=self.user_1,
-            name='Evel Knievel'
-        )
-        self.organization_3 = OrganizationFactory.create(
-            owner=self.user_1,
-            name='Hanson Kids'
-        )
-        self.organization_4 = OrganizationFactory.create(
-            owner=self.user_1,
-            name='Knight Rider'
-        )
-        self.organization_5 = OrganizationFactory.create(
-            owner=self.user_2,
-            name='Kids Club'
-        )
+        self.organization_1 = OrganizationFactory.create(owner=self.user_1, name='Evil Knight')
+        self.organization_2 = OrganizationFactory.create(owner=self.user_1, name='Evel Knievel')
+        self.organization_3 = OrganizationFactory.create(owner=self.user_1, name='Hanson Kids')
+        self.organization_4 = OrganizationFactory.create(owner=self.user_1, name='Knight Rider')
+        self.organization_5 = OrganizationFactory.create(owner=self.user_2, name='Kids Club')
 
 
 class OrganizationListTestCase(OrganizationsEndpointTestCase):
@@ -73,8 +56,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         Tests that the list of organizations can be queried if authenticated
         but it will not return results unless a search term is supplied.
         """
-        response = self.client.get(reverse('organization_list'),
-                                   user=self.user_1)
+        response = self.client.get(reverse('organization_list'), user=self.user_1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['meta']['pagination']['count'], 5)
@@ -84,7 +66,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         Tests that the organizations search is not intelligent.
         """
         # Search for organizations with "evil" in their name.
-        url = "{}?{}".format(reverse('organization_list'), urlencode({'filter[search]': 'Evil'}))
+        url = '{}?{}'.format(reverse('organization_list'), urlencode({'filter[search]': 'Evil'}))
         response = self.client.get(url, user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Expect two organizations with 'ev'
@@ -95,7 +77,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         Tests that the list of organizations can be obtained from its
         endpoint with different order.
         """
-        url = "{}?{}".format(reverse('organization_list'), urlencode({'filter[search]': 'Knight'}))
+        url = '{}?{}'.format(reverse('organization_list'), urlencode({'filter[search]': 'Knight'}))
         response = self.client.get(url, user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['meta']['pagination']['count'], 2)
@@ -104,7 +86,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         Tests that the organizations search is case insensitive.
         """
-        url = "{}?{}".format(reverse('organization_list'), urlencode({'filter[search]': 'kids'}))
+        url = '{}?{}'.format(reverse('organization_list'), urlencode({'filter[search]': 'kids'}))
         response = self.client.get(url, user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['meta']['pagination']['count'], 2)
@@ -118,9 +100,7 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
     """
 
     def test_unauth_api_organizations_detail_endpoint(self):
-        response = self.client.get(
-            reverse('organization_detail', kwargs={'pk': self.organization_1.pk})
-        )
+        response = self.client.get(reverse('organization_detail', kwargs={'pk': self.organization_1.pk}))
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -143,7 +123,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
                     'slug': 'hm',
                     'description': 'some description',
                     'website': 'http://onepercentclub.com',
-                }
+                },
             }
         }
 
@@ -161,10 +141,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         post_data = self.post_data
 
-        response = self.client.post(
-            reverse('organization_list'),
-            json.dumps(post_data),
-            user=self.user_1)
+        response = self.client.post(reverse('organization_list'), json.dumps(post_data), user=self.user_1)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         org_id = response.data['id']
@@ -179,10 +156,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         Tests POSTing new data to the endpoint.
         """
-        response = self.client.post(
-            reverse('organization_list'),
-            json.dumps(self.post_data),
-            user=self.user_1)
+        response = self.client.post(reverse('organization_list'), json.dumps(self.post_data), user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Update description
@@ -191,10 +165,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.post_data['data']['attributes']['description'] = 'Bla bla'
         url = reverse('organization_detail', kwargs={'pk': org_id})
 
-        response = self.client.put(
-            url,
-            json.dumps(self.post_data),
-            user=self.user_1)
+        response = self.client.put(url, json.dumps(self.post_data), user=self.user_1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check the data.
@@ -205,10 +176,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         Tests POSTing new data to the endpoint.
         """
-        response = self.client.post(
-            reverse('organization_list'),
-            json.dumps(self.post_data),
-            user=self.user_1)
+        response = self.client.post(reverse('organization_list'), json.dumps(self.post_data), user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Update description
@@ -217,17 +185,11 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.post_data['data']['attributes']['description'] = 'Bla bla'
         url = reverse('organization_detail', kwargs={'pk': org_id})
 
-        response = self.client.put(
-            url,
-            json.dumps(self.post_data),
-            user=BlueBottleUserFactory.create())
+        response = self.client.put(url, json.dumps(self.post_data), user=BlueBottleUserFactory.create())
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        response = self.client.patch(
-            url,
-            json.dumps(self.post_data),
-            user=BlueBottleUserFactory.create())
+        response = self.client.patch(url, json.dumps(self.post_data), user=BlueBottleUserFactory.create())
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -243,39 +205,21 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
         data = {
             'data': {
                 'type': 'organization-contacts',
-                'attributes': {
-                    'name': 'Brian Brown',
-                    'email': 'brian@brown.com',
-                    'phone': '555-1243'
-                }
+                'attributes': {'name': 'Brian Brown', 'email': 'brian@brown.com', 'phone': '555-1243'},
             }
         }
 
-        response = self.client.post(
-            reverse('organization_contact_list'),
-            json.dumps(data),
-            user=self.user_1
-        )
+        response = self.client.post(reverse('organization_contact_list'), json.dumps(data), user=self.user_1)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['name'], 'Brian Brown')
 
     def test_create_contact_without_phone(self):
         data = {
-            'data': {
-                'type': 'organization-contacts',
-                'attributes': {
-                    'name': 'Brian Brown',
-                    'email': 'brian@brown.com'
-                }
-            }
+            'data': {'type': 'organization-contacts', 'attributes': {'name': 'Brian Brown', 'email': 'brian@brown.com'}}
         }
 
-        response = self.client.post(
-            reverse('organization_contact_list'),
-            json.dumps(data),
-            user=self.user_1
-        )
+        response = self.client.post(reverse('organization_contact_list'), json.dumps(data), user=self.user_1)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['name'], 'Brian Brown')
@@ -283,10 +227,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
     def test_organization_contact(self):
         contact = OrganizationContactFactory.create(owner=self.user_1)
 
-        response = self.client.get(
-            reverse('organization_contact_detail', kwargs={'pk': contact.pk}),
-            user=self.user_1
-        )
+        response = self.client.get(reverse('organization_contact_detail', kwargs={'pk': contact.pk}), user=self.user_1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], contact.name)
@@ -304,19 +245,15 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         Tests that the endpoint first restricts results to logged-in users.
         """
         # Making the request without logging in...
-        response = self.client.get(
-            reverse('organization_detail',
-                    kwargs={'pk': self.organization_1.pk}))
-        self.assertEqual(
-            response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        response = self.client.get(reverse('organization_detail', kwargs={'pk': self.organization_1.pk}))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
     def test_manage_organizations_detail_get_success(self):
         """
         Tests a successful GET request over the endpoint.
         """
-        response = self.client.get(reverse('organization_detail',
-                                           kwargs={
-                                               'pk': self.organization_1.pk}),
-                                   user=self.user_1)
+        response = self.client.get(
+            reverse('organization_detail', kwargs={'pk': self.organization_1.pk}), user=self.user_1
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

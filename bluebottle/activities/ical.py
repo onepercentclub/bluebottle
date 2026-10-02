@@ -21,9 +21,7 @@ class ActivityIcal:
         else:
             event.add('summary', instance.title)
 
-        details = unescape(
-            to_text.handle(instance.details)
-        )
+        details = unescape(to_text.handle(instance.details))
         event.add('description', details)
         event.add('uid', instance.uid)
         event.add('url', instance.get_absolute_url())
@@ -62,4 +60,4 @@ class ActivityIcal:
         return calendar.to_ical()
 
     def to_attachment(self):
-        return (f"event-{self.instances[0].uid}.ics", self.to_file(), 'text/calendar')
+        return (f'event-{self.instances[0].uid}.ics', self.to_file(), 'text/calendar')

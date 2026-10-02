@@ -3,14 +3,14 @@ from fluent_contents.admin.contentitems import BaseContentItemFormSet, BaseConte
 from nested_admin.formsets import NestedBaseGenericInlineFormSetMixin
 
 COPY_FIELDS = (
-    "form",
-    "raw_id_fields",
-    "filter_vertical",
-    "filter_horizontal",
-    "radio_fields",
-    "prepopulated_fields",
-    "formfield_overrides",
-    "readonly_fields",
+    'form',
+    'raw_id_fields',
+    'filter_vertical',
+    'filter_horizontal',
+    'radio_fields',
+    'prepopulated_fields',
+    'formfield_overrides',
+    'readonly_fields',
 )
 
 
@@ -30,32 +30,28 @@ def get_cms_content_item_inlines(plugins=None, base=BaseContentItemInline):
     inlines = []
     for plugin in plugins:
         if not isinstance(plugin, extensions.ContentPlugin):
-            raise TypeError(
-                "get_cms_content_item_inlines() expects ContentPlugin instances, not {}".format(
-                    plugin
-                )
-            )
+            raise TypeError('get_cms_content_item_inlines() expects ContentPlugin instances, not {}'.format(plugin))
 
         content_item_type = plugin.model
-        class_name = "%s_AutoInline" % content_item_type.__name__
+        class_name = '%s_AutoInline' % content_item_type.__name__
         attrs = {
-            "__module__": plugin.__class__.__module__,
-            "model": content_item_type,
-            "name": plugin.verbose_name,
-            "plugin": plugin,
-            "type_name": plugin.type_name,
-            "extra_fieldsets": plugin.fieldsets,
-            "cp_admin_form_template": plugin.admin_form_template,
-            "cp_admin_init_template": plugin.admin_init_template,
+            '__module__': plugin.__class__.__module__,
+            'model': content_item_type,
+            'name': plugin.verbose_name,
+            'plugin': plugin,
+            'type_name': plugin.type_name,
+            'extra_fieldsets': plugin.fieldsets,
+            'cp_admin_form_template': plugin.admin_form_template,
+            'cp_admin_init_template': plugin.admin_init_template,
         }
 
         for name in COPY_FIELDS:
             if getattr(plugin, name, None):
                 attrs[name] = getattr(plugin, name)
 
-        plugin_inlines = getattr(plugin, "inlines", None)
+        plugin_inlines = getattr(plugin, 'inlines', None)
         if plugin_inlines:
-            attrs["inlines"] = plugin_inlines
+            attrs['inlines'] = plugin_inlines
 
         inlines.append(type(class_name, (base,), attrs))
 

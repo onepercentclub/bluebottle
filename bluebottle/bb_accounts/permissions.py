@@ -21,7 +21,7 @@ class IsAuthenticatedOrOpenPermission(BasePermission):
 
 
 class SignUpTokenPermission(BasePermission):
-    message = ("Platform is closed")
+    message = 'Platform is closed'
 
     def has_object_action_permission(self, action, user, obj):
         settings = MemberPlatformSettings.load()

@@ -21,23 +21,29 @@ from bluebottle.funding.models import Funding
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.models import Theme
-from bluebottle.initiatives.permissions import (
-    InitiativeStatusPermission, InitiativeOwnerPermission
-)
+from bluebottle.initiatives.permissions import InitiativeStatusPermission, InitiativeOwnerPermission
 from bluebottle.initiatives.serializers import (
-    InitiativeSerializer, InitiativeReviewTransitionSerializer,
-    InitiativeMapSerializer, InitiativePreviewSerializer, InitiativeRedirectSerializer,
-    RelatedInitiativeImageSerializer, ThemeSerializer,
+    InitiativeSerializer,
+    InitiativeReviewTransitionSerializer,
+    InitiativeMapSerializer,
+    InitiativePreviewSerializer,
+    InitiativeRedirectSerializer,
+    RelatedInitiativeImageSerializer,
+    ThemeSerializer,
     RelatedInitiativeImageContentSerializer,
-    InitiativeImageSerializer
+    InitiativeImageSerializer,
 )
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
-)
+from bluebottle.utils.permissions import OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, ListCreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
+    RetrieveUpdateAPIView,
+    JsonApiViewMixin,
+    CreateAPIView,
+    ListCreateAPIView,
+    ListAPIView,
+    TranslatedApiViewMixin,
+    RetrieveAPIView,
+    NoPagination,
     JsonApiElasticSearchPagination,
 )
 
@@ -48,20 +54,19 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     )
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(
-            Q(is_open=True) | Q(owner=self.request.user)
-        )
+        queryset = super().get_queryset().filter(Q(is_open=True) | Q(owner=self.request.user))
 
         return queryset
 
     serializer_class = InitiativeSerializer
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
 
     filterset_fields = {
-        'owner__id': ('exact', 'in',),
+        'owner__id': (
+            'exact',
+            'in',
+        ),
     }
 
     prefetch_for_includes = {
@@ -87,14 +92,10 @@ class InitiativePreviewList(JsonApiViewMixin, ListAPIView):
     serializer_class = InitiativePreviewSerializer
     model = Initiative
     pagination_class = JsonApiElasticSearchPagination
-    renderer_classes = (ElasticSearchJSONAPIRenderer, )
-    filter_backends = (
-        InitiativeSearchFilter,
-    )
+    renderer_classes = (ElasticSearchJSONAPIRenderer,)
+    filter_backends = (InitiativeSearchFilter,)
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
 
     def list(self, request, *args, **kwargs):
         result = self.filter_queryset(None)
@@ -138,11 +139,14 @@ class InitiativeMapList(generics.ListAPIView):
 
 class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Initiative.objects.select_related(
-        'owner', 'reviewer', 'promoter', 'place', 'location',
-        'organization', 'organization_contact',
-    ).prefetch_related(
-        'categories', 'activities'
-    )
+        'owner',
+        'reviewer',
+        'promoter',
+        'place',
+        'location',
+        'organization',
+        'organization_contact',
+    ).prefetch_related('categories', 'activities')
 
     serializer_class = InitiativeSerializer
 
@@ -174,15 +178,11 @@ class InitiativeImage(ImageContentView):
 
 class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     def get_queryset(self):
-        return RelatedImage.objects.filter(
-            content_type=ContentType.objects.get_for_model(Initiative)
-        )
+        return RelatedImage.objects.filter(content_type=ContentType.objects.get_for_model(Initiative))
 
     serializer_class = RelatedInitiativeImageSerializer
 
-    related_permission_classes = {
-        'content_object': [InitiativeOwnerPermission]
-    }
+    related_permission_classes = {'content_object': [InitiativeOwnerPermission]}
 
     permission_classes = []
 
@@ -201,7 +201,9 @@ class InitiativeReviewTransitionList(TransitionList):
 class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     serializer_class = ThemeSerializer
     queryset = Theme.objects.filter(disabled=False)
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
     pagination_class = NoPagination
 
     def get_queryset(self):
@@ -211,7 +213,9 @@ class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
 class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
     serializer_class = ThemeSerializer
     queryset = Theme.objects.filter(disabled=False)
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
 
 
 from collections import namedtuple

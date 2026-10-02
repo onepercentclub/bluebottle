@@ -1,5 +1,5 @@
-
 from future import standard_library
+
 standard_library.install_aliases()
 
 from urllib.parse import urlencode
@@ -38,8 +38,7 @@ def _encode_message(message):
     aes_key = get_settings()['aes_key'].encode('utf-8')
     hmac_key = get_settings()['hmac_key'].encode('utf-8')
 
-    pad = lambda s: s + (AES.block_size - len(s) % AES.block_size) * chr(
-        AES.block_size - len(s) % AES.block_size)
+    pad = lambda s: s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) % AES.block_size)
     init_vector = Random.new().read(AES.block_size)
     cipher = AES.new(aes_key, AES.MODE_CBC, init_vector)
     padded_message = pad(message)
@@ -51,8 +50,7 @@ def _encode_message(message):
 
 def generate_token(email, username, first_name, last_name):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    message = 'time={0}|username={1}|name={2} {3}|' \
-              'email={4}'.format(timestamp, username, first_name, last_name, email)
+    message = 'time={0}|username={1}|name={2} {3}|email={4}'.format(timestamp, username, first_name, last_name, email)
     aes_message, hmac_digest = _encode_message(message)
     token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest())
     return token
@@ -110,8 +108,7 @@ class TokenAuthentication(BaseTokenAuthentication):
 
     def check_timestamp(self, data):
         timestamp = datetime.strptime(data['timestamp'], '%Y-%m-%d %H:%M:%S')
-        time_limit = datetime.now() - \
-            timedelta(seconds=self.settings['token_expiration'])
+        time_limit = datetime.now() - timedelta(seconds=self.settings['token_expiration'])
         if timestamp < time_limit:
             raise TokenAuthenticationError('Authentication token expired')
 
@@ -120,8 +117,7 @@ class TokenAuthentication(BaseTokenAuthentication):
             raise TokenAuthenticationError(value='No token provided')
         try:
             CheckedToken.objects.get(token=self.args['token'])
-            raise TokenAuthenticationError(
-                value='Token was already used and is not valid')
+            raise TokenAuthenticationError(value='Token was already used and is not valid')
         except CheckedToken.DoesNotExist:
             # Token was not used previously. Continue with auth process.
             pass
@@ -154,7 +150,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         first_name = name.split(' ').pop(0)
         parts = name.split(' ')
         parts.pop(0)
-        last_name = " ".join(parts)
+        last_name = ' '.join(parts)
         email = login_data[3].strip()
         email = ''.join(x for x in email if x in string.printable)
 
@@ -164,13 +160,13 @@ class TokenAuthentication(BaseTokenAuthentication):
             'email': email,
             'first_name': first_name,
             'last_name': last_name,
-            'username': email
+            'username': email,
         }
 
         return data
 
     def get_metadata(self):
-        metadata = "<sso-url>{0}</sso-url>".format(self.sso_url())
+        metadata = '<sso-url>{0}</sso-url>'.format(self.sso_url())
         return metadata
 
     def sso_url(self, target_url=None):
@@ -194,5 +190,4 @@ class TokenAuthentication(BaseTokenAuthentication):
     def finalize(self, user, data):
         timestamp = timezone.make_aware(parse_datetime(data['timestamp']))
 
-        CheckedToken.objects.create(token=self.args['token'], user=user,
-                                    timestamp=timestamp).save()
+        CheckedToken.objects.create(token=self.args['token'], user=user, timestamp=timestamp).save()

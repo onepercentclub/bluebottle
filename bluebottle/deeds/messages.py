@@ -6,7 +6,6 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class DeedDateChangedNotification(TransitionMessage):
-
     subject = pgettext('platform-email', 'The date for the activity "{title}" has changed')
     template = 'messages/deed_date_changed'
 
@@ -17,12 +16,12 @@ class DeedDateChangedNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         if self.obj.start:
-            context['start'] = formats.date_format(self.obj.start, "SHORT_DATE_FORMAT")
+            context['start'] = formats.date_format(self.obj.start, 'SHORT_DATE_FORMAT')
         else:
             context['start'] = pgettext('platform-email', 'Today')
 
         if self.obj.end:
-            context['end'] = formats.date_format(self.obj.end, "SHORT_DATE_FORMAT")
+            context['end'] = formats.date_format(self.obj.end, 'SHORT_DATE_FORMAT')
         else:
             context['end'] = pgettext('platform-email', 'Runs indefinitely')
         return context
@@ -35,13 +34,10 @@ class DeedDateChangedNotification(TransitionMessage):
 
     def get_recipients(self):
         """participants that signed up"""
-        return [
-            participant.user for participant in self.obj.participants
-        ]
+        return [participant.user for participant in self.obj.participants]
 
 
 class DeedReminderNotification(TransitionMessage):
-
     subject = pgettext('platform-email', 'Your activity "{title}" will start tomorrow!')
     template = 'messages/deed_reminder'
     send_once = True
@@ -65,6 +61,7 @@ class ParticipantJoinedNotification(TransitionMessage):
     """
     The participant joined
     """
+
     subject = pgettext('platform-email', 'You have joined the activity "{title}"')
     template = 'messages/deed_participant_joined'
     context = {
@@ -80,10 +77,10 @@ class ParticipantJoinedNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         if self.obj.activity.start:
-            context['start'] = formats.date_format(self.obj.activity.start, "SHORT_DATE_FORMAT")
+            context['start'] = formats.date_format(self.obj.activity.start, 'SHORT_DATE_FORMAT')
 
         if self.obj.activity.end:
-            context['end'] = formats.date_format(self.obj.activity.end, "SHORT_DATE_FORMAT")
+            context['end'] = formats.date_format(self.obj.activity.end, 'SHORT_DATE_FORMAT')
 
         return context
 

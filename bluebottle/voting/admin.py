@@ -96,13 +96,9 @@ class PollAdmin(
     superadmin_fields = ('force_status',)
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = (
-            (_('Details'), {'fields': self.get_fields(request, obj)}),
-        )
+        fieldsets = ((_('Details'), {'fields': self.get_fields(request, obj)}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': self.superadmin_fields}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': self.superadmin_fields}),)
         return fieldsets
 
     def vote_count(self, obj):
@@ -115,9 +111,7 @@ class PollAdmin(
             return '-'
 
         links = []
-        blocks = PollContent.objects.filter(poll=obj).select_related(
-            'placeholder', 'placeholder__parent_type'
-        )
+        blocks = PollContent.objects.filter(poll=obj).select_related('placeholder', 'placeholder__parent_type')
         for block in blocks:
             placeholder = block.placeholder
             if not placeholder or not placeholder.parent_id:
@@ -126,9 +120,7 @@ class PollAdmin(
             if parent is None:
                 continue
             url = reverse(
-                'admin:{}_{}_change'.format(
-                    parent._meta.app_label, parent._meta.model_name
-                ),
+                'admin:{}_{}_change'.format(parent._meta.app_label, parent._meta.model_name),
                 args=(parent.pk,),
             )
             links.append(format_html('<a href="{}">{}</a>', url, parent))

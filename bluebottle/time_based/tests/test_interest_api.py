@@ -67,9 +67,7 @@ class InterestListAPITestCase(APITestCase):
         )
         self.assertEqual(
             mail.outbox[0].subject,
-            "You'll be notified if a spot opens up for {}".format(
-                self.activity.title
-            ),
+            "You'll be notified if a spot opens up for {}".format(self.activity.title),
         )
 
     def test_create_idempotent(self):
@@ -340,9 +338,7 @@ class MyInterestListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
         included_activity_ids = {
-            item['id']
-            for item in self.response.json().get('included', [])
-            if item['type'].startswith('activities/')
+            item['id'] for item in self.response.json().get('included', []) if item['type'].startswith('activities/')
         }
         self.assertNotIn(str(self.registration_closed.pk), included_activity_ids)
         self.assertNotIn(str(self.succeeded.pk), included_activity_ids)
@@ -419,9 +415,7 @@ class MyInterestListAPITestCase(APITestCase):
 
         interest_ids = {item['id'] for item in self.response.json()['data']}
         included_activity_ids = {
-            item['id']
-            for item in self.response.json().get('included', [])
-            if item['type'].startswith('activities/')
+            item['id'] for item in self.response.json().get('included', []) if item['type'].startswith('activities/')
         }
         self.assertEqual(
             interest_ids,
@@ -440,9 +434,7 @@ class MyInterestListAPITestCase(APITestCase):
         )
         self.assertStatus(status.HTTP_200_OK)
 
-        included_types = {
-            item['type'] for item in self.response.json().get('included', [])
-        }
+        included_types = {item['type'] for item in self.response.json().get('included', [])}
         self.assertIn('activities/time-based/deadlines', included_types)
         self.assertIn('activities/time-based/dates', included_types)
         self.assertIn('activities/time-based/date-slots', included_types)
@@ -451,9 +443,7 @@ class MyInterestListAPITestCase(APITestCase):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
 
-        included_types = {
-            item['type'] for item in self.response.json().get('included', [])
-        }
+        included_types = {item['type'] for item in self.response.json().get('included', [])}
         self.assertIn('members', included_types)
         self.assertIn('activities/time-based/deadlines', included_types)
         self.assertIn('activities/time-based/dates', included_types)
@@ -540,9 +530,7 @@ class InterestDateSlotAPITestCase(APITestCase):
         )
         self.assertEqual(
             mail.outbox[0].subject,
-            "You'll be notified if a spot opens up for {}".format(
-                self.activity.title
-            ),
+            "You'll be notified if a spot opens up for {}".format(self.activity.title),
         )
 
     def test_create_idempotent(self):
@@ -656,17 +644,13 @@ class InterestDetailAPITestCase(APITestCase):
     def test_delete(self):
         self.perform_delete(user=self.user)
         self.assertStatus(status.HTTP_204_NO_CONTENT)
-        self.assertFalse(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertFalse(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
     def test_delete_other_user(self):
         other = BlueBottleUserFactory.create()
         self.perform_delete(user=other)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
-        self.assertTrue(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertTrue(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
 
 class InterestPermissionAPITestCase(APITestCase):
@@ -675,6 +659,7 @@ class InterestPermissionAPITestCase(APITestCase):
     Unrelated users still cannot access foreign interests; activity managers
     and staff can delete via RelatedActivityOwnerPermission / IsAdminPermission.
     """
+
     url_name = 'interest-detail'
     serializer = InterestSerializer
     factory = InterestFactory
@@ -713,7 +698,8 @@ class InterestPermissionAPITestCase(APITestCase):
                 'api_add_interest',
                 'api_change_interest',
                 'api_delete_interest',
-            } & codenames,
+            }
+            & codenames,
             codenames,
         )
 
@@ -724,9 +710,7 @@ class InterestPermissionAPITestCase(APITestCase):
     def test_other_authenticated_user_cannot_delete_foreign_interest(self):
         self.perform_delete(user=self.other)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
-        self.assertTrue(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertTrue(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
     def test_other_authenticated_user_cannot_get_foreign_interest(self):
         self.perform_get(user=self.other)
@@ -759,17 +743,13 @@ class DeadlineActivityMyInterestAPITestCase(APITestCase):
     def test_get_without_interest(self):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertIsNone(
-            self.response.json()['data']['relationships']['my-interest']['data']
-        )
+        self.assertIsNone(self.response.json()['data']['relationships']['my-interest']['data'])
 
     def test_get_anonymous(self):
         InterestFactory.create(user=self.user, activity=self.model)
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        self.assertIsNone(
-            self.response.json()['data']['relationships']['my-interest']['data']
-        )
+        self.assertIsNone(self.response.json()['data']['relationships']['my-interest']['data'])
 
     def test_my_interest_persists_after_registration_closed(self):
         interest = InterestFactory.create(user=self.user, activity=self.model)
@@ -861,9 +841,7 @@ class DateSlotMyInterestAPITestCase(APITestCase):
     def test_get_without_interest(self):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertIsNone(
-            self.response.json()['data']['relationships']['my-interest']['data']
-        )
+        self.assertIsNone(self.response.json()['data']['relationships']['my-interest']['data'])
 
     def test_my_interest_persists_after_registration_closed(self):
         interest = InterestFactory.create(
@@ -901,9 +879,7 @@ class InterestDeleteOnJoinAPITestCase(APITestCase):
             activity=activity,
         )
 
-        self.assertFalse(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertFalse(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
     def test_deadline_registration_with_review_still_deletes_interest(self):
         activity = DeadlineActivityFactory.create(
@@ -923,9 +899,7 @@ class InterestDeleteOnJoinAPITestCase(APITestCase):
         )
 
         self.assertEqual(registration.status, 'new')
-        self.assertFalse(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertFalse(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
     def test_date_participant_deletes_slot_interest(self):
         activity = DateActivityFactory.create(
@@ -951,9 +925,7 @@ class InterestDeleteOnJoinAPITestCase(APITestCase):
             slot=slot,
         )
 
-        self.assertFalse(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertFalse(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
     def test_date_participant_does_not_delete_other_slot_interest(self):
         activity = DateActivityFactory.create(
@@ -984,9 +956,7 @@ class InterestDeleteOnJoinAPITestCase(APITestCase):
             slot=slot,
         )
 
-        self.assertTrue(
-            InterestFactory._meta.model.objects.filter(pk=other_interest.pk).exists()
-        )
+        self.assertTrue(InterestFactory._meta.model.objects.filter(pk=other_interest.pk).exists())
 
     def test_schedule_registration_deletes_interest(self):
         activity = ScheduleActivityFactory.create(
@@ -1005,9 +975,7 @@ class InterestDeleteOnJoinAPITestCase(APITestCase):
             activity=activity,
         )
 
-        self.assertFalse(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertFalse(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
     def test_periodic_registration_deletes_interest(self):
         activity = PeriodicActivityFactory.create(
@@ -1026,9 +994,7 @@ class InterestDeleteOnJoinAPITestCase(APITestCase):
             activity=activity,
         )
 
-        self.assertFalse(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertFalse(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
     def test_date_participant_with_review_still_deletes_interest(self):
         activity = DateActivityFactory.create(
@@ -1055,9 +1021,7 @@ class InterestDeleteOnJoinAPITestCase(APITestCase):
         )
 
         self.assertEqual(participant.status, 'new')
-        self.assertFalse(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertFalse(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
 
 class InterestLifecycleIsolationTestCase(APITestCase):
@@ -1080,9 +1044,7 @@ class InterestLifecycleIsolationTestCase(APITestCase):
         activity.states.cancel(save=True)
 
         self.assertEqual(activity.status, 'cancelled')
-        self.assertTrue(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertTrue(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
     def test_succeed_activity_keeps_interest(self):
         activity = DeadlineActivityFactory.create(
@@ -1105,9 +1067,7 @@ class InterestLifecycleIsolationTestCase(APITestCase):
         activity.states.succeed(save=True)
 
         self.assertEqual(activity.status, 'succeeded')
-        self.assertTrue(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertTrue(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
     def test_registration_deadline_lock_keeps_interest(self):
         """
@@ -1135,9 +1095,7 @@ class InterestLifecycleIsolationTestCase(APITestCase):
         activity.states.lock(save=True)
 
         self.assertEqual(activity.status, 'full')
-        self.assertTrue(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertTrue(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
     def test_registration_deadline_expire_keeps_interest(self):
         """
@@ -1161,9 +1119,7 @@ class InterestLifecycleIsolationTestCase(APITestCase):
         activity.states.expire(save=True)
 
         self.assertEqual(activity.status, 'expired')
-        self.assertTrue(
-            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
-        )
+        self.assertTrue(InterestFactory._meta.model.objects.filter(pk=interest.pk).exists())
 
 
 class InterestManagerDeleteAPITestCase(APITestCase):
@@ -1191,9 +1147,7 @@ class InterestManagerDeleteAPITestCase(APITestCase):
     def test_activity_owner_can_delete_interest(self):
         self.perform_delete(user=self.activity.owner)
         self.assertStatus(status.HTTP_204_NO_CONTENT)
-        self.assertFalse(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertFalse(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
     def test_activity_manager_can_delete_interest(self):
         manager = BlueBottleUserFactory.create()
@@ -1201,25 +1155,19 @@ class InterestManagerDeleteAPITestCase(APITestCase):
 
         self.perform_delete(user=manager)
         self.assertStatus(status.HTTP_204_NO_CONTENT)
-        self.assertFalse(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertFalse(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
     def test_staff_can_delete_interest(self):
         staff = BlueBottleUserFactory.create(is_staff=True)
         self.perform_delete(user=staff)
         self.assertStatus(status.HTTP_204_NO_CONTENT)
-        self.assertFalse(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertFalse(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
     def test_unrelated_user_still_cannot_delete(self):
         other = BlueBottleUserFactory.create()
         self.perform_delete(user=other)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
-        self.assertTrue(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertTrue(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
 
 class InterestSlotManagerDeleteAPITestCase(APITestCase):
@@ -1252,9 +1200,7 @@ class InterestSlotManagerDeleteAPITestCase(APITestCase):
     def test_activity_owner_can_delete_slot_interest(self):
         self.perform_delete(user=self.activity.owner)
         self.assertStatus(status.HTTP_204_NO_CONTENT)
-        self.assertFalse(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertFalse(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
     def test_activity_manager_can_delete_slot_interest(self):
         manager = BlueBottleUserFactory.create()
@@ -1262,17 +1208,13 @@ class InterestSlotManagerDeleteAPITestCase(APITestCase):
 
         self.perform_delete(user=manager)
         self.assertStatus(status.HTTP_204_NO_CONTENT)
-        self.assertFalse(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertFalse(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
     def test_staff_can_delete_slot_interest(self):
         staff = BlueBottleUserFactory.create(is_staff=True)
         self.perform_delete(user=staff)
         self.assertStatus(status.HTTP_204_NO_CONTENT)
-        self.assertFalse(
-            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
-        )
+        self.assertFalse(self.factory._meta.model.objects.filter(pk=self.model.pk).exists())
 
 
 class DeadlineInterestRelatedListAPITestCase(APITestCase):
@@ -1292,9 +1234,7 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
             review=False,
             owner=initiative.owner,
         )
-        self.interests = InterestFactory.create_batch(
-            3, activity=self.activity, slot=None
-        )
+        self.interests = InterestFactory.create_batch(3, activity=self.activity, slot=None)
         date_activity = DateActivityFactory.create(
             initiative=initiative,
         )
@@ -1388,30 +1328,19 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
     def test_list_includes_user(self):
         self.perform_get(user=self.activity.owner, query={'include': 'user'})
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTrue(
-            any(
-                item['type'] == 'members'
-                for item in self.response.json().get('included', [])
-            )
-        )
+        self.assertTrue(any(item['type'] == 'members' for item in self.response.json().get('included', [])))
 
     def test_list_includes_user_by_default(self):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
 
-        included_types = {
-            item['type'] for item in self.response.json().get('included', [])
-        }
+        included_types = {item['type'] for item in self.response.json().get('included', [])}
         self.assertIn('members', included_types)
 
         included_member_ids = {
-            item['id']
-            for item in self.response.json().get('included', [])
-            if item['type'] == 'members'
+            item['id'] for item in self.response.json().get('included', []) if item['type'] == 'members'
         }
-        expected_member_ids = {
-            str(interest.user_id) for interest in self.interests
-        }
+        expected_member_ids = {str(interest.user_id) for interest in self.interests}
         self.assertTrue(expected_member_ids.issubset(included_member_ids))
 
 
@@ -1511,9 +1440,7 @@ class DateSlotInterestRelatedListAPITestCase(APITestCase):
             status='full',
             capacity=1,
         )
-        self.interests = InterestFactory.create_batch(
-            2, activity=self.activity, slot=self.slot
-        )
+        self.interests = InterestFactory.create_batch(2, activity=self.activity, slot=self.slot)
         InterestFactory.create(activity=self.activity, slot=None)
         self.url = reverse(self.url_name, args=(self.slot.pk,))
 

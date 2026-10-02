@@ -26,25 +26,17 @@ class PollModelTestCase(BluebottleTestCase):
 
         page = PageFactory.create()
         placeholder = Placeholder.objects.create_for_object(page, 'blog_contents')
-        self.block = PollContent.objects.create_for_placeholder(
-            placeholder, poll=self.poll
-        )
+        self.block = PollContent.objects.create_for_placeholder(placeholder, poll=self.poll)
 
     def test_str_without_active_language(self):
         with override(None):
             self.assertEqual(str(Poll.objects.get(pk=self.poll.pk)), 'Favourite colour')
-            self.assertEqual(
-                str(PollOption.objects.get(pk=self.option.pk)), 'Blue'
-            )
-            self.assertEqual(
-                str(PollContent.objects.get(pk=self.block.pk)), 'Favourite colour'
-            )
+            self.assertEqual(str(PollOption.objects.get(pk=self.option.pk)), 'Blue')
+            self.assertEqual(str(PollContent.objects.get(pk=self.block.pk)), 'Favourite colour')
 
     def test_one_vote_per_user_per_poll(self):
         user = BlueBottleUserFactory.create()
         PollVoteFactory.create(poll=self.poll, option=self.option, owner=user)
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                PollVoteFactory.create(
-                    poll=self.poll, option=self.option, owner=user
-                )
+                PollVoteFactory.create(poll=self.poll, option=self.option, owner=user)

@@ -7,7 +7,6 @@ from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, B
 
 
 class VitepayPaymentProvider(PaymentProvider):
-
     title = 'Vitepay / Orange Money'
     provider = 'vitepay'
 
@@ -18,22 +17,11 @@ class VitepayPaymentProvider(PaymentProvider):
 
     @property
     def payment_methods(self):
-        return [
-            PaymentMethod(
-                provider='vitepay',
-                name='Orange Money',
-                currencies=['XOF'],
-                code='orange_money'
-            )
-        ]
+        return [PaymentMethod(provider='vitepay', name='Orange Money', currencies=['XOF'], code='orange_money')]
 
     @property
     def private_settings(self):
-        return {
-            'api_secret': self.api_secret,
-            'api_key': self.api_key,
-            'api_url': self.api_url
-        }
+        return {'api_secret': self.api_secret, 'api_key': self.api_key, 'api_url': self.api_url}
 
     class Meta(object):
         verbose_name = 'Vitepay payment provider'
@@ -52,7 +40,7 @@ class VitepayPayment(Payment):
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = VitepayPaymentProvider.objects.get()
-            self.unique_id = "{}-{}".format(provider.prefix, self.donation.id)
+            self.unique_id = '{}-{}'.format(provider.prefix, self.donation.id)
         super(VitepayPayment, self).save(*args, **kwargs)
 
 
@@ -73,6 +61,7 @@ class VitepayBankAccount(BankAccount):
         resource_name = 'payout-accounts/vitepay-external-accounts'
 
     def __str__(self):
-        return u"Vitepay Bankaccount {}".format(self.account_name)
+        return 'Vitepay Bankaccount {}'.format(self.account_name)
+
 
 from .states import *  # noqa

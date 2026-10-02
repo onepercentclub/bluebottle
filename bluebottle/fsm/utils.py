@@ -28,15 +28,22 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     PeriodicParticipant,
     DateRegistration,
-    TimeContribution, ScheduleActivity, ScheduleParticipant, DeadlineRegistration, ScheduleRegistration,
-    TeamScheduleRegistration, TeamScheduleParticipant, TeamMember, PeriodicRegistration,
+    TimeContribution,
+    ScheduleActivity,
+    ScheduleParticipant,
+    DeadlineRegistration,
+    ScheduleRegistration,
+    TeamScheduleRegistration,
+    TeamScheduleParticipant,
+    TeamMember,
+    PeriodicRegistration,
 )
 
 
 def get_doc(element):
     if element.__doc__:
-        return re.sub(' +', ' ', element.__doc__.replace("\n", " "))
-    return "{} (documentation missing)".format(str(element)).replace('<', '').replace('>', '')
+        return re.sub(' +', ' ', element.__doc__.replace('\n', ' '))
+    return '{} (documentation missing)'.format(str(element)).replace('<', '').replace('>', '')
 
 
 def has_field(model, field):
@@ -48,40 +55,38 @@ def has_field(model, field):
 
 
 def clean(string):
-    return re.sub(' +', ' ', string.replace("\n", " "))
+    return re.sub(' +', ' ', string.replace('\n', ' '))
 
 
 def setup_instance(model):
     model_args = {}
 
-    if has_field(model, "owner"):
-        model_args["owner"] = Member(email='initiator@example.com')
+    if has_field(model, 'owner'):
+        model_args['owner'] = Member(email='initiator@example.com')
 
-    if has_field(model, "user"):
-        model_args["user"] = Member(email='supporter@example.com')
+    if has_field(model, 'user'):
+        model_args['user'] = Member(email='supporter@example.com')
 
-    instance = model(
-        **model_args
-    )
+    instance = model(**model_args)
 
     if isinstance(instance, Activity) and getattr(instance, 'title', None) is None:
-        instance.title = "[activity title]"
+        instance.title = '[activity title]'
 
     if isinstance(instance, Initiative):
-        instance.title = "[initiative title]"
+        instance.title = '[initiative title]'
 
     if isinstance(instance, Funding):
-        instance.title = "[activity title]"
+        instance.title = '[activity title]'
 
     if isinstance(instance, Donor):
         PledgePayment(donation=instance)
-        instance.activity = Funding(title="[activity title]")
+        instance.activity = Funding(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, MoneyContribution):
         donor = Donor()
-        donor.activity = Funding(title="[activity title]")
+        donor.activity = Funding(title='[activity title]')
         donor.activity.pre_save_polymorphic()
         donor.user = Member(first_name='[first name]', last_name='[last name]')
         PledgePayment(donation=donor)
@@ -91,93 +96,91 @@ def setup_instance(model):
         instance.donation = Donor()
 
     if isinstance(instance, DeadlineActivity):
-        instance.title = "[activity title]"
+        instance.title = '[activity title]'
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DeadlineRegistration):
-        instance.activity = DeadlineActivity(title="[activity title]")
+        instance.activity = DeadlineActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DeadlineParticipant):
-        instance.activity = DeadlineActivity(title="[activity title]")
+        instance.activity = DeadlineActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, ScheduleActivity):
-        instance.title = "[activity title]"
+        instance.title = '[activity title]'
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, ScheduleRegistration):
-        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity = ScheduleActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, ScheduleParticipant):
-        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity = ScheduleActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, Team):
-        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity = ScheduleActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, TeamMember):
-        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity = ScheduleActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.Team = Team(activity=instance.activity)
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, TeamScheduleRegistration):
-        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity = ScheduleActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, TeamScheduleParticipant):
-        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity = ScheduleActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, PeriodicActivity):
-        instance.title = "[activity title]"
+        instance.title = '[activity title]'
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, PeriodicRegistration):
-        instance.activity = PeriodicActivity(title="[activity title]")
+        instance.activity = PeriodicActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, PeriodicParticipant):
-        instance.activity = PeriodicActivity(title="[activity title]")
+        instance.activity = PeriodicActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.registration = PeriodicRegistration(activity=instance.activity)
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivity):
-        instance.title = "[activity title]"
+        instance.title = '[activity title]'
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateRegistration):
-        instance.activity = DateActivity(title="[activity title]")
+        instance.activity = DateActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivitySlot):
-        instance.activity = DateActivity(title="[activity title]")
+        instance.activity = DateActivity(title='[activity title]')
 
     if isinstance(instance, DateParticipant):
-        activity = DateActivity(title="[activity title]")
+        activity = DateActivity(title='[activity title]')
         instance.slot = DateActivitySlot(activity=activity)
         instance.activity = activity
         instance.registration = DateRegistration(activity=activity)
-        instance.registration.user = Member(
-            first_name="[first name]", last_name="[last name]"
-        )
+        instance.registration.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, TimeContribution):
         contributor = DeadlineParticipant()
-        contributor.activity = DeadlineActivity(title="[activity title]")
+        contributor.activity = DeadlineActivity(title='[activity title]')
         contributor.activity.pre_save_polymorphic()
         contributor.user = Member(first_name='[first name]', last_name='[last name]')
         instance.contributor = contributor
@@ -188,20 +191,20 @@ def setup_instance(model):
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, Deed):
-        instance.title = "[activity title]"
+        instance.title = '[activity title]'
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DeedParticipant):
-        instance.activity = Deed(title="[activity title]")
+        instance.activity = Deed(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, CollectActivity):
-        instance.title = "[activity title]"
+        instance.title = '[activity title]'
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, CollectContributor):
-        instance.activity = CollectActivity(title="[activity title]")
+        instance.activity = CollectActivity(title='[activity title]')
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
@@ -212,54 +215,46 @@ def setup_instance(model):
 
 
 def document_model(model):
-    documentation = {
-        'states': [],
-        'transitions': [],
-        'triggers': [],
-        'periodic_tasks': []
-    }
+    documentation = {'states': [], 'transitions': [], 'triggers': [], 'periodic_tasks': []}
 
     instance = setup_instance(model)
 
     machine = instance.states
     for state in list(machine.states.values()):
-        documentation['states'].append({
-            'name': state.name.capitalize(),
-            'description': state.description
-        })
+        documentation['states'].append({'name': state.name.capitalize(), 'description': state.description})
 
     for transition in machine.transitions.values():
         triggers = [
-            trigger for trigger in instance.triggers.triggers
+            trigger
+            for trigger in instance.triggers.triggers
             if isinstance(trigger, TransitionTrigger) and trigger.transition == transition
         ]
         effects = sum([trigger.effects for trigger in triggers], [])
-        documentation['transitions'].append({
-            'name': transition.name,
-            'description': transition.description,
-            'from': [state.name.capitalize() for state in transition.sources],
-            'to': transition.target.name.capitalize(),
-            'manual': "Automatic" if transition.automatic else "Manual",
-            'conditions': [get_doc(condition) for condition in transition.conditions],
-            'effects': [clean(effect(instance).to_html()) for effect in effects]
-
-        })
-    triggers = [
-        trigger for trigger in model.triggers.triggers
-        if not isinstance(trigger, TransitionTrigger)
-    ]
+        documentation['transitions'].append(
+            {
+                'name': transition.name,
+                'description': transition.description,
+                'from': [state.name.capitalize() for state in transition.sources],
+                'to': transition.target.name.capitalize(),
+                'manual': 'Automatic' if transition.automatic else 'Manual',
+                'conditions': [get_doc(condition) for condition in transition.conditions],
+                'effects': [clean(effect(instance).to_html()) for effect in effects],
+            }
+        )
+    triggers = [trigger for trigger in model.triggers.triggers if not isinstance(trigger, TransitionTrigger)]
 
     for trigger in triggers:
-        documentation['triggers'].append({
-            'when': str(trigger),
-            'effects': [clean(effect(instance).to_html()) for effect in trigger.effects]
-        })
+        documentation['triggers'].append(
+            {'when': str(trigger), 'effects': [clean(effect(instance).to_html()) for effect in trigger.effects]}
+        )
 
     for task in model.periodic_tasks:
-        documentation['periodic_tasks'].append({
-            'when': str(task(instance)),
-            'effects': [clean(effect(instance).to_html()) for effect in task(instance).effects]
-        })
+        documentation['periodic_tasks'].append(
+            {
+                'when': str(task(instance)),
+                'effects': [clean(effect(instance).to_html()) for effect in task(instance).effects],
+            }
+        )
 
     return documentation
 
@@ -277,32 +272,35 @@ def document_notifications(model):
             trigger_name = '{} on {}'.format(trigger, instance._meta.verbose_name)
         for effect in trigger.effects:
             if effect.__name__ == '_NotificationEffect':
-                effects.append({
-                    'effect': effect,
-                    'trigger': trigger_name,
-                })
+                effects.append(
+                    {
+                        'effect': effect,
+                        'trigger': trigger_name,
+                    }
+                )
 
     for task in model.periodic_tasks:
         for effect in task(instance).effects:
             if effect.__name__ == '_NotificationEffect':
-                effects.append({
-                    'effect': effect,
-                    'trigger': '{} on {}'.format(task(instance), instance._meta.verbose_name)
-                })
+                effects.append(
+                    {'effect': effect, 'trigger': '{} on {}'.format(task(instance), instance._meta.verbose_name)}
+                )
 
     for eff in effects:
         effect = eff['effect']
         trigger = eff['trigger']
         message = effect.message(instance)
-        messages.append({
-            'class': "{}.{}".format(app, effect.message.__name__),
-            'trigger': trigger,
-            'template': effect.message.template,
-            'description': get_doc(effect.message),
-            'recipients': get_doc(message.get_recipients).capitalize(),
-            'subject': message.generic_subject,
-            'content_text': message.generic_content_text,
-            # 'content_html': message.generic_content_html
-        })
+        messages.append(
+            {
+                'class': '{}.{}'.format(app, effect.message.__name__),
+                'trigger': trigger,
+                'template': effect.message.template,
+                'description': get_doc(effect.message),
+                'recipients': get_doc(message.get_recipients).capitalize(),
+                'subject': message.generic_subject,
+                'content_text': message.generic_content_text,
+                # 'content_html': message.generic_content_html
+            }
+        )
 
     return messages

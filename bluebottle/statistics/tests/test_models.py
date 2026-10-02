@@ -3,15 +3,17 @@ import datetime
 from django.utils import timezone
 from django.test.utils import override_settings
 
-from bluebottle.impact.tests.factories import (
-    ImpactTypeFactory, ImpactGoalFactory
-)
+from bluebottle.impact.tests.factories import ImpactTypeFactory, ImpactGoalFactory
 from bluebottle.statistics.tests.factories import (
-    ManualStatisticFactory, DatabaseStatisticFactory, ImpactStatisticFactory
+    ManualStatisticFactory,
+    DatabaseStatisticFactory,
+    ImpactStatisticFactory,
 )
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateParticipantFactory,
-    DateActivitySlotFactory, DateRegistrationFactory
+    DateActivityFactory,
+    DateParticipantFactory,
+    DateActivitySlotFactory,
+    DateRegistrationFactory,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -35,12 +37,7 @@ class StatisticsModelTestCase(BluebottleTestCase):
     def test_impact(self):
         type = ImpactTypeFactory()
 
-        ImpactGoalFactory.create_batch(
-            5,
-            type=type,
-            target=100,
-            realized=50
-        )
+        ImpactGoalFactory.create_batch(5, type=type, target=100, realized=50)
 
         stat = ImpactStatisticFactory.create(impact_type=type)
 
@@ -49,12 +46,7 @@ class StatisticsModelTestCase(BluebottleTestCase):
     def test_impact_failed(self):
         type = ImpactTypeFactory()
 
-        goals = ImpactGoalFactory.create_batch(
-            5,
-            type=type,
-            target=100,
-            realized=50
-        )
+        goals = ImpactGoalFactory.create_batch(5, type=type, target=100, realized=50)
         activity = goals[0].activity
         activity.status = 'failed'
         activity.save()
@@ -65,15 +57,11 @@ class StatisticsModelTestCase(BluebottleTestCase):
 
     def test_database(self):
         initiative = InitiativeFactory.create()
-        activity = DateActivityFactory.create(
-            initiative=initiative,
-            owner=initiative.owner,
-            slots=[]
-        )
+        activity = DateActivityFactory.create(initiative=initiative, owner=initiative.owner, slots=[])
         slot = DateActivitySlotFactory.create(
             activity=activity,
             start=timezone.now() - datetime.timedelta(hours=1),
-            duration=datetime.timedelta(minutes=6)
+            duration=datetime.timedelta(minutes=6),
         )
 
         initiative.states.submit(save=True)
@@ -83,9 +71,7 @@ class StatisticsModelTestCase(BluebottleTestCase):
 
         registrations = DateRegistrationFactory.create_batch(5, activity=activity)
         for registration in registrations:
-            DateParticipantFactory.create(
-                slot=slot, activity=activity, registration=registration
-            )
+            DateParticipantFactory.create(slot=slot, activity=activity, registration=registration)
 
         stat = DatabaseStatisticFactory.create(name='Test', query='people_involved')
 

@@ -2,9 +2,13 @@ from django.urls import path
 from django.urls import re_path
 
 from bluebottle.updates.views import (
-    UpdateList, UpdateDetail, ActivityUpdateList,
-    UpdateImageContent, UpdateImageList,
-    UpdateDocumentContent, UpdateDocumentList,
+    UpdateList,
+    UpdateDetail,
+    ActivityUpdateList,
+    UpdateImageContent,
+    UpdateImageList,
+    UpdateDocumentContent,
+    UpdateDocumentList,
 )
 
 urlpatterns = [
@@ -13,16 +17,6 @@ urlpatterns = [
     path('<int:pk>', UpdateDetail.as_view(), name='update-detail'),
     path('images/', UpdateImageList.as_view(), name='update-image-list'),
     path('documents/', UpdateDocumentList.as_view(), name='update-document-list'),
-
-
-    re_path(
-        r'^(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
-        UpdateImageContent.as_view(),
-        name='update-image'
-    ),
-    re_path(
-        r'^(?P<pk>\d+)/document/$',
-        UpdateDocumentContent.as_view(),
-        name='update-document'
-    ),
+    re_path(r'^(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$', UpdateImageContent.as_view(), name='update-image'),
+    re_path(r'^(?P<pk>\d+)/document/$', UpdateDocumentContent.as_view(), name='update-document'),
 ]

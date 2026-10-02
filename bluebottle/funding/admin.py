@@ -21,12 +21,7 @@ from past.utils import old_div
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import (
-    ActivityChildAdmin,
-    ActivityForm,
-    ContributionChildAdmin,
-    ContributorChildAdmin
-)
+from bluebottle.activities.admin import ActivityChildAdmin, ActivityForm, ContributionChildAdmin, ContributorChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import (
     StateMachineAdmin,
@@ -55,7 +50,8 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward, IbanCheck,
+    Reward,
+    IbanCheck,
 )
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
@@ -87,11 +83,14 @@ logger = logging.getLogger(__name__)
 
 
 class PaymentLinkMixin(object):
-
     def payment_link(self, obj):
-        payment_url = reverse('admin:{}_{}_change'.format(
-            obj.payment._meta.app_label, obj.payment._meta.model_name,
-        ), args=(obj.payment.id,))
+        payment_url = reverse(
+            'admin:{}_{}_change'.format(
+                obj.payment._meta.app_label,
+                obj.payment._meta.model_name,
+            ),
+            args=(obj.payment.id,),
+        )
         return format_html('<a href="{}">{}</a>', payment_url, obj.payment)
 
     payment_link.short_description = _('Payment')
@@ -111,7 +110,7 @@ class RewardInline(admin.TabularInline):
 
     def link(self, obj):
         url = reverse('admin:funding_reward_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.title)
+        return format_html('<a href="{}">{}</a>', url, obj.title)
 
 
 @admin.register(Reward)
@@ -131,16 +130,22 @@ class CurrencyFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            (cur, get_currency_symbol(cur)) for cur in
-            Funding.objects.values_list('target_currency', flat=True).distinct()
+            (cur, get_currency_symbol(cur))
+            for cur in Funding.objects.values_list('target_currency', flat=True).distinct()
         ]
 
 
 class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
     model = Payout
     readonly_fields = [
-        'payout_link', 'total_amount', 'status', 'provider', 'currency',
-        'date_approved', 'date_started', 'date_completed'
+        'payout_link',
+        'total_amount',
+        'status',
+        'provider',
+        'currency',
+        'date_approved',
+        'date_started',
+        'date_completed',
     ]
     fields = readonly_fields
     extra = 0
@@ -151,17 +156,20 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     def payout_link(self, obj):
         url = reverse('admin:funding_payout_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj)
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 class FundingAdminForm(ActivityForm):
-
     def clean(self):
         clean = super(FundingAdminForm, self).clean()
         donation = self.instance.donations.filter(status='succeeded').order_by('created').first()
         if donation and clean['deadline'] > donation.created + timedelta(days=76):
-            message = str(_("Can't extend a deadline to more then 75 days from the first donation, which was {date}. "
-                            "Maximum deadline is {deadline}"))
+            message = str(
+                _(
+                    "Can't extend a deadline to more then 75 days from the first donation, which was {date}. "
+                    'Maximum deadline is {deadline}'
+                )
+            )
             message = message.format(
                 date=str(donation.created.date()),
                 deadline=str(donation.created.date() + timedelta(days=75)),
@@ -186,26 +194,26 @@ class FundingAdmin(ActivityChildAdmin):
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
 
     detail_fields = (
-        "title",
-        "description",
-        "image",
-        "video_url",
-        "theme",
-        "impact_location",
-        "categories",
-        "organization",
+        'title',
+        'description',
+        'image',
+        'video_url',
+        'theme',
+        'impact_location',
+        'categories',
+        'organization',
     )
 
     status_fields = (
-        "initiative",
-        "owner",
-        "slug",
-        "highlight",
-        "created",
-        "updated",
-        "has_deleted_data",
-        "status",
-        "states",
+        'initiative',
+        'owner',
+        'slug',
+        'highlight',
+        'created',
+        'updated',
+        'has_deleted_data',
+        'status',
+        'states',
     )
 
     campaign_fields = (
@@ -223,43 +231,38 @@ class FundingAdmin(ActivityChildAdmin):
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.load()
         fieldsets = [
-            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
-            (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
-            (_("Date & amount"), {"fields": self.campaign_fields}),
-            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
+            (_('Management'), {'fields': self.get_status_fields(request, obj)}),
+            (_('Information'), {'fields': self.get_detail_fields(request, obj)}),
+            (_('Date & amount'), {'fields': self.campaign_fields}),
+            (_('Activity Pub'), {'fields': self.get_activity_pub_fields(request, obj)}),
         ]
         if Location.objects.count():
             if settings.enable_office_restrictions:
-                if "office_restriction" not in self.office_fields:
-                    self.office_fields += ("office_restriction",)
-                fieldsets.append((_("Work location"), {"fields": self.office_fields}))
+                if 'office_restriction' not in self.office_fields:
+                    self.office_fields += ('office_restriction',)
+                fieldsets.append((_('Work location'), {'fields': self.office_fields}))
 
         if request.user.is_superuser:
-            fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
+            fieldsets.append((_('Super admin'), {'fields': ('force_status',)}))
 
         if SegmentType.objects.exists():
             fieldsets.append(
                 (
-                    _("Segments"),
-                    {
-                        "fields": [
-                            segment_type.field_name
-                            for segment_type in SegmentType.objects.all()
-                        ]
-                    },
+                    _('Segments'),
+                    {'fields': [segment_type.field_name for segment_type in SegmentType.objects.all()]},
                 )
             )
         return fieldsets
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
-        'amount_donated', 'amount_raised',
-        'donors_link', 'started', 'team_activity'
+        'amount_donated',
+        'amount_raised',
+        'donors_link',
+        'started',
+        'team_activity',
     ]
 
-    list_display = ActivityChildAdmin.list_display + [
-        'deadline', 'percentage_donated', 'percentage_matching'
-
-    ]
+    list_display = ActivityChildAdmin.list_display + ['deadline', 'percentage_donated', 'percentage_matching']
 
     def percentage_donated(self, obj):
         if obj.target and obj.target.amount and obj.amount_donated.amount:
@@ -314,7 +317,7 @@ class FundingAdmin(ActivityChildAdmin):
         total = obj.donations.filter(status=DonorStateMachine.succeeded.value).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
 
-    donors_link.short_description = _("Donations")
+    donors_link.short_description = _('Donations')
 
 
 class DonorAdminForm(StateMachineModelForm):
@@ -352,11 +355,12 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
 
     raw_id_fields = ['activity', 'payout', 'user']
     readonly_fields = ContributorChildAdmin.readonly_fields + [
-        'amount_value', 'payout_amount_value',
-        'payment_link', 'sync_payment_link'
+        'amount_value',
+        'payout_amount_value',
+        'payment_link',
+        'sync_payment_link',
     ]
-    list_display = ['created', 'payment_link', 'activity_link', 'user_link',
-                    'state_name', 'amount', 'payout_amount']
+    list_display = ['created', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', 'payout_amount']
     list_filter = [
         DonorAdminStatusFilter,
         DonorAdminCurrencyFilter,
@@ -364,21 +368,22 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     ]
     date_hierarchy = 'created'
 
-    inlines = [
-        UpdateInline
-    ]
+    inlines = [UpdateInline]
 
-    superadmin_fields = [
-        'force_status',
-        'amount',
-        'payout_amount',
-        'sync_payment_link'
-    ]
+    superadmin_fields = ['force_status', 'amount', 'payout_amount', 'sync_payment_link']
 
     fields = [
-        'created', 'activity', 'payout', 'user',
-        'amount_value', 'payout_amount_value',
-        'reward', 'anonymous', 'name', 'status', 'payment_link'
+        'created',
+        'activity',
+        'payout',
+        'user',
+        'amount_value',
+        'payout_amount_value',
+        'reward',
+        'anonymous',
+        'name',
+        'status',
+        'payment_link',
     ]
 
     export_to_csv_fields = (
@@ -397,7 +402,10 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
 
     def get_exclude(self, request, obj=None):
         if not request.user.is_superuser:
-            return ('amount', 'payout_amount',)
+            return (
+                'amount',
+                'payout_amount',
+            )
         else:
             return []
 
@@ -420,7 +428,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
             return format_html('<i style="color: #999">anonymous</i>')
         if obj.user:
             user_url = reverse('admin:members_member_change', args=(obj.user.id,))
-            return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)
+            return format_html('<a href="{}">{}</a>', user_url, obj.user.full_name)
         return format_html('<i style="color: #999">guest</i>')
 
     user_link.short_description = _('User')
@@ -445,19 +453,10 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
             payment_intent = PaymentIntent.objects.filter(donation_id=pk).get()
             payment = payment_intent.get_payment()
             payment.update()
-            self.message_user(
-                request,
-                'Status checked',
-                level='INFO'
-            )
+            self.message_user(request, 'Status checked', level='INFO')
         except PaymentException as e:
-            self.message_user(
-                request,
-                'Error checking status {}'.format(e),
-                level='WARNING'
-            )
-        donation_url = reverse('admin:funding_donor_change'.format(
-        ), args=(pk,))
+            self.message_user(request, 'Error checking status {}'.format(e), level='WARNING')
+        donation_url = reverse('admin:funding_donor_change'.format(), args=(pk,))
         response = HttpResponseRedirect(donation_url)
         return response
 
@@ -476,20 +475,16 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     fields = ['donation', 'states'] + readonly_fields
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = (
-            (_('Basic'), {'fields': self.get_fields(request, obj)}),
-        )
+        fieldsets = ((_('Basic'), {'fields': self.get_fields(request, obj)}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': ['force_status']}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': ['force_status']}),)
         return fieldsets
 
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()
         process_urls = [
-            path('<int:pk>/check/', self.check_status, name="funding_payment_check"),
-            path('<int:pk>/refund/', self.refund, name="funding_payment_refund"),
+            path('<int:pk>/check/', self.check_status, name='funding_payment_check'),
+            path('<int:pk>/refund/', self.refund, name='funding_payment_refund'),
         ]
         return process_urls + urls
 
@@ -498,22 +493,18 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         try:
             payment.update()
         except PaymentException as e:
-            self.message_user(
-                request,
-                'Error checking status {}'.format(e),
-                level='WARNING'
-            )
-        payment_url = reverse('admin:{}_{}_change'.format(
-            payment._meta.app_label, payment._meta.model_name,
-        ), args=(payment.id,))
+            self.message_user(request, 'Error checking status {}'.format(e), level='WARNING')
+        payment_url = reverse(
+            'admin:{}_{}_change'.format(
+                payment._meta.app_label,
+                payment._meta.model_name,
+            ),
+            args=(payment.id,),
+        )
         response = HttpResponseRedirect(payment_url)
         return response
 
-    @confirmation_form(
-        RefundConfirmationForm,
-        Payment,
-        'admin/payments/refund_confirmation.html'
-    )
+    @confirmation_form(RefundConfirmationForm, Payment, 'admin/payments/refund_confirmation.html')
     def refund(self, request, val=None):
         if isinstance(val, Payment):
             payment = val
@@ -522,11 +513,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         try:
             payment.states.request_refund(save=True)
         except PaymentException as e:
-            self.message_user(
-                request,
-                'Error checking status {}'.format(e),
-                level='WARNING'
-            )
+            self.message_user(request, 'Error checking status {}'.format(e), level='WARNING')
         payment_url = reverse('admin:funding_payment_change', args=(payment.id,))
         response = HttpResponseRedirect(payment_url)
         return response
@@ -556,7 +543,7 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
         VitepayPayment,
         TelesomPayment,
         LegacyPayment,
-        PledgePayment
+        PledgePayment,
     )
 
 
@@ -577,9 +564,12 @@ class PaymentProviderChildAdmin(PolymorphicChildModelAdmin):
     def get_fieldsets(self, request, obj=None):
         provider = self.model._meta.verbose_name
         return (
-            (provider, {
-                'fields': self.get_fields(request, obj),
-            }),
+            (
+                provider,
+                {
+                    'fields': self.get_fields(request, obj),
+                },
+            ),
         )
 
 
@@ -601,13 +591,16 @@ class PayoutAccountActivityLinkMixin(object):
             fundings = obj.funding_set.all()
 
         if len(fundings):
-            return format_html(", ".join([
-                format_html(
-                    u"<a href='{}'>{}</a>",
-                    reverse('admin:funding_funding_change', args=(p.id,)),
-                    p.title
-                ) for p in fundings
-            ]))
+            return format_html(
+                ', '.join(
+                    [
+                        format_html(
+                            "<a href='{}'>{}</a>", reverse('admin:funding_funding_change', args=(p.id,)), p.title
+                        )
+                        for p in fundings
+                    ]
+                )
+            )
         else:
             return _('None')
 
@@ -615,18 +608,24 @@ class PayoutAccountActivityLinkMixin(object):
 
     def grant_application_links(self, obj):
         from bluebottle.grant_management.models import GrantApplication
+
         if isinstance(obj, PayoutAccount):
             grant_applications = GrantApplication.objects.filter(bank_account__connect_account=obj).all()
         else:
             grant_applications = obj.grant_application_set.all()
         if len(grant_applications):
-            return format_html(", ".join([
-                format_html(
-                    u"<a href='{}'>{}</a>",
-                    reverse('admin:grant_management_grantapplication_change', args=(p.id,)),
-                    p.title
-                ) for p in grant_applications
-            ]))
+            return format_html(
+                ', '.join(
+                    [
+                        format_html(
+                            "<a href='{}'>{}</a>",
+                            reverse('admin:grant_management_grantapplication_change', args=(p.id,)),
+                            p.title,
+                        )
+                        for p in grant_applications
+                    ]
+                )
+            )
         else:
             return _('None')
 
@@ -650,7 +649,10 @@ class PayoutAccountChildAdmin(PayoutAccountActivityLinkMixin, PolymorphicChildMo
         return fields
 
     def get_status_fields(self, request, obj):
-        return ['status', 'created', ]
+        return [
+            'status',
+            'created',
+        ]
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -658,9 +660,7 @@ class PayoutAccountChildAdmin(PayoutAccountActivityLinkMixin, PolymorphicChildMo
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': ['force_status']}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': ['force_status']}),)
         return fieldsets
 
 
@@ -671,10 +671,7 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True
-    search_fields = [
-        'stripepayoutaccount__account_id',
-        'owner__first_name', 'owner__last_name', 'owner__email'
-    ]
+    search_fields = ['stripepayoutaccount__account_id', 'owner__first_name', 'owner__last_name', 'owner__email']
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,
@@ -684,13 +681,8 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
 class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMixin, PolymorphicChildModelAdmin):
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
-    readonly_fields = (
-        'document', 'funding_links', 'grant_application_links', 'created', 'updated'
-    )
-    fields = (
-        'connect_account', 'document',
-        'status', 'states', 'created', 'updated'
-    )
+    readonly_fields = ('document', 'funding_links', 'grant_application_links', 'created', 'updated')
+    fields = ('connect_account', 'document', 'status', 'states', 'created', 'updated')
 
     def get_fields(self, request, obj):
         fields = list(super().get_fields(request, obj))
@@ -705,20 +697,18 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
 
     def document(self, obj):
         if (
-            obj.connect_account and
-            isinstance(obj.connect_account, PlainPayoutAccount) and
-            obj.connect_account.document and
-            obj.connect_account.document.file
+            obj.connect_account
+            and isinstance(obj.connect_account, PlainPayoutAccount)
+            and obj.connect_account.document
+            and obj.connect_account.document.file
         ):
-            template = loader.get_template(
-                'admin/document_button.html'
-            )
+            template = loader.get_template('admin/document_button.html')
             if 'localhost' in connection.tenant.domain_url:
                 download_url = obj.connect_account.document.file.url
             else:
                 download_url = reverse_signed('kyc-document', args=(obj.connect_account.id,))
             return template.render({'document_url': download_url})
-        return "_"
+        return '_'
 
 
 @admin.register(IbanCheck)
@@ -740,14 +730,15 @@ class IbanCheckAdmin(admin.ModelAdmin):
     def pretty_result(self, obj):
         """Render result JSON with indentation for readability."""
         if not obj.result:
-            return "-"
+            return '-'
         try:
             data = obj.result if isinstance(obj.result, dict) else json.loads(obj.result)
         except (TypeError, ValueError):
             return obj.result
         formatted = json.dumps(data, indent=2, sort_keys=True)
-        return format_html('<div style="display:flex-table"><pre style="white-space: pre-wrap;">{}</pre></div>',
-                           formatted)
+        return format_html(
+            '<div style="display:flex-table"><pre style="white-space: pre-wrap;">{}</pre></div>', formatted
+        )
 
     pretty_result.short_description = 'Response'
 
@@ -759,10 +750,11 @@ class BankAccountAdmin(PayoutAccountActivityLinkMixin, PolymorphicParentModelAdm
     list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
-    search_fields = ['externalaccount__account_id',
-                     'flutterwavebankaccount__account_holder_name',
-                     'pledgebankaccount__account_holder_name',
-                     ]
+    search_fields = [
+        'externalaccount__account_id',
+        'flutterwavebankaccount__account_holder_name',
+        'pledgebankaccount__account_holder_name',
+    ]
 
     def public(self, obj):
         return obj.connect_account and obj.connect_account.public
@@ -797,15 +789,13 @@ class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
 
     def document_link(self, obj):
         if obj.document and obj.document.file:
-            template = loader.get_template(
-                'admin/document_button.html'
-            )
+            template = loader.get_template('admin/document_button.html')
             if 'localhost' in connection.tenant.domain_url:
                 download_url = obj.document.file.url
             else:
                 download_url = reverse_signed('kyc-document', args=(obj.id,))
             return template.render({'document_url': download_url})
-        return "_"
+        return '_'
 
 
 class DonorInline(PaymentLinkMixin, admin.TabularInline):
@@ -832,7 +822,7 @@ class PayoutAdmin(StateMachineAdmin):
         'provider',
         'date_approved',
         'date_started',
-        'date_completed'
+        'date_completed',
     ]
     list_display = ['created', 'activity_link', 'status']
     list_filter = ['status']
@@ -855,27 +845,21 @@ class PayoutAdmin(StateMachineAdmin):
 
     def account_link(self, obj):
         url = reverse('admin:funding_bankaccount_change', args=(obj.activity.bank_account.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.activity.bank_account)
+        return format_html('<a href="{}">{}</a>', url, obj.activity.bank_account)
 
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.activity)
+        return format_html('<a href="{}">{}</a>', url, obj.activity)
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = (
-            (_('Basic'), {'fields': self.get_fields(request, obj)}),
-        )
+        fieldsets = ((_('Basic'), {'fields': self.get_fields(request, obj)}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': ['force_status']}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': ['force_status']}),)
         return fieldsets
 
 
 @admin.register(FundingPlatformSettings)
 class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
     def get_form(self, request, obj=None, **kwargs):
-        kwargs['widgets'] = {
-            'matching_name': forms.TextInput(attrs={'placeholder': connection.tenant.name})
-        }
+        kwargs['widgets'] = {'matching_name': forms.TextInput(attrs={'placeholder': connection.tenant.name})}
         return super().get_form(request, obj, **kwargs)

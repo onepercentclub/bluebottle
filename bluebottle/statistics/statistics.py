@@ -18,7 +18,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     DeadlineActivity,
     ScheduleActivity,
-    TimeContribution
+    TimeContribution,
 )
 from bluebottle.utils.exchange_rates import convert
 
@@ -46,19 +46,12 @@ class Statistics(object):
         return Q(**filter_args)
 
     def filter_activities(self, model, date_field, statuses):
-        activities = model.objects.filter(
-            self.date_filter(date_field),
-            status__in=statuses
-        )
+        activities = model.objects.filter(self.date_filter(date_field), status__in=statuses)
         if self.subregion:
-            activities = activities.filter(
-                office_location__subregion=self.subregion
-            )
+            activities = activities.filter(office_location__subregion=self.subregion)
 
         if self.region:
-            activities = activities.filter(
-                office_location__subregion__region=self.region
-            )
+            activities = activities.filter(office_location__subregion__region=self.region)
         return activities
 
     @property
@@ -67,53 +60,58 @@ class Statistics(object):
         The (unique) total number of people that donated, fundraised, campaigned, or was a
         task owner or  member.
         """
-        contributor_ids = Contributor.objects.filter(
-            self.date_filter('contributions__start'),
-            user_id__isnull=False,
-            status__in=('new', 'accepted', 'active', 'succeeded')
-        ).order_by(
-            'user__id'
-        ).distinct('user').values_list('user_id', flat=True)
+        contributor_ids = (
+            Contributor.objects.filter(
+                self.date_filter('contributions__start'),
+                user_id__isnull=False,
+                status__in=('new', 'accepted', 'active', 'succeeded'),
+            )
+            .order_by('user__id')
+            .distinct('user')
+            .values_list('user_id', flat=True)
+        )
 
-        initiative_owner_ids = Initiative.objects.filter(
-            self.date_filter('created'),
-            status='approved'
-        ).order_by(
-            'owner__id'
-        ).distinct('owner').values_list('owner_id', flat=True)
+        initiative_owner_ids = (
+            Initiative.objects.filter(self.date_filter('created'), status='approved')
+            .order_by('owner__id')
+            .distinct('owner')
+            .values_list('owner_id', flat=True)
+        )
 
-        activity_owner_ids = Activity .objects.filter(
-            self.date_filter('created'),
-            status__in=[
-                'open', 'full', 'registration_closed', 'running',
-                'succeeded', 'partially_funded'
-            ]
-        ).order_by(
-            'owner__id'
-        ).distinct('owner').values_list('owner_id', flat=True)
+        activity_owner_ids = (
+            Activity.objects.filter(
+                self.date_filter('created'),
+                status__in=['open', 'full', 'registration_closed', 'running', 'succeeded', 'partially_funded'],
+            )
+            .order_by('owner__id')
+            .distinct('owner')
+            .values_list('owner_id', flat=True)
+        )
 
         people_count = len(set(contributor_ids) | set(initiative_owner_ids) | set(activity_owner_ids))
 
         # Add anonymous donations
-        people_count += len(Contributor.objects.filter(
-            self.date_filter('contributor_date'),
-            user_id=None,
-            status='succeeded'
-        ))
+        people_count += len(
+            Contributor.objects.filter(self.date_filter('contributor_date'), user_id=None, status='succeeded')
+        )
 
         # Add donations on behalf of another person
-        people_count += len(Donor.objects.filter(
-            self.date_filter('contributor_date'),
-            user_id__isnull=False,
-            status='succeeded',
-            name__isnull=False,
-        ).order_by('name').distinct('name'))
+        people_count += len(
+            Donor.objects.filter(
+                self.date_filter('contributor_date'),
+                user_id__isnull=False,
+                status='succeeded',
+                name__isnull=False,
+            )
+            .order_by('name')
+            .distinct('name')
+        )
 
         return people_count
 
     @property
     def time_activities_succeeded(self):
-        """ Total number of succeeded tasks """
+        """Total number of succeeded tasks"""
 
         activity_filters = [
             (DateActivity, 'slots__start'),
@@ -123,52 +121,39 @@ class Statistics(object):
         ]
 
         return sum(
-            len(self.filter_activities(model, date_field, ['succeeded']))
-            for model, date_field in activity_filters
+            len(self.filter_activities(model, date_field, ['succeeded'])) for model, date_field in activity_filters
         )
 
     @property
     def fundings_succeeded(self):
-        """ Total number of succeeded tasks """
-        tasks = Funding.objects.filter(
-            self.date_filter('deadline'),
-            status='succeeded'
-        )
+        """Total number of succeeded tasks"""
+        tasks = Funding.objects.filter(self.date_filter('deadline'), status='succeeded')
         return len(tasks)
 
     @property
     def deeds_succeeded(self):
-        """ Total number of succeeded tasks """
-        return len(Deed.objects.filter(
-            self.date_filter('start'),
-            status='succeeded'
-        ))
+        """Total number of succeeded tasks"""
+        return len(Deed.objects.filter(self.date_filter('start'), status='succeeded'))
 
     @property
     def time_activities_online(self):
-        """ Total number of online tasks """
+        """Total number of online tasks"""
 
     @property
     def deeds_online(self):
-        """ Total number of online tasks """
+        """Total number of online tasks"""
 
-        return len(Deed.objects.filter(
-            self.date_filter('start'),
-            status__in=('open', 'full', 'running')
-        ))
+        return len(Deed.objects.filter(self.date_filter('start'), status__in=('open', 'full', 'running')))
 
     @property
     def fundings_online(self):
-        """ Total number of succeeded tasks """
-        fundings = Funding.objects.filter(
-            self.date_filter('transition_date'),
-            status='open'
-        )
+        """Total number of succeeded tasks"""
+        fundings = Funding.objects.filter(self.date_filter('transition_date'), status='open')
         return len(fundings)
 
     @property
     def activities_succeeded(self):
-        """ Total number of succeeded tasks """
+        """Total number of succeeded tasks"""
 
         activity_filters = [
             (DateActivity, 'slots__start'),
@@ -181,8 +166,7 @@ class Statistics(object):
         ]
 
         return sum(
-            len(self.filter_activities(model, date_field, ['succeeded']))
-            for model, date_field in activity_filters
+            len(self.filter_activities(model, date_field, ['succeeded'])) for model, date_field in activity_filters
         )
 
     @property
@@ -200,17 +184,13 @@ class Statistics(object):
         ]
 
         return sum(
-            len(
-                self.filter_activities(
-                    model, date_field, ['open', 'full', 'registration_closed', 'running']
-                )
-            )
+            len(self.filter_activities(model, date_field, ['open', 'full', 'registration_closed', 'running']))
             for model, date_field in activity_filters
         )
 
     @property
     def donated_total(self):
-        """ Total amount donated to all activities"""
+        """Total amount donated to all activities"""
         donations = Donor.objects.filter(
             self.date_filter('created'),
             status='succeeded',
@@ -228,22 +208,15 @@ class Statistics(object):
 
     @property
     def time_spent(self):
-        """ Total amount of time spent on realized tasks """
-        contributions = TimeContribution.objects.filter(
-            self.date_filter('start'),
-            status='succeeded'
-        )
+        """Total amount of time spent on realized tasks"""
+        contributions = TimeContribution.objects.filter(self.date_filter('start'), status='succeeded')
         if self.user:
             contributions = contributions.filter(contributor__user=self.user)
         if self.subregion:
-            contributions = contributions.filter(
-                contributor__user__location__subregion=self.subregion
-            )
+            contributions = contributions.filter(contributor__user__location__subregion=self.subregion)
 
         if self.region:
-            contributions = contributions.filter(
-                contributor__user__location__subregion__region=self.region
-            )
+            contributions = contributions.filter(contributor__user__location__subregion__region=self.region)
 
         contributions = contributions.aggregate(time_spent=Sum('value'))
         if contributions['time_spent']:
@@ -252,23 +225,19 @@ class Statistics(object):
 
     @property
     def deeds_done(self):
-        """ Total amount of time spent on realized tasks """
+        """Total amount of time spent on realized tasks"""
         efforts = EffortContribution.objects.filter(
             self.date_filter('start'),
             contributor__polymorphic_ctype=ContentType.objects.get_for_model(DeedParticipant),
-            status='succeeded'
+            status='succeeded',
         )
         if self.user:
             efforts = efforts.filter(contributor__user=self.user)
         if self.subregion:
-            efforts = efforts.filter(
-                contributor__user__location__subregion=self.subregion
-            )
+            efforts = efforts.filter(contributor__user__location__subregion=self.subregion)
 
         if self.region:
-            efforts = efforts.filter(
-                contributor__user__location__subregion__region=self.region
-            )
+            efforts = efforts.filter(contributor__user__location__subregion__region=self.region)
         return efforts.count()
 
     @property
@@ -276,61 +245,47 @@ class Statistics(object):
         efforts = CollectContribution.objects.filter(
             self.date_filter('start'),
             contributor__polymorphic_ctype=ContentType.objects.get_for_model(CollectContributor),
-            status='succeeded'
+            status='succeeded',
         )
         if self.user:
             efforts = efforts.filter(contributor__user=self.user)
         if self.subregion:
-            efforts = efforts.filter(
-                contributor__user__location__subregion=self.subregion
-            )
+            efforts = efforts.filter(contributor__user__location__subregion=self.subregion)
 
         if self.region:
-            efforts = efforts.filter(
-                contributor__user__location__subregion__region=self.region
-            )
+            efforts = efforts.filter(contributor__user__location__subregion__region=self.region)
         return efforts.count()
 
     @property
     def activity_participants(self):
-        """ Total number of realized task members """
-        contributions = TimeContribution.objects.filter(
-            self.date_filter('start'),
-            status='succeeded'
-        )
+        """Total number of realized task members"""
+        contributions = TimeContribution.objects.filter(self.date_filter('start'), status='succeeded')
 
         if self.subregion:
-            contributions = contributions.filter(
-                contributor__user__location__subregion=self.subregion
-            )
+            contributions = contributions.filter(contributor__user__location__subregion=self.subregion)
 
         if self.region:
-            contributions = contributions.filter(
-                contributor__user__location__subregion__region=self.region
-            )
+            contributions = contributions.filter(contributor__user__location__subregion__region=self.region)
 
         contributions = contributions.aggregate(count=Count('contributor__user', distinct=True))
         return contributions['count'] or 0
 
     @property
     def donations(self):
-        """ Total number of realized task members """
-        donations = Donor.objects.filter(
-            self.date_filter('contributor_date'),
-            status='succeeded'
-        )
+        """Total number of realized task members"""
+        donations = Donor.objects.filter(self.date_filter('contributor_date'), status='succeeded')
 
         return len(donations)
 
     @property
     def amount_matched(self):
-        """ Total amount matched on realized (done and incomplete) activities """
-        totals = Funding.objects.filter(
-            self.date_filter('transition_date'),
-            status__in=['succeeded', 'open', 'partial']
-        ).filter(
-            amount_matching__gt=0
-        ).values('amount_matching_currency').annotate(total=Sum('amount_matching'))
+        """Total amount matched on realized (done and incomplete) activities"""
+        totals = (
+            Funding.objects.filter(self.date_filter('transition_date'), status__in=['succeeded', 'open', 'partial'])
+            .filter(amount_matching__gt=0)
+            .values('amount_matching_currency')
+            .annotate(total=Sum('amount_matching'))
+        )
 
         amounts = [Money(total['total'], total['amount_matching_currency']) for total in totals]
         if totals:
@@ -340,34 +295,22 @@ class Statistics(object):
 
     @property
     def participants(self):
-        """ Total numbers of participants (members that started a initiative, or where a realized task member) """
-        initiative_owners = Initiative.objects.filter(
-            self.date_filter('created'),
-            status='approved'
-        ).distinct('owner')
+        """Total numbers of participants (members that started a initiative, or where a realized task member)"""
+        initiative_owners = Initiative.objects.filter(self.date_filter('created'), status='approved').distinct('owner')
 
         if self.subregion:
-            initiative_owners = initiative_owners.filter(
-                owner__location__subregion=self.subregion
-            )
+            initiative_owners = initiative_owners.filter(owner__location__subregion=self.subregion)
 
         if self.region:
-            initiative_owners = initiative_owners.filter(
-                owner__location__subregion__region=self.region
-            )
+            initiative_owners = initiative_owners.filter(owner__location__subregion__region=self.region)
 
         return initiative_owners.count() + self.activity_participants
 
     @property
     def pledged_total(self):
-        """ Total amount of pledged donations """
-        donations = PledgePayment.objects.filter(
-            self.date_filter('created'),
-            donation__status='succeeded'
-        )
-        totals = donations.values(
-            'donation__amount_currency'
-        ).annotate(total=Sum('donation__amount'))
+        """Total amount of pledged donations"""
+        donations = PledgePayment.objects.filter(self.date_filter('created'), donation__status='succeeded')
+        totals = donations.values('donation__amount_currency').annotate(total=Sum('donation__amount'))
 
         amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
         if totals:
@@ -379,11 +322,8 @@ class Statistics(object):
 
     @property
     def members(self):
-        """ Total amount of members."""
-        members = Member.objects.filter(
-            self.date_filter('date_joined'),
-            is_active=True
-        )
+        """Total amount of members."""
+        members = Member.objects.filter(self.date_filter('date_joined'), is_active=True)
         if self.subregion:
             members = members.filter(location__subregion=self.subregion)
 

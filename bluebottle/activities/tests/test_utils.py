@@ -17,9 +17,7 @@ from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateActivitySlotFactory, ScheduleSlotFactory
-)
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, ScheduleSlotFactory
 from bluebottle.utils.utils import to_text
 
 
@@ -31,23 +29,15 @@ class BulkAddParticipantTestCase(TestCase):
         self.member = BlueBottleUserFactory.create(email=self.emails[0])
 
     def assertParticipant(self, email):
-        self.assertTrue(
-            DeedParticipant.objects.filter(
-                user__email=email, activity=self.activity
-            ).exists()
-        )
+        self.assertTrue(DeedParticipant.objects.filter(user__email=email, activity=self.activity).exists())
 
     def assertNotExists(self, email):
-        self.assertFalse(
-            Member.objects.filter(email=email).exists()
-        )
+        self.assertFalse(Member.objects.filter(email=email).exists())
 
     def test_bulk_add(self):
         result = bulk_add_participants(self.activity, self.emails, False)
 
-        self.assertEqual(result, {
-            'added': 1, 'existing': 0, 'failed': 2, 'created': 0
-        })
+        self.assertEqual(result, {'added': 1, 'existing': 0, 'failed': 2, 'created': 0})
 
         for email in self.emails[1:]:
             self.assertNotExists(email)
@@ -58,22 +48,16 @@ class BulkAddParticipantTestCase(TestCase):
         MemberPlatformSettings.objects.create(confirm_signup=True)
         result = bulk_add_participants(self.activity, self.emails, False)
 
-        self.assertEqual(result, {
-            'added': 1, 'existing': 0, 'failed': 0, 'created': 2
-        })
+        self.assertEqual(result, {'added': 1, 'existing': 0, 'failed': 0, 'created': 2})
 
         for email in self.emails:
             self.assertParticipant(email)
 
     def test_bulk_add_already_signed_up(self):
-        DeedParticipantFactory.create(
-            activity=self.activity, user=self.member
-        )
+        DeedParticipantFactory.create(activity=self.activity, user=self.member)
         result = bulk_add_participants(self.activity, self.emails, False)
 
-        self.assertEqual(result, {
-            'added': 0, 'existing': 1, 'failed': 2, 'created': 0
-        })
+        self.assertEqual(result, {'added': 0, 'existing': 1, 'failed': 2, 'created': 0})
 
         for email in self.emails[1:]:
             self.assertNotExists(email)
@@ -84,9 +68,7 @@ class BulkAddParticipantTestCase(TestCase):
         MemberPlatformSettings.objects.create(closed=True)
         result = bulk_add_participants(self.activity, self.emails, False)
 
-        self.assertEqual(result, {
-            'added': 1, 'existing': 0, 'failed': 0, 'created': 2
-        })
+        self.assertEqual(result, {'added': 1, 'existing': 0, 'failed': 0, 'created': 2})
 
         for email in self.emails:
             self.assertParticipant(email)
@@ -97,9 +79,7 @@ class BulkAddParticipantTestCase(TestCase):
 
         result = bulk_add_participants(self.activity, self.emails, False)
 
-        self.assertEqual(result, {
-            'added': 1, 'existing': 0, 'failed': 2, 'created': 0
-        })
+        self.assertEqual(result, {'added': 1, 'existing': 0, 'failed': 2, 'created': 0})
 
         for email in self.emails[1:]:
             self.assertNotExists(email)
@@ -111,9 +91,7 @@ class IcalTestMixin:
     defaults = {}
 
     def setUp(self):
-        self.model = self.factory.create(
-            **self.defaults
-        )
+        self.model = self.factory.create(**self.defaults)
 
         self.ical = ActivityIcal(self.model)
         self.ics = self.ical.to_file().decode('utf-8')
@@ -121,19 +99,12 @@ class IcalTestMixin:
         super().setUp()
 
     def escape_ical(self, value):
-        return (
-            value
-            .replace('\\', '\\\\')
-            .replace(',', '\\,')
-            .replace(';', '\\;')
-        )
+        return value.replace('\\', '\\\\').replace(',', '\\,').replace(';', '\\;')
 
     def assert_field(self, field, value):
         for line in self.ics.replace('\r\n ', '').splitlines():
             if line.startswith(field):
-                self.assertIn(
-                    value, line
-                )
+                self.assertIn(value, line)
                 return
 
         self.fail(f'Field {field} not found')
@@ -156,44 +127,24 @@ class IcalTestMixin:
         else:
             description = self.model.description
 
-        escaped = unescape(
-            to_text.handle(description.html)
-        )[:-1]
+        escaped = unescape(to_text.handle(description.html))[:-1]
 
-        self.assert_field(
-            'DESCRIPTION',
-            rf'{escaped}\, {self.model.get_absolute_url()}'
-        )
+        self.assert_field('DESCRIPTION', rf'{escaped}\, {self.model.get_absolute_url()}')
 
     def test_orgnanizer(self):
-        self.assert_field(
-            'ORGANIZER',
-            f'CN="{self.model.owner.full_name}":MAILTO:{self.model.owner.email}'
-        )
+        self.assert_field('ORGANIZER', f'CN="{self.model.owner.full_name}":MAILTO:{self.model.owner.email}')
 
     def test_start(self):
         if isinstance(self.model.start, datetime):
-            self.assert_field(
-                'DTSTART',
-                f'TZID=UTC;VALUE=DATE-TIME:{self.model.start.strftime("%Y%m%dT%H%M%SZ")}'
-            )
+            self.assert_field('DTSTART', f'TZID=UTC;VALUE=DATE-TIME:{self.model.start.strftime("%Y%m%dT%H%M%SZ")}')
         else:
-            self.assert_field(
-                'DTSTART',
-                f'VALUE=DATE:{self.model.start.strftime("%Y%m%d")}'
-            )
+            self.assert_field('DTSTART', f'VALUE=DATE:{self.model.start.strftime("%Y%m%d")}')
 
     def test_end(self):
         if isinstance(self.model.start, datetime):
-            self.assert_field(
-                'DTEND',
-                f'TZID=UTC;VALUE=DATE-TIME:{self.model.end.strftime("%Y%m%dT%H%M%SZ")}'
-            )
+            self.assert_field('DTEND', f'TZID=UTC;VALUE=DATE-TIME:{self.model.end.strftime("%Y%m%dT%H%M%SZ")}')
         else:
-            self.assert_field(
-                'DTEND',
-                f'VALUE=DATE:{self.model.end.strftime("%Y%m%d")}'
-            )
+            self.assert_field('DTEND', f'VALUE=DATE:{self.model.end.strftime("%Y%m%d")}')
 
 
 class DeedIcalTestCase(IcalTestMixin, BluebottleTestCase):
@@ -204,12 +155,9 @@ class CollectIcalTestCase(IcalTestMixin, BluebottleTestCase):
     factory = CollectActivityFactory
 
     def test_description(self):
-        description = unescape(
-            to_text.handle(self.model.description.html)
-        )[:-1]
+        description = unescape(to_text.handle(self.model.description.html))[:-1]
         self.assert_field(
-            'DESCRIPTION',
-            rf'{description}\, Collecting {self.model.collect_type}\, {self.model.get_absolute_url()}'
+            'DESCRIPTION', rf'{description}\, Collecting {self.model.collect_type}\, {self.model.get_absolute_url()}'
         )
 
 
@@ -220,7 +168,7 @@ class ScheduleSlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
     def defaults(self):
         return {
             'location': GeolocationFactory.create(),
-            'location_hint': "On the third floor",
+            'location_hint': 'On the third floor',
         }
 
     def test_location(self):
@@ -236,7 +184,7 @@ class DateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
         return {
             'activity': DateActivityFactory.create(slots=[]),
             'location': GeolocationFactory.create(),
-            'location_hint': "On the third floor",
+            'location_hint': 'On the third floor',
         }
 
     def test_location(self):
@@ -252,14 +200,11 @@ class OnlineDateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
         return {
             'activity': DateActivityFactory.create(slots=[]),
             'is_online': True,
-            'online_meeting_url': "http://example.com",
+            'online_meeting_url': 'http://example.com',
         }
 
     def test_description(self):
-        description = unescape(
-            to_text.handle(self.model.activity.description.html)
-        )[:-1]
+        description = unescape(to_text.handle(self.model.activity.description.html))[:-1]
         self.assert_field(
-            'DESCRIPTION',
-            rf'{description}\, {self.model.get_absolute_url()} Join: {self.model.online_meeting_url}'
+            'DESCRIPTION', rf'{description}\, {self.model.get_absolute_url()} Join: {self.model.online_meeting_url}'
         )

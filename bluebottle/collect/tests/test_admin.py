@@ -9,7 +9,6 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 class CollectActivityAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -46,19 +45,12 @@ class CollectActivityAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(CollectActivity.objects.count(), 1)
 
     def test_admin_contributors(self):
-        activity = CollectActivityFactory.create(
-            target=10,
-            realized=5,
-            status='open'
-        )
-        CollectContributorFactory.create_batch(
-            3,
-            activity=activity
-        )
+        activity = CollectActivityFactory.create(target=10, realized=5, status='open')
+        CollectContributorFactory.create_batch(3, activity=activity)
 
         url = reverse('admin:collect_collectactivity_change', args=(activity.id,))
         page = self.app.get(url)
-        self.assertTrue("contributors-0" in page.text)
-        self.assertTrue("contributors-1" in page.text)
-        self.assertTrue("contributors-2" in page.text)
-        self.assertFalse("contributors-3" in page.text, "Only real contributors shoudl show")
+        self.assertTrue('contributors-0' in page.text)
+        self.assertTrue('contributors-1' in page.text)
+        self.assertTrue('contributors-2' in page.text)
+        self.assertFalse('contributors-3' in page.text, 'Only real contributors shoudl show')

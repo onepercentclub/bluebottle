@@ -31,16 +31,11 @@ class File(models.Model):
             FileMimetypeValidator(
                 allowed_mimetypes=settings.PRIVATE_FILE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
-
+            validate_file_infection,
+        ],
     )
     owner = models.ForeignKey(
-        'members.Member',
-        verbose_name=_('owner'),
-        related_name='own_%(class)s',
-        on_delete=models.CASCADE,
-        null=True
+        'members.Member', verbose_name=_('owner'), related_name='own_%(class)s', on_delete=models.CASCADE, null=True
     )
     used = models.BooleanField(_('used'), default=False)
     name = models.CharField(null=True, blank=True, max_length=500)
@@ -63,9 +58,7 @@ class File(models.Model):
 
 class Image(File):
     cropbox = models.CharField(max_length=40, blank=True)
-    origin = models.ForeignKey(
-        'activity_pub.Image', null=True, related_name="activities", on_delete=models.SET_NULL
-    )
+    origin = models.ForeignKey('activity_pub.Image', null=True, related_name='activities', on_delete=models.SET_NULL)
 
     class JSONAPIMeta(object):
         resource_name = 'images'
@@ -74,9 +67,7 @@ class Image(File):
         if not self.cropbox and self.file:
             self.file.file.seek(0)
             try:
-                image = ImageOps.exif_transpose(
-                    default.engine.get_image(self.file.file)
-                )
+                image = ImageOps.exif_transpose(default.engine.get_image(self.file.file))
 
                 self.cropbox = get_default_cropbox(image, 16 / 9, 40)
             except UnidentifiedImageError:
@@ -96,7 +87,7 @@ class Document(File):
 
 def get_private_path(self, filename):
     ext = filename.split('.')[-1]
-    filename = "%s.%s" % (uuid.uuid4(), ext)
+    filename = '%s.%s' % (uuid.uuid4(), ext)
     upload_to = os.path.join('files', filename)
     if not upload_to.startswith('private'):
         upload_to = 'private/{}'.format(upload_to)

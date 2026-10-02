@@ -3,7 +3,6 @@ from bluebottle.utils.email_backend import send_mail
 
 
 class EmailMessageAdapter(BaseMessageAdapter):
-
     @property
     def template_name(self):
         return 'mails/{}'.format(self.message.template)
@@ -18,5 +17,5 @@ class EmailMessageAdapter(BaseMessageAdapter):
             custom_message=self.message.custom_message,
             body_html=self.message.body_html,
             insert_method=self.message.insert_method,
-            **context
+            **context,
         )

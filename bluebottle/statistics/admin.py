@@ -12,9 +12,7 @@ from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.statistics.models import (
-    BaseStatistic, ManualStatistic, DatabaseStatistic, ImpactStatistic
-)
+from bluebottle.statistics.models import BaseStatistic, ManualStatistic, DatabaseStatistic, ImpactStatistic
 
 
 class StatisticsChildAdmin(PolymorphicChildModelAdmin):
@@ -27,7 +25,7 @@ class StatisticsChildAdmin(PolymorphicChildModelAdmin):
             icon = 'default'
         else:
             icon = obj.icon
-        return format_html(u'<img style="width: 50px" src="/static/assets/impact-icons/{}-impact.svg">', icon)
+        return format_html('<img style="width: 50px" src="/static/assets/impact-icons/{}-impact.svg">', icon)
 
 
 class IconWidget(forms.RadioSelect):
@@ -36,7 +34,6 @@ class IconWidget(forms.RadioSelect):
 
 
 class ManualStatisticForm(TranslatableModelForm):
-
     class Meta(object):
         model = ManualStatistic
         widgets = {
@@ -65,15 +62,12 @@ class ImpactStatisticChildAdmin(StatisticsChildAdmin):
 class StatisticAdmin(SortableAdmin, PolymorphicParentModelAdmin):
     base_model = BaseStatistic
     list_display = ('name', 'statistics_type', 'active')
-    list_editable = ('active', )
-    child_models = (
-        DatabaseStatistic,
-        ManualStatistic,
-        ImpactStatistic
-    )
+    list_editable = ('active',)
+    child_models = (DatabaseStatistic, ManualStatistic, ImpactStatistic)
 
     def statistics_type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name
+
     statistics_type.short_description = _('Type')
 
     def get_child_models(self):

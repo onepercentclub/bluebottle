@@ -1,20 +1,12 @@
 from bluebottle.fsm.effects import RelatedTransitionEffect
-from bluebottle.fsm.triggers import (
-    TransitionTrigger, register, TriggerManager
-)
-from bluebottle.funding.effects import (
-    SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
-    ClearPayoutDatesEffect
-)
+from bluebottle.fsm.triggers import TransitionTrigger, register, TriggerManager
+from bluebottle.funding.effects import SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, ClearPayoutDatesEffect
 from bluebottle.funding.messages.funding.activity_manager import (
-    FundingPayoutAccountVerified, FundingPayoutAccountRejected
+    FundingPayoutAccountVerified,
+    FundingPayoutAccountRejected,
 )
-from bluebottle.funding.models import (
-    PlainPayoutAccount, Payout, BankAccount
-)
-from bluebottle.funding.states import (
-    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine
-)
+from bluebottle.funding.models import PlainPayoutAccount, Payout, BankAccount
+from bluebottle.funding.states import PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -33,18 +25,11 @@ class PlainPayoutAccountTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
             PlainPayoutAccountStateMachine.verify,
-            effects=[
-                NotificationEffect(FundingPayoutAccountVerified),
-                DeleteDocumentEffect
-            ]
+            effects=[NotificationEffect(FundingPayoutAccountVerified), DeleteDocumentEffect],
         ),
-
         TransitionTrigger(
             PlainPayoutAccountStateMachine.reject,
-            effects=[
-                NotificationEffect(FundingPayoutAccountRejected),
-                DeleteDocumentEffect
-            ]
+            effects=[NotificationEffect(FundingPayoutAccountRejected), DeleteDocumentEffect],
         ),
     ]
 
@@ -56,11 +41,9 @@ class BankAccountTriggers(TriggerManager):
             BankAccountStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    'connect_account',
-                    PlainPayoutAccountStateMachine.reject,
-                    description='Reject connected KYC account'
+                    'connect_account', PlainPayoutAccountStateMachine.reject, description='Reject connected KYC account'
                 )
-            ]
+            ],
         ),
     ]
 
@@ -68,39 +51,9 @@ class BankAccountTriggers(TriggerManager):
 @register(Payout)
 class PayoutTriggers(TriggerManager):
     triggers = [
-        TransitionTrigger(
-            PayoutStateMachine.approve,
-            effects=[
-                SubmitPayoutEffect,
-                SetDateEffect('date_approved')
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutStateMachine.start,
-            effects=[
-                SetDateEffect('date_started')
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutStateMachine.reset,
-            effects=[
-                ClearPayoutDatesEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutStateMachine.schedule,
-            effects=[
-                ClearPayoutDatesEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutStateMachine.succeed,
-            effects=[
-                SetDateEffect('date_completed')
-            ]
-        ),
+        TransitionTrigger(PayoutStateMachine.approve, effects=[SubmitPayoutEffect, SetDateEffect('date_approved')]),
+        TransitionTrigger(PayoutStateMachine.start, effects=[SetDateEffect('date_started')]),
+        TransitionTrigger(PayoutStateMachine.reset, effects=[ClearPayoutDatesEffect]),
+        TransitionTrigger(PayoutStateMachine.schedule, effects=[ClearPayoutDatesEffect]),
+        TransitionTrigger(PayoutStateMachine.succeed, effects=[SetDateEffect('date_completed')]),
     ]

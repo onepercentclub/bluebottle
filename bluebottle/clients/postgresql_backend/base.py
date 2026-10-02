@@ -3,7 +3,7 @@ from tenant_schemas.postgresql_backend import base
 from bluebottle.clients import properties
 
 from tenant_schemas.postgresql_backend.introspection import (
-    DatabaseSchemaIntrospection as TenantDatabaseSchemaIntrospection
+    DatabaseSchemaIntrospection as TenantDatabaseSchemaIntrospection,
 )
 
 
@@ -29,10 +29,7 @@ class DatabaseSchemaIntrospection(TenantDatabaseSchemaIntrospection):
         """,
             [table_name],
         )
-        return [
-            {"name": row[0], "table": table_name, "column": row[1]}
-            for row in cursor.fetchall()
-        ]
+        return [{'name': row[0], 'table': table_name, 'column': row[1]} for row in cursor.fetchall()]
 
 
 class DatabaseWrapper(base.DatabaseWrapper):

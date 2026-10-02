@@ -5,12 +5,10 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class DonationSuccessDonorMessage(TransitionMessage):
-    subject = pgettext('platform-email', "Thanks for your donation!")
+    subject = pgettext('platform-email', 'Thanks for your donation!')
     template = 'messages/funding/contributor/donation_success_donor'
 
-    context = {
-        'title': 'activity.title'
-    }
+    context = {'title': 'activity.title'}
 
     def get_recipients(self):
         """the donor (unless it is a guest donation)"""
@@ -24,9 +22,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
     subject = pgettext('platform-email', 'Your donation for the campaign "{title}" will be refunded')
     template = 'messages/funding/contributor/donation_refunded_donor'
 
-    context = {
-        'title': 'activity.title'
-    }
+    context = {'title': 'activity.title'}
 
     def get_recipients(self):
         """the donor (unless it is a guest donation)"""
@@ -40,9 +36,7 @@ class DonationActivityRefundedDonorMessage(TransitionMessage):
     subject = pgettext('platform-email', 'Your donation for the campaign "{title}" will be refunded')
     template = 'messages/funding/contributor/donation_activity_refunded_donor'
 
-    context = {
-        'title': 'activity.title'
-    }
+    context = {'title': 'activity.title'}
 
     def get_recipients(self):
         """the donor (unless it is a guest donation)"""

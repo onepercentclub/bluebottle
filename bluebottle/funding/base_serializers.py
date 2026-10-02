@@ -15,8 +15,15 @@ class PaymentSerializer(ModelSerializer):
 
     class Meta(object):
         model = Payment
-        fields = ('donation', 'status', )
-        meta_fields = ('transitions', 'created', 'updated', )
+        fields = (
+            'donation',
+            'status',
+        )
+        meta_fields = (
+            'transitions',
+            'created',
+            'updated',
+        )
 
     class JSONAPIMeta(object):
         included_resources = ['donation', 'donation.activity', 'donation.updates']

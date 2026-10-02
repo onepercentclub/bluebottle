@@ -1,9 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
-from rest_framework_json_api.relations import (
-    ResourceRelatedField, SerializerMethodResourceRelatedField
-)
+from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
@@ -35,8 +33,15 @@ class PollOptionSerializer(ModelSerializer):
     class Meta:
         model = PollOption
         fields = (
-            'id', 'title', 'description', 'image', 'video_url', 'sequence',
-            'votes', 'percentage', 'winner',
+            'id',
+            'title',
+            'description',
+            'image',
+            'video_url',
+            'sequence',
+            'votes',
+            'percentage',
+            'winner',
         )
 
     class JSONAPIMeta:
@@ -51,7 +56,10 @@ class PollVoteSerializer(ModelSerializer):
     class Meta:
         model = PollVote
         fields = (
-            'id', 'poll', 'option', 'created',
+            'id',
+            'poll',
+            'option',
+            'created',
         )
 
     class JSONAPIMeta:
@@ -77,14 +85,10 @@ class PollVoteSerializer(ModelSerializer):
                 data['poll'] = poll
 
         if option and poll and option.poll_id != poll.id:
-            raise serializers.ValidationError({
-                'option': _('This option does not belong to this poll')
-            })
+            raise serializers.ValidationError({'option': _('This option does not belong to this poll')})
 
         if poll and poll.status != 'open':
-            raise serializers.ValidationError(
-                _('This poll is not open for voting')
-            )
+            raise serializers.ValidationError(_('This poll is not open for voting'))
 
         return data
 
@@ -102,18 +106,21 @@ class PollSerializer(ModelSerializer):
         read_only=True,
     )
     results_export_url = PrivateFileSerializer(
-        'poll-vote-export',
-        url_args=('pk',),
-        filename='votes.xlsx',
-        permission=CanExportVotesPermission,
-        read_only=True
+        'poll-vote-export', url_args=('pk',), filename='votes.xlsx', permission=CanExportVotesPermission, read_only=True
     )
 
     class Meta:
         model = Poll
         fields = (
-            'id', 'title', 'subtitle', 'end_date', 'status', 'options',
-            'votes_cast', 'my_vote', 'results_export_url',
+            'id',
+            'title',
+            'subtitle',
+            'end_date',
+            'status',
+            'options',
+            'votes_cast',
+            'my_vote',
+            'results_export_url',
         )
 
     class JSONAPIMeta:

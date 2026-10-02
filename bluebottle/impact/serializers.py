@@ -13,8 +13,12 @@ class ImpactTypeSerializer(ModelSerializer):
     class Meta(object):
         model = ImpactType
         fields = (
-            'id', 'slug', 'name', 'unit',
-            'text', 'text_with_target',
+            'id',
+            'slug',
+            'name',
+            'unit',
+            'text',
+            'text_with_target',
             'text_passed',
             'icon',
         )
@@ -24,9 +28,7 @@ class ImpactTypeSerializer(ModelSerializer):
 
 
 class ImpactGoalSerializer(ModelSerializer):
-    activity = PolymorphicResourceRelatedField(
-        ActivitySerializer, queryset=Activity.objects.all()
-    )
+    activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
     impact_type = ResourceRelatedField(source='type', queryset=ImpactType.objects.all())
 
     errors = ValidationErrorsField()

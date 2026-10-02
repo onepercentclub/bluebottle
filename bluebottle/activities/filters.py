@@ -36,7 +36,7 @@ from bluebottle.utils.filters import (
 
 class DistanceFacet(Facet):
     def get_aggregation(self):
-        return A("filter", filter=MatchAll())
+        return A('filter', filter=MatchAll())
 
     def get_values(self, data, filter_values):
         return []
@@ -44,7 +44,7 @@ class DistanceFacet(Facet):
     def get_value_filter(self, filter_value):
         request = get_current_request()
 
-        place_id = request.GET.get("place")
+        place_id = request.GET.get('place')
         if place_id:
             place = Place.objects.filter(pk=place_id).first()
             if place and place.position and filter_value:
@@ -52,8 +52,8 @@ class DistanceFacet(Facet):
                     _expand__to_dot=False,
                     distance=filter_value,
                     position={
-                        "lat": float(place.position[1]),
-                        "lon": float(place.position[0]),
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
                     },
                 )
                 return geo_filter | Term(is_online=True)
@@ -61,82 +61,81 @@ class DistanceFacet(Facet):
 
 class OfficeRestrictionFacet(Facet):
     def get_aggregation(self):
-        return A("filter", filter=MatchAll())
+        return A('filter', filter=MatchAll())
 
     def get_values(self, data, filter_values):
         return []
 
     def get_value_filter(self, filter_value):
         user = get_current_user()
-        if filter_value == "0" or not user.is_authenticated or not user.location:
+        if filter_value == '0' or not user.is_authenticated or not user.location:
             return
         office = user.location
-        query = Term(office_restriction__restriction="all") | (
-            Term(office_restriction__office=office.id)
-            & Term(office_restriction__restriction="office")
+        query = Term(office_restriction__restriction='all') | (
+            Term(office_restriction__office=office.id) & Term(office_restriction__restriction='office')
         )
 
         if office.subregion:
             query = query | (
                 Term(office_restriction__subregion=office.subregion.id)
-                & Term(office_restriction__restriction="office_subregion")
+                & Term(office_restriction__restriction='office_subregion')
             )
 
             if office.subregion.region:
                 query = query | (
                     Term(office_restriction__region=office.subregion.region.id)
-                    & Term(office_restriction__restriction="office_region")
+                    & Term(office_restriction__restriction='office_region')
                 )
 
-        return Nested(path="office_restriction", query=query)
+        return Nested(path='office_restriction', query=query)
 
 
 class UpcomingFacet(Facet):
-    agg_type = "terms"
+    agg_type = 'terms'
 
     def get_aggregation(self):
-        return A("filter", filter=MatchAll())
+        return A('filter', filter=MatchAll())
 
     def get_values(self, data, filter_values):
         return []
 
     def add_filter(self, filter_values):
-        if filter_values == ["1"]:
+        if filter_values == ['1']:
             settings = InitiativePlatformSettings.load()
-            statuses = ["open", "running"]
+            statuses = ['open', 'running']
             if settings.include_full_activities:
-                statuses.append("full")
-                statuses.append("registration_closed")
+                statuses.append('full')
+                statuses.append('registration_closed')
             return Terms(status=statuses)
-        if filter_values == ["0"]:
-            return Terms(status=["succeeded", "partially_funded", "refunded"])
+        if filter_values == ['0']:
+            return Terms(status=['succeeded', 'partially_funded', 'refunded'])
 
 
 class DraftFacet(Facet):
-    agg_type = "terms"
+    agg_type = 'terms'
 
     def get_aggregation(self):
-        return A("filter", filter=MatchAll())
+        return A('filter', filter=MatchAll())
 
     def get_values(self, data, filter_values):
         return []
 
     def add_filter(self, filter_values):
-        if filter_values == ["1"]:
-            statuses = ["draft", "needs_work"]
+        if filter_values == ['1']:
+            statuses = ['draft', 'needs_work']
             return Terms(status=statuses)
 
 
 class BooleanFacet(Facet):
-    agg_type = "terms"
+    agg_type = 'terms'
 
-    def __init__(self, metric=None, metric_sort="desc", labels=None, **kwargs):
-        self.labels = labels or {"1": _("Yes"), "0": _("No")}
+    def __init__(self, metric=None, metric_sort='desc', labels=None, **kwargs):
+        self.labels = labels or {'1': _('Yes'), '0': _('No')}
 
         super().__init__(metric, metric_sort, **kwargs)
 
     def get_value(self, bucket):
-        return (self.labels[str(bucket["key"])], 1 if bucket["key"] else 0)
+        return (self.labels[str(bucket['key'])], 1 if bucket['key'] else 0)
 
     def get_values(self, data, filter_values):
         result = super().get_values(data, filter_values)
@@ -146,12 +145,12 @@ class BooleanFacet(Facet):
         return result
 
     def add_filter(self, filter_values):
-        if filter_values == ["0"]:
+        if filter_values == ['0']:
             filter_values = [False]
-        if filter_values == ["1"]:
+        if filter_values == ['1']:
             filter_values = [True]
         if filter_values:
-            return Terms(**{self._params["field"]: filter_values})
+            return Terms(**{self._params['field']: filter_values})
 
     def is_filtered(self, key, filter_values):
         """
@@ -162,17 +161,17 @@ class BooleanFacet(Facet):
 
 class LocalFacet(BooleanFacet):
     def __init__(self, *args, **kwargs):
-        labels = {'1': _("Local activities"), '0': _("Remote activities")}
+        labels = {'1': _('Local activities'), '0': _('Remote activities')}
         super().__init__(*args, labels=labels, **kwargs)
 
 
 class TeamActivityFacet(BooleanFacet):
     def __init__(self, *args, **kwargs):
-        labels = {"teams": _("With your team"), "individuals": _("As an individual")}
+        labels = {'teams': _('With your team'), 'individuals': _('As an individual')}
         super().__init__(*args, labels=labels, **kwargs)
 
     def get_value(self, bucket):
-        return (self.labels[bucket["key"]], bucket["key"])
+        return (self.labels[bucket['key']], bucket['key'])
 
 
 class MatchingFacet(BooleanFacet):
@@ -180,10 +179,10 @@ class MatchingFacet(BooleanFacet):
         user = get_current_user()
 
         settings = InitiativePlatformSettings.load()
-        statuses = ["open", "running"]
+        statuses = ['open', 'running']
         if settings.include_full_activities:
-            statuses.append("full")
-            statuses.append("registration_closed")
+            statuses.append('full')
+            statuses.append('registration_closed')
 
         filters = Terms(status=statuses)
 
@@ -192,38 +191,32 @@ class MatchingFacet(BooleanFacet):
 
         if user.location:
             office = user.location
-            office_filter = Term(office_restriction__restriction="all") | (
-                Term(office_restriction__office=office.id)
-                & Term(office_restriction__restriction="office")
+            office_filter = Term(office_restriction__restriction='all') | (
+                Term(office_restriction__office=office.id) & Term(office_restriction__restriction='office')
             )
 
             if office.subregion:
                 office_filter = office_filter | (
                     Term(office_restriction__subregion=office.subregion.id)
-                    & Term(office_restriction__restriction="office_subregion")
+                    & Term(office_restriction__restriction='office_subregion')
                 )
 
                 if office.subregion.region:
                     office_filter = office_filter | (
                         Term(office_restriction__region=office.subregion.region.id)
-                        & Term(office_restriction__restriction="office_region")
+                        & Term(office_restriction__restriction='office_region')
                     )
-            filters = filters & Nested(path="office_restriction", query=office_filter)
+            filters = filters & Nested(path='office_restriction', query=office_filter)
 
-        if (
-            user.search_distance and
-            user.place and
-            user.place.position and
-            not user.any_search_distance
-        ):
+        if user.search_distance and user.place and user.place.position and not user.any_search_distance:
             place = user.place
             if user.exclude_online:
                 distance_filter = GeoDistance(
                     _expand__to_dot=False,
                     distance=user.search_distance,
                     position={
-                        "lat": float(place.position[1]),
-                        "lon": float(place.position[0]),
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
                     },
                 )
             else:
@@ -231,8 +224,8 @@ class MatchingFacet(BooleanFacet):
                     _expand__to_dot=False,
                     distance=user.search_distance,
                     position={
-                        "lat": float(place.position[1]),
-                        "lon": float(place.position[0]),
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
                     },
                 ) | Term(is_online=True)
 
@@ -242,16 +235,16 @@ class MatchingFacet(BooleanFacet):
 
 
 class ManagingFacet(Facet):
-    agg_type = "terms"
+    agg_type = 'terms'
 
     def get_aggregation(self):
-        return A("filter", filter=MatchAll())
+        return A('filter', filter=MatchAll())
 
     def get_values(self, data, filter_values):
-        return A("filter", filter=MatchNone())
+        return A('filter', filter=MatchNone())
 
     def add_filter(self, filter_values):
-        if filter_values == ["1"]:
+        if filter_values == ['1']:
             user = get_current_user()
 
             if not user.is_authenticated:
@@ -260,145 +253,121 @@ class ManagingFacet(Facet):
 
 
 class ReviewingFacet(Facet):
-    agg_type = "terms"
+    agg_type = 'terms'
 
     def get_aggregation(self):
-        return A("filter", filter=MatchAll())
+        return A('filter', filter=MatchAll())
 
     def get_values(self, data, filter_values):
-        return A("filter", filter=MatchNone())
+        return A('filter', filter=MatchNone())
 
     def add_filter(self, filter_values):
-        if filter_values == ["1"]:
+        if filter_values == ['1']:
             user = get_current_user()
 
             if not user.is_authenticated:
                 return MatchNone()
 
             if user.has_perm('activities.api_review_activity'):
-
                 must_filters = [~Term(activity_type='grantapplication')]
 
-                subregions = getattr(user, "subregion_manager", None)
+                subregions = getattr(user, 'subregion_manager', None)
                 if subregions:
-                    subregion_ids = list(subregions.values_list("id", flat=True))
+                    subregion_ids = list(subregions.values_list('id', flat=True))
                     if subregion_ids:
                         must_filters.append(
-                            Nested(
-                                path="office_subregion",
-                                query=Terms(**{"office_subregion__id": subregion_ids})
-                            )
+                            Nested(path='office_subregion', query=Terms(**{'office_subregion__id': subregion_ids}))
                         )
-                offices = getattr(user, "office_manager", None)
+                offices = getattr(user, 'office_manager', None)
                 if offices:
-                    office_ids = list(offices.values_list("id", flat=True))
+                    office_ids = list(offices.values_list('id', flat=True))
                     if office_ids:
-                        must_filters.append(
-                            Nested(
-                                path="office",
-                                query=Terms(**{"office__id": office_ids})
-                            )
-                        )
+                        must_filters.append(Nested(path='office', query=Terms(**{'office__id': office_ids})))
 
-                segments = getattr(user, "segment_manager", None)
+                segments = getattr(user, 'segment_manager', None)
                 if segments and segments.exists():
-                    segment_ids = list(segments.values_list("id", flat=True))
+                    segment_ids = list(segments.values_list('id', flat=True))
                     if segment_ids:
-                        must_filters.append(
-                            Nested(
-                                path="segments",
-                                query=Terms(**{"segments__id": segment_ids})
-                            )
-                        )
+                        must_filters.append(Nested(path='segments', query=Terms(**{'segments__id': segment_ids})))
                 return Bool(must=must_filters)
 
             return MatchNone()
 
 
 class StatusFacet(Facet):
-    agg_type = "terms"
+    agg_type = 'terms'
 
     def get_aggregation(self):
-        return A("filter", filter=MatchAll())
+        return A('filter', filter=MatchAll())
 
     def get_values(self, data, filter_values):
-        return A("filter", filter=MatchNone())
+        return A('filter', filter=MatchNone())
 
     def add_filter(self, filter_values):
-        if filter_values == ["draft"]:
-            return Terms(status=["draft", "needs_work", "submitted"])
-        if filter_values == ["submitted"]:
-            return Terms(status=["submitted"])
-        if filter_values == ["needs_work"]:
-            return Terms(status=["needs_work"])
-        if filter_values == ["open"]:
+        if filter_values == ['draft']:
+            return Terms(status=['draft', 'needs_work', 'submitted'])
+        if filter_values == ['submitted']:
+            return Terms(status=['submitted'])
+        if filter_values == ['needs_work']:
+            return Terms(status=['needs_work'])
+        if filter_values == ['open']:
             return Terms(
                 status=[
-                    "open",
-                    "running",
-                    "full",
-                    "registration_closed",
-                    "on_hold",
-                    "granted",
+                    'open',
+                    'running',
+                    'full',
+                    'registration_closed',
+                    'on_hold',
+                    'granted',
                 ]
             )
-        if filter_values == ["succeeded"]:
-            return Terms(status=["succeeded", "partially_funded"])
-        if filter_values == ["failed"]:
-            return Terms(
-                status=["refunded", "rejected", "expired", "failed", "cancelled"]
-            )
+        if filter_values == ['succeeded']:
+            return Terms(status=['succeeded', 'partially_funded'])
+        if filter_values == ['failed']:
+            return Terms(status=['refunded', 'rejected', 'expired', 'failed', 'cancelled'])
         return MatchNone()
 
 
 class InitiativeFacet(TermsFacet):
     def __init__(self, **kwargs):
-        super().__init__(field="owner", **kwargs)
+        super().__init__(field='owner', **kwargs)
 
     def add_filter(self, filter_values):
-        initiative_filter = Nested(
-            path="initiative", query=(Terms(initiative__id=filter_values))
-        )
+        initiative_filter = Nested(path='initiative', query=(Terms(initiative__id=filter_values)))
         open_filter = Terms(
             status=[
-                "succeeded",
-                "open",
-                "full",
-                "registration_closed",
-                "partially_funded",
+                'succeeded',
+                'open',
+                'full',
+                'registration_closed',
+                'partially_funded',
             ]
         )
         user = get_current_user()
         if user.is_authenticated:
-            return (
-                initiative_filter
-                & (Term(manager=user.id) | open_filter)
-                & ~Terms(status=["deleted"])
-            )
+            return initiative_filter & (Term(manager=user.id) | open_filter) & ~Terms(status=['deleted'])
         return initiative_filter & open_filter
 
 
 class ActivityDateRangeFacet(Facet):
     def get_aggregation(self):
-        return A("filter", filter=MatchAll())
+        return A('filter', filter=MatchAll())
 
     def get_values(self, data, filter_values):
         return []
 
     def get_value_filter(self, filter_value):
-        start, end = filter_value.split(",")
+        start, end = filter_value.split(',')
         start = dateutil.parser.parse(start)
         end = dateutil.parser.parse(end)
 
         if start.astimezone(UTC) >= now():
-            return Range(
-                _expand__to_dot=False, **{"duration": {"gte": start, "lt": end}}
-            )
+            return Range(_expand__to_dot=False, **{'duration': {'gte': start, 'lt': end}})
         else:
             return Q(
-                "nested",
-                path="dates",
-                query=Q("range", **{"dates.end": {"gt": start, "lt": end}}),
+                'nested',
+                path='dates',
+                query=Q('range', **{'dates.end': {'gt': start, 'lt': end}}),
             )
 
 
@@ -412,128 +381,120 @@ class ActivitySearch(Search):
     doc_types = [activity]
 
     sorting = {
-        "date": ["dates.start"],
-        "created": ["created"],
-        "distance": ["distance"],
+        'date': ['dates.start'],
+        'created': ['created'],
+        'distance': ['distance'],
     }
-    default_sort = "date"
+    default_sort = 'date'
 
     fields = [
-        (None, ("title^3", "description^2")),
-        ("initiative", ("title^2", "story", "pitch")),
-        ("slots", ("title",)),
+        (None, ('title^3', 'description^2')),
+        ('initiative', ('title^2', 'story', 'pitch')),
+        ('slots', ('title',)),
     ]
 
     facets = {
-        "initiative.id": InitiativeFacet(),
-        "upcoming": UpcomingFacet(),
-        "draft": DraftFacet(),
-        "activity-type": TermsFacet(field="activity_type", min_doc_count=0),
-        "status": TermsFacet(field="status"),
-        "matching": MatchingFacet(field="matching"),
-        "highlight": BooleanFacet(field="highlight"),
-        "distance": DistanceFacet(),
-        "office_restriction": OfficeRestrictionFacet(),
-        "is_online": BooleanFacet(
-            field="is_online", labels={"0": _("In-person"), "1": _("Online/remote")}
-        ),
-        "is_local": LocalFacet(field='is_local'),
-        "team_activity": TeamActivityFacet(field="team_activity"),
-        "date": ActivityDateRangeFacet(),
-        "office": UntranslatedModelFacet("office", Location),
-        "office_subregion": UntranslatedModelFacet("office_subregion", OfficeSubRegion),
-        "office_region": UntranslatedModelFacet("office_region", OfficeRegion),
+        'initiative.id': InitiativeFacet(),
+        'upcoming': UpcomingFacet(),
+        'draft': DraftFacet(),
+        'activity-type': TermsFacet(field='activity_type', min_doc_count=0),
+        'status': TermsFacet(field='status'),
+        'matching': MatchingFacet(field='matching'),
+        'highlight': BooleanFacet(field='highlight'),
+        'distance': DistanceFacet(),
+        'office_restriction': OfficeRestrictionFacet(),
+        'is_online': BooleanFacet(field='is_online', labels={'0': _('In-person'), '1': _('Online/remote')}),
+        'is_local': LocalFacet(field='is_local'),
+        'team_activity': TeamActivityFacet(field='team_activity'),
+        'date': ActivityDateRangeFacet(),
+        'office': UntranslatedModelFacet('office', Location),
+        'office_subregion': UntranslatedModelFacet('office_subregion', OfficeSubRegion),
+        'office_region': UntranslatedModelFacet('office_region', OfficeRegion),
     }
 
     possible_facets = {
-        "status": StatusFacet(),
-        "managing": ManagingFacet(),
-        "reviewing": ReviewingFacet(),
-        "category": ModelFacet("categories", Category, "title"),
-        "skill": ModelFacet("expertise", Skill),
-        "country": ModelFacet("country", Country),
-        "theme": ModelFacet("theme", Theme),
+        'status': StatusFacet(),
+        'managing': ManagingFacet(),
+        'reviewing': ReviewingFacet(),
+        'category': ModelFacet('categories', Category, 'title'),
+        'skill': ModelFacet('expertise', Skill),
+        'country': ModelFacet('country', Country),
+        'theme': ModelFacet('theme', Theme),
     }
 
     def sort(self, search):
         search = super().sort(search)
 
-        if self._sort == "-created":
+        if self._sort == '-created':
             search = search.sort(
                 {
-                    "created": {
-                        "order": "desc",
+                    'created': {
+                        'order': 'desc',
                     }
                 }
             )
             return search
 
-        if self._sort == "distance":
+        if self._sort == 'distance':
             request = get_current_request()
-            place_id = request.GET.get("place")
+            place_id = request.GET.get('place')
             if place_id:
                 place = Place.objects.filter(pk=place_id).first()
                 if place and place.position:
                     geo_sort = {
-                        "_geo_distance": {
-                            "position": {
-                                "lat": float(place.position[1]),
-                                "lon": float(place.position[0]),
+                        '_geo_distance': {
+                            'position': {
+                                'lat': float(place.position[1]),
+                                'lon': float(place.position[0]),
                             },
-                            "order": "asc",
-                            "distance_type": "arc",
+                            'order': 'asc',
+                            'distance_type': 'arc',
                         }
                     }
 
-                    search = search.sort({"is_online": {"order": "desc"}}, geo_sort)
+                    search = search.sort({'is_online': {'order': 'desc'}}, geo_sort)
             else:
-                search = search.sort({"is_online": {"order": "desc"}})
+                search = search.sort({'is_online': {'order': 'desc'}})
 
-        if self._sort == "start":
+        if self._sort == 'start':
             # Used for activity tab in initiatives
             start = now()
             end = datetime.max
 
             search = search.sort(
                 {
-                    "dates.end": {
-                        "order": "asc",
-                        "mode": "min",
-                        "nested": {
-                            "path": "dates",
-                            "filter": (
-                                Range(**{"dates.end": {"lte": end}})
-                                & Range(**{"dates.end": {"gte": start}})
-                            ),
+                    'dates.end': {
+                        'order': 'asc',
+                        'mode': 'min',
+                        'nested': {
+                            'path': 'dates',
+                            'filter': (Range(**{'dates.end': {'lte': end}}) & Range(**{'dates.end': {'gte': start}})),
                         },
                     }
                 }
             )
             return search
 
-        if self._sort == "date" or not self._sort:
-            if (
-                "upcoming" in self.filter_values
-                and self.filter_values["upcoming"][0] == "1"
-            ):
+        if self._sort == 'date' or not self._sort:
+            if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == '1':
                 start = now()
                 end = date.max
 
-                if "date" in self.filter_values:
-                    start, end = self.filter_values["date"][0].split(",")
+                if 'date' in self.filter_values:
+                    start, end = self.filter_values['date'][0].split(',')
 
                 search = search.sort(
                     {
-                        "dates.end": {
-                            "order": "asc",
-                            "missing": "_last",
-                            "nested": {
-                                "path": "dates",
-                                "filter": (
-                                    Range(**{"dates.end": {"lte": end}}) &
-                                    (
-                                        Range(**{"dates.end": {"gte": start}}) |
-                                        Bool(must_not=Exists(field='dates.end'))
+                        'dates.end': {
+                            'order': 'asc',
+                            'missing': '_last',
+                            'nested': {
+                                'path': 'dates',
+                                'filter': (
+                                    Range(**{'dates.end': {'lte': end}})
+                                    & (
+                                        Range(**{'dates.end': {'gte': start}})
+                                        | Bool(must_not=Exists(field='dates.end'))
                                     )
                                 ),
                             },
@@ -544,19 +505,18 @@ class ActivitySearch(Search):
                 start = datetime.min
                 end = now()
 
-                if "date" in self.filter_values:
-                    start, end = self.filter_values["date"][0].split(",")
+                if 'date' in self.filter_values:
+                    start, end = self.filter_values['date'][0].split(',')
 
                 search = search.sort(
                     {
-                        "dates.end": {
-                            "order": "desc",
-                            "mode": "max",
-                            "nested": {
-                                "path": "dates",
-                                "filter": (
-                                    Range(**{"dates.end": {"lte": end}})
-                                    & Range(**{"dates.end": {"gte": start}})
+                        'dates.end': {
+                            'order': 'desc',
+                            'mode': 'max',
+                            'nested': {
+                                'path': 'dates',
+                                'filter': (
+                                    Range(**{'dates.end': {'lte': end}}) & Range(**{'dates.end': {'gte': start}})
                                 ),
                             },
                         }
@@ -570,9 +530,7 @@ class ActivitySearch(Search):
         settings = InitiativePlatformSettings.load()
 
         # Create new instance with existing search filters from settings
-        result = super().__new__(
-            cls, settings.search_filters_activities.distinct().all()
-        )
+        result = super().__new__(cls, settings.search_filters_activities.distinct().all())
 
         # get filters from the request
         filters = args[1] if len(args) > 1 and isinstance(args[1], dict) else {}
@@ -584,7 +542,7 @@ class ActivitySearch(Search):
 
         # Add segment facets
         for segment_type in SegmentType.objects.all():
-            result.facets[f"segment.{segment_type.slug}"] = SegmentFacet(segment_type)
+            result.facets[f'segment.{segment_type.slug}'] = SegmentFacet(segment_type)
 
         return result
 
@@ -593,43 +551,36 @@ class ActivitySearch(Search):
         search = search.filter(Term(archived=False))
         if not self.user.is_staff:
             segment_filters = [
-                ~Nested(path="segments", query=(Term(segments__closed=True))),
+                ~Nested(path='segments', query=(Term(segments__closed=True))),
                 Nested(
-                    path="segments",
+                    path='segments',
                     query=(
                         Terms(
                             segments__id=(
-                                [
-                                    segment.id
-                                    for segment in self.user.segments.filter(
-                                        closed=True
-                                    )
-                                ]
+                                [segment.id for segment in self.user.segments.filter(closed=True)]
                                 if self.user.is_authenticated
                                 else []
                             )
                         )
                     ),
-                )
+                ),
             ]
 
             if self.user.is_authenticated:
-                segment_filters.append(
-                    Term(manager=self.user.pk)
-                )
+                segment_filters.append(Term(manager=self.user.pk))
 
             search = search.filter(Bool(should=segment_filters))
 
-        if "initiative.id" not in self._filters and "status" not in self._filters:
+        if 'initiative.id' not in self._filters and 'status' not in self._filters:
             search = search.filter(
                 Terms(
                     status=[
-                        "succeeded",
-                        "open",
-                        "full",
-                        "registration_closed",
-                        "partially_funded",
-                        "refunded",
+                        'succeeded',
+                        'open',
+                        'full',
+                        'registration_closed',
+                        'partially_funded',
+                        'refunded',
                     ]
                 )
             )

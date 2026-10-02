@@ -40,30 +40,20 @@ class ExportAsCSVActionTest(BluebottleTestCase):
 
     def test_export(self):
         response = self.admin.actions[0](
-            self.admin,
-            self.request,
-            TestModelQuerySet([TestModel(title='bla', text='bli bloe')])
+            self.admin, self.request, TestModelQuerySet([TestModel(title='bla', text='bli bloe')])
         )
 
-        data = list(csv.reader(
-            response.content.decode('utf-8').split('\n'),
-            delimiter=";"
-        ))
+        data = list(csv.reader(response.content.decode('utf-8').split('\n'), delimiter=';'))
 
         self.assertEqual(data[0], ['Just a title', 'Some text'])
         self.assertEqual(data[1], ['bla', 'bli bloe'])
 
     def test_export_escaped(self):
         response = self.admin.actions[0](
-            self.admin,
-            self.request,
-            TestModelQuerySet([TestModel(title='@bla', text='+bli bloe')])
+            self.admin, self.request, TestModelQuerySet([TestModel(title='@bla', text='+bli bloe')])
         )
 
-        data = list(csv.reader(
-            response.content.decode('utf-8').split('\n'),
-            delimiter=";"
-        ))
+        data = list(csv.reader(response.content.decode('utf-8').split('\n'), delimiter=';'))
 
         self.assertEqual(data[0], ['Just a title', 'Some text'])
         self.assertEqual(data[1], ["'@bla", "'+bli bloe"])

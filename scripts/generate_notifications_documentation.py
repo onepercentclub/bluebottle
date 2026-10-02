@@ -13,15 +13,17 @@ api = settings.CONFLUENCE['api']
 
 
 def clean_text(content):
-    return '\n'.join([
-        line.strip() for line
-        in content.strip().split('\n')
-        if line.strip() and line.strip() not in ['-------------------', '-  -']
-    ])
+    return '\n'.join(
+        [
+            line.strip()
+            for line in content.strip().split('\n')
+            if line.strip() and line.strip() not in ['-------------------', '-  -']
+        ]
+    )
 
 
 def clean_html(content):
-    soup = BeautifulSoup(content, "html")
+    soup = BeautifulSoup(content, 'html')
     for elem in soup.find_all(['html', 'body', 'table', 'tbody', 'tr', 'td', 'th', 'center']):
         elem.unwrap()
     soup.head.extract()
@@ -30,7 +32,7 @@ def clean_html(content):
 
 
 def generate_notification_html(documentation):
-    html = ""
+    html = ''
     for message in documentation:
         html += """
         <table>
@@ -53,7 +55,7 @@ def generate_notification_html(documentation):
             message['template'],
             message['recipients'],
             message['subject'],
-            clean_text(message['content_text'])
+            clean_text(message['content_text']),
         )
     return html
 
@@ -71,8 +73,7 @@ def run(*args):
     tenant = Client.objects.get(schema_name='goodup_demo')
 
     with LocalTenant(tenant):
-
-        url = "{}/wiki/rest/api/content/{}".format(api['domain'], notifications['page_id'])
+        url = '{}/wiki/rest/api/content/{}'.format(api['domain'], notifications['page_id'])
         response = requests.get(url, auth=(api['user'], api['key']))
         data = response.json()
         version = data['version']['number'] + 1
@@ -84,7 +85,7 @@ def run(*args):
             messages = document_notifications(model_class)
             if len(messages):
                 total += len(messages)
-                html += "<h2>{}</h2>".format(model_class._meta.verbose_name)
+                html += '<h2>{}</h2>'.format(model_class._meta.verbose_name)
                 html += generate_notification_html(messages)
 
         total += len(extra_messages)
@@ -92,43 +93,38 @@ def run(*args):
         for extra in extra_messages:
             message_class = get_class(extra)
             message = message_class(MemberPlatformSettings)
-            messages.append({
-                'class': extra,
-                'trigger': 'Cronjob',
-                'template': message_class.template,
-                'description': get_doc(message_class),
-                'recipients': get_doc(message_class.get_recipients),
-                'subject': message_class.subject,
-                'content_text': message.generic_content_text,
-                # 'content_html': message.generic_content_html
-            })
-        html += "<h2>Other messages</h2>"
+            messages.append(
+                {
+                    'class': extra,
+                    'trigger': 'Cronjob',
+                    'template': message_class.template,
+                    'description': get_doc(message_class),
+                    'recipients': get_doc(message_class.get_recipients),
+                    'subject': message_class.subject,
+                    'content_text': message.generic_content_text,
+                    # 'content_html': message.generic_content_html
+                }
+            )
+        html += '<h2>Other messages</h2>'
         html += generate_notification_html(messages)
 
         data = {
-            "id": notifications['page_id'],
-            "type": "page",
-            "status": "current",
-            "title": notifications['title'],
-            "version": {
-                "number": version
-            },
-            "body": {
-                "storage": {
-                    "value": html,
-                    "representation": "storage"
-                }
-            }
+            'id': notifications['page_id'],
+            'type': 'page',
+            'status': 'current',
+            'title': notifications['title'],
+            'version': {'number': version},
+            'body': {'storage': {'value': html, 'representation': 'storage'}},
         }
         url += '?expand=body.storage'
         response = requests.put(url, json=data, auth=(api['user'], api['key']))
 
-        print(f"{total} messages")
+        print(f'{total} messages')
         if response.status_code == 200:
-            print("[OK]")
+            print('[OK]')
         else:
-            text_file = open("email_documentation.html", "w")
+            text_file = open('email_documentation.html', 'w')
             text_file.write(html)
             text_file.close()
-            print("You can find html out put in email_documentation.html")
-            print("[ERROR]")
+            print('You can find html out put in email_documentation.html')
+            print('[ERROR]')

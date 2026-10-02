@@ -1,8 +1,6 @@
 from django.test import RequestFactory
 
-from bluebottle.activity_pub.authentication import (
-    HTTPSignatureAuthentication
-)
+from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 
 from bluebottle.activity_pub.tests.utils import SignedRequestFactory
 from bluebottle.test.utils import BluebottleTestCase

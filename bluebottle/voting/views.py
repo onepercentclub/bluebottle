@@ -7,8 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.utils.permissions import OneOf, ResourceOwnerPermission, ResourcePermission
 from bluebottle.utils.views import (
-    ExportView, JsonApiViewMixin, ListCreateAPIView, RetrieveAPIView,
-    RetrieveUpdateDestroyAPIView
+    ExportView,
+    JsonApiViewMixin,
+    ListCreateAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView,
 )
 from bluebottle.voting.models import Poll, PollVote
 from bluebottle.voting.serializers import PollSerializer, PollVoteSerializer
@@ -28,9 +31,7 @@ class PollVoteList(JsonApiViewMixin, ListCreateAPIView):
     )
 
     def get_queryset(self):
-        polls = Poll.objects.annotate(_votes_cast=Count('votes')).prefetch_related(
-            'options'
-        )
+        polls = Poll.objects.annotate(_votes_cast=Count('votes')).prefetch_related('options')
         queryset = (
             self.queryset.filter(owner=self.request.user)
             .select_related('option')
@@ -50,9 +51,7 @@ class PollVoteList(JsonApiViewMixin, ListCreateAPIView):
             with transaction.atomic():
                 super().perform_create(serializer)
         except IntegrityError:
-            raise ValidationError(
-                _('You have already voted in this poll')
-            )
+            raise ValidationError(_('You have already voted in this poll'))
 
 
 class PollVoteDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

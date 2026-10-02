@@ -1,8 +1,6 @@
 from django.utils.translation import get_language
 
-from bluebottle.utils.views import (
-    ListAPIView, RetrieveAPIView, JsonApiViewMixin, JsonApiPagination
-)
+from bluebottle.utils.views import ListAPIView, RetrieveAPIView, JsonApiViewMixin, JsonApiPagination
 from .models import Category
 from .serializers import CategorySerializer
 
@@ -16,9 +14,7 @@ class CategoryList(JsonApiViewMixin, ListAPIView):
     pagination_class = CategoryPagination
 
     def get_queryset(self, *args, **kwargs):
-        return self.queryset.translated(
-            get_language()
-        ).order_by('translations__title')
+        return self.queryset.translated(get_language()).order_by('translations__title')
 
     serializer_class = CategorySerializer
 

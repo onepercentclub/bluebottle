@@ -17,11 +17,12 @@ from bluebottle.activity_pub.serializers.federated_activities import (
     LocationSerializer,
 )
 from bluebottle.activity_pub.serializers.json_ld import (
-    DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer, GrantApplicationSerializer
+    DoGoodEventSerializer,
+    GoodDeedSerializer,
+    CrowdFundingSerializer,
+    GrantApplicationSerializer,
 )
-from bluebottle.activity_pub.tests.factories import (
-    DoGoodEventFactory
-)
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import GeoFeature, Geolocation
@@ -39,9 +40,7 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
     activity_pub_factory = DoGoodEventFactory
 
     def setUp(self):
-        self.settings = SitePlatformSettings.objects.create(
-            share_activities=['supplier', 'consumer']
-        )
+        self.settings = SitePlatformSettings.objects.create(share_activities=['supplier', 'consumer'])
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
             self.mock_image_response = Response()
             self.mock_image_response.raw = BytesIO(image_file.read())
@@ -56,15 +55,9 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
 
     def test_to_json_ld(self):
         model = self.factory.create()
-        federated_serializer = self.federated_serializer(
-            instance=model,
-            context=self.context
-        )
+        federated_serializer = self.federated_serializer(instance=model, context=self.context)
 
-        activity_pub_serializer = self.activity_pub_serializer(
-            data=federated_serializer.data,
-            context=self.context
-        )
+        activity_pub_serializer = self.activity_pub_serializer(data=federated_serializer.data, context=self.context)
 
         self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
 
@@ -81,25 +74,15 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
         DateActivitySlotFactory.create(activity=model, location=first_location)
         DateActivitySlotFactory.create(activity=model, location=second_location)
 
-        federated_serializer = self.federated_serializer(
-            instance=model,
-            context=self.context
-        )
+        federated_serializer = self.federated_serializer(instance=model, context=self.context)
 
-        activity_pub_serializer = self.activity_pub_serializer(
-            data=federated_serializer.data,
-            context=self.context
-        )
+        activity_pub_serializer = self.activity_pub_serializer(data=federated_serializer.data, context=self.context)
 
         self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
         do_good_event = activity_pub_serializer.save()
 
         serialized_locations = {
-            (
-                slot.location.latitude,
-                slot.location.longitude
-            )
-            for slot in do_good_event.sub_event.all()
+            (slot.location.latitude, slot.location.longitude) for slot in do_good_event.sub_event.all()
         }
         expected_locations = {
             (first_location.position.x, first_location.position.y),
@@ -109,15 +92,9 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
 
     def test_to_json_ld_already_exists(self):
         model = self.factory.create()
-        federated_serializer = self.federated_serializer(
-            instance=model,
-            context=self.context
-        )
+        federated_serializer = self.federated_serializer(instance=model, context=self.context)
 
-        activity_pub_serializer = self.activity_pub_serializer(
-            data=federated_serializer.data,
-            context=self.context
-        )
+        activity_pub_serializer = self.activity_pub_serializer(data=federated_serializer.data, context=self.context)
 
         self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
 
@@ -134,12 +111,8 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
     def test_to_federated_activity(self):
         activity_pub_model = self.activity_pub_factory.create(iri='http://example.com')
 
-        federated_serializer = self.activity_pub_serializer(
-            instance=activity_pub_model, context=self.context
-        )
-        serializer = self.federated_serializer(
-            data=federated_serializer.data, context=self.context
-        )
+        federated_serializer = self.activity_pub_serializer(instance=activity_pub_model, context=self.context)
+        serializer = self.federated_serializer(data=federated_serializer.data, context=self.context)
 
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
@@ -153,22 +126,16 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
     def test_to_federated_activity_already_exists(self):
         activity_pub_model = self.activity_pub_factory.create(iri='http://example.com')
 
-        federated_serializer = self.activity_pub_serializer(
-            instance=activity_pub_model, context=self.context
-        )
+        federated_serializer = self.activity_pub_serializer(instance=activity_pub_model, context=self.context)
 
-        serializer = self.federated_serializer(
-            data=federated_serializer.data, context=self.context
-        )
+        serializer = self.federated_serializer(data=federated_serializer.data, context=self.context)
 
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
         with mock.patch('requests.get', return_value=self.mock_image_response):
             activity = serializer.save()
 
-        serializer = self.federated_serializer(
-            instance=activity, data=federated_serializer.data, context=self.context
-        )
+        serializer = self.federated_serializer(instance=activity, data=federated_serializer.data, context=self.context)
 
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
@@ -181,12 +148,8 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
 
     def test_url_field_included_when_set(self):
         """Test that url field is included in serialized output when it's set."""
-        do_good_event = self.activity_pub_factory.create(
-            url='https://example.com/activity'
-        )
-        serializer = self.activity_pub_serializer(
-            instance=do_good_event, context=self.context
-        )
+        do_good_event = self.activity_pub_factory.create(url='https://example.com/activity')
+        serializer = self.activity_pub_serializer(instance=do_good_event, context=self.context)
         data = serializer.data
 
         self.assertIn('url', data)
@@ -195,9 +158,7 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
     def test_url_field_included_when_none(self):
         """Test that url field is included in serialized output even when it's None."""
         do_good_event = self.activity_pub_factory.create(url=None)
-        serializer = self.activity_pub_serializer(
-            instance=do_good_event, context=self.context
-        )
+        serializer = self.activity_pub_serializer(instance=do_good_event, context=self.context)
         data = serializer.data
 
         self.assertIn('url', data)
@@ -206,9 +167,7 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
 
 class FederatedFundingSerializerTestCase(BluebottleTestCase):
     def setUp(self):
-        SitePlatformSettings.objects.create(
-            share_activities=['supplier', 'consumer']
-        )
+        SitePlatformSettings.objects.create(share_activities=['supplier', 'consumer'])
 
     @property
     def context(self):
@@ -255,9 +214,7 @@ class FederatedFundingSerializerTestCase(BluebottleTestCase):
 @override_settings(MAPBOX_API_KEY=None)
 class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
     def setUp(self):
-        SitePlatformSettings.objects.create(
-            share_activities=['supplier', 'consumer']
-        )
+        SitePlatformSettings.objects.create(share_activities=['supplier', 'consumer'])
         self.country = CountryFactory.create(alpha2_code='NL')
 
     @property
@@ -314,11 +271,13 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
         self.assertEqual(location['address']['country'], 'NL')
         self.assertEqual(
             location['identifier'],
-            [{
-                'type': 'PropertyValue',
-                'propertyID': 'mapbox-feature-id',
-                'value': place.mapbox_id,
-            }]
+            [
+                {
+                    'type': 'PropertyValue',
+                    'propertyID': 'mapbox-feature-id',
+                    'value': place.mapbox_id,
+                }
+            ],
         )
 
         feature_count = GeoFeature.objects.count()
@@ -336,11 +295,13 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
         self.assertEqual(event.location.address.locality, 'Amsterdam')
         self.assertEqual(
             event.location.identifier,
-            [{
-                'type': 'PropertyValue',
-                'propertyID': 'mapbox-feature-id',
-                'value': place.mapbox_id,
-            }]
+            [
+                {
+                    'type': 'PropertyValue',
+                    'propertyID': 'mapbox-feature-id',
+                    'value': place.mapbox_id,
+                }
+            ],
         )
         self.assertEqual(GeoFeature.objects.count(), feature_count)
 
@@ -406,23 +367,27 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
         self.assertEqual(location['address']['locality'], geolocation.locality)
         self.assertEqual(
             location['identifier'],
-            [{
-                'type': 'PropertyValue',
-                'propertyID': 'mapbox-feature-id',
-                'value': geolocation.mapbox_id,
-            }]
+            [
+                {
+                    'type': 'PropertyValue',
+                    'propertyID': 'mapbox-feature-id',
+                    'value': geolocation.mapbox_id,
+                }
+            ],
         )
 
     def test_linked_location_uses_name_when_locality_missing(self):
-        serializer = LinkedLocationSerializer(data={
-            'name': 'Amsterdam, Netherlands',
-            'latitude': 52.37,
-            'longitude': 4.9,
-            'address': {
-                'locality': None,
-                'country': 'NL',
-            },
-        })
+        serializer = LinkedLocationSerializer(
+            data={
+                'name': 'Amsterdam, Netherlands',
+                'latitude': 52.37,
+                'longitude': 4.9,
+                'address': {
+                    'locality': None,
+                    'country': 'NL',
+                },
+            }
+        )
         self.assertTrue(serializer.is_valid(raise_exception=True))
         self.assertEqual(serializer.validated_data['locality'], 'Amsterdam, Netherlands')
         self.assertEqual(
@@ -437,11 +402,13 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
             'place_type': place_type,
             'latitude': 52.37,
             'longitude': 4.9,
-            'identifier': [{
-                'type': 'PropertyValue',
-                'propertyID': 'mapbox-feature-id',
-                'value': mapbox_id,
-            }],
+            'identifier': [
+                {
+                    'type': 'PropertyValue',
+                    'propertyID': 'mapbox-feature-id',
+                    'value': mapbox_id,
+                }
+            ],
             'address': {
                 'id': 'https://example.com/address/1',
                 'locality': 'Amsterdam',
@@ -496,14 +463,10 @@ class GoodDeedSerializerTest(BluebottleTestCase):
     def test_url_field_included_when_set(self):
         """Test that url field is included in GoodDeedSerializer when it's set."""
         good_deed = GoodDeed.objects.create(
-            name='Test Good Deed',
-            summary='Test summary',
-            url='https://example.com/good-deed'
+            name='Test Good Deed', summary='Test summary', url='https://example.com/good-deed'
         )
 
-        serializer = self.serializer_class(
-            instance=good_deed, context=self.context
-        )
+        serializer = self.serializer_class(instance=good_deed, context=self.context)
         data = serializer.data
 
         self.assertIn('url', data)
@@ -511,15 +474,9 @@ class GoodDeedSerializerTest(BluebottleTestCase):
 
     def test_url_field_included_when_none(self):
         """Test that url field is included in GoodDeedSerializer even when it's None."""
-        good_deed = GoodDeed.objects.create(
-            name='Test Good Deed',
-            summary='Test summary',
-            url=None
-        )
+        good_deed = GoodDeed.objects.create(name='Test Good Deed', summary='Test summary', url=None)
 
-        serializer = self.serializer_class(
-            instance=good_deed, context=self.context
-        )
+        serializer = self.serializer_class(instance=good_deed, context=self.context)
         data = serializer.data
 
         self.assertIn('url', data)
@@ -542,12 +499,10 @@ class CrowdFundingSerializerTest(BluebottleTestCase):
             summary='Test summary',
             url='https://example.com/crowd-funding',
             target=1000.00,
-            target_currency='EUR'
+            target_currency='EUR',
         )
 
-        serializer = self.serializer_class(
-            instance=crowd_funding, context=self.context
-        )
+        serializer = self.serializer_class(instance=crowd_funding, context=self.context)
         data = serializer.data
 
         self.assertIn('url', data)
@@ -556,16 +511,10 @@ class CrowdFundingSerializerTest(BluebottleTestCase):
     def test_url_field_included_when_none(self):
         """Test that url field is included in CrowdFundingSerializer even when it's None."""
         crowd_funding = CrowdFunding.objects.create(
-            name='Test Crowd Funding',
-            summary='Test summary',
-            url=None,
-            target=1000.00,
-            target_currency='EUR'
+            name='Test Crowd Funding', summary='Test summary', url=None, target=1000.00, target_currency='EUR'
         )
 
-        serializer = self.serializer_class(
-            instance=crowd_funding, context=self.context
-        )
+        serializer = self.serializer_class(instance=crowd_funding, context=self.context)
         data = serializer.data
 
         self.assertIn('url', data)
@@ -588,12 +537,10 @@ class GrantApplicationSerializerTest(BluebottleTestCase):
             summary='Test summary',
             url='https://example.com/grant-application',
             target=1000.00,
-            target_currency='EUR'
+            target_currency='EUR',
         )
 
-        serializer = self.serializer_class(
-            instance=grant_application, context=self.context
-        )
+        serializer = self.serializer_class(instance=grant_application, context=self.context)
         data = serializer.data
 
         self.assertIn('url', data)
@@ -602,16 +549,10 @@ class GrantApplicationSerializerTest(BluebottleTestCase):
     def test_url_field_included_when_none(self):
         """Test that url field is included in GrantApplicationSerializer even when it's None."""
         grant_application = GrantApplication.objects.create(
-            name='Test Grant Application',
-            summary='Test summary',
-            url=None,
-            target=1000.00,
-            target_currency='EUR'
+            name='Test Grant Application', summary='Test summary', url=None, target=1000.00, target_currency='EUR'
         )
 
-        serializer = self.serializer_class(
-            instance=grant_application, context=self.context
-        )
+        serializer = self.serializer_class(instance=grant_application, context=self.context)
         data = serializer.data
 
         self.assertIn('url', data)

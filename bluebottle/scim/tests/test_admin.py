@@ -45,10 +45,7 @@ class PlatformSettingsAdminTest(BluebottleAdminTestCase):
 
         # Check it shows up in object history
         self.client.force_login(self.superuser)
-        url = reverse(
-            'admin:scim_scimplatformsettings_history',
-            args=(self.scim_settings.pk, )
-        )
+        url = reverse('admin:scim_scimplatformsettings_history', args=(self.scim_settings.pk,))
         response = self.client.get(url)
         self.assertContains(response, 'Reset Token')
 
@@ -56,9 +53,7 @@ class PlatformSettingsAdminTest(BluebottleAdminTestCase):
         self.request.user.perms = []
 
         current_token = self.scim_settings.bearer_token
-        response = self.admin.reset_token(
-            self.request, self.scim_settings.pk
-        )
+        response = self.admin.reset_token(self.request, self.scim_settings.pk)
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(self.scim_settings.bearer_token, current_token)

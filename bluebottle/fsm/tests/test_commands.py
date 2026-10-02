@@ -8,7 +8,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class PrintTransitionsTestCase(BluebottleTestCase):
-
     def document_transitions(self, model):
         old_stdout = sys.stdout
         result = StringIO()
@@ -25,7 +24,4 @@ class PrintTransitionsTestCase(BluebottleTestCase):
     def test_print_transitions_all_models_render(self):
         for model in settings.CONFLUENCE['dev_models']:
             data = eval(self.document_transitions(model['model']))
-            self.assertEqual(
-                [key for key in data.keys()],
-                ['states', 'transitions', 'triggers', 'periodic_tasks']
-            )
+            self.assertEqual([key for key in data.keys()], ['states', 'transitions', 'triggers', 'periodic_tasks'])

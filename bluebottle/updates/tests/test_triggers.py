@@ -19,17 +19,13 @@ class DeedTriggersTestCase(TriggerTestCase):
 
     def test_create_notify(self):
         participants = DeedParticipantFactory.create_batch(3, activity=self.defaults['activity'])
-        DeedParticipantFactory.create(
-            activity=self.defaults['activity'], user=self.defaults['activity'].owner
-        )
+        DeedParticipantFactory.create(activity=self.defaults['activity'], user=self.defaults['activity'].owner)
         self.defaults['author'] = self.defaults['activity'].owner
         self.defaults['notify'] = True
         self.create()
 
         with self.execute():
-            self.assertNotificationEffect(
-                FollowersNotification, [participant.user for participant in participants]
-            )
+            self.assertNotificationEffect(FollowersNotification, [participant.user for participant in participants])
             self.assertNoNotificationEffect(OwnerNotification)
 
     def test_create_notify_contributors_only(self):
@@ -47,9 +43,7 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.create()
 
         with self.execute():
-            self.assertNotificationEffect(
-                FollowersNotification, [active_participant.user]
-            )
+            self.assertNotificationEffect(FollowersNotification, [active_participant.user])
             self.assertNoNotificationEffect(OwnerNotification)
 
     def test_create_no_notify(self):

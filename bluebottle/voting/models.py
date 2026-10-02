@@ -14,9 +14,7 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 class Poll(TriggerMixin, TranslatableModel):
     translations = TranslatedFields(
         title=models.CharField(_('title'), max_length=255),
-        subtitle=models.CharField(
-            _('subtitle'), max_length=255, blank=True, default=''
-        ),
+        subtitle=models.CharField(_('subtitle'), max_length=255, blank=True, default=''),
     )
 
     end_date = models.DateField(_('end date'), null=True, blank=True)
@@ -26,9 +24,7 @@ class Poll(TriggerMixin, TranslatableModel):
         verbose_name = _('poll')
         verbose_name_plural = _('polls')
         ordering = ('-id',)
-        permissions = (
-            ('api_read_poll', 'Can view polls through the API'),
-        )
+        permissions = (('api_read_poll', 'Can view polls through the API'),)
 
     class JSONAPIMeta:
         resource_name = 'polls'
@@ -82,9 +78,7 @@ class PollOption(SortableMixin, TranslatableModel):
         null=True,
     )
 
-    sequence = models.PositiveIntegerField(
-        default=0, editable=False, db_index=True
-    )
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     @property
     def vote_count(self):
@@ -98,9 +92,7 @@ class PollOption(SortableMixin, TranslatableModel):
     @property
     def winner(self):
         max_count = max(
-            self.poll.options.annotate(
-                vote_count=Count('votes')
-            ).values_list('vote_count', flat=True),
+            self.poll.options.annotate(vote_count=Count('votes')).values_list('vote_count', flat=True),
             default=0,
         )
         return max_count > 0 and self.votes.count() == max_count

@@ -62,12 +62,14 @@ class FundingDocumentTestCase(BluebottleTestCase):
 
         self.assertEqual(
             prepared['location'],
-            [{
-                'id': impact_location.id,
-                'name': impact_location.geofeature.place_name,
-                'locality': locality_from_geolocation(impact_location),
-                'country_code': None,
-                'country': None,
-                'type': 'location',
-            }],
+            [
+                {
+                    'id': impact_location.id,
+                    'name': impact_location.geofeature.place_name,
+                    'locality': locality_from_geolocation(impact_location),
+                    'country_code': None,
+                    'country': None,
+                    'type': 'location',
+                }
+            ],
         )

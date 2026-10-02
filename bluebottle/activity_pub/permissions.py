@@ -26,15 +26,13 @@ class InboxPermission(permissions.BasePermission):
             if hasattr(request, 'data') and isinstance(request.data, dict) and 'type' in request.data:
                 if request.data['type'] == 'Follow':
                     return True
-                if request.data['type'] in (
-                    'Create', 'Update', 'Start', 'Cancel', 'Finish', 'Delete'
-                ):
+                if request.data['type'] in ('Create', 'Update', 'Start', 'Cancel', 'Finish', 'Delete'):
                     # Only actors we follow can post publish activities
                     return (
-                        Follow.objects.filter(object=request.auth).exists() or
-                        Follow.objects.filter(actor=request.auth).exists()
+                        Follow.objects.filter(object=request.auth).exists()
+                        or Follow.objects.filter(actor=request.auth).exists()
                     )
-                if request.data['type'] in ('Accept', ):
+                if request.data['type'] in ('Accept',):
                     # Only actors that we accepted us can announce
                     try:
                         object = ActivityPubModel.objects.from_iri(request.data['object'])
@@ -43,9 +41,7 @@ class InboxPermission(permissions.BasePermission):
                             return Follow.objects.filter(object=request.auth).exists()
                         else:
                             # If it's an Accept on an Event, make sure we accepted the related follow
-                            return Accept.objects.filter(
-                                object__in=Follow.objects.filter(actor=request.auth)
-                            ).exists()
+                            return Accept.objects.filter(object__in=Follow.objects.filter(actor=request.auth)).exists()
                     except ActivityPubModel.DoesNotExist:
                         return False
 

@@ -17,7 +17,8 @@ from bluebottle.time_based.models import (
     ScheduleSlot,
     TeamScheduleParticipant,
     TeamScheduleRegistration,
-    DateActivitySlot, RegisteredDateParticipant
+    DateActivitySlot,
+    RegisteredDateParticipant,
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -28,27 +29,20 @@ class ParticipantSerializer(BaseContributorSerializer):
 
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields + (
-            "total_duration",
-            "registration",
+            'total_duration',
+            'registration',
         )
-        meta_fields = BaseContributorSerializer.Meta.meta_fields + (
-            "permissions",
-        )
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        included_resources = [
-            "user",
-            "registration",
-            "activity",
-            "contributions"
-        ]
+        included_resources = ['user', 'registration', 'activity', 'contributions']
 
     included_serializers = dict(
         BaseContributorSerializer.included_serializers.serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.RegisteredDateActivitySerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
-        }
+        },
     )
 
 
@@ -67,19 +61,19 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
-        fields = ParticipantSerializer.Meta.fields + ("contributions", 'slot')
+        fields = ParticipantSerializer.Meta.fields + ('contributions', 'slot')
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        resource_name = "contributors/time-based/date-participants"
+        resource_name = 'contributors/time-based/date-participants'
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['slot']
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers.serializers,
         **{
-            "activity": "bluebottle.time_based.serializers.DateActivitySerializer",
-            "registration": "bluebottle.time_based.serializers.DateRegistrationSerializer",
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+            'registration': 'bluebottle.time_based.serializers.DateRegistrationSerializer',
             'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
-        }
+        },
     )
 
 
@@ -89,17 +83,17 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
 
     class Meta(ParticipantSerializer.Meta):
         model = DeadlineParticipant
-        fields = ParticipantSerializer.Meta.fields + ("contributions",)
+        fields = ParticipantSerializer.Meta.fields + ('contributions',)
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        resource_name = "contributors/time-based/deadline-participants"
+        resource_name = 'contributors/time-based/deadline-participants'
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers.serializers,
         **{
-            "activity": "bluebottle.time_based.serializers.DeadlineActivitySerializer",
-            "registration": "bluebottle.time_based.serializers.DeadlineRegistrationSerializer",
-        }
+            'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
+            'registration': 'bluebottle.time_based.serializers.DeadlineRegistrationSerializer',
+        },
     )
 
 
@@ -111,51 +105,43 @@ class RegisteredDateParticipantSerializer(ParticipantSerializer):
         fields = BaseContributorSerializer.Meta.fields + ('contributions',)
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        resource_name = "contributors/time-based/registered-date-participants"
-        included_resources = [
-            "user",
-            "activity",
-            "contributions"
-        ]
+        resource_name = 'contributors/time-based/registered-date-participants'
+        included_resources = ['user', 'activity', 'contributions']
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers.serializers,
         **{
-            "activity": "bluebottle.time_based.serializers.RegisteredDateActivitySerializer",
-        }
+            'activity': 'bluebottle.time_based.serializers.RegisteredDateActivitySerializer',
+        },
     )
 
 
 class ScheduleParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('schedule-participant-detail', view_args=('pk',))
-    registration = ResourceRelatedField(
-        queryset=ScheduleRegistration.objects.all(), required=False
-    )
-    slot = ResourceRelatedField(
-        queryset=ScheduleSlot.objects.all(), required=False
-    )
+    registration = ResourceRelatedField(queryset=ScheduleRegistration.objects.all(), required=False)
+    slot = ResourceRelatedField(queryset=ScheduleSlot.objects.all(), required=False)
 
     class Meta(ParticipantSerializer.Meta):
-        fields = ParticipantSerializer.Meta.fields + ("slot", "contributions")
+        fields = ParticipantSerializer.Meta.fields + ('slot', 'contributions')
         model = ScheduleParticipant
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        resource_name = "contributors/time-based/schedule-participants"
+        resource_name = 'contributors/time-based/schedule-participants'
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
-            "slot",
-            "slot.location",
-            "slot.location.country",
+            'slot',
+            'slot.location',
+            'slot.location.country',
         ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers.serializers,
         **{
-            "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
-            "slot": "bluebottle.time_based.serializers.slots.ScheduleSlotSerializer",
-            "slot.location": "bluebottle.geo.serializers.GeolocationSerializer",
-            "slot.location.country": "bluebottle.geo.serializers.CountrySerializer",
-            "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
-        }
+            'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+            'slot': 'bluebottle.time_based.serializers.slots.ScheduleSlotSerializer',
+            'slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'slot.location.country': 'bluebottle.geo.serializers.CountrySerializer',
+            'registration': 'bluebottle.time_based.serializers.ScheduleRegistrationSerializer',
+        },
     )
 
 
@@ -165,27 +151,27 @@ class TeamScheduleParticipantSerializer(ScheduleParticipantSerializer):
 
     class Meta(ScheduleParticipantSerializer.Meta):
         model = TeamScheduleParticipant
-        fields = ScheduleParticipantSerializer.Meta.fields + ("team_member",)
+        fields = ScheduleParticipantSerializer.Meta.fields + ('team_member',)
 
     class JSONAPIMeta(ScheduleParticipantSerializer.JSONAPIMeta):
-        resource_name = "contributors/time-based/team-schedule-participants"
+        resource_name = 'contributors/time-based/team-schedule-participants'
 
         included_resources = ScheduleParticipantSerializer.JSONAPIMeta.included_resources + [
-            "team_member",
-            "slot.team",
-            "slot.team.user"
+            'team_member',
+            'slot.team',
+            'slot.team.user',
         ]
 
     included_serializers = dict(
         ScheduleParticipantSerializer.included_serializers.serializers,
         **{
-            "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
-            "team": "bluebottle.time_based.serializers.teams.TeamSerializer",
-            "team_member": "bluebottle.time_based.serializers.teams.TeamMemberSerializer",
-            "slot": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
-            "slot.team": "bluebottle.time_based.serializers.TeamSerializer",
-            "slot.team.user": "bluebottle.initiatives.serializers.MemberSerializer",
-        }
+            'registration': 'bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer',
+            'team': 'bluebottle.time_based.serializers.teams.TeamSerializer',
+            'team_member': 'bluebottle.time_based.serializers.teams.TeamMemberSerializer',
+            'slot': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer',
+            'slot.team': 'bluebottle.time_based.serializers.TeamSerializer',
+            'slot.team.user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        },
     )
 
 
@@ -196,21 +182,19 @@ class PeriodicParticipantSerializer(ParticipantSerializer):
 
     class Meta(ParticipantSerializer.Meta):
         model = PeriodicParticipant
-        fields = ParticipantSerializer.Meta.fields + ("contributions", "slot")
+        fields = ParticipantSerializer.Meta.fields + ('contributions', 'slot')
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        resource_name = "contributors/time-based/periodic-participants"
-        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
-            "slot"
-        ]
+        resource_name = 'contributors/time-based/periodic-participants'
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['slot']
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers.serializers,
         **{
-            "slot": "bluebottle.time_based.serializers.slots.PeriodicSlotSerializer",
-            "activity": "bluebottle.time_based.serializers.PeriodicActivitySerializer",
-            "registration": "bluebottle.time_based.serializers.PeriodicRegistrationSerializer",
-        }
+            'slot': 'bluebottle.time_based.serializers.slots.PeriodicSlotSerializer',
+            'activity': 'bluebottle.time_based.serializers.PeriodicActivitySerializer',
+            'registration': 'bluebottle.time_based.serializers.PeriodicRegistrationSerializer',
+        },
     )
 
 
@@ -218,9 +202,7 @@ class ParticipantTransitionSerializer(TransitionSerializer):
     field = 'states'
 
     class JSONAPIMeta(object):
-        included_resources = [
-            'resource', 'resource.activity'
-        ]
+        included_resources = ['resource', 'resource.activity']
 
 
 class DateParticipantTransitionSerializer(ParticipantTransitionSerializer):

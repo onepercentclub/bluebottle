@@ -1,8 +1,12 @@
 from django.contrib.auth.models import Group
 
 from bluebottle.activities.messages.activity_manager import TermsOfServiceNotification
-from bluebottle.funding.messages.funding.activity_manager import FundingSubmittedMessage, FundingApprovedMessage, \
-    FundingNeedsWorkMessage, FundingRejectedMessage
+from bluebottle.funding.messages.funding.activity_manager import (
+    FundingSubmittedMessage,
+    FundingApprovedMessage,
+    FundingNeedsWorkMessage,
+    FundingRejectedMessage,
+)
 from bluebottle.funding.messages.funding.platform_manager import LivePayoutAccountMarkedIncomplete
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import Funding
@@ -18,24 +22,15 @@ from bluebottle.test.utils import NotificationTestCase
 
 
 def reviewer_with_permission(**extra):
-    reviewer = BlueBottleUserFactory.create(
-        submitted_initiative_notifications=True,
-        **extra
-    )
+    reviewer = BlueBottleUserFactory.create(submitted_initiative_notifications=True, **extra)
     reviewer.groups.add(Group.objects.get(name='Staff'))
     return reviewer
 
 
 class FundingNotificationTestCase(NotificationTestCase):
-
     def setUp(self):
-        self.obj = FundingFactory.create(
-            title="Save the world!"
-        )
-        self.reviewer = BlueBottleUserFactory.create(
-            is_staff=True,
-            submitted_initiative_notifications=True
-        )
+        self.obj = FundingFactory.create(title='Save the world!')
+        self.reviewer = BlueBottleUserFactory.create(is_staff=True, submitted_initiative_notifications=True)
 
     def test_activity_submitted_reviewer_notification(self):
         self.message_class = FundingSubmittedReviewerMessage
@@ -90,7 +85,6 @@ class FundingNotificationTestCase(NotificationTestCase):
 
 
 class LivePayoutAccountMarkedIncompleteNotificationTestCase(FundingStripeMixin, NotificationTestCase):
-
     def setUp(self):
         super().setUp()
         self.payout_account = StripePayoutAccountFactory.create(

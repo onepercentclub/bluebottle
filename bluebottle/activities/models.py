@@ -34,39 +34,35 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 @python_2_unicode_compatible
 class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     class TeamActivityChoices(DjangoChoices):
-        teams = ChoiceItem("teams", label=_("Teams"))
-        individuals = ChoiceItem("individuals", label=_("Individuals"))
+        teams = ChoiceItem('teams', label=_('Teams'))
+        individuals = ChoiceItem('individuals', label=_('Individuals'))
 
     owner = models.ForeignKey(
-        "members.Member",
-        verbose_name=_("activity manager"),
-        related_name="activities",
+        'members.Member',
+        verbose_name=_('activity manager'),
+        related_name='activities',
         on_delete=models.CASCADE,
     )
 
-    highlight = models.BooleanField(
-        default=False, help_text=_("Highlight this activity to show it on homepage")
-    )
+    highlight = models.BooleanField(default=False, help_text=_('Highlight this activity to show it on homepage'))
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
     status = models.CharField(max_length=40)
 
-    review_status = models.CharField(max_length=40, default="draft")
+    review_status = models.CharField(max_length=40, default='draft')
 
     initiative = models.ForeignKey(
         Initiative,
-        related_name="activities",
+        related_name='activities',
         on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
 
-    theme = models.ForeignKey(
-        "initiatives.Theme", null=True, blank=True, on_delete=SET_NULL
-    )
-    categories = models.ManyToManyField("categories.Category", blank=True)
+    theme = models.ForeignKey('initiatives.Theme', null=True, blank=True, on_delete=SET_NULL)
+    categories = models.ManyToManyField('categories.Category', blank=True)
 
     organization = models.ForeignKey(
         Organization,
@@ -74,7 +70,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         null=True,
         blank=True,
         on_delete=SET_NULL,
-        related_name="activities",
+        related_name='activities',
     )
 
     host_organization = models.ForeignKey(
@@ -84,19 +80,19 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         null=True,
         blank=True,
         on_delete=SET_NULL,
-        related_name="hosted_activities",
+        related_name='hosted_activities',
     )
 
     office_location = models.ForeignKey(
-        "geo.Location",
-        verbose_name=_("Host work location"),
+        'geo.Location',
+        verbose_name=_('Host work location'),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
 
     office_restriction = models.CharField(
-        _("Restrictions"),
+        _('Restrictions'),
         default=OfficeRestrictionChoices.all,
         choices=OfficeRestrictionChoices.choices,
         blank=True,
@@ -105,103 +101,96 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     has_deleted_data = models.BooleanField(
-        _("Has anonymised and/or deleted data"),
+        _('Has anonymised and/or deleted data'),
         default=False,
-        help_text=_(
-            "Due to company policies and local laws, user data maybe deleted in this activity."
-        ),
+        help_text=_('Due to company policies and local laws, user data maybe deleted in this activity.'),
     )
 
     deleted_successful_contributors = models.PositiveIntegerField(
-        _("Number of deleted successful contributors"), default=0, null=True, blank=True
+        _('Number of deleted successful contributors'), default=0, null=True, blank=True
     )
 
-    title = models.CharField(_("Title"), max_length=255)
-    slug = models.SlugField(_("Slug"), max_length=100, default="new")
-    description = QuillField(_("Description"), blank=True)
+    title = models.CharField(_('Title'), max_length=255)
+    slug = models.SlugField(_('Slug'), max_length=100, default='new')
+    description = QuillField(_('Description'), blank=True)
     team_activity = models.CharField(
-        _("participation"),
+        _('participation'),
         max_length=100,
         default=TeamActivityChoices.individuals,
         choices=TeamActivityChoices.choices,
         blank=True,
-        help_text=_("Is this activity open for individuals or can only teams sign up?"),
+        help_text=_('Is this activity open for individuals or can only teams sign up?'),
     )
     image = ImageField(blank=True, null=True)
 
     origin = models.ForeignKey(
-        'activity_pub.Event', null=True, related_name="adopted_activities", on_delete=models.SET_NULL
+        'activity_pub.Event', null=True, related_name='adopted_activities', on_delete=models.SET_NULL
     )
 
     video_url = models.URLField(
-        _("video"),
+        _('video'),
         max_length=2048,
         blank=True,
         null=True,
-        default="",
-        help_text=_(
-            "Make your activity come alive with a video. "
-            "You can paste the link to YouTube or Vimeo here."
-        ),
+        default='',
+        help_text=_('Make your activity come alive with a video. You can paste the link to YouTube or Vimeo here.'),
     )
 
     next_step_link = models.URLField(
-        _("Redirect step link"),
+        _('Redirect step link'),
         max_length=2048,
         blank=True,
         null=True,
-        default="",
-        help_text=_(
-            "This link is shown after a user joined as the next step for the activity"
-        ),
+        default='',
+        help_text=_('This link is shown after a user joined as the next step for the activity'),
     )
 
     next_step_title = models.CharField(
-        _("Redirect step title"),
+        _('Redirect step title'),
         max_length=100,
         blank=True,
         null=True,
-        default="",
-        help_text=_("The title in the popup after a user joined the activity"),
+        default='',
+        help_text=_('The title in the popup after a user joined the activity'),
     )
 
     next_step_button_label = models.CharField(
-        _("Redirect step button label"),
+        _('Redirect step button label'),
         max_length=100,
         blank=True,
         null=True,
-        default="",
-        help_text=_("The title on the next link button"),
+        default='',
+        help_text=_('The title on the next link button'),
     )
 
     next_step_description = models.TextField(
-        _("Redirect step description"),
+        _('Redirect step description'),
         blank=True,
         null=True,
-        default="",
-        help_text=_("A description to explain what the next step is"),
+        default='',
+        help_text=_('A description to explain what the next step is'),
     )
 
     segments = models.ManyToManyField(
-        "segments.segment",
-        verbose_name=_("Segment"),
-        related_name="activities",
+        'segments.segment',
+        verbose_name=_('Segment'),
+        related_name='activities',
         blank=True,
     )
 
-    followers = GenericRelation("follow.Follow", object_id_field="instance_id")
-    messages = GenericRelation("notifications.Message")
+    followers = GenericRelation('follow.Follow', object_id_field='instance_id')
+    messages = GenericRelation('notifications.Message')
 
-    follows = GenericRelation(Follow, object_id_field="instance_id")
+    follows = GenericRelation(Follow, object_id_field='instance_id')
 
-    activity_type = _("Activity")
+    activity_type = _('Activity')
 
     auto_approve = True
 
     tos_accepted = models.BooleanField(
-        _("Terms of Service accepted"),
+        _('Terms of Service accepted'),
         default=False,
-        help_text=_("Has the user accepted the terms of service for this activity?")
+        help_text=_('Has the user accepted the terms of service for this activity?'),
     )
 
     @property
@@ -211,11 +200,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def event(self):
         from bluebottle.activity_pub.models import Event
+
         return Event.objects.get(object=self)
 
     @property
     def activity_pub_url(self):
         from bluebottle.activity_pub.models import Event
+
         try:
             return self.event.iri or self.event.pub_url
         except Event.DoesNotExist:
@@ -223,7 +214,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def details(self):
-        return f"{self.description.html}, {self.get_absolute_url()}"
+        return f'{self.description.html}, {self.get_absolute_url()}'
 
     @property
     def owners(self):
@@ -252,11 +243,11 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
         fields = ['theme']
         if Location.objects.count():
-            fields.append("office_location")
+            fields.append('office_location')
             if InitiativePlatformSettings.load().enable_office_regions:
-                fields.append("office_restriction")
+                fields.append('office_restriction')
         if not self.initiative_id:
-            fields.append("image")
+            fields.append('image')
 
         return fields
 
@@ -280,25 +271,25 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         return ActivityQuestion.objects.filter(activity_types__contains=self._meta.model_name)
 
     class Meta(object):
-        verbose_name = _("Activity")
-        verbose_name_plural = _("Activities")
+        verbose_name = _('Activity')
+        verbose_name_plural = _('Activities')
         permissions = (
-            ("api_read_activity", "Can view activity through the API"),
-            ("api_read_own_activity", "Can view own activity through the API"),
-            ("api_review_activity", "Can review activities through the API"),
+            ('api_read_activity', 'Can view activity through the API'),
+            ('api_read_own_activity', 'Can view own activity through the API'),
+            ('api_review_activity', 'Can review activities through the API'),
         )
 
     def __str__(self):
-        return self.title or str(_("-empty-"))
+        return self.title or str(_('-empty-'))
 
     def save(self, **kwargs):
         if not self.theme_id and self.initiative_id:
             self.theme = self.initiative.theme
-        if self.slug in ["", "new"]:
+        if self.slug in ['', 'new']:
             if self.title and slugify(self.title):
                 self.slug = slugify(self.title)
             else:
-                self.slug = "new"
+                self.slug = 'new'
 
         if not self.owner_id and self.initiative:
             self.owner = self.initiative.owner
@@ -316,14 +307,12 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
             type = self.get_real_instance().__class__.__name__.lower()
         except PolymorphicTypeInvalid:
             type = self.__class__.__name__.lower()
-        return (
-            f"{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}"
-        )
+        return f'{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}'
 
     def get_admin_url(self):
         domain = get_current_host()
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
-        return f"{domain}{url}"
+        return f'{domain}{url}'
 
     @property
     def organizer(self):
@@ -333,7 +322,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
 def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
     # This fixing deleting related polymorphic objects through admin
-    if hasattr(sub_objs, "non_polymorphic"):
+    if hasattr(sub_objs, 'non_polymorphic'):
         sub_objs = sub_objs.non_polymorphic()
     return models.CASCADE(collector, field, sub_objs, using)
 
@@ -346,21 +335,19 @@ class Contributor(TriggerMixin, PolymorphicModel):
     updated = models.DateTimeField(auto_now=True)
     contributor_date = models.DateTimeField(null=True, blank=True)
 
-    activity = models.ForeignKey(
-        Activity, related_name="contributors", on_delete=NON_POLYMORPHIC_CASCADE
-    )
+    activity = models.ForeignKey(Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE)
 
     team = models.ForeignKey(
-        "activities.Team",
-        verbose_name=_("Old team"),
+        'activities.Team',
+        verbose_name=_('Old team'),
         null=True,
         blank=True,
-        related_name="members",
+        related_name='members',
         on_delete=models.SET_NULL,
     )
     user = models.ForeignKey(
-        "members.Member",
-        verbose_name=_("user"),
+        'members.Member',
+        verbose_name=_('user'),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -388,9 +375,9 @@ class Contributor(TriggerMixin, PolymorphicModel):
         return self.activity.contributor_date
 
     class Meta(object):
-        ordering = ("-created",)
-        verbose_name = _("Contribution")
-        verbose_name_plural = _("Contributions")
+        ordering = ('-created',)
+        verbose_name = _('Contribution')
+        verbose_name_plural = _('Contributions')
 
     @property
     def type(self):
@@ -399,29 +386,29 @@ class Contributor(TriggerMixin, PolymorphicModel):
     def __str__(self):
         if self.user:
             return str(self.user)
-        return str(_("Anonymous"))
+        return str(_('Anonymous'))
 
 
 @python_2_unicode_compatible
 class Organizer(Contributor):
     class Meta(object):
-        verbose_name = _("Activity owner")
-        verbose_name_plural = _("Activity owners")
+        verbose_name = _('Activity owner')
+        verbose_name_plural = _('Activity owners')
 
     class JSONAPIMeta(object):
-        resource_name = "contributors/organizers"
+        resource_name = 'contributors/organizers'
 
 
 class Contribution(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
-    start = models.DateTimeField(_("start"), null=True, blank=True)
-    end = models.DateTimeField(_("end"), null=True, blank=True)
+    start = models.DateTimeField(_('start'), null=True, blank=True)
+    end = models.DateTimeField(_('end'), null=True, blank=True)
 
     contributor = models.ForeignKey(
         Contributor,
-        related_name="contributions",
+        related_name='contributions',
         on_delete=SET_NULL,
         null=True,
         blank=True,
@@ -432,73 +419,67 @@ class Contribution(TriggerMixin, PolymorphicModel):
         return self.contributor.user
 
     class Meta(object):
-        ordering = ("-created",)
-        verbose_name = _("Contribution amount")
-        verbose_name_plural = _("Contribution amounts")
+        ordering = ('-created',)
+        verbose_name = _('Contribution amount')
+        verbose_name_plural = _('Contribution amounts')
 
     def __str__(self):
-        return str(_("Contribution amount"))
+        return str(_('Contribution amount'))
 
 
 class EffortContribution(Contribution):
     class ContributionTypeChoices(DjangoChoices):
-        organizer = ChoiceItem("organizer", label=_("Activity Organizer"))
-        deed = ChoiceItem("deed", label=_("Deed participant"))
+        organizer = ChoiceItem('organizer', label=_('Activity Organizer'))
+        deed = ChoiceItem('deed', label=_('Deed participant'))
 
     contribution_type = models.CharField(
-        _("Contribution type"),
+        _('Contribution type'),
         max_length=20,
         choices=ContributionTypeChoices.choices,
     )
 
     class Meta(object):
-        verbose_name = _("Effort")
-        verbose_name_plural = _("Contributions")
+        verbose_name = _('Effort')
+        verbose_name_plural = _('Contributions')
 
 
 class Invite(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
 
     class JSONAPIMeta(object):
-        resource_name = "activities/invites"
+        resource_name = 'activities/invites'
 
 
 class Team(TriggerMixin, models.Model):
     status = models.CharField(max_length=40)
 
-    activity = models.ForeignKey(
-        Activity, related_name="old_teams", on_delete=NON_POLYMORPHIC_CASCADE
-    )
+    activity = models.ForeignKey(Activity, related_name='old_teams', on_delete=NON_POLYMORPHIC_CASCADE)
 
     created = models.DateTimeField(default=timezone.now)
 
-    owner = models.ForeignKey(
-        "members.Member", related_name="teams", null=True, on_delete=models.SET_NULL
-    )
+    owner = models.ForeignKey('members.Member', related_name='teams', null=True, on_delete=models.SET_NULL)
 
     @property
     def accepted_participants(self):
-        return self.members.filter(status="accepted")
+        return self.members.filter(status='accepted')
 
     @property
     def accepted_participants_count(self):
         return len(self.accepted_participants)
 
     class Meta(object):
-        ordering = ("-created",)
-        verbose_name = _("Team")
+        ordering = ('-created',)
+        verbose_name = _('Team')
 
         permissions = (
-            ("api_read_team", "Can view team through the API"),
-            ("api_change_team", "Can change team through the API"),
-            ("api_change_own_team", "Can change own team through the API"),
+            ('api_read_team', 'Can view team through the API'),
+            ('api_change_team', 'Can change team through the API'),
+            ('api_change_own_team', 'Can change own team through the API'),
         )
 
     @property
     def name(self):
-        return _("Team {name}").format(
-            name=self.owner.full_name if self.owner_id else _("Anonymous")
-        )
+        return _('Team {name}').format(name=self.owner.full_name if self.owner_id else _('Anonymous'))
 
     def __str__(self):
         return self.name
@@ -516,14 +497,13 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
     objects = TranslatablePolymorphicManager()
 
     VISIBILITY_CHOICES = (
-        ('all', _("Everyone")),
-        ('managers', _("Managers")),
+        ('all', _('Everyone')),
+        ('managers', _('Managers')),
     )
 
     class VisibilityChoices(DjangoChoices):
-
-        all = ChoiceItem('all', label=_("Everyone"))
-        managers = ChoiceItem('managers', label=_("Managers"))
+        all = ChoiceItem('all', label=_('Everyone'))
+        managers = ChoiceItem('managers', label=_('Managers'))
 
     translations = TranslatedFields(
         name=models.CharField(
@@ -531,32 +511,29 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
             help_text=_(
                 'The label for this question. This is used for validation messages e.g. "[label] is required".'
             ),
-            max_length=255
+            max_length=255,
         ),
         question=models.CharField(max_length=255),
-        help_text=models.TextField(null=True, blank=True)
+        help_text=models.TextField(null=True, blank=True),
     )
 
     activity_types = MultiSelectField(
         max_length=300,
         choices=InitiativePlatformSettings.ACTIVITY_TYPES,
-        default=[choice[0] for choice in InitiativePlatformSettings.ACTIVITY_TYPES]
+        default=[choice[0] for choice in InitiativePlatformSettings.ACTIVITY_TYPES],
     )
 
     required = models.BooleanField(default=True)
     visibility = models.CharField(
-        _('Who can see the answers?'),
-        max_length=255,
-        choices=VisibilityChoices.choices,
-        default=VisibilityChoices.all
+        _('Who can see the answers?'), max_length=255, choices=VisibilityChoices.choices, default=VisibilityChoices.all
     )
 
     def __str__(self):
         return self.question
 
     class Meta(object):
-        verbose_name = _("Form question")
-        verbose_name_plural = _("Form questions")
+        verbose_name = _('Form question')
+        verbose_name_plural = _('Form questions')
 
 
 def POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
@@ -565,31 +542,29 @@ def POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 
 class ActivityMessage(models.Model):
     sender = models.ForeignKey(
-        "members.Member",
-        related_name="activity_messages_sent",
+        'members.Member',
+        related_name='activity_messages_sent',
         on_delete=models.CASCADE,
     )
     activity = models.ForeignKey(
         Activity,
-        related_name="activity_messages",
+        related_name='activity_messages',
         on_delete=POLYMORPHIC_CASCADE,
     )
-    message = models.TextField(_("Message"), max_length=5000)
+    message = models.TextField(_('Message'), max_length=5000)
     created = models.DateTimeField(default=timezone.now)
 
     class Meta(object):
-        ordering = ("-created",)
-        verbose_name = _("Activity message")
-        verbose_name_plural = _("Activity messages")
+        ordering = ('-created',)
+        verbose_name = _('Activity message')
+        verbose_name_plural = _('Activity messages')
 
     class JSONAPIMeta(object):
-        resource_name = "activity-messages"
+        resource_name = 'activity-messages'
 
 
 class ActivityAnswer(PolymorphicModel):
-    activity = models.ForeignKey(
-        Activity, on_delete=POLYMORPHIC_CASCADE, related_name='answers'
-    )
+    activity = models.ForeignKey(Activity, on_delete=POLYMORPHIC_CASCADE, related_name='answers')
     question = models.ForeignKey(ActivityQuestion, on_delete=models.CASCADE)
 
     class Meta:
@@ -648,9 +623,9 @@ class SegmentAnswer(ActivityAnswer):
         return self.segment
 
     def save(self, *args, **kwargs):
-        current_segments = self.activity.segments.filter(
-            segment_type=self.question.segment_type
-        ).exclude(pk=self.segment.pk)
+        current_segments = self.activity.segments.filter(segment_type=self.question.segment_type).exclude(
+            pk=self.segment.pk
+        )
 
         for segment in current_segments:
             self.activity.segments.remove(segment)

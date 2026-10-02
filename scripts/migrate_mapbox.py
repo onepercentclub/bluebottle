@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 HOUSE_NUMBER_LEADING_PATTERN = re.compile(r'^(\d+[a-zA-Z\-/]*)')
 HOUSE_NUMBER_BEFORE_COMMA_PATTERN = re.compile(r'\b(\d+[a-zA-Z\-/]*)\s*,')
 POSTCODE_PATTERN = re.compile(r'\b\d{4}\s*[A-Z]{2}\b', re.IGNORECASE)
-STREET_NUMBER_SUFFIX_PATTERN = re.compile(
-    r'^(?P<street>.+?)\s+(?P<number>\d+[a-zA-Z\-/]*)$'
-)
+STREET_NUMBER_SUFFIX_PATTERN = re.compile(r'^(?P<street>.+?)\s+(?P<number>\d+[a-zA-Z\-/]*)$')
 
 
 def _housenumber_from_text(value):
@@ -238,11 +236,7 @@ def parse_feature(feature):
         'street': address_context.get('street_name') or properties.get('name', ''),
         'street_number': address_context.get('address_number', ''),
         'postal_code': context.get('postcode', {}).get('name', ''),
-        'locality': (
-            context.get('place', {}).get('name')
-            or context.get('locality', {}).get('name')
-            or ''
-        ),
+        'locality': (context.get('place', {}).get('name') or context.get('locality', {}).get('name') or ''),
         'province': context.get('region', {}).get('name', ''),
         'country_code': country_code,
     }
@@ -270,6 +264,7 @@ def apply_parsed_feature(geolocation, parsed):
     country_code = parsed.get('country_code')
     if country_code:
         from bluebottle.geo.models import Country
+
         country = Country.objects.filter(alpha2_code=country_code).first()
         if country:
             geolocation.country = country
@@ -290,9 +285,7 @@ def resolve_geolocation_feature(geolocation, language=None):
 
     if geolocation.mapbox_id and mapbox_utils.is_v6_mapbox_id(geolocation.mapbox_id):
         try:
-            response = mapbox_utils.lookup_by_mapbox_id(
-                geolocation.mapbox_id, language=language
-            )
+            response = mapbox_utils.lookup_by_mapbox_id(geolocation.mapbox_id, language=language)
             return mapbox_utils.first_feature(response)
         except requests.RequestException as error:
             logger.warning('Mapbox lookup by id failed: %s', error)
@@ -357,9 +350,7 @@ def resolve_geolocation_feature(geolocation, language=None):
 
     if geolocation.mapbox_id:
         try:
-            response = mapbox_utils.lookup_by_mapbox_id(
-                geolocation.mapbox_id, language=language
-            )
+            response = mapbox_utils.lookup_by_mapbox_id(geolocation.mapbox_id, language=language)
             feature = mapbox_utils.first_feature(response)
             if feature:
                 return feature
@@ -472,9 +463,7 @@ def run(*args):
 
     tenant_list = list(tenants)
     if not tenant_list:
-        print('No tenants found{}'.format(
-            ' for schema {!r}'.format(options.tenant) if options.tenant else ''
-        ))
+        print('No tenants found{}'.format(' for schema {!r}'.format(options.tenant) if options.tenant else ''))
         return
 
     print(
@@ -491,13 +480,8 @@ def run(*args):
             if site_settings.terminated:
                 continue
             locations = Geolocation.objects.exclude(
-                Q(mapbox_id__isnull=True) |
-                Q(mapbox_id='') |
-                Q(mapbox_id='unknown')
-            ).filter(
-                Q(geofeature__isnull=True) |
-                ~Q(mapbox_id__startswith='dXJu')
-            )
+                Q(mapbox_id__isnull=True) | Q(mapbox_id='') | Q(mapbox_id='unknown')
+            ).filter(Q(geofeature__isnull=True) | ~Q(mapbox_id__startswith='dXJu'))
 
             total = locations.count()
             print('{}: {} locations to migrate'.format(tenant.name, total), flush=True)
@@ -508,9 +492,7 @@ def run(*args):
 
             for index, geolocation in enumerate(locations.iterator(), start=1):
                 try:
-                    status, detail = migrate_geolocation(
-                        geolocation, dry_run=options.dry_run
-                    )
+                    status, detail = migrate_geolocation(geolocation, dry_run=options.dry_run)
                 except Exception as error:
                     status = 'error'
                     detail = str(error)
@@ -524,16 +506,12 @@ def run(*args):
                         failed += 1
 
                 print(
-                    '{} / {} [{}] {} - {}'.format(
-                        index, total, status, geolocation.id, detail
-                    ),
+                    '{} / {} [{}] {} - {}'.format(index, total, status, geolocation.id, detail),
                     flush=True,
                 )
                 time.sleep(options.sleep)
 
             print(
-                '{} done: {} updated, {} skipped, {} failed'.format(
-                    tenant.name, updated, skipped, failed
-                ),
+                '{} done: {} updated, {} skipped, {} failed'.format(tenant.name, updated, skipped, failed),
                 flush=True,
             )

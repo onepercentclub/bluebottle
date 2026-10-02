@@ -6,10 +6,27 @@ from collections import OrderedDict
 
 class DictFormatter(logging.Formatter):
     """Used for formatting log records into a dict."""
-    default_regular_attrs = ["name", "message", "levelname", "module", "asctime"]
-    ignore_builtin_attrs = ["levelno", "pathname", "filename", "lineno", "funcName", "created", "msecs",
-                            "relativeCreated", "thread", "threadName", "process", "processName", "args", "msg",
-                            "exc_info", "exc_text", "stack_info"]
+
+    default_regular_attrs = ['name', 'message', 'levelname', 'module', 'asctime']
+    ignore_builtin_attrs = [
+        'levelno',
+        'pathname',
+        'filename',
+        'lineno',
+        'funcName',
+        'created',
+        'msecs',
+        'relativeCreated',
+        'thread',
+        'threadName',
+        'process',
+        'processName',
+        'args',
+        'msg',
+        'exc_info',
+        'exc_text',
+        'stack_info',
+    ]
 
     def __init__(self, *args, **kwargs):
         """
@@ -62,9 +79,9 @@ class DictFormatter(logging.Formatter):
         """
         message = super(DictFormatter, self).format(record)
         record_dict = record.__dict__
-        record_dict["message"] = message
-        if "asctime" not in record_dict:
-            record_dict["asctime"] = self.formatTime(record)
+        record_dict['message'] = message
+        if 'asctime' not in record_dict:
+            record_dict['asctime'] = self.formatTime(record)
 
         if self.extra_attrs is not None:
             extra_attrs = self.extra_attrs

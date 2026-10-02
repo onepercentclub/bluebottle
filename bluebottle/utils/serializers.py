@@ -47,11 +47,7 @@ class MoneySerializer(serializers.DecimalField):
     }
 
     def __init__(self, max_digits=12, decimal_places=2, max_amount=None, min_amount=None, **kwargs):
-        super(MoneySerializer, self).__init__(
-            max_digits=max_digits,
-            decimal_places=decimal_places,
-            **kwargs
-        )
+        super(MoneySerializer, self).__init__(max_digits=max_digits, decimal_places=decimal_places, **kwargs)
         if max_amount is not None:
             message = self.error_messages['max_amount'].format(max_amount=max_amount)
             self.validators.append(MaxAmountValidator(max_amount, message=message))
@@ -61,10 +57,7 @@ class MoneySerializer(serializers.DecimalField):
             self.validators.append(MinAmountValidator(min_amount, message=message))
 
     def to_representation(self, instance):
-        return {
-            'amount': instance.amount,
-            'currency': str(instance.currency)
-        }
+        return {'amount': instance.amount, 'currency': str(instance.currency)}
 
     def to_internal_value(self, data):
         if not data:
@@ -87,7 +80,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
 
 class MLStripper(HTMLParser):
-    """ Used to strip HTML tags for meta fields (e.g. description) """
+    """Used to strip HTML tags for meta fields (e.g. description)"""
 
     def __init__(self):
         self.reset()
@@ -101,7 +94,7 @@ class MLStripper(HTMLParser):
 
 
 class BasePermissionField(serializers.Field):
-    """ Field that can be used to return permission of the current and related view.
+    """Field that can be used to return permission of the current and related view.
 
     `view_name`: The name of the view
     `view_args`: A list of attributes that are passed into the url for the view
@@ -128,7 +121,7 @@ class BasePermissionField(serializers.Field):
         return value  # Just pass the whole object back
 
     def to_representation(self, value):
-        """ Return a dict with the permissions the current user has on the view and parent.
+        """Return a dict with the permissions the current user has on the view and parent.
 
         Example response:
         {
@@ -157,9 +150,7 @@ class PermissionField(BasePermissionField):
     """
 
     def _method_permissions(self, method, user, view, value):
-        return all(perm.has_action_permission(
-            method, user, view.model
-        ) for perm in view.get_permissions())
+        return all(perm.has_action_permission(method, user, view.model) for perm in view.get_permissions())
 
 
 class UserPermissionField(serializers.Serializer):
@@ -177,7 +168,7 @@ class UserPermissionField(serializers.Serializer):
 
 
 class ResourcePermissionField(BasePermissionField):
-    """ Field that can be used to return permissions for a view with object. """
+    """Field that can be used to return permissions for a view with object."""
 
     def _method_permissions(self, method, user, view, value):
         for permission in view.get_permissions():
@@ -187,26 +178,27 @@ class ResourcePermissionField(BasePermissionField):
             ):
                 return False
 
-        if hasattr(view, "related_permission_classes"):
+        if hasattr(view, 'related_permission_classes'):
             for related, permissions in list(view.related_permission_classes.items()):
                 related_obj = attrgetter(related)(value)
                 for permission in permissions:
-                    if not permission().has_object_action_permission(
-                        method, user, related_obj
-                    ):
+                    if not permission().has_object_action_permission(method, user, related_obj):
                         return False
 
         return True
 
 
 class RelatedResourcePermissionField(BasePermissionField):
-    """ Field that can be used to return permission for a related view. """
+    """Field that can be used to return permission for a related view."""
 
     def _method_permissions(self, method, user, view, value):
         return all(
-            (perm.has_parent_permission(method, user, value, view.model) and
-             perm.has_action_permission(method, user, view.model))
-            for perm in view.get_permissions())
+            (
+                perm.has_parent_permission(method, user, value, view.model)
+                and perm.has_action_permission(method, user, view.model)
+            )
+            for perm in view.get_permissions()
+        )
 
 
 class CaptchaField(serializers.CharField):
@@ -217,13 +209,10 @@ class CaptchaField(serializers.CharField):
             captcha = client.submit(
                 recaptcha_response=result,
                 private_key=settings.RECAPTCHA_PRIVATE_KEY,
-                remoteip=get_client_ip(self.context['request'])
+                remoteip=get_client_ip(self.context['request']),
             )
         except HTTPError:  # Catch timeouts, etc
-            raise serializers.ValidationError(
-                self.error_messages["captcha_error"],
-                code="captcha_error"
-            )
+            raise serializers.ValidationError(self.error_messages['captcha_error'], code='captcha_error')
 
         if not captcha.is_valid or not validate_host(captcha.extra_data['hostname'], settings.ALLOWED_HOSTS):
             raise serializers.ValidationError('Captcha value is not valid')
@@ -260,7 +249,7 @@ class TruncatedCharField(serializers.CharField):
         super(TruncatedCharField, self).__init__(*args, **kwargs)
 
     def to_internal_value(self, data):
-        return data[:self.length]
+        return data[: self.length]
 
 
 class ManyAnonymizedResourceRelatedField(ManyRelatedField):

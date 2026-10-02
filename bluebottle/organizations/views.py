@@ -13,12 +13,8 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 
-from bluebottle.organizations.serializers import (
-    OrganizationSerializer, OrganizationContactSerializer
-)
-from bluebottle.organizations.models import (
-    Organization, OrganizationContact
-)
+from bluebottle.organizations.serializers import OrganizationSerializer, OrganizationContactSerializer
+from bluebottle.organizations.models import Organization, OrganizationContact
 
 
 class OrganizationPagination(JsonApiPageNumberPagination):
@@ -28,30 +24,26 @@ class OrganizationPagination(JsonApiPageNumberPagination):
 class OrganizationContactList(AutoPrefetchMixin, generics.CreateAPIView):
     queryset = OrganizationContact.objects.all()
     serializer_class = OrganizationContactSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ['name']
-    renderer_classes = (BluebottleJSONAPIRenderer, )
-    parser_classes = (JSONParser, )
-    authentication_classes = (
-        JSONWebTokenAuthentication,
-    )
+    renderer_classes = (BluebottleJSONAPIRenderer,)
+    parser_classes = (JSONParser,)
+    authentication_classes = (JSONWebTokenAuthentication,)
 
 
 class OrganizationContactDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
     queryset = OrganizationContact.objects.all()
     serializer_class = OrganizationContactSerializer
 
-    renderer_classes = (BluebottleJSONAPIRenderer, )
-    parser_classes = (JSONParser, )
+    renderer_classes = (BluebottleJSONAPIRenderer,)
+    parser_classes = (JSONParser,)
     permission_classes = (IsAuthenticated, IsOwner)
-    authentication_classes = (
-        JSONWebTokenAuthentication,
-    )
+    authentication_classes = (JSONWebTokenAuthentication,)
 
 
 class OrganizationSearchFilter(filters.SearchFilter):
-    search_param = "filter[search]"
+    search_param = 'filter[search]'
 
 
 class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
@@ -60,17 +52,15 @@ class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
     serializer_class = OrganizationSerializer
     pagination_class = OrganizationPagination
 
-    filter_backends = (OrganizationSearchFilter, )
+    filter_backends = (OrganizationSearchFilter,)
 
     search_fields = ['name']
 
     permission_classes = (IsAuthenticated,)
-    renderer_classes = (BluebottleJSONAPIRenderer, )
-    parser_classes = (JSONParser, )
+    renderer_classes = (BluebottleJSONAPIRenderer,)
+    parser_classes = (JSONParser,)
 
-    authentication_classes = (
-        JSONWebTokenAuthentication,
-    )
+    authentication_classes = (JSONWebTokenAuthentication,)
 
     prefetch_for_includes = {
         'owner': ['owner'],
@@ -82,8 +72,6 @@ class OrganizationDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     permission_classes = (IsAuthenticated, OneOf(IsOwnerOrReadOnly, IsStaffMember))
-    renderer_classes = (BluebottleJSONAPIRenderer, )
-    parser_classes = (JSONParser, )
-    authentication_classes = (
-        JSONWebTokenAuthentication,
-    )
+    renderer_classes = (BluebottleJSONAPIRenderer,)
+    parser_classes = (JSONParser,)
+    authentication_classes = (JSONWebTokenAuthentication,)

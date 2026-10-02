@@ -1,12 +1,28 @@
 from django.urls import path
 
 from bluebottle.activity_pub.views import (
-    PersonView, InboxView, OutBoxView, PublicKeyView, FollowView,
-    AcceptView, CreateView, OrganizationView,
-    GoodDeedView, ImageView, CrowdFundingView, CollectCampaignView, PlaceView, AddressView,
+    PersonView,
+    InboxView,
+    OutBoxView,
+    PublicKeyView,
+    FollowView,
+    AcceptView,
+    CreateView,
+    OrganizationView,
+    GoodDeedView,
+    ImageView,
+    CrowdFundingView,
+    CollectCampaignView,
+    PlaceView,
+    AddressView,
     GrantApplicationView,
-    DoGoodEventView, SubEventView, UpdateView,
-    DeleteView, StartView, CancelView, FinishView
+    DoGoodEventView,
+    SubEventView,
+    UpdateView,
+    DeleteView,
+    StartView,
+    CancelView,
+    FinishView,
 )
 
 app_name = 'activity_pub'

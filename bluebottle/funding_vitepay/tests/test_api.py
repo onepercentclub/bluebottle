@@ -13,7 +13,6 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class VitepayPaymentTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(VitepayPaymentTestCase, self).setUp()
         VitepayPaymentProvider.objects.all().delete()
@@ -33,8 +32,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.data = {
             'data': {
                 'type': 'payments/vitepay-payments',
-                'attributes': {
-                },
+                'attributes': {},
                 'relationships': {
                     'donation': {
                         'data': {
@@ -42,22 +40,23 @@ class VitepayPaymentTestCase(BluebottleTestCase):
                             'id': self.donation.pk,
                         }
                     }
-                }
+                },
             }
         }
 
-    @patch('bluebottle.funding_vitepay.utils.requests.post',
-           return_value=type('obj', (object,),
-                             {'status_code': 200, 'content': b'https://vitepay.com/some-path-to-pay'}))
+    @patch(
+        'bluebottle.funding_vitepay.utils.requests.post',
+        return_value=type('obj', (object,), {'status_code': 200, 'content': b'https://vitepay.com/some-path-to-pay'}),
+    )
     def test_create_payment(self, vitepay_post):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data["data"]["attributes"]["status"], "new")
+        self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(
-            data["data"]["attributes"]["payment-url"],
-            "https://vitepay.com/some-path-to-pay",
+            data['data']['attributes']['payment-url'],
+            'https://vitepay.com/some-path-to-pay',
         )
-        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
+        self.assertEqual(data['included'][0]['attributes']['status'], 'draft')

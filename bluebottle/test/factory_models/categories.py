@@ -21,8 +21,6 @@ class CategoryContentFactory(factory.DjangoModelFactory):
     category = factory.SubFactory(CategoryFactory)
     title = factory.Sequence(lambda n: 'category_content_title_{}'.format(n))
     description = factory.Sequence(lambda n: 'category_content_description_{}'.format(n))
-    image = SimpleUploadedFile(name='test_image.jpg',
-                               content=b'',
-                               content_type='image/jpeg')
+    image = SimpleUploadedFile(name='test_image.jpg', content=b'', content_type='image/jpeg')
     link_text = factory.Sequence(lambda n: 'read more {}'.format(n))
     link_url = factory.Sequence(lambda n: 'http://{}.test-link-url.com'.format(n))

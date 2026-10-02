@@ -24,12 +24,7 @@ class TeamMemberPermission(ResourceOwnerPermission):
         except Activity.owner.RelatedObjectDoesNotExist:
             activity_owners = []
 
-        return (
-            user == captain or
-            user in activity_owners or
-            user.is_staff or
-            user.is_superuser
-        )
+        return user == captain or user in activity_owners or user.is_staff or user.is_superuser
 
 
 class DateParticipantPermission(IsOwner):
@@ -56,11 +51,11 @@ class CreateByEmailPermission(IsOwner):
 class InviteCodePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return (
-            str(obj.invite_code) == str(obj.team.invite_code) or
-            request.user.is_staff or
-            request.user.is_superuser or
-            request.user == obj.team.owner or
-            request.user in obj.team.activity.owners
+            str(obj.invite_code) == str(obj.team.invite_code)
+            or request.user.is_staff
+            or request.user.is_superuser
+            or request.user == obj.team.owner
+            or request.user in obj.team.activity.owners
         )
 
     def has_action_permission(self, action, user, model_cls):
@@ -70,10 +65,10 @@ class InviteCodePermission(BasePermission):
 class DateSlotActivityStatusPermission(BasePermission):
     def has_object_action_permission(self, action, user, obj):
         return (
-            action not in ('POST', 'DELETE', 'PATCH', 'PUT') or
-            user in obj.activity.owners or
-            user.is_staff or
-            user.is_superuser
+            action not in ('POST', 'DELETE', 'PATCH', 'PUT')
+            or user in obj.activity.owners
+            or user.is_staff
+            or user.is_superuser
         )
 
     def has_action_permission(self, action, user, model_cls):
@@ -82,26 +77,19 @@ class DateSlotActivityStatusPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
         return (
-            request.method not in ('POST', 'DELETE', 'PATCH', 'PUT') or
-            user in obj.activity.owners or
-            user.is_staff or
-            user.is_superuser
+            request.method not in ('POST', 'DELETE', 'PATCH', 'PUT')
+            or user in obj.activity.owners
+            or user.is_staff
+            or user.is_superuser
         )
 
 
 class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
-
     def has_object_permission(self, request, view, obj):
         user = request.user
         if not obj:
             return True
-        if obj and (
-            user == obj.user or
-            user in obj.activity.owners or
-            user.is_staff or
-            user.is_superuser
-
-        ):
+        if obj and (user == obj.user or user in obj.activity.owners or user.is_staff or user.is_superuser):
             return True
         return False
 
@@ -123,13 +111,11 @@ class RelatedActivityInterestListPermission(permissions.BasePermission):
 
 
 class CanExportParticipantsPermission(IsOwner):
-    """ Allows access only to obj owner. """
+    """Allows access only to obj owner."""
 
     def has_object_action_permission(self, action, user, obj):
         return (
-            user in obj.owners or
-            user.is_staff or
-            user.is_superuser
+            user in obj.owners or user.is_staff or user.is_superuser
         ) and InitiativePlatformSettings.load().enable_participant_exports
 
     def has_action_permission(self, action, user, model_cls):

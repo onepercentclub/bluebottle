@@ -1,346 +1,345 @@
 from django.utils.translation import gettext_lazy as _
 
-JET_INDEX_DASHBOARD = "bluebottle.bluebottle_dashboard.dashboard.CustomIndexDashboard"
-JET_APP_INDEX_DASHBOARD = (
-    "bluebottle.bluebottle_dashboard.dashboard.CustomAppIndexDashboard"
-)
+JET_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomIndexDashboard'
+JET_APP_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomAppIndexDashboard'
 
-JET_DEFAULT_THEME = "goodup"
+JET_DEFAULT_THEME = 'goodup'
 
 JET_SIDE_MENU_ITEMS = [
     {
-        "label": _("Initiatives & Activities"),
-        "app_label": "activities",
-        "permissions": ["activities.change_activity"],
-        "items": [
+        'label': _('Initiatives & Activities'),
+        'app_label': 'activities',
+        'permissions': ['activities.change_activity'],
+        'items': [
             {
-                "name": "initiatives.initiative",
-                "permissions": ["initiatives.change_initiative"],
+                'name': 'initiatives.initiative',
+                'permissions': ['initiatives.change_initiative'],
             },
             {
-                "name": "activities.activity",
-                "permissions": ["activities.change_activity"],
+                'name': 'activities.activity',
+                'permissions': ['activities.change_activity'],
             },
             {
-                "name": "activities.contributor",
-                "permissions": ["activities.change_contributor"],
+                'name': 'activities.contributor',
+                'permissions': ['activities.change_contributor'],
             },
             {
-                "name": "activities.contribution",
-                "permissions": ["activities.change_contribution"],
+                'name': 'activities.contribution',
+                'permissions': ['activities.change_contribution'],
             },
             {
-                "name": "activities.activityquestion",
-                "permissions": ["activities.change_activityquestion"],
+                'name': 'activities.activityquestion',
+                'permissions': ['activities.change_activityquestion'],
             },
             {
-                "name": "impact.impacttype",
-                "permissions": ["impact.change_impacttype"],
-                "enabled": "initiatives.InitiativePlatformSettings.enable_impact",
+                'name': 'impact.impacttype',
+                'permissions': ['impact.change_impacttype'],
+                'enabled': 'initiatives.InitiativePlatformSettings.enable_impact',
             },
             {
-                "name": "categories.category",
-                "permissions": ["categories.change_category"],
+                'name': 'categories.category',
+                'permissions': ['categories.change_category'],
             },
-            {"name": "initiatives.theme", "permissions": ["initiatives.change_theme"]},
+            {'name': 'initiatives.theme', 'permissions': ['initiatives.change_theme']},
             {
-                "name": "organizations.organization",
-                "permissions": ["organizations.change_organization"],
+                'name': 'organizations.organization',
+                'permissions': ['organizations.change_organization'],
             },
-            {"name": "geo.location", "permissions": ["geo.change_location"]},
+            {'name': 'geo.location', 'permissions': ['geo.change_location']},
         ],
     },
     {
-        "label": _("Time Based"),
-        "app_label": "time_based",
-        "permissions": ["activities.change_activity"],
-        "items": [
+        'label': _('Time Based'),
+        'app_label': 'time_based',
+        'permissions': ['activities.change_activity'],
+        'items': [
             {
-                "name": "time_based.dateactivity",
-                "permissions": ["time_based.change_dateactivity"],
+                'name': 'time_based.dateactivity',
+                'permissions': ['time_based.change_dateactivity'],
             },
             {
-                "name": "time_based.registereddateactivity",
-                "permissions": ["time_based.change_registereddateactivity"],
+                'name': 'time_based.registereddateactivity',
+                'permissions': ['time_based.change_registereddateactivity'],
             },
             {
-                "name": "time_based.dateactivityslot",
-                "permissions": ["time_based.change_dateactivityslot"],
+                'name': 'time_based.dateactivityslot',
+                'permissions': ['time_based.change_dateactivityslot'],
             },
             {
-                "name": "time_based.periodicactivity",
-                "permissions": ["time_based.change_periodicactivity"],
+                'name': 'time_based.periodicactivity',
+                'permissions': ['time_based.change_periodicactivity'],
             },
             {
-                "name": "time_based.deadlineactivity",
-                "permissions": ["time_based.change_deadlineactivity"],
+                'name': 'time_based.deadlineactivity',
+                'permissions': ['time_based.change_deadlineactivity'],
             },
             {
-                "name": "time_based.scheduleactivity",
-                "permissions": ["time_based.change_scheduleactivity"],
+                'name': 'time_based.scheduleactivity',
+                'permissions': ['time_based.change_scheduleactivity'],
             },
-            {"name": "time_based.skill", "permissions": ["time_based.change_skill"]},
-            {"name": "time_based.interest", "permissions": ["time_based.change_interest"]},
+            {'name': 'time_based.skill', 'permissions': ['time_based.change_skill']},
+            {'name': 'time_based.interest', 'permissions': ['time_based.change_interest']},
         ],
     },
     {
-        "label": _("Collect"),
-        "app_label": "collect",
-        "permissions": ["activities.change_activity"],
-        "enabled": "initiatives.InitiativePlatformSettings.collect_enabled",
-        "items": [
+        'label': _('Collect'),
+        'app_label': 'collect',
+        'permissions': ['activities.change_activity'],
+        'enabled': 'initiatives.InitiativePlatformSettings.collect_enabled',
+        'items': [
             {
-                "name": "collect.collectactivity",
+                'name': 'collect.collectactivity',
             },
             {
-                "name": "collect.collectcontributor",
+                'name': 'collect.collectcontributor',
             },
             {
-                "name": "collect.collecttype",
-            },
-        ],
-    },
-    {
-        "label": _("Deeds"),
-        "app_label": "deeds",
-        "permissions": ["activities.change_activity"],
-        "enabled": "initiatives.InitiativePlatformSettings.deeds_enabled",
-        "items": [
-            {"name": "deeds.deed", "permissions": ["deeds.change_deed"]},
-            {
-                "name": "deeds.deedparticipant",
-                "permissions": ["deeds.change_deedparticipant"],
+                'name': 'collect.collecttype',
             },
         ],
     },
     {
-        "label": _("Funding"),
-        "app_label": "funding",
-        "permissions": ["funding.change_funding"],
-        "items": [
-            {"name": "funding.funding", "permissions": ["funding.change_funding"]},
-            {"name": "funding.donor", "permissions": ["funding.change_donor"]},
-            {"name": "funding.payment", "permissions": ["funding.change_payment"]},
+        'label': _('Deeds'),
+        'app_label': 'deeds',
+        'permissions': ['activities.change_activity'],
+        'enabled': 'initiatives.InitiativePlatformSettings.deeds_enabled',
+        'items': [
+            {'name': 'deeds.deed', 'permissions': ['deeds.change_deed']},
             {
-                "name": "funding.payoutaccount",
-                "permissions": ["funding.change_payoutaccount"],
-            },
-            {
-                "name": "funding.bankaccount",
-                "permissions": ["funding.change_bankaccount"],
-            },
-            {
-                "name": "funding.payout", "permissions": ["funding.change_payout"],
+                'name': 'deeds.deedparticipant',
+                'permissions': ['deeds.change_deedparticipant'],
             },
         ],
     },
     {
-        "label": _("Grant management"),
-        "app_label": "grant_management",
-        "permissions": ["grant_management.change_grantapplication"],
-        "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
-        "items": [
+        'label': _('Funding'),
+        'app_label': 'funding',
+        'permissions': ['funding.change_funding'],
+        'items': [
+            {'name': 'funding.funding', 'permissions': ['funding.change_funding']},
+            {'name': 'funding.donor', 'permissions': ['funding.change_donor']},
+            {'name': 'funding.payment', 'permissions': ['funding.change_payment']},
             {
-                "name": "grant_management.grantprovider",
-                "permissions": ["grant_management.change_grantprovider"],
+                'name': 'funding.payoutaccount',
+                'permissions': ['funding.change_payoutaccount'],
             },
             {
-                "name": "grant_management.grantfund",
-                "permissions": ["grant_management.change_grantfund"],
+                'name': 'funding.bankaccount',
+                'permissions': ['funding.change_bankaccount'],
             },
             {
-                "name": "grant_management.grantapplication",
-                "permissions": ["grant_management.change_grantapplication"],
-            },
-            {
-                "name": "grant_management.grantpayout",
-                "permissions": ["grant_management.change_grantpayout"],
-            },
-            {
-                "name": "grant_management.grantpayment",
-                "permissions": ["grant_management.change_grantpayment"],
+                'name': 'funding.payout',
+                'permissions': ['funding.change_payout'],
             },
         ],
     },
     {
-        "label": _("GoodUp Connect"),
-        "app_label": "activity_pub",
-        "permissions": ["activity_pub.change_event"],
-        "enabled": "cms.SitePlatformSettings.is_sharing_activities",
-        "items": [
+        'label': _('Grant management'),
+        'app_label': 'grant_management',
+        'permissions': ['grant_management.change_grantapplication'],
+        'enabled': 'initiatives.InitiativePlatformSettings.grant_application_enabled',
+        'items': [
             {
-                "name": "activity_pub.publishedactivity",
-                "permissions": ["activity_pub.change_event"],
-                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
-                "url": "/en/admin/activity_pub/follower/",
-                "label": _("Connected consumers"),
+                'name': 'grant_management.grantprovider',
+                'permissions': ['grant_management.change_grantprovider'],
             },
             {
-                "name": "activity_pub.receivedactivity",
-                "permissions": ["activity_pub.change_event"],
-                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
-                "url": "/en/admin/activity_pub/following/",
-                "label": _("Connected suppliers"),
+                'name': 'grant_management.grantfund',
+                'permissions': ['grant_management.change_grantfund'],
             },
             {
-                "name": "activity_pub.publishedactivity",
-                "permissions": ["activity_pub.change_event"],
-                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
-                "url": "/en/admin/activity_pub/publishedactivity/",
-                "label": _("Shared activities"),
+                'name': 'grant_management.grantapplication',
+                'permissions': ['grant_management.change_grantapplication'],
             },
             {
-                "name": "activity_pub.receivedactivity",
-                "permissions": ["activity_pub.change_event"],
-                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
-                "url": "/en/admin/activity_pub/receivedactivity/",
-                "label": _("Received activities"),
+                'name': 'grant_management.grantpayout',
+                'permissions': ['grant_management.change_grantpayout'],
             },
             {
-                "name": "activity_links.linkedactivity",
-                "permissions": ["activity_pub.change_event"],
-                "enabled": "cms.SitePlatformSettings.is_linking_activities",
+                'name': 'grant_management.grantpayment',
+                'permissions': ['grant_management.change_grantpayment'],
+            },
+        ],
+    },
+    {
+        'label': _('GoodUp Connect'),
+        'app_label': 'activity_pub',
+        'permissions': ['activity_pub.change_event'],
+        'enabled': 'cms.SitePlatformSettings.is_sharing_activities',
+        'items': [
+            {
+                'name': 'activity_pub.publishedactivity',
+                'permissions': ['activity_pub.change_event'],
+                'enabled': 'cms.SitePlatformSettings.is_publishing_activities',
+                'url': '/en/admin/activity_pub/follower/',
+                'label': _('Connected consumers'),
+            },
+            {
+                'name': 'activity_pub.receivedactivity',
+                'permissions': ['activity_pub.change_event'],
+                'enabled': 'cms.SitePlatformSettings.is_receiving_activities',
+                'url': '/en/admin/activity_pub/following/',
+                'label': _('Connected suppliers'),
+            },
+            {
+                'name': 'activity_pub.publishedactivity',
+                'permissions': ['activity_pub.change_event'],
+                'enabled': 'cms.SitePlatformSettings.is_publishing_activities',
+                'url': '/en/admin/activity_pub/publishedactivity/',
+                'label': _('Shared activities'),
+            },
+            {
+                'name': 'activity_pub.receivedactivity',
+                'permissions': ['activity_pub.change_event'],
+                'enabled': 'cms.SitePlatformSettings.is_receiving_activities',
+                'url': '/en/admin/activity_pub/receivedactivity/',
+                'label': _('Received activities'),
+            },
+            {
+                'name': 'activity_links.linkedactivity',
+                'permissions': ['activity_pub.change_event'],
+                'enabled': 'cms.SitePlatformSettings.is_linking_activities',
                 # "url": "/en/admin/activity_pub/following/",
-                "label": _("Linked activities"),
+                'label': _('Linked activities'),
             },
         ],
     },
     {
-        "label": _("Users"),
-        "app_label": "members",
-        "permissions": ["members.change_member"],
-        "items": [
-            {"name": "members.member", "permissions": ["members.change_member"]},
-            {"name": "auth.group", "permissions": ["auth.change_group"]},
+        'label': _('Users'),
+        'app_label': 'members',
+        'permissions': ['members.change_member'],
+        'items': [
+            {'name': 'members.member', 'permissions': ['members.change_member']},
+            {'name': 'auth.group', 'permissions': ['auth.change_group']},
         ],
     },
     {
-        "label": _("Segments"),
-        "app_label": "segments",
-        "permissions": ["segments.change_segmenttype"],
-        "items": [
+        'label': _('Segments'),
+        'app_label': 'segments',
+        'permissions': ['segments.change_segmenttype'],
+        'items': [
             {
-                "label": _("All segment types"),
-                "name": "segments.segmenttype",
-                "permissions": ["segments.change_segment"],
+                'label': _('All segment types'),
+                'name': 'segments.segmenttype',
+                'permissions': ['segments.change_segment'],
             },
         ],  # Segment type items are added programmatically in bluebottle_dashboard/utils.py
     },
     {
-        "label": _("Work locations"),
-        "permissions": ["offices.change_officeregion"],
-        "enabled": "initiatives.InitiativePlatformSettings.enable_office_regions",
-        "items": [
-            {"name": "geo.location", "permissions": ["geo.change_location"]},
+        'label': _('Work locations'),
+        'permissions': ['offices.change_officeregion'],
+        'enabled': 'initiatives.InitiativePlatformSettings.enable_office_regions',
+        'items': [
+            {'name': 'geo.location', 'permissions': ['geo.change_location']},
             {
-                "name": "offices.officesubregion",
-                "permissions": ["offices.change_officesubregion"],
+                'name': 'offices.officesubregion',
+                'permissions': ['offices.change_officesubregion'],
             },
             {
-                "name": "offices.officeregion",
-                "permissions": ["offices.change_officeregion"],
-            },
-        ],
-    },
-    {
-        "label": _("Content"),
-        "permissions": ["pages.change_page"],
-        "items": [
-            {"name": "pages.platformpage", "permissions": ["pages.change_platformpage"]},
-            {"name": "pages.page", "permissions": ["pages.change_page"]},
-            {
-                "name": "news.newsitem",
-                "label": _("News"),
-                "permissions": ["news.change_newsitem"],
-            },
-            {
-                "name": "cms.homepage",
-                "label": _("Homepage"),
-                "permissions": ["cms.change_homepage"],
-            },
-            {
-                "name": "statistics.basestatistic",
-                "label": _("Statistics"),
-                "permissions": ["statistics.change_statistic"],
-            },
-            {"name": "slides.slide", "permissions": ["slides.change_slide"]},
-            {
-                "name": "voting.poll",
-                "permissions": ["voting.change_poll"],
-            },
-            {
-                "name": "cms.sitelinks",
-                "label": _("Header & footer"),
-                "permissions": ["cms.change_sitelinks"],
-            },
-            {
-                "name": "notifications.messagetemplate",
-                "label": _("Email templates"),
-                "permissions": ["notifications.change_messagetemplate"],
-            },
-            {
-                "name": "redirects.redirect",
-                "permissions": ["redirects.change_redirect"],
-            },
-            {
-                "name": "updates.update",
-                "permissions": ["updates.change_update"],
+                'name': 'offices.officeregion',
+                'permissions': ['offices.change_officeregion'],
             },
         ],
     },
     {
-        "label": _("Reporting"),
-        "app_label": "looker",
-        "permissions": ["looker.access_looker_embeds"],
-        "items": [],
+        'label': _('Content'),
+        'permissions': ['pages.change_page'],
+        'items': [
+            {'name': 'pages.platformpage', 'permissions': ['pages.change_platformpage']},
+            {'name': 'pages.page', 'permissions': ['pages.change_page']},
+            {
+                'name': 'news.newsitem',
+                'label': _('News'),
+                'permissions': ['news.change_newsitem'],
+            },
+            {
+                'name': 'cms.homepage',
+                'label': _('Homepage'),
+                'permissions': ['cms.change_homepage'],
+            },
+            {
+                'name': 'statistics.basestatistic',
+                'label': _('Statistics'),
+                'permissions': ['statistics.change_statistic'],
+            },
+            {'name': 'slides.slide', 'permissions': ['slides.change_slide']},
+            {
+                'name': 'voting.poll',
+                'permissions': ['voting.change_poll'],
+            },
+            {
+                'name': 'cms.sitelinks',
+                'label': _('Header & footer'),
+                'permissions': ['cms.change_sitelinks'],
+            },
+            {
+                'name': 'notifications.messagetemplate',
+                'label': _('Email templates'),
+                'permissions': ['notifications.change_messagetemplate'],
+            },
+            {
+                'name': 'redirects.redirect',
+                'permissions': ['redirects.change_redirect'],
+            },
+            {
+                'name': 'updates.update',
+                'permissions': ['updates.change_update'],
+            },
+        ],
     },
     {
-        "label": _("Settings"),
-        "permissions": ["cms.siteplatformsettings"],
-        "items": [
+        'label': _('Reporting'),
+        'app_label': 'looker',
+        'permissions': ['looker.access_looker_embeds'],
+        'items': [],
+    },
+    {
+        'label': _('Settings'),
+        'permissions': ['cms.siteplatformsettings'],
+        'items': [
             {
-                "name": "cms.siteplatformsettings",
-                "permissions": ["cms.change_siteplatformsettings"],
+                'name': 'cms.siteplatformsettings',
+                'permissions': ['cms.change_siteplatformsettings'],
             },
             {
-                "name": "members.memberplatformsettings",
-                "permissions": ["members.change_memberplatformsettings"],
+                'name': 'members.memberplatformsettings',
+                'permissions': ['members.change_memberplatformsettings'],
             },
             {
-                "name": "notifications.notificationplatformsettings",
-                "permissions": ["notifications.notificationplatformsettings"],
+                'name': 'notifications.notificationplatformsettings',
+                'permissions': ['notifications.notificationplatformsettings'],
             },
             {
-                "name": "mails.mailplatformsettings",
-                "permissions": ["mails.change_mailplatformsettings"],
+                'name': 'mails.mailplatformsettings',
+                'permissions': ['mails.change_mailplatformsettings'],
             },
             {
-                "name": "initiatives.initiativeplatformsettings",
-                "permissions": ["initiatives.change_initiativeplatformsettings"],
+                'name': 'initiatives.initiativeplatformsettings',
+                'permissions': ['initiatives.change_initiativeplatformsettings'],
             },
             {
-                "name": "funding.fundingplatformsettings",
-                "permissions": ["funding.change_fundingplatformsettings"],
+                'name': 'funding.fundingplatformsettings',
+                'permissions': ['funding.change_fundingplatformsettings'],
             },
             {
-                "name": "funding.paymentprovider",
-                "permissions": ["funding.change_paymentprovider"],
+                'name': 'funding.paymentprovider',
+                'permissions': ['funding.change_paymentprovider'],
             },
             {
-                "name": "analytics.analyticsplatformsettings",
-                "permissions": ["analytics.change_analyticsplatformsettings"],
+                'name': 'analytics.analyticsplatformsettings',
+                'permissions': ['analytics.change_analyticsplatformsettings'],
             },
             {
-                "label": _("Manage Reporting"),
-                "name": "looker.lookerembed",
+                'label': _('Manage Reporting'),
+                'name': 'looker.lookerembed',
             },
             {
-                "name": "scim.scimplatformsettings",
-                "permissions": ["scim.change_scimplatformsettings"],
+                'name': 'scim.scimplatformsettings',
+                'permissions': ['scim.change_scimplatformsettings'],
             },
-            {"name": "geo.country", "permissions": ["geo.change_country"]},
-            {"name": "utils.language", "permissions": ["utils.change_language"]},
-            {"name": "authtoken.token", "permissions": ["authtoken.change_token"]},
+            {'name': 'geo.country', 'permissions': ['geo.change_country']},
+            {'name': 'utils.language', 'permissions': ['utils.change_language']},
+            {'name': 'authtoken.token', 'permissions': ['authtoken.change_token']},
         ],
     },
 ]

@@ -2,8 +2,13 @@ from django.urls import path
 from django.urls import re_path
 
 from bluebottle.files.views import (
-    FileList, FileDetail, ImageList, PrivateFileList, PrivateFileDetail,
-    ImagePreview, ImageDetail
+    FileList,
+    FileDetail,
+    ImageList,
+    PrivateFileList,
+    PrivateFileDetail,
+    ImagePreview,
+    ImageDetail,
 )
 
 

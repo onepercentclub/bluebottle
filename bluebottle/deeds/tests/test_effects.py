@@ -23,14 +23,9 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
             activity=self.activity,
         )
 
-        self.assertEqual(
-            participant.contributions.first().start.date(),
-            self.activity.end
-        )
+        self.assertEqual(participant.contributions.first().start.date(), self.activity.end)
 
-        self.assertIsNone(
-            participant.contributions.first().end
-        )
+        self.assertIsNone(participant.contributions.first().end)
 
     def test_create_no_end(self):
         self.activity.end = None
@@ -38,14 +33,9 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
 
         participant = DeedParticipantFactory.create(activity=self.activity)
 
-        self.assertEqual(
-            participant.contributions.first().start.date(),
-            participant.created.date()
-        )
+        self.assertEqual(participant.contributions.first().start.date(), participant.created.date())
 
-        self.assertIsNone(
-            participant.contributions.first().end
-        )
+        self.assertIsNone(participant.contributions.first().end)
 
     def test_create_no_start(self):
         self.activity.start = None
@@ -54,14 +44,9 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
 
         participant = DeedParticipantFactory.create(activity=self.activity)
 
-        self.assertEqual(
-            participant.contributions.first().start.date(),
-            participant.created.date()
-        )
+        self.assertEqual(participant.contributions.first().start.date(), participant.created.date())
 
-        self.assertIsNone(
-            participant.contributions.first().end
-        )
+        self.assertIsNone(participant.contributions.first().end)
 
     def test_create_future_start(self):
         self.activity.start = date.today() + timedelta(days=10)
@@ -70,14 +55,9 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
 
         participant = DeedParticipantFactory.create(activity=self.activity)
 
-        self.assertEqual(
-            participant.contributions.first().start.date(),
-            participant.activity.start
-        )
+        self.assertEqual(participant.contributions.first().start.date(), participant.activity.start)
 
-        self.assertIsNone(
-            participant.contributions.first().end
-        )
+        self.assertIsNone(participant.contributions.first().end)
 
 
 class RescheduleEffortsEffectsTestCase(BluebottleTestCase):
@@ -96,17 +76,11 @@ class RescheduleEffortsEffectsTestCase(BluebottleTestCase):
         self.activity.start = date.today() + timedelta(days=1)
         self.effect.post_save()
 
-        self.assertEqual(
-            self.participant.contributions.first().start.astimezone(self.tz).date(),
-            self.activity.start
-        )
+        self.assertEqual(self.participant.contributions.first().start.astimezone(self.tz).date(), self.activity.start)
 
     def test_unset_start(self):
         current_start = self.participant.contributions.first().start
         self.activity.start = None
         self.effect.post_save()
 
-        self.assertEqual(
-            self.participant.contributions.first().start.date(),
-            current_start.date()
-        )
+        self.assertEqual(self.participant.contributions.first().start.date(), current_start.date())

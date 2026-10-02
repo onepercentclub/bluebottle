@@ -7,13 +7,17 @@ from bluebottle.activities.dashboard import (
     RecentlySubmittedActivities,
     RecentlyPublishedActivities,
     RecentContributors,
-    UnPublishedActivities
+    UnPublishedActivities,
 )
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadyForApprovalDashboardModule
-from bluebottle.grant_management.dashboard import GrantPayoutsReadyForApprovalDashboardModule, \
-    GrantApplicationsReadyForApprovalDashboardModule
+from bluebottle.grant_management.dashboard import (
+    GrantPayoutsReadyForApprovalDashboardModule,
+    GrantApplicationsReadyForApprovalDashboardModule,
+)
 from bluebottle.initiatives.dashboard import (
-    MyReviewingInitiatives, RecentlyPublishedInitiatives, RecentlySubmittedInitiatives
+    MyReviewingInitiatives,
+    RecentlyPublishedInitiatives,
+    RecentlySubmittedInitiatives,
 )
 from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.updates.dashboard import RecentUpdates
@@ -46,20 +50,14 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(GrantPayoutsReadyForApprovalDashboardModule())
 
         # Other
-        self.children.append(modules.RecentActions(
-            _('Recent Actions'),
-            10,
-            column=0,
-            order=0
-        ))
+        self.children.append(modules.RecentActions(_('Recent Actions'), 10, column=0, order=0))
         self.children.append(RecentMembersDashboard())
 
 
 class CustomAppIndexDashboard(DefaultAppIndexDashboard):
-
     def __new__(cls, context, **kwargs):
         try:
-            mod = importlib.import_module("bluebottle.{}.dashboard".format(kwargs['app_label']))
+            mod = importlib.import_module('bluebottle.{}.dashboard'.format(kwargs['app_label']))
             dash = mod.AppIndexDashboard(context, **kwargs)
             return dash
         except ImportError:

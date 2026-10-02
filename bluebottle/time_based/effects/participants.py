@@ -12,7 +12,9 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     DeadlineParticipant,
     ScheduleRegistration,
-    ScheduleParticipant, ScheduleSlot, DateRegistration,
+    ScheduleParticipant,
+    ScheduleSlot,
+    DateRegistration,
 )
 
 
@@ -23,17 +25,13 @@ class CreateTimeContributionEffect(Effect):
     def post_save(self, **kwargs):
         activity = self.instance.activity
         tz = get_current_timezone()
-        if hasattr(self.instance, "slot") and self.instance.slot:
+        if hasattr(self.instance, 'slot') and self.instance.slot:
             contribution_date = self.instance.slot.start
         elif activity.start and activity.start > date.today():
-            contribution_date = make_aware(
-                datetime.combine(activity.start, datetime.min.replace(hour=12).time()),
-                tz
-            )
+            contribution_date = make_aware(datetime.combine(activity.start, datetime.min.replace(hour=12).time()), tz)
         elif activity.deadline and activity.deadline < date.today():
             contribution_date = make_aware(
-                datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()),
-                tz
+                datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()), tz
             )
         else:
             contribution_date = now()
@@ -42,14 +40,14 @@ class CreateTimeContributionEffect(Effect):
             contributor=self.instance,
             contribution_type=ContributionTypeChoices.period,
             value=activity.duration,
-            start=contribution_date
+            start=contribution_date,
         )
 
         contribution.execute_triggers(**self.options)
         contribution.save()
 
     def __str__(self):
-        return _("Create contribution")
+        return _('Create contribution')
 
 
 class CreateRegisteredTimeContributionEffect(Effect):
@@ -63,25 +61,23 @@ class CreateRegisteredTimeContributionEffect(Effect):
             contributor=self.instance,
             contribution_type=ContributionTypeChoices.period,
             value=activity.duration,
-            start=activity.start or now()
+            start=activity.start or now(),
         )
 
         contribution.execute_triggers(**self.options)
         contribution.save()
 
     def __str__(self):
-        return _("Create contribution")
+        return _('Create contribution')
 
 
 class CreateScheduleContributionEffect(Effect):
-    title = _("Create contribution")
-    template = "admin/create_deadline_time_contribution.html"
+    title = _('Create contribution')
+    template = 'admin/create_deadline_time_contribution.html'
 
     def post_save(self, **kwargs):
         try:
-            self.instance.contributions.get(
-                timecontribution__contribution_type="period"
-            )
+            self.instance.contributions.get(timecontribution__contribution_type='period')
         except ObjectDoesNotExist:
             slot = self.instance.slot
             if slot and slot.start and slot.end:
@@ -91,11 +87,7 @@ class CreateScheduleContributionEffect(Effect):
                     value=slot.duration,
                     start=slot.start,
                     end=slot.end,
-                    status=(
-                        "succeeded"
-                        if slot.end < now()
-                        else "new"
-                    ),
+                    status=('succeeded' if slot.end < now() else 'new'),
                 )
 
             else:
@@ -105,7 +97,7 @@ class CreateScheduleContributionEffect(Effect):
                     value=self.instance.activity.duration,
                     start=now(),
                     end=now() + self.instance.activity.duration,
-                    status="new",
+                    status='new',
                 )
 
             contribution.execute_triggers(**self.options)
@@ -131,16 +123,12 @@ class CreateRegistrationEffect(Effect):
 
     def post_save(self, **kwargs):
         registration = self.get_registration_model().objects.create(
-            activity=self.instance.activity,
-            user=self.instance.user,
-            status='accepted'
+            activity=self.instance.activity, user=self.instance.user, status='accepted'
         )
         self.instance.registration = registration
         self.instance.save()
 
-    conditions = [
-        without_registration
-    ]
+    conditions = [without_registration]
 
 
 class LockScheduleActivityIfFullEffect(Effect):
@@ -148,6 +136,7 @@ class LockScheduleActivityIfFullEffect(Effect):
     Lock the activity after the participant is saved, when registrations that
     count toward capacity have been created.
     """
+
     display = False
 
     def post_save(self, **kwargs):
@@ -182,15 +171,12 @@ class CreateDateRegistrationEffect(Effect):
 
 
 class CreatePeriodicPreparationTimeContributionEffect(CreatePeriodicParticipantsEffect):
-    title = _("Create preparation time contribution")
-    template = "admin/create_preparation_time_contribution.html"
+    title = _('Create preparation time contribution')
+    template = 'admin/create_preparation_time_contribution.html'
 
     def is_first_participant(self):
         """First participant"""
-        return (
-            self.instance.registration
-            and self.instance.registration.participants.count() == 0
-        )
+        return self.instance.registration and self.instance.registration.participants.count() == 0
 
     conditions = [is_first_participant]
 

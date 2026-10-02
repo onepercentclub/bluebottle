@@ -19,6 +19,7 @@ Usage:
     python manage.py preview_all_messages --all
     python manage.py preview_all_messages --all --all-languages
 """
+
 import importlib
 import inspect
 import json
@@ -46,24 +47,19 @@ MESSAGE_MODULES = {
     'activities.participant': 'bluebottle.activities.messages.participant',
     'activities.reviewer': 'bluebottle.activities.messages.reviewer',
     'activities.matching': 'bluebottle.activities.messages.matching',
-
     'time_based.messages': 'bluebottle.time_based.messages.messages',
     'time_based.participants': 'bluebottle.time_based.messages.participants',
     'time_based.teams': 'bluebottle.time_based.messages.teams',
     'time_based.registrations': 'bluebottle.time_based.messages.registrations',
     'time_based.activity_manager': 'bluebottle.time_based.messages.activity_manager',
-
     'funding.contributor': 'bluebottle.funding.messages.funding.contributor',
     'funding.activity_manager': 'bluebottle.funding.messages.funding.activity_manager',
     'funding.platform_manager': 'bluebottle.funding.messages.funding.platform_manager',
-
     'grant_management.activity_manager': 'bluebottle.grant_management.messages.activity_manager',
     'grant_management.grant_provider': 'bluebottle.grant_management.messages.grant_provider',
     'grant_management.reviewer': 'bluebottle.grant_management.messages.reviewer',
-
     'initiatives.initiator': 'bluebottle.initiatives.messages.initiator',
     'initiatives.reviewer': 'bluebottle.initiatives.messages.reviewer',
-
     'deeds': 'bluebottle.deeds.messages',
     'collect': 'bluebottle.collect.messages',
     'updates': 'bluebottle.updates.messages',
@@ -126,7 +122,7 @@ def analyze_triggers():
                     transition_name = transition_parts[-1]
                 else:
                     transition_name = transition_ref
-                    state_machine = "Unknown"
+                    state_machine = 'Unknown'
 
                 # Find NotificationEffect entries
                 notification_pattern = r'NotificationEffect\s*\(\s*([^,\)]+)'
@@ -138,7 +134,7 @@ def analyze_triggers():
                     # Extract conditions if present
                     # Look for conditions= near this NotificationEffect
                     effect_start = notif_match.start()
-                    effect_context = effects_block[max(0, effect_start - 50):effect_start + 200]
+                    effect_context = effects_block[max(0, effect_start - 50) : effect_start + 200]
 
                     conditions = []
                     conditions_match = re.search(r'conditions=\[(.*?)\]', effect_context, re.DOTALL)
@@ -154,7 +150,7 @@ def analyze_triggers():
                         'state_machine': state_machine,
                         'module': trigger_module_path.split('.')[-1],  # e.g., 'triggers', 'participants'
                         'full_module': trigger_module_path,
-                        'conditions': conditions
+                        'conditions': conditions,
                     }
 
                     if message_class_name not in message_triggers:
@@ -181,7 +177,7 @@ def analyze_triggers():
                         'state_machine': 'ModelChanged',
                         'module': trigger_module_path.split('.')[-1],
                         'full_module': trigger_module_path,
-                        'conditions': []
+                        'conditions': [],
                     }
 
                     if message_class_name not in message_triggers:
@@ -205,7 +201,7 @@ def analyze_triggers():
                         'state_machine': 'ModelCreated',
                         'module': trigger_module_path.split('.')[-1],
                         'full_module': trigger_module_path,
-                        'conditions': []
+                        'conditions': [],
                     }
 
                     if message_class_name not in message_triggers:
@@ -214,7 +210,7 @@ def analyze_triggers():
                     message_triggers[message_class_name].append(trigger_info)
 
         except Exception as e:
-            print(f"Warning: Could not analyze {trigger_module_path}: {e}")
+            print(f'Warning: Could not analyze {trigger_module_path}: {e}')
             continue
 
     return message_triggers
@@ -231,7 +227,7 @@ def format_trigger_description(triggers):
         str: HTML-formatted trigger description
     """
     if not triggers:
-        return ""
+        return ''
 
     descriptions = []
 
@@ -246,18 +242,18 @@ def format_trigger_description(triggers):
     for machine, machine_triggers in sorted(by_machine.items()):
         transitions = []
         for t in machine_triggers:
-            trans_desc = f"<code>{t['transition']}</code>"
+            trans_desc = f'<code>{t["transition"]}</code>'
             if t['conditions']:
                 cond_list = ', '.join([f'<code>{c}</code>' for c in t['conditions'][:3]])
                 if len(t['conditions']) > 3:
                     cond_list += ', ...'
-                trans_desc += f" <small>(when: {cond_list})</small>"
+                trans_desc += f' <small>(when: {cond_list})</small>'
             transitions.append(trans_desc)
 
-        machine_desc = f"<strong>{machine}</strong>: {', '.join(transitions)}"
+        machine_desc = f'<strong>{machine}</strong>: {", ".join(transitions)}'
         descriptions.append(machine_desc)
 
-    return "<br>".join(descriptions)
+    return '<br>'.join(descriptions)
 
 
 #  Mock objects for different entity types
@@ -267,11 +263,11 @@ class MockMember:
     def __init__(self, language='en'):
         self.id = 1
         self.pk = 1
-        self.first_name = "Jane"
-        self.last_name = "Doe"
-        self.short_name = "Jane D."
-        self.full_name = "Jane Doe"
-        self.email = "jane.doe@example.com"
+        self.first_name = 'Jane'
+        self.last_name = 'Doe'
+        self.short_name = 'Jane D.'
+        self.full_name = 'Jane Doe'
+        self.email = 'jane.doe@example.com'
         self.primary_language = language
         self.favourite_themes = Theme.objects.none()
         self.skills = Theme.objects.none()
@@ -280,7 +276,6 @@ class MockMember:
 
 
 class MockQueryset:
-
     def __init__(self, elements=None):
         self.elements = elements or []
 
@@ -323,14 +318,14 @@ class MockActivity:
     def __init__(self, language='en'):
         self.id = 123
         self.pk = 123
-        self.title = "Clean up the local park"
-        self.slug = "clean-up-the-local-park"
-        self.description = "Help us clean the local park!"
+        self.title = 'Clean up the local park'
+        self.slug = 'clean-up-the-local-park'
+        self.description = 'Help us clean the local park!'
         self.start = now() + timedelta(days=24)
         self.end = now() + timedelta(days=30, hours=3)
         self.deadline = now() + timedelta(days=30, hours=3)
         self.duration = timedelta(hours=3)
-        self.status = "open"
+        self.status = 'open'
         self.owner = MockMember(language)
         self.organization = None
         self.participants = DeedParticipant.objects.none()
@@ -344,10 +339,10 @@ class MockActivity:
         self.interests = MockQueryset([MockInterest(language, activity=self)])
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/activities/details/deed/{self.id}/{self.slug}"
+        return f'https://example.goodup.com/en/activities/details/deed/{self.id}/{self.slug}'
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/admin/activities/deed/{self.id}/{self.slug}"
+        return f'https://example.goodup.com/en/admin/activities/deed/{self.id}/{self.slug}'
 
 
 class MockInterest:
@@ -369,8 +364,8 @@ class MockParticipant:
         self.pk = 456
         self.user = MockMember(language)
         self.activity = MockActivity(language)
-        self.status = "accepted"
-        self.motivation = "I love helping the community!"
+        self.status = 'accepted'
+        self.motivation = 'I love helping the community!'
         self.time_spent = None
         self.participants = DeedParticipant.objects.none()
         # Create an empty queryset that supports .all() and .filter() but returns nothing
@@ -383,7 +378,7 @@ class MockParticipant:
         return self.user
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/activities/participants/{self.id}"
+        return f'https://example.goodup.com/en/activities/participants/{self.id}'
 
 
 class MockRegistration:
@@ -394,8 +389,8 @@ class MockRegistration:
         self.pk = 456
         self.user = MockMember(language)
         self.activity = MockActivity(language)
-        self.status = "accepted"
-        self.motivation = "I love helping the community!"
+        self.status = 'accepted'
+        self.motivation = 'I love helping the community!'
         self.participants = DateParticipant.objects.all()
         self.slot = MockSlot(language)
         self.team = MockTeam(language)
@@ -405,7 +400,7 @@ class MockRegistration:
         return self.user
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/activities/participants/{self.id}"
+        return f'https://example.goodup.com/en/activities/participants/{self.id}'
 
 
 class MockSlot:
@@ -414,7 +409,7 @@ class MockSlot:
     def __init__(self, language='en'):
         self.id = 789
         self.pk = 789
-        self.title = "Morning Shift"
+        self.title = 'Morning Shift'
         self.activity = MockActivity(language)
         self.start = now() + timedelta(days=1)
         self.end = now() + timedelta(days=1, hours=3)
@@ -424,8 +419,8 @@ class MockSlot:
         self.location = None
         self.event_data = None  # For calendar event generation
         self.is_online = True
-        self.online_meeting_url = "https://example.goodup.com/en/meeting/vzzbxx"
-        self.location_hint = ""
+        self.online_meeting_url = 'https://example.goodup.com/en/meeting/vzzbxx'
+        self.location_hint = ''
         interest = MockInterest(language, slot=self, activity=self.activity)
         self.interests = MockQueryset([interest])
 
@@ -434,7 +429,7 @@ class MockSlot:
         return self.activity.owner
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/activities/slots/{self.id}"
+        return f'https://example.goodup.com/en/activities/slots/{self.id}'
 
 
 class MockTeam:
@@ -443,18 +438,17 @@ class MockTeam:
     def __init__(self, language='en'):
         self.id = 321
         self.pk = 321
-        self.name = "Team Awesome"
+        self.name = 'Team Awesome'
         self.activity = MockActivity(language)
         self.user = MockMember(language)
         self.slots = DateActivitySlot.objects.all()
         self.event_data = None
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/activities/teams/{self.id}"
+        return f'https://example.goodup.com/en/activities/teams/{self.id}'
 
 
 class MockTeamSlot(MockSlot):
-
     def __init__(self, language='en'):
         super().__init__(language)
         self.team = MockTeam(language)
@@ -473,7 +467,7 @@ class MockTeamMember:
         self.slots = MockQueryset([MockSlot(language)])
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/activities/teams/{self.id}"
+        return f'https://example.goodup.com/en/activities/teams/{self.id}'
 
 
 class MockFunding:
@@ -482,8 +476,8 @@ class MockFunding:
     def __init__(self, language='en'):
         self.id = 111
         self.pk = 111
-        self.title = "Support our community garden"
-        self.slug = "support-community-garden"
+        self.title = 'Support our community garden'
+        self.slug = 'support-community-garden'
         self.target = Money(3500, 'EUR')
         self.amount_raised = Money(1700, 'EUR')
         self.owner = MockMember(language)
@@ -491,7 +485,7 @@ class MockFunding:
         self.payouts = Payout.objects.none()
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/funding/{self.id}/{self.slug}"
+        return f'https://example.goodup.com/en/funding/{self.id}/{self.slug}'
 
 
 class MockOrganization:
@@ -513,10 +507,10 @@ class MockPayoutAccount:
         self.grant_application = MockGrantApplication(language)
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/payout/{self.id}"
+        return f'https://example.goodup.com/en/payout/{self.id}'
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/payout/{self.id}"
+        return f'https://example.goodup.com/en/payout/{self.id}'
 
 
 class MockGrantPayout:
@@ -535,6 +529,7 @@ class MockGrantPayout:
     @property
     def grants(self):
         """Mock queryset-like object that supports .first() and .all()"""
+
         class MockGrantsQuerySet:
             def __init__(self, grants_list):
                 self.grants_list = grants_list
@@ -548,10 +543,10 @@ class MockGrantPayout:
         return MockGrantsQuerySet(self._grants_list)
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/payout/{self.id}"
+        return f'https://example.goodup.com/en/payout/{self.id}'
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/payout{self.id}"
+        return f'https://example.goodup.com/en/payout{self.id}'
 
 
 class MockGrantApplication:
@@ -560,8 +555,8 @@ class MockGrantApplication:
     def __init__(self, language='en'):
         self.id = 111
         self.pk = 111
-        self.title = "Support our community garden"
-        self.slug = "support-community-garden"
+        self.title = 'Support our community garden'
+        self.slug = 'support-community-garden'
         self.target = Money(3500, 'EUR')
         self.owner = MockMember(language)
         self.partner_organization = None  # For donation receipt template
@@ -570,10 +565,10 @@ class MockGrantApplication:
         self.payouts = Payout.objects.none()
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+        return f'https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}'
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+        return f'https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}'
 
 
 class MockGrantFund:
@@ -582,13 +577,13 @@ class MockGrantFund:
     def __init__(self, language='en'):
         self.id = 111
         self.pk = 111
-        self.name = "GoodUp Big Fund"
+        self.name = 'GoodUp Big Fund'
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+        return f'https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}'
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+        return f'https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}'
 
 
 class MockGrantDonor:
@@ -601,10 +596,10 @@ class MockGrantDonor:
         self.fund = MockGrantFund(language)
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+        return f'https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}'
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+        return f'https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}'
 
 
 class MockGrantProvider:
@@ -615,7 +610,7 @@ class MockGrantProvider:
         self.pk = 111
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+        return f'https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}'
 
 
 class MockGrantPayment:
@@ -632,12 +627,13 @@ class MockGrantPayment:
 
             def all(self):
                 return [self._payout]
+
         self.payouts = MockPayoutsQuerySet(self._payout)
         self.total = Money(3500, 'EUR')
         self.grant_provider = MockGrantProvider(language)
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+        return f'https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}'
 
 
 class MockDonation:
@@ -657,7 +653,7 @@ class MockDonation:
         return self.user
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/donations/{self.id}"
+        return f'https://example.goodup.com/en/donations/{self.id}'
 
 
 class MockInitiative:
@@ -665,12 +661,12 @@ class MockInitiative:
 
     def __init__(self, language='en'):
         self.id = 333
-        self.title = "Green City Initiative"
-        self.slug = "green-city-initiative"
+        self.title = 'Green City Initiative'
+        self.slug = 'green-city-initiative'
         self.owner = MockMember(language)
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/initiatives/{self.id}/{self.slug}"
+        return f'https://example.goodup.com/en/initiatives/{self.id}/{self.slug}'
 
 
 class MockUpdate:
@@ -678,7 +674,7 @@ class MockUpdate:
 
     def __init__(self, language='en'):
         self.id = 444
-        self.title = "Great progress update!"
+        self.title = 'Great progress update!'
         self.message = "We've made amazing progress..."
         self.author = MockMember(language)
         self.activity = MockActivity(language)
@@ -706,7 +702,6 @@ MOCK_OBJECT_MAP = {
     'Member': MockMember,
     'Registration': MockRegistration,
     'GrantPayout': MockGrantPayout,
-
 }
 
 
@@ -735,18 +730,22 @@ def get_mock_object_for_message(message_class, language='en'):
 
         if 'updates' in module_name:
             from bluebottle.updates.models import Update
+
             return get_real_or_mock_object(Update, MockUpdate, language)
 
         if 'funding' in module_name:
             if 'contributor' in module_name or 'Donation' in class_name:
                 from bluebottle.funding.models import Donation
+
                 return get_real_or_mock_object(Donation, MockDonation, language)
 
             if 'PayoutAccount' in class_name:
                 from bluebottle.funding.models import PayoutAccount
+
                 return get_real_or_mock_object(PayoutAccount, MockPayoutAccount, language)
 
             from bluebottle.funding.models import Funding
+
             return get_real_or_mock_object(Funding, MockFunding, language)
 
         if 'GrantPayment' in class_name:
@@ -760,6 +759,7 @@ def get_mock_object_for_message(message_class, language='en'):
                 return MockPayoutAccount(language)
             try:
                 from bluebottle.grant_management.models import GrantApplication
+
                 grant_app = GrantApplication.objects.filter().first()
                 if grant_app:
                     return grant_app
@@ -781,6 +781,7 @@ def get_mock_object_for_message(message_class, language='en'):
             # Check for specific time-based types
             if 'Participant' in class_name or 'participant' in module_name:
                 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
+
                 # Try DateParticipant first
                 participant = DateParticipant.objects.filter().first()
                 if participant:
@@ -794,6 +795,7 @@ def get_mock_object_for_message(message_class, language='en'):
             if 'Slot' in class_name or ('Changed' in class_name and 'Date' in class_name):
                 # Messages about slot changes need slot objects
                 from bluebottle.time_based.models import DateActivitySlot
+
                 slot = DateActivitySlot.objects.filter().first()
                 if slot:
                     return slot
@@ -801,6 +803,7 @@ def get_mock_object_for_message(message_class, language='en'):
 
             if 'Registration' in class_name or 'registrations' in module_name:
                 from bluebottle.time_based.models import PeriodParticipant
+
                 return get_real_or_mock_object(PeriodParticipant, MockRegistration, language)
 
             if 'Team' in class_name:
@@ -815,12 +818,14 @@ def get_mock_object_for_message(message_class, language='en'):
             # Messages with "Date" likely need DateActivity
             if 'Date' in class_name or 'Reminder' in class_name:
                 from bluebottle.time_based.models import DateActivity
+
                 activity = DateActivity.objects.filter().first()
                 if activity:
                     return activity
 
             # Default to any time-based activity
             from bluebottle.time_based.models import DateActivity, PeriodActivity
+
             activity = DateActivity.objects.filter().first()
             if activity:
                 return activity
@@ -832,22 +837,27 @@ def get_mock_object_for_message(message_class, language='en'):
         if 'deeds' in module_name:
             if 'Participant' in class_name:
                 from bluebottle.deeds.models import DeedParticipant
+
                 return get_real_or_mock_object(DeedParticipant, MockParticipant, language)
 
             from bluebottle.deeds.models import Deed
+
             return get_real_or_mock_object(Deed, MockActivity, language)
 
         # Check for collect
         if 'collect' in module_name:
             if 'Participant' in class_name:
                 from bluebottle.collect.models import CollectContributor
+
                 return get_real_or_mock_object(CollectContributor, MockParticipant, language)
             from bluebottle.collect.models import CollectActivity
+
             return get_real_or_mock_object(CollectActivity, MockActivity, language)
 
         # Check for initiatives
         if 'initiatives' in module_name:
             from bluebottle.initiatives.models import Initiative
+
             return get_real_or_mock_object(Initiative, MockInitiative, language)
 
     except Exception:
@@ -870,9 +880,7 @@ def discover_message_classes(module_path):
         message_classes = []
 
         for name, obj in inspect.getmembers(module, inspect.isclass):
-            if (issubclass(obj, TransitionMessage) and
-                    obj != TransitionMessage and
-                    obj.__module__ == module_path):
+            if issubclass(obj, TransitionMessage) and obj != TransitionMessage and obj.__module__ == module_path:
                 # Skip abstract message classes (only if Meta is defined on this class itself)
                 # Check if this class defines its own Meta (not inherited)
                 if 'Meta' in obj.__dict__:
@@ -883,7 +891,7 @@ def discover_message_classes(module_path):
 
         return sorted(message_classes)
     except ImportError as e:
-        print(f"Warning: Could not import {module_path}: {e}")
+        print(f'Warning: Could not import {module_path}: {e}')
         return []
 
 
@@ -931,9 +939,9 @@ def matching_activities_preview_context():
 def preview_message(message_class_name, message_class, language='en', output_format='html', verbose=False):
     """Generate preview for a single message"""
     if verbose:
-        print(f"\n{'=' * 80}")
-        print(f"Message: {message_class_name} ({language.upper()})")
-        print(f"{'=' * 80}\n")
+        print(f'\n{"=" * 80}')
+        print(f'Message: {message_class_name} ({language.upper()})')
+        print(f'{"=" * 80}\n')
 
     # Get appropriate object (try real DB object first, fallback to mock)
     mock_obj = get_mock_object_for_message(message_class, language)
@@ -942,8 +950,8 @@ def preview_message(message_class_name, message_class, language='en', output_for
     is_real_object = hasattr(mock_obj, '_state') and hasattr(mock_obj._state, 'db')
 
     if verbose:
-        obj_type = "DB object" if is_real_object else "Mock object"
-        print(f"Using: {mock_obj.__class__.__name__} ({obj_type})")
+        obj_type = 'DB object' if is_real_object else 'Mock object'
+        print(f'Using: {mock_obj.__class__.__name__} ({obj_type})')
     # Create message instance
     try:
         preview_options = {}
@@ -951,12 +959,13 @@ def preview_message(message_class_name, message_class, language='en', output_for
             preview_options['context'] = matching_activities_preview_context()
         message_instance = message_class(mock_obj, **preview_options)
     except Exception as e:
-        print(f"❌ Could not instantiate {message_class_name}: {e}")
+        print(f'❌ Could not instantiate {message_class_name}: {e}')
         return None
 
     # Get mock recipient - try to use a real user from the database if available
     # This allows Django ORM queries like .filter(user=recipient) to work
     from bluebottle.members.models import Member
+
     try:
         # Try to get a real user from database for ORM compatibility
         mock_recipient = Member.objects.filter(is_active=True).first()
@@ -974,13 +983,14 @@ def preview_message(message_class_name, message_class, language='en', output_for
         with translation.override(language):
             # Force Django to load translations
             from django.utils.translation import gettext
+
             _ = gettext('test')
 
             if output_format == 'subject':
                 context = message_instance.get_context(mock_recipient)
                 subject = str(message_instance.subject.format(**context, obj=mock_obj))
                 if verbose:
-                    print(f"Subject: {subject}\n")
+                    print(f'Subject: {subject}\n')
                 return subject
 
             elif output_format == 'html':
@@ -989,25 +999,26 @@ def preview_message(message_class_name, message_class, language='en', output_for
                 subject = str(message_instance.subject.format(**context))
 
                 if verbose:
-                    print(f"Subject: {subject}")
-                    print(f"Template: mails/{message_instance.template}.html")
-                    print(f"HTML length: {len(html_content)} characters")
+                    print(f'Subject: {subject}')
+                    print(f'Template: mails/{message_instance.template}.html')
+                    print(f'HTML length: {len(html_content)} characters')
                 return {'html': html_content, 'subject': subject, 'context': context}
 
     except Exception as e:
         error_msg = str(e)
         # Check if it's a known mock data limitation
         if "Field 'id' expected a number" in error_msg:
-            print(f"⚠️  Skipping {message_class_name} ({language}): Requires real database objects for ORM queries")
-        elif "matching query does not exist" in error_msg or "DoesNotExist" in type(e).__name__:
-            print(f"⚠️  Skipping {message_class_name} ({language}): Requires real database relationships", e)
+            print(f'⚠️  Skipping {message_class_name} ({language}): Requires real database objects for ORM queries')
+        elif 'matching query does not exist' in error_msg or 'DoesNotExist' in type(e).__name__:
+            print(f'⚠️  Skipping {message_class_name} ({language}): Requires real database relationships', e)
         else:
             print(
-                f"❌ Error rendering {message_class_name} with "
-                f"({mock_obj.__class__.__name__}) ({language}): {error_msg}"
+                f'❌ Error rendering {message_class_name} with '
+                f'({mock_obj.__class__.__name__}) ({language}): {error_msg}'
             )
         if verbose:
             import traceback
+
             traceback.print_exc()
         return None
 
@@ -1023,7 +1034,7 @@ def save_preview(message_class_name, content, output_dir, module_name, language=
         os.makedirs(module_dir)
 
     # Always include language suffix for consistency
-    filename = f"{message_class_name}_{language}.html"
+    filename = f'{message_class_name}_{language}.html'
     filepath = os.path.join(module_dir, filename)
 
     html_content = content if isinstance(content, str) else content.get('html', '')
@@ -1055,7 +1066,7 @@ def save_preview(message_class_name, content, output_dir, module_name, language=
         f.write(html_content)
 
     if verbose:
-        print(f"✅ Saved: {filepath}")
+        print(f'✅ Saved: {filepath}')
 
     # Return filepath and subject as a dict
     return {'filepath': filepath, 'subject': subject}
@@ -1071,32 +1082,26 @@ def generate_index(output_dir, all_messages, languages, trigger_map=None):
     total_messages = sum(module_counts.values())
 
     # Generate metadata for modals
-    metadata = {
-        'languages': languages,
-        'modules': {}
-    }
+    metadata = {'languages': languages, 'modules': {}}
     for module_name, messages in all_messages.items():
         module_dir = module_name.replace('.', '_')
-        metadata['modules'][module_name] = {
-            'directory': module_dir,
-            'messages': []
-        }
+        metadata['modules'][module_name] = {'directory': module_dir, 'messages': []}
         for msg_name, msg_class in messages:
             # Get trigger information for this message
             triggers = trigger_map.get(msg_name, []) if trigger_map else []
-            trigger_desc = format_trigger_description(triggers) if triggers else ""
+            trigger_desc = format_trigger_description(triggers) if triggers else ''
 
             msg_data = {
                 'name': msg_name,
-                'description': (msg_class.__doc__ or "").strip().replace('\n', ' '),
+                'description': (msg_class.__doc__ or '').strip().replace('\n', ' '),
                 'triggers': triggers,
                 'trigger_description': trigger_desc,
                 'previews': {},
-                'subjects': {}
+                'subjects': {},
             }
             for lang in languages:
-                filename = f"{msg_name}_{lang}.html"
-                filepath = f"{module_dir}/{filename}"
+                filename = f'{msg_name}_{lang}.html'
+                filepath = f'{module_dir}/{filename}'
                 full_path = os.path.join(output_dir, filepath)
                 if os.path.exists(full_path):
                     msg_data['previews'][lang] = filepath
@@ -1106,7 +1111,7 @@ def generate_index(output_dir, all_messages, languages, trigger_map=None):
                         if os.path.exists(subject_cache_file):
                             with open(subject_cache_file, 'r', encoding='utf-8') as f:
                                 subjects_cache = json.load(f)
-                                cache_key = f"{module_name}:{msg_name}:{lang}"
+                                cache_key = f'{module_name}:{msg_name}:{lang}'
                                 if cache_key in subjects_cache:
                                     msg_data['subjects'][lang] = subjects_cache[cache_key]
                     except Exception:
@@ -1460,32 +1465,34 @@ def generate_index(output_dir, all_messages, languages, trigger_map=None):
             <div class="message-list">
 """
         for msg_name, msg_class in sorted(messages):
-            doc = (msg_class.__doc__ or "").strip().replace('\n', ' ')
+            doc = (msg_class.__doc__ or '').strip().replace('\n', ' ')
 
             # Get trigger info from metadata
             triggers = trigger_map.get(msg_name, []) if trigger_map else []
-            trigger_desc = format_trigger_description(triggers) if triggers else ""
+            trigger_desc = format_trigger_description(triggers) if triggers else ''
 
             html += f"""
                 <div class="message-item">
                     <div class="message-name">{msg_name}</div>
                     {f'<div class="message-description">{doc}</div>' if doc else ''}
-                    {(f'<div class="message-triggers"><strong>🎯 '
-                      f'Triggered by:</strong> {trigger_desc}</div>') if trigger_desc else ''}
+                    {
+                (f'<div class="message-triggers"><strong>🎯 Triggered by:</strong> {trigger_desc}</div>')
+                if trigger_desc
+                else ''
+            }
                     <div class="lang-links">
 """
             # Show only EN and NL buttons in the overview
             overview_languages = [lang for lang in ['en', 'nl'] if lang in languages]
             for lang in overview_languages:
                 # Language flags
-                lang_flags = {
-                    'de': '🇩🇪', 'en': '🇬🇧', 'es': '🇪🇸',
-                    'fr': '🇫🇷', 'hu': '🇭🇺', 'nl': '🇳🇱', 'pt': '🇵🇹'
-                }
+                lang_flags = {'de': '🇩🇪', 'en': '🇬🇧', 'es': '🇪🇸', 'fr': '🇫🇷', 'hu': '🇭🇺', 'nl': '🇳🇱', 'pt': '🇵🇹'}
                 lang_flag = lang_flags.get(lang, '🌐')
-                html += (f'<button class="lang-btn" '
-                         f'onclick="openModal(\'{module_name}\', \'{msg_name}\', \'{lang}\')">'
-                         f'{lang_flag} {lang.upper()}</button>\n')
+                html += (
+                    f'<button class="lang-btn" '
+                    f"onclick=\"openModal('{module_name}', '{msg_name}', '{lang}')\">"
+                    f'{lang_flag} {lang.upper()}</button>\n'
+                )
 
             html += """                    </div>
                 </div>
@@ -1699,15 +1706,19 @@ class Command(BaseCommand):
         parser.add_argument('--list-modules', action='store_true', help='List all available modules')
         parser.add_argument('--module', type=str, help='Generate previews for specific module')
         parser.add_argument('--all', action='store_true', help='Generate previews for ALL modules')
-        parser.add_argument('--all-languages', action='store_true',
-                            help='Generate in all available languages (de, en, es, fr, hu, nl, pt)')
-        parser.add_argument('--languages', type=str,
-                            help='Comma-separated language codes (e.g., "en,nl,fr")')
-        parser.add_argument('--output-dir', type=str,
-                            default=None,
-                            help='Output directory (default: notifications/static/email_previews)')
-        parser.add_argument('--verbose', action='store_true',
-                            help='Show detailed output for each message preview')
+        parser.add_argument(
+            '--all-languages',
+            action='store_true',
+            help='Generate in all available languages (de, en, es, fr, hu, nl, pt)',
+        )
+        parser.add_argument('--languages', type=str, help='Comma-separated language codes (e.g., "en,nl,fr")')
+        parser.add_argument(
+            '--output-dir',
+            type=str,
+            default=None,
+            help='Output directory (default: notifications/static/email_previews)',
+        )
+        parser.add_argument('--verbose', action='store_true', help='Show detailed output for each message preview')
 
     def handle(self, *args, **options):
         # Set up a real tenant for the preview generation
@@ -1715,11 +1726,11 @@ class Command(BaseCommand):
             tenant = Client.objects.get(schema_name='goodup_demo')
             if tenant:
                 connection.set_tenant(tenant)
-                self.stdout.write(f"Using tenant: {tenant.client_name}")
+                self.stdout.write(f'Using tenant: {tenant.client_name}')
             else:
-                self.stderr.write("Warning: No tenant found in database. Some features may not work correctly.")
+                self.stderr.write('Warning: No tenant found in database. Some features may not work correctly.')
         except Exception as e:
-            self.stderr.write(f"Warning: Could not set up tenant: {e}")
+            self.stderr.write(f'Warning: Could not set up tenant: {e}')
 
         # Set default output directory to static folder
         if not options['output_dir']:
@@ -1729,12 +1740,12 @@ class Command(BaseCommand):
             )
 
         if options['list_modules']:
-            self.stdout.write("\n📦 Available Message Modules:")
-            self.stdout.write("=" * 80)
+            self.stdout.write('\n📦 Available Message Modules:')
+            self.stdout.write('=' * 80)
             for short_name, full_path in sorted(MESSAGE_MODULES.items()):
                 messages = discover_message_classes(full_path)
-                self.stdout.write(f"  {short_name:40} ({len(messages)} messages)")
-            self.stdout.write(f"\n Total modules: {len(MESSAGE_MODULES)}")
+                self.stdout.write(f'  {short_name:40} ({len(messages)} messages)')
+            self.stdout.write(f'\n Total modules: {len(MESSAGE_MODULES)}')
             return
 
         # Determine which languages to generate
@@ -1744,19 +1755,21 @@ class Command(BaseCommand):
             # Validate languages
             invalid = [lang for lang in languages if lang not in available_languages]
             if invalid:
-                self.stderr.write(f"Invalid language codes: {', '.join(invalid)}")
-                self.stdout.write(f"Available languages: {', '.join(available_languages)}")
+                self.stderr.write(f'Invalid language codes: {", ".join(invalid)}')
+                self.stdout.write(f'Available languages: {", ".join(available_languages)}')
                 return
         elif options['all_languages']:
             languages = available_languages
         else:
             languages = ['en']
-            self.stdout.write(self.style.WARNING(
-                f"\n💡 Tip: Use --all-languages to generate previews in all {len(available_languages)} languages "
-                f"(de, en, es, fr, hu, nl, pt)\n"
-            ))
+            self.stdout.write(
+                self.style.WARNING(
+                    f'\n💡 Tip: Use --all-languages to generate previews in all {len(available_languages)} languages '
+                    f'(de, en, es, fr, hu, nl, pt)\n'
+                )
+            )
 
-        self.stdout.write(f"Generating previews for languages: {', '.join(languages)}\n")
+        self.stdout.write(f'Generating previews for languages: {", ".join(languages)}\n')
 
         if options['all'] or options['module']:
             modules_to_process = {}
@@ -1768,18 +1781,18 @@ class Command(BaseCommand):
                 matched = {k: v for k, v in MESSAGE_MODULES.items() if options['module'].lower() in k.lower()}
                 if not matched:
                     self.stderr.write(f"❌ No module found matching '{options['module']}'")
-                    self.stdout.write("\nAvailable modules:")
+                    self.stdout.write('\nAvailable modules:')
                     for name in MESSAGE_MODULES.keys():
-                        self.stdout.write(f"  - {name}")
+                        self.stdout.write(f'  - {name}')
                     return
                 modules_to_process = matched
 
             # Analyze triggers to map messages to their triggering transitions
             if options.get('verbose'):
-                self.stdout.write("\n🔍 Analyzing trigger files...")
+                self.stdout.write('\n🔍 Analyzing trigger files...')
             trigger_map = analyze_triggers()
             if options.get('verbose'):
-                self.stdout.write(f"   Found trigger info for {len(trigger_map)} message classes\n")
+                self.stdout.write(f'   Found trigger info for {len(trigger_map)} message classes\n')
 
             all_messages = {}
             total_generated = 0
@@ -1789,29 +1802,30 @@ class Command(BaseCommand):
 
             for module_name, module_path in modules_to_process.items():
                 if verbose:
-                    self.stdout.write(f"\n{'=' * 80}")
-                    self.stdout.write(f"📦 Processing module: {module_name}")
-                    self.stdout.write(f"{'=' * 80}")
+                    self.stdout.write(f'\n{"=" * 80}')
+                    self.stdout.write(f'📦 Processing module: {module_name}')
+                    self.stdout.write(f'{"=" * 80}')
 
                 messages = discover_message_classes(module_path)
                 if not messages:
                     if verbose:
-                        self.stdout.write(f"  No messages found in {module_name}")
+                        self.stdout.write(f'  No messages found in {module_name}')
                     continue
 
                 all_messages[module_name] = messages
                 if verbose:
-                    self.stdout.write(f"  Found {len(messages)} message classes")
+                    self.stdout.write(f'  Found {len(messages)} message classes')
 
                 for msg_name, msg_class in messages:
                     for lang in languages:
                         content = preview_message(msg_name, msg_class, lang, 'html', verbose=verbose)
                         if content:
-                            result = save_preview(msg_name, content, options['output_dir'], module_name, lang,
-                                                  verbose=verbose)
+                            result = save_preview(
+                                msg_name, content, options['output_dir'], module_name, lang, verbose=verbose
+                            )
                             # Cache the subject
                             if result and result.get('subject'):
-                                cache_key = f"{module_name}:{msg_name}:{lang}"
+                                cache_key = f'{module_name}:{msg_name}:{lang}'
                                 subjects_cache[cache_key] = result['subject']
                             total_generated += 1
                         else:
@@ -1827,16 +1841,16 @@ class Command(BaseCommand):
             if all_messages:
                 generate_index(options['output_dir'], all_messages, languages, trigger_map)
 
-            self.stdout.write(f"\n{'=' * 80}")
-            self.stdout.write(self.style.SUCCESS("✅ COMPLETE!"))
-            self.stdout.write(f"{'=' * 80}")
-            self.stdout.write(f"Total messages generated: {total_generated}")
+            self.stdout.write(f'\n{"=" * 80}')
+            self.stdout.write(self.style.SUCCESS('✅ COMPLETE!'))
+            self.stdout.write(f'{"=" * 80}')
+            self.stdout.write(f'Total messages generated: {total_generated}')
             if total_errors > 0:
-                self.stdout.write(self.style.WARNING(f"Total errors: {total_errors}"))
-            self.stdout.write(f"Output directory: {os.path.abspath(options['output_dir'])}")
-            self.stdout.write("\nView in browser:")
-            self.stdout.write("  Static URL: /static/email_previews/index.html")
-            self.stdout.write(f"  Or open: xdg-open {os.path.abspath(options['output_dir'])}/index.html")
+                self.stdout.write(self.style.WARNING(f'Total errors: {total_errors}'))
+            self.stdout.write(f'Output directory: {os.path.abspath(options["output_dir"])}')
+            self.stdout.write('\nView in browser:')
+            self.stdout.write('  Static URL: /static/email_previews/index.html')
+            self.stdout.write(f'  Or open: xdg-open {os.path.abspath(options["output_dir"])}/index.html')
 
         else:
             self.print_help('manage.py', 'preview_all_messages')

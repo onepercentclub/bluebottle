@@ -20,12 +20,7 @@ class GrantApplicationDocument(ActivityDocument):
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
-            return [
-                {
-                    'period': 'once',
-                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-                }
-            ]
+            return [{'period': 'once', 'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24}]
 
     class Django:
         related_models = ActivityDocument.Django.related_models + (GrantDonor,)
@@ -41,13 +36,10 @@ class GrantApplicationDocument(ActivityDocument):
         return [None]
 
     def prepare_dates(self, instance):
-        return [{
-            'start': None,
-            'end': None
-        }]
+        return [{'start': None, 'end': None}]
 
     def prepare_duration(self, instance):
-        return {"gte": None, "lte": None}
+        return {'gte': None, 'lte': None}
 
     def prepare_amount(self, amount):
         if amount:

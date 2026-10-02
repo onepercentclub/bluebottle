@@ -8,7 +8,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class GrantPayoutStateMachineTests(BluebottleTestCase):
-
     def setUp(self):
         super().setUp()
         # Disable IBAN check to simplify testing

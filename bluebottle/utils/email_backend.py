@@ -63,6 +63,7 @@ def _log_template_render_error(exception, template_name, subject, to):
 
 try:
     import cssutils
+
     cssutils.log.setLevel(logging.CRITICAL)
 except ModuleNotFoundError:
     pass
@@ -70,8 +71,8 @@ except ModuleNotFoundError:
 
 class TenantAwareBackend(EmailBackend):
     """
-        Support per-tenant smtp configuration and optionally
-        sign the message with a DKIM key, if present.
+    Support per-tenant smtp configuration and optionally
+    sign the message with a DKIM key, if present.
     """
 
     def open(self):
@@ -95,18 +96,15 @@ class TenantAwareBackend(EmailBackend):
             return False
         try:
             message_string = email_message.message().as_bytes()
-            signature = b""
+            signature = b''
             try:
-                signature = dkim.sign(message_string,
-                                      properties.DKIM_SELECTOR,
-                                      properties.DKIM_DOMAIN,
-                                      properties.DKIM_PRIVATE_KEY)
+                signature = dkim.sign(
+                    message_string, properties.DKIM_SELECTOR, properties.DKIM_DOMAIN, properties.DKIM_PRIVATE_KEY
+                )
             except AttributeError:
                 pass
 
-            self.connection.sendmail(
-                email_message.from_email, email_message.recipients(),
-                signature + message_string)
+            self.connection.sendmail(email_message.from_email, email_message.recipients(), signature + message_string)
         except Exception:
             if not self.fail_silently:
                 raise
@@ -119,7 +117,7 @@ DKIMBackend = TenantAwareBackend
 
 class TestMailBackend(EmailBackend):
     def _send(self, email_message):
-        """ Force recipient to the current user."""
+        """Force recipient to the current user."""
         request = ThreadLocal.get_current_request()
 
         try:
@@ -131,12 +129,10 @@ class TestMailBackend(EmailBackend):
                 return False
 
         try:
-            email_message.subject += ' || To: ' + \
-                                     str(email_message.recipients()[0])
+            email_message.subject += ' || To: ' + str(email_message.recipients()[0])
             message_string = email_message.message().as_string()
 
-            self.connection.sendmail(
-                email_message.from_email, recipient, message_string)
+            self.connection.sendmail(email_message.from_email, recipient, message_string)
         except Exception:
             if not self.fail_silently:
                 raise
@@ -144,8 +140,17 @@ class TestMailBackend(EmailBackend):
         return True
 
 
-def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
-                   from_email=None, reply_to=None, attachments=None, **kwargs):
+def create_message(
+    template_name=None,
+    to=None,
+    subject=None,
+    cc=None,
+    bcc=None,
+    from_email=None,
+    reply_to=None,
+    attachments=None,
+    **kwargs,
+):
 
     if hasattr(to, 'primary_language') and to.primary_language:
         language = to.primary_language
@@ -161,12 +166,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         ctx = Context(kwargs)
         ctx['to'] = to  # Add the recipient to the context
         html_content = premailer.transform(
-            get_template(
-                '{0}.html'.format(template_name)
-            ).render(
-                ctx.flatten()
-            ),
-            base_url=tenant_url()
+            get_template('{0}.html'.format(template_name)).render(ctx.flatten()), base_url=tenant_url()
         )
         text_content = to_text.handle(html_content)
 
@@ -187,7 +187,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         # is being translated using ugettext_lazy.
         msg = EmailMultiAlternatives(**args)
         msg.activated_language = translation.get_language()
-        msg.attach_alternative(html_content, "text/html")
+        msg.attach_alternative(html_content, 'text/html')
         return msg
 
 
@@ -197,44 +197,35 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
     from bluebottle.common.tasks import _send_celery_mail
 
     if not to:
-        logger.error("No recipient specified")
+        logger.error('No recipient specified')
         return
 
     # Simple check if email address is valid
     regex = r'[^@]+@[^@]+\.[^@]+'
     if not re.match(regex, to.email):
-        logger.error("Trying to send email to invalid email address: {0}"
-                     .format(to.email))
+        logger.error('Trying to send email to invalid email address: {0}'.format(to.email))
         return
 
     if not kwargs.get('site'):
-        kwargs.update({
-            'site': tenant_url(),
-            'tenant': connection.tenant.client_name,
-            'tenant_name': connection.tenant.name
-        })
+        kwargs.update(
+            {'site': tenant_url(), 'tenant': connection.tenant.client_name, 'tenant_name': connection.tenant.name}
+        )
 
     site_platform_settings = SitePlatformSettings.load()
     mail_platform_settings = MailPlatformSettings.load()
-    kwargs.update({
-        'settings': mail_platform_settings,
-        'content': site_platform_settings,
-    })
+    kwargs.update(
+        {
+            'settings': mail_platform_settings,
+            'content': site_platform_settings,
+        }
+    )
 
     if site_platform_settings.terminated:
-        logger.error(
-            f"Trying to send email on terminated platform: {to.email}"
-        )
+        logger.error(f'Trying to send email on terminated platform: {to.email}')
         return
 
     try:
-        msg = create_message(
-            template_name=template_name,
-            to=to,
-            subject=subject,
-            attachments=attachments,
-            **kwargs
-        )
+        msg = create_message(template_name=template_name, to=to, subject=subject, attachments=attachments, **kwargs)
     except Exception as e:
         error_message = f"Exception while rendering email for '{subject}' template: {e}, in {template_name}"
         logger.error(error_message)
@@ -257,5 +248,5 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
             if properties.SEND_MAIL:
                 msg.send()
         except Exception as e:
-            logger.error("Exception sending synchronous email: {0}".format(e))
+            logger.error('Exception sending synchronous email: {0}'.format(e))
             return

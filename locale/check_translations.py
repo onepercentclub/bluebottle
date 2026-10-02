@@ -11,32 +11,16 @@ display_missing = 10
 parser = argparse.ArgumentParser(description='Check translation percentages')
 
 # Optional argument
-parser.add_argument(
-    '--source-locale',
-    type=str,
-    default='en',
-    help='Base locale to check strings against'
-)
+parser.add_argument('--source-locale', type=str, default='en', help='Base locale to check strings against')
 
 parser.add_argument(
-    'path',
-    nargs="?",
-    type=str,
-    default=os.path.join(os.getcwd(), 'locale/'),
-    help='Path to locale files'
+    'path', nargs='?', type=str, default=os.path.join(os.getcwd(), 'locale/'), help='Path to locale files'
 )
 
-parser.add_argument(
-    '--locales',
-    type=str,
-    default='nl',
-    help='Locales to check'
-)
+parser.add_argument('--locales', type=str, default='nl', help='Locales to check')
 
 parser.add_argument(
-    '--no-fail',
-    action='store_true',
-    help='Do not exit with code 1 when translations are missing (report only)'
+    '--no-fail', action='store_true', help='Do not exit with code 1 when translations are missing (report only)'
 )
 
 
@@ -46,7 +30,8 @@ if __name__ == '__main__':
     failed = False
 
     languages = [
-        lang for lang in os.listdir(args.path)
+        lang
+        for lang in os.listdir(args.path)
         if os.path.isdir(os.path.join(args.path, lang)) and lang != args.source_locale
     ]
     sources = polib.pofile(os.path.join(args.path, args.source_locale, 'LC_MESSAGES/django.po'))

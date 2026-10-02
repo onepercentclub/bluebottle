@@ -17,7 +17,8 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantTransitionSerializer,
     ScheduleRegistrationSerializer,
     ScheduleRegistrationTransitionSerializer,
-    ScheduleTransitionSerializer, ScheduleSlotSerializer,
+    ScheduleTransitionSerializer,
+    ScheduleSlotSerializer,
 )
 from bluebottle.time_based.tests.base import (
     TimeBasedActivityAPIExportTestCase,
@@ -47,9 +48,7 @@ class ScheduleActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestC
     serializer = ScheduleActivitySerializer
     factory = ScheduleActivityFactory
     fields = TimeBasedActivityListAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
-    attributes = TimeBasedActivityListAPITestCase.attributes + [
-        'capacity', 'deadline', 'duration', 'is-online'
-    ]
+    attributes = TimeBasedActivityListAPITestCase.attributes + ['capacity', 'deadline', 'duration', 'is-online']
 
     def setUp(self):
         super().setUp()
@@ -70,16 +69,14 @@ class ScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
     factory = ScheduleActivityFactory
 
     fields = TimeBasedActivityDetailAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
-    attributes = TimeBasedActivityDetailAPITestCase.attributes + [
-        'capacity', 'deadline', 'duration', 'is-online'
-    ]
+    attributes = TimeBasedActivityDetailAPITestCase.attributes + ['capacity', 'deadline', 'duration', 'is-online']
 
     defaults = dict(
         TimeBasedActivityDetailAPITestCase.defaults,
         **{
             'start': date.today() + timedelta(days=10),
             'deadline': date.today() + timedelta(days=20),
-        }
+        },
     )
 
 
@@ -89,51 +86,35 @@ class TeamScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, 
     factory = ScheduleActivityFactory
 
     fields = TimeBasedActivityDetailAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
-    attributes = TimeBasedActivityDetailAPITestCase.attributes + [
-        'capacity', 'deadline', 'duration', 'is-online'
-    ]
+    attributes = TimeBasedActivityDetailAPITestCase.attributes + ['capacity', 'deadline', 'duration', 'is-online']
 
     defaults = dict(
         TimeBasedActivityDetailAPITestCase.defaults,
         **{
             'start': date.today() + timedelta(days=10),
             'deadline': date.today() + timedelta(days=20),
-            "team_activity": "teams",
-        }
+            'team_activity': 'teams',
+        },
     )
 
     def test_get_team_member(self):
         user = BlueBottleUserFactory.create()
         team = TeamFactory.create(activity=self.model)
-        team_member = TeamMemberFactory.create(
-            user=user,
-            team=team
-        )
+        team_member = TeamMemberFactory.create(user=user, team=team)
         TeamFactory.create(activity=self.model)
         TeamMemberFactory.create(team=team)
 
         self.perform_get(user=user)
 
         contributors_link = self.response.json()['data']['relationships']['contributors']['links']['my']
-        self.assertEqual(
-            contributors_link['meta']['count'],
-            1
-        )
+        self.assertEqual(contributors_link['meta']['count'], 1)
 
         teams_link = self.response.json()['data']['relationships']['teams']['links']['my']
-        self.assertEqual(
-            teams_link['meta']['count'],
-            1
-        )
+        self.assertEqual(teams_link['meta']['count'], 1)
 
         response = self.client.get(contributors_link['href'], user=user)
-        self.assertEqual(
-            response.json()['meta']['pagination']['count'], 1
-        )
-        self.assertEqual(
-            response.json()['data'][0]['id'],
-            str(team_member.participants.get().pk)
-        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['data'][0]['id'], str(team_member.participants.get().pk))
 
     def test_get_team_captain(self):
         user = BlueBottleUserFactory.create()
@@ -144,25 +125,14 @@ class TeamScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, 
         self.perform_get(user=user)
 
         contributors_link = self.response.json()['data']['relationships']['contributors']['links']['my']
-        self.assertEqual(
-            contributors_link['meta']['count'],
-            1
-        )
+        self.assertEqual(contributors_link['meta']['count'], 1)
 
         teams_link = self.response.json()['data']['relationships']['teams']['links']['owned']
-        self.assertEqual(
-            teams_link['meta']['count'],
-            1
-        )
+        self.assertEqual(teams_link['meta']['count'], 1)
 
         response = self.client.get(teams_link['href'], user=user)
-        self.assertEqual(
-            response.json()['meta']['pagination']['count'], 1
-        )
-        self.assertEqual(
-            response.json()['data'][0]['id'],
-            str(team.pk)
-        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['data'][0]['id'], str(team.pk))
 
 
 class ScheduleActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):
@@ -176,7 +146,7 @@ class ScheduleActivityTransitionListAPITestCase(TimeBasedActivityTransitionListA
         **{
             'start': date.today() + timedelta(days=10),
             'deadline': date.today() + timedelta(days=20),
-        }
+        },
     )
 
 
@@ -298,10 +268,7 @@ class ScheduleParticipantDetailAPITestCase(TimeBasedParticipantDetailAPITestCase
         self.model = self.participant
         new_slot = ScheduleSlotFactory.create(activity=self.activity)
         current_user = self.model.user
-        self.perform_update(
-            {'slot': new_slot},
-            user=self.activity.owner
-        )
+        self.perform_update({'slot': new_slot}, user=self.activity.owner)
 
         self.assertStatus(status.HTTP_200_OK)
 
@@ -331,9 +298,7 @@ class ScheduleSlotDetailAPITestCase(APITestCase):
     factory = ScheduleSlotFactory
 
     fields = []
-    attributes = [
-        'start', 'duration'
-    ]
+    attributes = ['start', 'duration']
 
     defaults = {}
 
@@ -388,32 +353,26 @@ class ScheduleSlotDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_ical_download(self):
-        start = (date.today() + timedelta(days=10)).strftime("%Y-%m-%d %H:00:00")
-        self.perform_update(
-            {"start": start, "duration": "4:0:0", "is_online": True}, user=self.admin
-        )
+        start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
+        self.perform_update({'start': start, 'duration': '4:0:0', 'is_online': True}, user=self.admin)
 
         ical_response = self.client.get(
-            self.response.json()["data"]["attributes"]["links"]["ical"],
+            self.response.json()['data']['attributes']['links']['ical'],
         )
 
         calendar = icalendar.Calendar.from_ical(ical_response.content)
 
-        for ical_event in calendar.walk("vevent"):
+        for ical_event in calendar.walk('vevent'):
+            self.assertAlmostEqual(ical_event['dtstart'].dt, self.model.start, delta=timedelta(seconds=10))
             self.assertAlmostEqual(
-                ical_event["dtstart"].dt, self.model.start, delta=timedelta(seconds=10)
-            )
-            self.assertAlmostEqual(
-                ical_event["dtend"].dt,
+                ical_event['dtend'].dt,
                 self.model.start + self.model.duration,
                 delta=timedelta(seconds=10),
             )
 
-            self.assertEqual(str(ical_event["summary"]), self.activity.title)
-            self.assertEqual(ical_event["url"], self.model.get_absolute_url())
-            self.assertEqual(
-                ical_event["organizer"], "MAILTO:{}".format(self.activity.owner.email)
-            )
+            self.assertEqual(str(ical_event['summary']), self.activity.title)
+            self.assertEqual(ical_event['url'], self.model.get_absolute_url())
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
 
 
 class ScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase):
@@ -442,21 +401,26 @@ class ScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Start', 'Status', 'Registration answer',)
+            (
+                'Email',
+                'Name',
+                'Registration Date',
+                'Start',
+                'Status',
+                'Registration answer',
+            ),
         )
 
 
-class TeamScheduleActivityExportTestCase(
-    TimeBasedActivityAPIExportTestCase, APITestCase
-):
+class TeamScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase):
     factory = ScheduleActivityFactory
     participant_factory = TeamFactory
-    url_name = "schedule-detail"
+    url_name = 'schedule-detail'
 
     activity_defaults = {
-        "start": date.today() + timedelta(days=10),
-        "deadline": date.today() + timedelta(days=20),
-        "team_activity": "teams",
+        'start': date.today() + timedelta(days=10),
+        'deadline': date.today() + timedelta(days=20),
+        'team_activity': 'teams',
     }
 
     def test_get(self):
@@ -479,12 +443,12 @@ class TeamScheduleActivityExportTestCase(
         self.assertEqual(
             tuple(sheet.values)[0],
             (
-                "Captain email",
-                "Captain name",
-                "Registration Date",
-                "Start",
-                "Status",
-                "Registration answer",
+                'Captain email',
+                'Captain name',
+                'Registration Date',
+                'Start',
+                'Status',
+                'Registration answer',
             ),
         )
 
@@ -492,17 +456,17 @@ class TeamScheduleActivityExportTestCase(
             self.assertEqual(
                 tuple(sheet.values)[0],
                 (
-                    "Email",
-                    "Name",
-                    "Registration Date",
-                    "Start",
-                    "Status",
-                    "Is captain",
+                    'Email',
+                    'Name',
+                    'Registration Date',
+                    'Start',
+                    'Status',
+                    'Is captain',
                 ),
             )
 
     def test_export_teams_with_duplicate_names(self):
-        team_name = "Team Justine Broekhuizen"
+        team_name = 'Team Justine Broekhuizen'
         self.participants[0].name = team_name
         self.participants[0].save()
         self.participants[1].name = team_name

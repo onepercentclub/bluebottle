@@ -12,59 +12,58 @@ from bluebottle.activity_links.models import LinkedActivity
 
 @register(LinkedActivity)
 class LinkedActivityStateMachine(ModelStateMachine):
-
     model = LinkedActivity
 
     new = State(
-        _("New"),
-        "new",
-        _("New linked activities are not yet shown in the activities overview."),
+        _('New'),
+        'new',
+        _('New linked activities are not yet shown in the activities overview.'),
     )
 
     open = State(
-        _("Open"),
-        "open",
-        _("Open linked activities are shown in the open activities overview."),
+        _('Open'),
+        'open',
+        _('Open linked activities are shown in the open activities overview.'),
     )
 
     succeeded = State(
-        _("Succeeded"),
-        "succeeded",
-        _("Succeeded linked activities are shown in the succeeded activities overview."),
+        _('Succeeded'),
+        'succeeded',
+        _('Succeeded linked activities are shown in the succeeded activities overview.'),
     )
 
     cancelled = State(
-        _("Cancelled"),
-        "cancelled",
-        _("Cancelled linked activities are never shown."),
+        _('Cancelled'),
+        'cancelled',
+        _('Cancelled linked activities are never shown.'),
     )
 
     initiate = Transition(
         EmptyState(),
         new,
-        name=_("Initiative"),
-        description=_("The link will be created."),
+        name=_('Initiative'),
+        description=_('The link will be created.'),
     )
 
     start = Transition(
         [new, cancelled],
         open,
-        name=_("Start"),
-        description=_("The link will be shown."),
+        name=_('Start'),
+        description=_('The link will be shown.'),
     )
 
     succeed = Transition(
         [new, open],
         succeeded,
-        name=_("Succeeded"),
-        description=_("The initiative will be isucceeded."),
+        name=_('Succeeded'),
+        description=_('The initiative will be isucceeded.'),
         automatic=True,
     )
 
     cancel = Transition(
         [new, open, succeeded],
         cancelled,
-        name=_("Cancel"),
-        description=_("The initiative will be cancelled."),
+        name=_('Cancel'),
+        description=_('The initiative will be cancelled.'),
         automatic=True,
     )

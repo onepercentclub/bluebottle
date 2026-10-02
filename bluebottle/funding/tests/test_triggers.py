@@ -6,21 +6,31 @@ from django.utils.timezone import now
 from djmoney.money import Money
 
 from bluebottle.activities.messages.activity_manager import (
-    ActivityRejectedNotification, ActivitySubmittedNotification,
-    ActivityApprovedNotification, ActivityNeedsWorkNotification
+    ActivityRejectedNotification,
+    ActivitySubmittedNotification,
+    ActivityApprovedNotification,
+    ActivityNeedsWorkNotification,
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.messages.funding.activity_manager import (
-    FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage,
-    FundingRejectedMessage
+    FundingSubmittedMessage,
+    FundingApprovedMessage,
+    FundingNeedsWorkMessage,
+    FundingRejectedMessage,
 )
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.states import FundingStateMachine
-from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory, RewardFactory, \
-    BankAccountFactory, PlainPayoutAccountFactory
+from bluebottle.funding.tests.factories import (
+    FundingFactory,
+    BudgetLineFactory,
+    DonorFactory,
+    RewardFactory,
+    BankAccountFactory,
+    PlainPayoutAccountFactory,
+)
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.base import FundingStripeMixin
@@ -38,10 +48,7 @@ class PlainFundingTriggerTests(BluebottleTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        self.funding = FundingFactory.create(
-            initiative=self.initiative,
-            target=Money(1000, 'EUR')
-        )
+        self.funding = FundingFactory.create(initiative=self.initiative, target=Money(1000, 'EUR'))
         BudgetLineFactory.create(activity=self.funding)
         self.funding.bank_account = generate_mock_bank_account()
         self.funding.states.submit(save=True)
@@ -127,9 +134,7 @@ class DonorTriggerTests(FundingStripeMixin, BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
-            initiative=self.initiative,
-            deadline=now() + timedelta(days=10),
-            target=Money(1000, 'EUR')
+            initiative=self.initiative, deadline=now() + timedelta(days=10), target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
         bank_account = generate_mock_bank_account()
@@ -192,14 +197,10 @@ class DonorTriggerTests(FundingStripeMixin, BluebottleTestCase):
 
         payment_intent.latest_charge = charge
 
-        with mock.patch(
-            "stripe.PaymentIntent.retrieve", return_value=payment_intent
-        ):
-            with mock.patch("stripe.Refund.create"):
-                with mock.patch(
-                    "stripe.Charge.retrieve", return_value=charge
-                ):
-                    self.assertEqual(self.funding.status, "partially_funded")
+        with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
+            with mock.patch('stripe.Refund.create'):
+                with mock.patch('stripe.Charge.retrieve', return_value=charge):
+                    self.assertEqual(self.funding.status, 'partially_funded')
                     self.funding.states.refund(save=True)
                     self.donor.refresh_from_db()
                     self.payment.states.refund(save=True)
@@ -220,19 +221,11 @@ class FundingTriggersTestCase(TriggerTestCase):
 
     def setUp(self):
         self.owner = BlueBottleUserFactory.create()
-        self.staff_user = BlueBottleUserFactory.create(
-            is_staff=True,
-            submitted_initiative_notifications=True
-        )
+        self.staff_user = BlueBottleUserFactory.create(is_staff=True, submitted_initiative_notifications=True)
 
         image = ImageFactory()
-        payout_account = PlainPayoutAccountFactory.create(
-            status='verified'
-        )
-        bank_acount = BankAccountFactory.create(
-            status='verified',
-            connect_account=payout_account
-        )
+        payout_account = PlainPayoutAccountFactory.create(status='verified')
+        bank_acount = BankAccountFactory.create(status='verified', connect_account=payout_account)
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved'),
@@ -242,7 +235,6 @@ class FundingTriggersTestCase(TriggerTestCase):
             'title': 'Yeah',
             'image': image,
             'bank_account': bank_acount,
-
         }
         super().setUp()
 

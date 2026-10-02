@@ -12,7 +12,6 @@ from bluebottle.time_based.tests.steps import assert_status
 
 
 class DateActivityScenarioTestCase(BluebottleAdminTestCase):
-
     def setUp(self):
         super().setUp()
         self.owner = BlueBottleUserFactory.create()
@@ -43,7 +42,7 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         activity_data = {
             'title': 'Movember',
             'start': str(date.today()),
-            'description': json.dumps({'html': 'Show some stash!', 'delta': ''})
+            'description': json.dumps({'html': 'Show some stash!', 'delta': ''}),
         }
         activity = api_update_deed(self, activity, activity_data)
         api_deed_transition(self, activity, 'publish')

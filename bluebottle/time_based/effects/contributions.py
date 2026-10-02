@@ -13,26 +13,16 @@ class RescheduleActivityDurationsEffect(Effect):
         tz = get_current_timezone()
 
         if self.instance.start:
-            start = make_aware(
-                datetime.combine(self.instance.start, datetime.min.time()),
-                tz
-            )
+            start = make_aware(datetime.combine(self.instance.start, datetime.min.time()), tz)
         else:
             start = F('start')
 
         if self.instance.deadline:
-            end = make_aware(
-                datetime.combine(self.instance.deadline, datetime.min.time()),
-                tz
-            )
+            end = make_aware(datetime.combine(self.instance.deadline, datetime.min.time()), tz)
         else:
             end = None
 
-        self.instance.durations.update(
-            start=start,
-            end=end,
-            value=self.instance.duration
-        )
+        self.instance.durations.update(start=start, end=end, value=self.instance.duration)
 
 
 class RescheduleRelatedTimeContributionsEffect(Effect):
@@ -40,7 +30,4 @@ class RescheduleRelatedTimeContributionsEffect(Effect):
 
     def post_save(self, **kwargs):
 
-        self.instance.durations.update(
-            start=self.instance.start or now(),
-            value=self.instance.duration
-        )
+        self.instance.durations.update(start=self.instance.start or now(), value=self.instance.duration)

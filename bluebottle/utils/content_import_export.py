@@ -63,23 +63,31 @@ def download_image_from_url(image_url):
                 # Default filename based on content type
                 content_type = response.headers.get('Content-Type', 'image/jpeg')
                 ext = content_type.split('/')[-1] if '/' in content_type else 'jpg'
-                filename = f"imported_image.{ext}"
+                filename = f'imported_image.{ext}'
 
         # Create ContentFile from downloaded content
         content = ContentFile(response.content)
         return content, filename
     except Exception as e:
-        print(f"Error downloading image from {image_url}: {e}")
+        print(f'Error downloading image from {image_url}: {e}')
         return None, None
 
 
 def get_block_fields(block):
     fields = block.__dict__.copy()
     skip_fields = [
-        'id', '_state', 'parent_type_id', 'parent_id',
-        'polymorphic_ctype_id', 'contentitem_ptr_id',
-        'placeholder_id', 'block_id', 'order_field',
-        'order_field_name', '_block_cache', '_django_version'
+        'id',
+        '_state',
+        'parent_type_id',
+        'parent_id',
+        'polymorphic_ctype_id',
+        'contentitem_ptr_id',
+        'placeholder_id',
+        'block_id',
+        'order_field',
+        'order_field_name',
+        '_block_cache',
+        '_django_version',
     ]
 
     # Get the model's field definitions to check field types
@@ -136,18 +144,22 @@ def dump_content(placeholder_field):
         items = []
         if hasattr(block, 'items'):
             for item in block.items.all():
-                items.append({
-                    'model': item.__class__.__name__,
-                    'app': item.__class__._meta.app_label,
-                    'data': get_block_fields(item)
-                })
+                items.append(
+                    {
+                        'model': item.__class__.__name__,
+                        'app': item.__class__._meta.app_label,
+                        'data': get_block_fields(item),
+                    }
+                )
         fields = get_block_fields(block)
-        data.append({
-            'model': block.__class__.__name__,
-            'app': block.__class__._meta.app_label,
-            'fields': fields,
-            'items': items
-        })
+        data.append(
+            {
+                'model': block.__class__.__name__,
+                'app': block.__class__._meta.app_label,
+                'fields': fields,
+                'items': items,
+            }
+        )
     return data
 
 
@@ -164,11 +176,7 @@ def create_content_block(block_data, placeholder):
     model = apps.get_model(block_data['app'], block_data['model'])
     content_type = ContentType.objects.get_for_model(model)
 
-    content_block = model.objects.create_for_placeholder(
-        placeholder,
-        polymorphic_ctype=content_type,
-        **block_fields
-    )
+    content_block = model.objects.create_for_placeholder(placeholder, polymorphic_ctype=content_type, **block_fields)
 
     # Handle image imports for the block
     for field_name, image_data in image_fields.items():
@@ -186,10 +194,7 @@ def create_content_block(block_data, placeholder):
                     item_image_fields[key] = value
                     del item_fields[key]
 
-            item = item_model.objects.create(
-                block=content_block,
-                **item_fields
-            )
+            item = item_model.objects.create(block=content_block, **item_fields)
 
             # Handle image imports for items
             for field_name, image_data in item_image_fields.items():
@@ -204,9 +209,9 @@ def handle_image_import(field_name, image_data, item):
 
     field = item._meta.get_field(field_name)
     is_foreign_key_to_image = isinstance(field, FileImageField) or (
-        isinstance(field, models.ForeignKey) and
-        hasattr(field.remote_field, 'model') and
-        field.remote_field.model == Image
+        isinstance(field, models.ForeignKey)
+        and hasattr(field.remote_field, 'model')
+        and field.remote_field.model == Image
     )
 
     if isinstance(image_data, dict) and 'image_url' in image_data:
@@ -232,7 +237,7 @@ def handle_image_import(field_name, image_data, item):
                 item.save()
             return True
         except Exception as e:
-            print(f"Error importing image for {field_name}: {e}")
+            print(f'Error importing image for {field_name}: {e}')
             traceback.print_exc()
             return False
 
@@ -258,10 +263,7 @@ def import_content_item_from_data(item_data, lookup_fields, slot='blog_contents'
         lookup_kwargs[field] = properties[field]
 
     # Create or update item
-    item, created = model.objects.get_or_create(
-        **lookup_kwargs,
-        defaults=properties
-    )
+    item, created = model.objects.get_or_create(**lookup_kwargs, defaults=properties)
 
     # Update existing items with new properties
     if not created:
@@ -277,10 +279,7 @@ def import_content_item_from_data(item_data, lookup_fields, slot='blog_contents'
     item_type = ContentType.objects.get_for_model(item)
 
     (placeholder, _created) = Placeholder.objects.get_or_create(
-        parent_id=item.pk,
-        parent_type_id=item_type.pk,
-        slot=slot,
-        role='m'
+        parent_id=item.pk, parent_type_id=item_type.pk, slot=slot, role='m'
     )
 
     # Delete existing content items
@@ -313,17 +312,11 @@ def import_content_items_from_data(data, model_name, lookup_fields, slot='blog_c
 
     for item_data in data:
         if item_data['model'] == model_name:
-            item, created = import_content_item_from_data(
-                item_data, lookup_fields, slot
-            )
+            item, created = import_content_item_from_data(item_data, lookup_fields, slot)
             last_item = item  # Keep track of the last processed item
             if created:
                 imported_count += 1
             else:
                 updated_count += 1
 
-    return {
-        'imported': imported_count,
-        'updated': updated_count,
-        'last_item': last_item
-    }
+    return {'imported': imported_count, 'updated': updated_count, 'last_item': last_item}

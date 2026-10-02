@@ -13,7 +13,6 @@ SCORE_MAP = {
 @registry.register_document
 @activity.doc_type
 class DeedDocument(ActivityDocument):
-
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
 
@@ -27,7 +26,7 @@ class DeedDocument(ActivityDocument):
             return Deed.objects.filter(contributors=related_instance)
 
     class Django:
-        related_models = ActivityDocument.Django.related_models + (DeedParticipant, )
+        related_models = ActivityDocument.Django.related_models + (DeedParticipant,)
         model = Deed
 
     def prepare_start(self, instance):
@@ -37,10 +36,7 @@ class DeedDocument(ActivityDocument):
         return [instance.end]
 
     def prepare_dates(self, instance):
-        return [{
-            'start': instance.start,
-            'end': instance.end
-        }]
+        return [{'start': instance.start, 'end': instance.end}]
 
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:

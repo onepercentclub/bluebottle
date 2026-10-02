@@ -1,4 +1,3 @@
-
 import datetime
 
 from django.utils.timezone import get_current_timezone, make_aware
@@ -12,16 +11,11 @@ tz = get_current_timezone()
 
 
 class DuplicateSlotTestCase(BluebottleTestCase):
-
     def setUp(self):
         super().setUp()
-        self.activity = DateActivityFactory.create(
-            slots=[]
-        )
+        self.activity = DateActivityFactory.create(slots=[])
         self.slot = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=make_aware(datetime.datetime(2022, 5, 15, 10, 0), tz),
-            status='cancelled'
+            activity=self.activity, start=make_aware(datetime.datetime(2022, 5, 15, 10, 0), tz), status='cancelled'
         )
 
     def _get_slot_dates(self):
@@ -36,16 +30,16 @@ class DuplicateSlotTestCase(BluebottleTestCase):
         self.assertEqual(
             self._get_slot_dates(),
             [
-                '2022-05-15', '2022-05-16', '2022-05-17',
-                '2022-05-18', '2022-05-19', '2022-05-20',
-            ]
+                '2022-05-15',
+                '2022-05-16',
+                '2022-05-17',
+                '2022-05-18',
+                '2022-05-19',
+                '2022-05-20',
+            ],
         )
         self.assertEqual(
-            self._get_slot_statuses(),
-            [
-                'cancelled', 'finished', 'finished',
-                'finished', 'finished', 'finished'
-            ]
+            self._get_slot_statuses(), ['cancelled', 'finished', 'finished', 'finished', 'finished', 'finished']
         )
 
     def test_duplicate_every_day_end_dst(self):
@@ -57,11 +51,7 @@ class DuplicateSlotTestCase(BluebottleTestCase):
 
         self.assertEqual(
             self._get_slot_dates(),
-            [
-                '2022-10-27', '2022-10-28', '2022-10-29',
-                '2022-10-30', '2022-10-31', '2022-11-01',
-                '2022-11-02'
-            ]
+            ['2022-10-27', '2022-10-28', '2022-10-29', '2022-10-30', '2022-10-31', '2022-11-01', '2022-11-02'],
         )
 
         for slot in self.activity.slots.all():
@@ -74,10 +64,14 @@ class DuplicateSlotTestCase(BluebottleTestCase):
         self.assertEqual(
             self._get_slot_dates(),
             [
-                '2022-05-15', '2022-05-22', '2022-05-29',
-                '2022-06-05', '2022-06-12', '2022-06-19',
+                '2022-05-15',
+                '2022-05-22',
+                '2022-05-29',
+                '2022-06-05',
+                '2022-06-12',
+                '2022-06-19',
                 '2022-06-26',
-            ]
+            ],
         )
 
     def test_duplicate_every_monthday(self):
@@ -86,10 +80,16 @@ class DuplicateSlotTestCase(BluebottleTestCase):
         self.assertEqual(
             self._get_slot_dates(),
             [
-                '2022-05-15', '2022-06-15', '2022-07-15',
-                '2022-08-15', '2022-09-15', '2022-10-15',
-                '2022-11-15', '2022-12-15', '2023-01-15',
-            ]
+                '2022-05-15',
+                '2022-06-15',
+                '2022-07-15',
+                '2022-08-15',
+                '2022-09-15',
+                '2022-10-15',
+                '2022-11-15',
+                '2022-12-15',
+                '2023-01-15',
+            ],
         )
 
     def test_duplicate_every_3rd_sunday(self):
@@ -98,32 +98,27 @@ class DuplicateSlotTestCase(BluebottleTestCase):
         self.assertEqual(
             self._get_slot_dates(),
             [
-                '2022-05-15', '2022-06-19', '2022-07-17',
-                '2022-08-21', '2022-09-18',
-            ]
+                '2022-05-15',
+                '2022-06-19',
+                '2022-07-17',
+                '2022-08-21',
+                '2022-09-18',
+            ],
         )
 
 
 class TestDurationToHours(BluebottleTestCase):
     def setUp(self):
         super().setUp()
-        self.activity = DeadlineActivityFactory.create(
-            duration=datetime.timedelta(hours=12)
-        )
+        self.activity = DeadlineActivityFactory.create(duration=datetime.timedelta(hours=12))
 
     def test_hours(self):
-        self.assertEqual(
-            duration_to_hours(self.activity.duration), 12
-        )
+        self.assertEqual(duration_to_hours(self.activity.duration), 12)
 
     def test_half_hours(self):
         self.activity.duration = datetime.timedelta(hours=12, minutes=40)
-        self.assertEqual(
-            duration_to_hours(self.activity.duration), 13
-        )
+        self.assertEqual(duration_to_hours(self.activity.duration), 13)
 
     def test_more_then_day(self):
         self.activity.duration = datetime.timedelta(days=1, hours=18)
-        self.assertEqual(
-            duration_to_hours(self.activity.duration), 42
-        )
+        self.assertEqual(duration_to_hours(self.activity.duration), 42)

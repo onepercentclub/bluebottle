@@ -14,58 +14,54 @@ class AcceptTosEffect(Effect):
             stripe = get_stripe()
 
             service_argreement = (
-                self.instance.account.tos_acceptance.service_agreement if
-                hasattr(self.instance.account.tos_acceptance, 'service_agreement') else
-                "full"
+                self.instance.account.tos_acceptance.service_agreement
+                if hasattr(self.instance.account.tos_acceptance, 'service_agreement')
+                else 'full'
             )
 
             stripe.Account.modify(
                 self.instance.account_id,
                 tos_acceptance={
-                    "service_agreement": service_argreement,
-                    "date": now(),
-                    "ip": get_client_ip(get_current_request()),
+                    'service_agreement': service_argreement,
+                    'date': now(),
+                    'ip': get_client_ip(get_current_request()),
                 },
             )
 
 
 class PutActivitiesOnHoldEffect(Effect):
     conditions = []
-    title = _("Put activities on hold")
-    template = "admin/put_activities_on_hold.html"
+    title = _('Put activities on hold')
+    template = 'admin/put_activities_on_hold.html'
 
     def post_save(self, **kwargs):
-        fundings = Funding.objects.filter(
-            status="open", bank_account__connect_account=self.instance
-        )
+        fundings = Funding.objects.filter(status='open', bank_account__connect_account=self.instance)
 
         for funding in fundings:
             funding.states.put_on_hold(save=True)
 
     def __str__(self):
-        return "Put activities on hold when payments are disabled by stripe"
+        return 'Put activities on hold when payments are disabled by stripe'
 
 
 class OpenActivitiesOnHoldEffect(Effect):
     conditions = []
-    title = _("Open activities that are on hold")
-    template = "admin/open_activities_on_hold.html"
+    title = _('Open activities that are on hold')
+    template = 'admin/open_activities_on_hold.html'
 
     def post_save(self, **kwargs):
-        fundings = Funding.objects.filter(
-            status="on_hold", bank_account__connect_account=self.instance
-        )
+        fundings = Funding.objects.filter(status='on_hold', bank_account__connect_account=self.instance)
 
         for funding in fundings:
             funding.states.approve(save=True)
 
     def __str__(self):
-        return "Open activities that are on hold when payments are verified again by stripe"
+        return 'Open activities that are on hold when payments are verified again by stripe'
 
 
 class UpdateBusinessTypeEffect(Effect):
     conditions = []
-    title = _("Update business type at stripe")
+    title = _('Update business type at stripe')
     display = False
 
     def pre_save(self, **kwargs):
@@ -79,10 +75,9 @@ class UpdateBusinessTypeEffect(Effect):
             and stripe_account.business_type != payout_account.business_type
         ):
             stripe_account = stripe.Account.modify(
-                payout_account.account_id,
-                business_type=payout_account.business_type
+                payout_account.account_id, business_type=payout_account.business_type
             )
             payout_account.update(stripe_account, save=False)
 
     def __str__(self):
-        return "Update business type at stripe. This might result in additional verification requirements"
+        return 'Update business type at stripe. This might result in additional verification requirements'

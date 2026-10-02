@@ -36,8 +36,7 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
         locations = document.prepare_location(activity)
 
         slot_locations = [
-            entry for entry in locations
-            if entry.get('id') == location.id and entry.get('locality') == 'Leiden'
+            entry for entry in locations if entry.get('id') == location.id and entry.get('locality') == 'Leiden'
         ]
         self.assertEqual(len(slot_locations), 1)
         self.assertEqual(slot_locations[0]['id'], location.id)
@@ -53,10 +52,7 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
         self.assertEqual(document.prepare_geofeature(activity), [])
 
         locations = document.prepare_location(activity)
-        slot_locations = [
-            entry for entry in locations
-            if entry.get('id') == location.id
-        ]
+        slot_locations = [entry for entry in locations if entry.get('id') == location.id]
         self.assertEqual(len(slot_locations), 1)
         self.assertGreater(len(slot_locations[0]['geofeatures']), 0)
 

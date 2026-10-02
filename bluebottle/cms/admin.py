@@ -18,9 +18,20 @@ from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
 from bluebottle.cms.models import (
-    SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
-    Stat, Quote, Person, Step, Logo, ResultPage, HomePage, ContentLink,
-    Greeting
+    SiteLinks,
+    Link,
+    LinkGroup,
+    LinkPermission,
+    SitePlatformSettings,
+    Stat,
+    Quote,
+    Person,
+    Step,
+    Logo,
+    ResultPage,
+    HomePage,
+    ContentLink,
+    Greeting,
 )
 from bluebottle.members.models import Member
 from bluebottle.statistics.statistics import Statistics
@@ -41,11 +52,7 @@ class LinkInline(SortableStackedInline):
     model = Link
     extra = 0
 
-    fields = (
-        'title', 'groups',
-        'highlight', 'open_in_new_tab',
-        'link'
-    )
+    fields = ('title', 'groups', 'highlight', 'open_in_new_tab', 'link')
 
 
 @admin.register(LinkGroup)
@@ -65,20 +72,23 @@ class LinkGroupAdmin(NonSortableParentAdmin):
 
 class LinkGroupInline(SortableTabularInline):
     model = LinkGroup
-    readonly_fields = ('title', 'edit_url',)
-    fields = ('name', 'title', 'edit_url',)
+    readonly_fields = (
+        'title',
+        'edit_url',
+    )
+    fields = (
+        'name',
+        'title',
+        'edit_url',
+    )
     extra = 0
 
     def edit_url(self, obj):
         url = ''
 
         if obj.id is not None:
-            url = "admin:%s_%s_change" % (self.model._meta.app_label,
-                                          self.model._meta.model_name)
-            return format_html(
-                u"<a href='{}'>{}</a>",
-                str(reverse(url, args=(obj.id,))), _('Edit this group')
-            )
+            url = 'admin:%s_%s_change' % (self.model._meta.app_label, self.model._meta.model_name)
+            return format_html("<a href='{}'>{}</a>", str(reverse(url, args=(obj.id,))), _('Edit this group'))
         return _('First save to edit this group')
 
     edit_url.short_name = 'Edit group'
@@ -132,24 +142,23 @@ class CMSNestedPlaceholderFieldAdmin(nested_admin.NestedModelAdminMixin, Placeho
         prefixes = {}
 
         for orig_formset, orig_inline in zip(orig_formsets, orig_inline_instances):
-            if not hasattr(orig_formset, "nesting_depth"):
+            if not hasattr(orig_formset, 'nesting_depth'):
                 orig_formset.nesting_depth = 1
 
             formsets.append(orig_formset)
             inline_instances.append(orig_inline)
 
             nested_formsets_and_inline_instances = []
-            if hasattr(orig_inline, "child_inline_instances"):
+            if hasattr(orig_inline, 'child_inline_instances'):
                 for child_inline in orig_inline.child_inline_instances:
                     nested_formsets_and_inline_instances += [
                         (orig_formset, inline, orig_inline)
                         for inline in child_inline.get_inline_instances(request, obj)
                     ]
 
-            if getattr(orig_inline, "inlines", []):
+            if getattr(orig_inline, 'inlines', []):
                 nested_formsets_and_inline_instances += [
-                    (orig_formset, inline, orig_inline)
-                    for inline in orig_inline.get_inline_instances(request, obj)
+                    (orig_formset, inline, orig_inline) for inline in orig_inline.get_inline_instances(request, obj)
                 ]
 
             i = 0
@@ -176,43 +185,41 @@ class CMSNestedPlaceholderFieldAdmin(nested_admin.NestedModelAdminMixin, Placeho
                         is_empty_form = False
                     else:
                         # This is the only ch<nged line. Use __prefix__ instead of empty for empty forms
-                        form_prefix = formset.add_prefix("__prefix__")
+                        form_prefix = formset.add_prefix('__prefix__')
                         form_obj = None
                         is_empty_form = True
                     InlineFormSet = inline.get_formset(request, form_obj)
 
                     # Check if we're dealing with a polymorphic instance, and if
                     # so, skip inlines for other child models
-                    if hasattr(form_obj, "get_real_instance"):
-                        if hasattr(InlineFormSet, "fk"):
+                    if hasattr(form_obj, 'get_real_instance'):
+                        if hasattr(InlineFormSet, 'fk'):
                             rel_model = InlineFormSet.fk.remote_field.model
                             if not isinstance(form_obj, rel_model):
                                 continue
                         elif not isinstance(form_obj, inline.parent_model):
                             continue
 
-                    prefix = "{}-{}".format(
-                        form_prefix, InlineFormSet.get_default_prefix()
-                    )
+                    prefix = '{}-{}'.format(form_prefix, InlineFormSet.get_default_prefix())
                     prefixes[prefix] = prefixes.get(prefix, 0) + 1
                     if prefixes[prefix] != 1:
-                        prefix = "{}-{}".format(prefix, prefixes[prefix])
+                        prefix = '{}-{}'.format(prefix, prefixes[prefix])
 
-                    if hasattr(form_obj, "get_real_instance"):
+                    if hasattr(form_obj, 'get_real_instance'):
                         if not isinstance(form_obj, inline.parent_model):
                             continue
 
                     formset_params = {
-                        "instance": form_obj,
-                        "prefix": prefix,
-                        "queryset": inline.get_queryset(request),
+                        'instance': form_obj,
+                        'prefix': prefix,
+                        'queryset': inline.get_queryset(request),
                     }
-                    if request.method == "POST" and not is_empty_form:
+                    if request.method == 'POST' and not is_empty_form:
                         formset_params.update(
                             {
-                                "data": request.POST.copy(),
-                                "files": request.FILES,
-                                "save_as_new": "_saveasnew" in request.POST,
+                                'data': request.POST.copy(),
+                                'files': request.FILES,
+                                'save_as_new': '_saveasnew' in request.POST,
                             }
                         )
 
@@ -230,20 +237,15 @@ class CMSNestedPlaceholderFieldAdmin(nested_admin.NestedModelAdminMixin, Placeho
                         """Return whether or not the user deleted the form."""
                         return (
                             inline.has_delete_permission(request, obj)
-                            and "{}-{}-DELETE".format(formset.prefix, index)
-                            in request.POST
+                            and '{}-{}-DELETE'.format(formset.prefix, index) in request.POST
                         )
 
                     # Bypass validation of each view-only inline form (since the form's
                     # data won't be in request.POST), unless the form was deleted.
                     if not inline.has_change_permission(request, form_obj):
-                        if "-empty-" not in nested_formset.prefix:
-                            for index, initial_form in enumerate(
-                                nested_formset.initial_forms
-                            ):
-                                if user_deleted_form(
-                                    request, form_obj, nested_formset, index
-                                ):
+                        if '-empty-' not in nested_formset.prefix:
+                            for index, initial_form in enumerate(nested_formset.initial_forms):
+                                if user_deleted_form(request, form_obj, nested_formset, index):
                                     continue
                                 initial_form._errors = {}
                                 initial_form.cleaned_data = initial_form.initial
@@ -251,35 +253,31 @@ class CMSNestedPlaceholderFieldAdmin(nested_admin.NestedModelAdminMixin, Placeho
                     # If request.method == 'POST', this is an attempted save,
                     # so we need to include the nested formsets and inline
                     # instances in the top level lists returned by this method
-                    if form is not None and request.method == "POST":
+                    if form is not None and request.method == 'POST':
                         formsets.append(nested_formset)
                         inline_instances.append(inline)
 
                     # nested_obj is a form or an empty formset
                     nested_obj = form or formset
 
-                    if not hasattr(nested_obj, "nested_formsets"):
+                    if not hasattr(nested_obj, 'nested_formsets'):
                         nested_obj.nested_formsets = []
-                    if not hasattr(nested_obj, "nested_inlines"):
+                    if not hasattr(nested_obj, 'nested_inlines'):
                         nested_obj.nested_inlines = []
 
                     nested_obj.nested_formsets.append(nested_formset)
                     nested_obj.nested_inlines.append(inline)
 
-                    if hasattr(inline, "get_inline_instances"):
+                    if hasattr(inline, 'get_inline_instances'):
                         nested_formsets_and_inline_instances += [
                             (nested_formset, nested_inline, inline)
-                            for nested_inline in inline.get_inline_instances(
-                                request, form_obj
-                            )
+                            for nested_inline in inline.get_inline_instances(request, form_obj)
                         ]
-                    if hasattr(inline, "child_inline_instances"):
+                    if hasattr(inline, 'child_inline_instances'):
                         for nested_child in inline.child_inline_instances:
                             nested_formsets_and_inline_instances += [
                                 (nested_formset, nested_inline, nested_child)
-                                for nested_inline in nested_child.get_inline_instances(
-                                    request, form_obj
-                                )
+                                for nested_inline in nested_child.get_inline_instances(request, form_obj)
                             ]
         return formsets, inline_instances
 
@@ -343,9 +341,7 @@ class ResultPageAdmin(CMSNestedPlaceholderFieldAdmin, TranslatableAdmin, NonSort
     def get_prepopulated_fields(self, request, obj=None):
         # can't use `prepopulated_fields = ..` because it breaks the admin validation
         # for translated fields. This is the official django-parler workaround.
-        return {
-            'slug': ('title',)
-        }
+        return {'slug': ('title',)}
 
     list_display = 'title', 'slug', 'start_date', 'end_date'
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
@@ -366,49 +362,41 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (
-                _('Contact'),
-                {
-                    'fields': (
-                        'platform_name', 'contact_email', 'contact_phone', 'terminated'
-                    )
-                }
-            ),
+            (_('Contact'), {'fields': ('platform_name', 'contact_email', 'contact_phone', 'terminated')}),
             (
                 _('Powered by'),
-                {
-                    'fields': (
-                        'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo', 'footer_banner'
-                    )
-                }
+                {'fields': ('copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo', 'footer_banner')},
             ),
             (
                 _('Metadata'),
-                {
-                    'fields': (
-                        'translatable_info', 'metadata_title', 'metadata_description', 'metadata_keywords'
-                    )
-                }
+                {'fields': ('translatable_info', 'metadata_title', 'metadata_description', 'metadata_keywords')},
             ),
             (
                 _('Styling'),
                 {
                     'fields': (
-                        'logo', 'favicon',
-                        'action_color', 'action_text_color', 'alternative_link_color',
-                        'description_color', 'description_text_color',
-                        'footer_color', 'footer_text_color',
-                        'title_font', 'body_font'
+                        'logo',
+                        'favicon',
+                        'action_color',
+                        'action_text_color',
+                        'alternative_link_color',
+                        'description_color',
+                        'description_text_color',
+                        'footer_color',
+                        'footer_text_color',
+                        'title_font',
+                        'body_font',
                     )
-                }
+                },
             ),
             (
                 _('GoodUp Connect'),
                 {
                     'fields': (
-                        'share_activities', 'organization',
+                        'share_activities',
+                        'organization',
                     )
-                }
+                },
             ),
         )
 
@@ -421,7 +409,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
         active_members = Member.objects.filter(is_active=True)
         return mark_safe(
             f"<div class='info_field'>"
-            f"    The platform is terminated. No emails will be sent to users. "
-            f"    There are {active_members.count()} active members."
-            f"</div>"
+            f'    The platform is terminated. No emails will be sent to users. '
+            f'    There are {active_members.count()} active members.'
+            f'</div>'
         )

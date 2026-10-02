@@ -18,10 +18,7 @@ from parler.models import TranslatableModel
 from solo.models import SingletonModel
 
 from bluebottle.utils.cache import memoize
-from bluebottle.utils.managers import (
-    SortableTranslatableManager,
-    PublishedManager
-)
+from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
 
 TIMEOUT = 5 * 60
 
@@ -58,9 +55,7 @@ def get_languages():
             )
 
         if not fallback:
-            fallback = [
-                Language(code='en', sub_code='', language_name='English', native_name='English')
-            ]
+            fallback = [Language(code='en', sub_code='', language_name='English', native_name='English')]
 
         return fallback
 
@@ -99,8 +94,7 @@ def get_current_language():
             code, sub_code = language_code.split('-')
             return Language.objects.get(code=code, sub_code=sub_code)
         except ValueError:
-            return Language.objects.filter(code=language_code).first() \
-                or Language.objects.filter(default=True).first()
+            return Language.objects.filter(code=language_code).first() or Language.objects.filter(default=True).first()
     except Language.DoesNotExist:
         return Language.objects.filter(default=True).first()
 
@@ -110,6 +104,7 @@ class Language(models.Model):
     """
     A language - ISO 639-1
     """
+
     code = models.CharField(max_length=2, blank=False)
     sub_code = models.CharField(max_length=2, blank=True)
     language_name = models.CharField(max_length=100, blank=False)
@@ -140,6 +135,7 @@ class Address(models.Model):
     """
     A postal address.
     """
+
     line1 = models.CharField(max_length=100, blank=True)
     line2 = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -193,30 +189,27 @@ class SortableTranslatableModel(TranslatableModel):
 
 
 class PublishedStatus(DjangoChoices):
-    published = ChoiceItem('published', label=_("Published"))
-    draft = ChoiceItem('draft', label=_("Draft"))
+    published = ChoiceItem('published', label=_('Published'))
+    draft = ChoiceItem('draft', label=_('Draft'))
 
 
 class PublishableModel(models.Model):
     # Publication
-    status = models.CharField(_('status'), max_length=20,
-                              choices=PublishedStatus.choices,
-                              default=PublishedStatus.draft, db_index=True)
+    status = models.CharField(
+        _('status'), max_length=20, choices=PublishedStatus.choices, default=PublishedStatus.draft, db_index=True
+    )
     publication_date = models.DateTimeField(
         _('publication date'),
-        null=True, db_index=True,
+        null=True,
+        db_index=True,
         default=now,
-        help_text=_("To go live, status must be 'Published'."))
+        help_text=_("To go live, status must be 'Published'."),
+    )
 
-    publication_end_date = models.DateTimeField(_('publication end date'),
-                                                null=True, blank=True,
-                                                db_index=True)
+    publication_end_date = models.DateTimeField(_('publication end date'), null=True, blank=True, db_index=True)
     # Metadata
     author = models.ForeignKey(
-        'members.Member',
-        verbose_name=_('author'),
-        blank=True, null=True,
-        on_delete=models.CASCADE
+        'members.Member', verbose_name=_('author'), blank=True, null=True, on_delete=models.CASCADE
     )
     creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
     modification_date = models.DateTimeField(_('last modification'), auto_now=True)
@@ -241,9 +234,7 @@ class Validator(object):
 
     def __call__(self):
         if not self.is_valid():
-            raise ValidatorError(
-                self.field, self.field, self.message
-            )
+            raise ValidatorError(self.field, self.field, self.message)
 
 
 class ValidatedModelMixin(object):
@@ -278,7 +269,6 @@ class ValidatedModelMixin(object):
 
 
 class AnonymizationMixin(object):
-
     @property
     def anonymized(self):
         return False

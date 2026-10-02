@@ -8,12 +8,15 @@ from bluebottle.clients.management.commands.new_tenant import Command as NewTena
 from bluebottle.clients.models import Client
 
 
-@override_settings(TENANT_APPS=('django_nose',),
-                   TENANT_MODEL='clients.Client',
-                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter', ))
+@override_settings(
+    TENANT_APPS=('django_nose',),
+    TENANT_MODEL='clients.Client',
+    DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',),
+)
 class ManagementCommandArgsTests(TestCase):
     def test_new_tenant(self):
         from ..management.commands.new_tenant import Command as NewTenantCommand
+
         cmd = NewTenantCommand()
 
         self.assertEqual(len(cmd.option_list), 6)
@@ -25,21 +28,23 @@ class ManagementCommandArgsTests(TestCase):
         self.assertEqual(cmd.option_list[5].dest, 'post_command')
 
 
-@override_settings(TENANT_APPS=('django_nose',),
-                   TENANT_MODEL='clients.Client',
-                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
+@override_settings(
+    TENANT_APPS=('django_nose',),
+    TENANT_MODEL='clients.Client',
+    DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',),
+)
 class ManagementCommandTests(TestCase):
     def test_new_tenant(self):
         from ..management.commands.new_tenant import Command as NewTenantCommand
+
         cmd = NewTenantCommand()
 
         with mock.patch(
             'bluebottle.clients.management.commands.new_tenant.Command.handle', return_value=None
         ) as handle_mock:
-            call_command(cmd, full_name='Test Client',
-                         schema_name='test_schema',
-                         domain_url='test.localhost',
-                         client_name='test')
+            call_command(
+                cmd, full_name='Test Client', schema_name='test_schema', domain_url='test.localhost', client_name='test'
+            )
             args, kwargs = handle_mock.call_args_list[0]
             self.assertEqual(kwargs['full_name'], 'Test Client')
             self.assertEqual(kwargs['schema_name'], 'test_schema')
@@ -56,16 +61,18 @@ class ManagementCommandNewTenantTests(TestCase):
         language_func = 'bluebottle.clients.management.commands.new_tenant.Command.create_languages'
         command_func = 'bluebottle.clients.management.commands.new_tenant.call_command'
         tenant = Client(name='New Tenant', schema_name='new', client_name='new')
-        with mock.patch(store_func, return_value=tenant) as store_mock, \
-                mock.patch(super_func) as super_mock, \
-                mock.patch(command_func) as command_mock, \
-                mock.patch(language_func) as language_mock:
+        with (
+            mock.patch(store_func, return_value=tenant) as store_mock,
+            mock.patch(super_func) as super_mock,
+            mock.patch(command_func) as command_mock,
+            mock.patch(language_func) as language_mock,
+        ):
             call_command(
                 cmd,
                 full_name='New Tenant',
                 schema_name='new',
                 domain_url='http://new.localhost:8000',
-                client_name='new'
+                client_name='new',
             )
             store_args, store_kwargs = store_mock.call_args_list[0]
             super_args, super_kwargs = super_mock.call_args_list[0]

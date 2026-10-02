@@ -8,11 +8,12 @@ from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
 
-from bluebottle.activities.tests.factories import TextQuestionFactory, \
-    TextAnswerFactory
+from bluebottle.activities.tests.factories import TextQuestionFactory, TextAnswerFactory
 from bluebottle.deeds.serializers import (
-    DeedSerializer, DeedTransitionSerializer,
-    DeedParticipantSerializer, DeedParticipantTransitionSerializer
+    DeedSerializer,
+    DeedTransitionSerializer,
+    DeedParticipantSerializer,
+    DeedParticipantTransitionSerializer,
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
@@ -38,7 +39,7 @@ class DeedsListViewAPITestCase(APITestCase):
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
-            'theme': ThemeFactory.create()
+            'theme': ThemeFactory.create(),
         }
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description', 'theme']
@@ -65,17 +66,13 @@ class DeedsListViewAPITestCase(APITestCase):
         self.assertTransition('delete')
 
     def test_custom_question_not_required(self):
-        TextQuestionFactory.create(
-            required=False
-        )
+        TextQuestionFactory.create(required=False)
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertTransition('publish')
 
     def test_custom_question_required(self):
-        TextQuestionFactory.create(
-            required=True
-        )
+        TextQuestionFactory.create(required=True)
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertNotTransition('publish')
@@ -134,25 +131,19 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.serializer = DeedSerializer
         self.factory = DeedFactory
 
-        owner = BlueBottleUserFactory.create(
-            avatar=ImageFactory.create()
-        )
+        owner = BlueBottleUserFactory.create(avatar=ImageFactory.create())
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved', owner=owner),
             'description': json.dumps({'html': 'Some descrpition', 'delta': ''}),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
-            'owner': owner
+            'owner': owner,
         }
         self.model = self.factory.create(**self.defaults)
 
-        self.accepted_participants = DeedParticipantFactory.create_batch(
-            4, activity=self.model, status='accepted'
-        )
-        self.withdrawn_participants = DeedParticipantFactory.create_batch(
-            4, activity=self.model, status='withdrawn'
-        )
+        self.accepted_participants = DeedParticipantFactory.create_batch(4, activity=self.model, status='accepted')
+        self.withdrawn_participants = DeedParticipantFactory.create_batch(4, activity=self.model, status='withdrawn')
 
         self.url = reverse('deed-detail', args=(self.model.pk,))
 
@@ -176,15 +167,9 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertTransition('publish')
         self.assertTransition('delete')
-        self.assertMeta(
-            'contributor-count',
-            len(self.accepted_participants)
-        )
+        self.assertMeta('contributor-count', len(self.accepted_participants))
         contributors = self.loadLinkedRelated('contributors')
-        self.assertObjectList(
-            contributors,
-            (self.accepted_participants + self.withdrawn_participants).reverse()
-        )
+        self.assertObjectList(contributors, (self.accepted_participants + self.withdrawn_participants).reverse())
         self.assertTrue(
             self.response.json()['data']['relationships']['updates']['links']['related'].endswith(
                 reverse('activity-update-list', args=(self.model.pk,))
@@ -234,9 +219,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertRelationship('answers', [answer])
 
     def test_get_with_segments(self):
-        segment = SegmentFactory.create(
-            name="SDG1"
-        )
+        segment = SegmentFactory.create(name='SDG1')
         self.model.segments.add(segment)
         self.model.save()
         self.perform_get(user=self.model.owner)
@@ -246,10 +229,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertRelationship('segments', [segment])
 
     def test_get_closed_segment(self):
-        segment = SegmentFactory.create(
-            name="SDG1",
-            closed=True
-        )
+        segment = SegmentFactory.create(name='SDG1', closed=True)
         self.model.segments.add(segment)
         self.model.save()
         self.perform_get()
@@ -257,10 +237,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_get_closed_segment_logged_in(self):
-        segment = SegmentFactory.create(
-            name="SDG1",
-            closed=True
-        )
+        segment = SegmentFactory.create(name='SDG1', closed=True)
         self.model.segments.add(segment)
         self.model.save()
         self.perform_get(user=BlueBottleUserFactory.create())
@@ -268,15 +245,9 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_get_closed_segment_logged_in_with_segment(self):
-        segment = SegmentFactory.create(
-            name="SDG1",
-            closed=True
-        )
+        segment = SegmentFactory.create(name='SDG1', closed=True)
 
-        SegmentFactory.create(
-            name="SDG2",
-            closed=True
-        )
+        SegmentFactory.create(name='SDG2', closed=True)
 
         self.model.segments.add(segment)
         self.model.save()
@@ -292,21 +263,13 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         links = self.response.json()['data']['attributes']['links']
 
-        self.assertTrue(
-            links['ical'].startswith(
-                reverse('deed-ical', args=(self.model.pk,))
-            )
-        )
+        self.assertTrue(links['ical'].startswith(reverse('deed-ical', args=(self.model.pk,))))
 
         response = self.client.get(links['ical'])
         self.assertTrue(response.status_code, 200)
 
     def test_get_with_participant(self):
-        participant = DeedParticipantFactory.create(
-            activity=self.model,
-            status='withdrawn',
-            user=self.user
-        )
+        participant = DeedParticipantFactory.create(activity=self.model, status='withdrawn', user=self.user)
         self.perform_get(user=self.user)
 
         self.assertStatus(status.HTTP_200_OK)
@@ -318,24 +281,15 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
-        self.assertMeta(
-            'contributor-count',
-            len(self.accepted_participants)
-        )
+        self.assertMeta('contributor-count', len(self.accepted_participants))
         contributors = self.loadLinkedRelated('contributors')
-        self.assertObjectList(
-            contributors,
-            (self.accepted_participants + [participant]).reverse()
-        )
+        self.assertObjectList(contributors, (self.accepted_participants + [participant]).reverse())
 
     def test_get_with_participant_team(self):
         self.model.team_activity = 'teams'
         self.model.save()
 
-        participant = DeedParticipantFactory.create(
-            activity=self.model,
-            user=self.user
-        )
+        participant = DeedParticipantFactory.create(activity=self.model, user=self.user)
         self.perform_get(user=self.user)
 
         self.assertStatus(status.HTTP_200_OK)
@@ -353,15 +307,9 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
-        self.assertMeta(
-            'contributor-count',
-            len(self.accepted_participants)
-        )
+        self.assertMeta('contributor-count', len(self.accepted_participants))
         contributors = self.loadLinkedRelated('contributors')
-        self.assertObjectList(
-            contributors,
-            self.accepted_participants.reverse()
-        )
+        self.assertObjectList(contributors, self.accepted_participants.reverse())
 
     def test_get_closed_site(self):
         with self.closed_site():
@@ -382,8 +330,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.model.save()
 
         self.perform_update(
-            {'start': date.today() + timedelta(days=10), 'end': date.today() + timedelta(days=5)},
-            user=self.model.owner
+            {'start': date.today() + timedelta(days=10), 'end': date.today() + timedelta(days=5)}, user=self.model.owner
         )
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
@@ -396,7 +343,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
                 'start': None,
                 'end': None,
             },
-            user=self.model.owner
+            user=self.model.owner,
         )
         self.assertStatus(status.HTTP_200_OK)
 
@@ -417,7 +364,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
                 'start': None,
                 'end': None,
             },
-            user=self.model.owner
+            user=self.model.owner,
         )
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
@@ -426,10 +373,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
     def test_put_initiative_owner(self):
         new_description = 'Test description'
-        self.perform_update(
-            {'description': new_description},
-            user=self.model.initiative.owner
-        )
+        self.perform_update({'description': new_description}, user=self.model.initiative.owner)
 
         self.assertStatus(status.HTTP_200_OK)
 
@@ -437,10 +381,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
     def test_put_initiative_activity_manager(self):
         new_description = 'Test description'
-        self.perform_update(
-            {'description': new_description},
-            user=self.model.initiative.activity_managers.first()
-        )
+        self.perform_update({'description': new_description}, user=self.model.initiative.activity_managers.first())
 
         self.assertStatus(status.HTTP_200_OK)
 
@@ -462,14 +403,10 @@ class DeedsDetailViewAPITestCase(APITestCase):
         member_settings = MemberPlatformSettings.load()
         member_settings.translate_user_content = True
         member_settings.save()
-        mock_translation_response = {
-            'value': 'In het Nederlands',
-            'source_language': 'en'
-        }
+        mock_translation_response = {'value': 'In het Nederlands', 'source_language': 'en'}
 
         with mock.patch(
-            'bluebottle.translations.utils.get_translation_response',
-            return_value=mock_translation_response
+            'bluebottle.translations.utils.get_translation_response', return_value=mock_translation_response
         ):
             response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
 
@@ -490,8 +427,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         member_settings.save()
 
         with mock.patch(
-            'bluebottle.translations.utils.get_translation_response',
-            side_effect=Exception('Something went wrong')
+            'bluebottle.translations.utils.get_translation_response', side_effect=Exception('Something went wrong')
         ):
             response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
 
@@ -506,6 +442,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
     def test_meta_translations_advanced_mock(self):
         from bluebottle.test.factory_models.utils import LanguageFactory
+
         member_settings = MemberPlatformSettings.load()
         member_settings.translate_user_content = True
         member_settings.save()
@@ -516,31 +453,21 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         # Set explicit title and description
         self.model.title = 'This is my activity'
-        self.model.description = json.dumps({"html": "We're going to change the world!", "delta": ""})
+        self.model.description = json.dumps({'html': "We're going to change the world!", 'delta': ''})
         self.model.save()
 
         # Mock function that reverses string for 'nl' language and uppercases for 'de' language
         def mock_translation_side_effect(text, target_language):
             if target_language == 'nl':
                 # Reverse the string
-                return {
-                    'value': text[::-1],
-                    'source_language': 'en'
-                }
+                return {'value': text[::-1], 'source_language': 'en'}
             elif target_language == 'en':
                 # Uppercase the string
-                return {
-                    'value': text.upper(),
-                    'source_language': 'bg'
-                }
-            return {
-                'value': text,
-                'source_language': 'bg'
-            }
+                return {'value': text.upper(), 'source_language': 'bg'}
+            return {'value': text, 'source_language': 'bg'}
 
         with mock.patch(
-            'bluebottle.translations.utils.get_translation_response',
-            side_effect=mock_translation_side_effect
+            'bluebottle.translations.utils.get_translation_response', side_effect=mock_translation_side_effect
         ):
             # Test with 'nl' language - should reverse the strings
             response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
@@ -552,8 +479,9 @@ class DeedsDetailViewAPITestCase(APITestCase):
             self.assertIn('translations', data['data']['meta'])
 
             self.assertIn('description', data['data']['meta']['translations'])
-            self.assertEqual(data['data']['meta']['translations']['description']['value'],
-                             "!dlrow eht egnahc ot gniog er'eW")
+            self.assertEqual(
+                data['data']['meta']['translations']['description']['value'], "!dlrow eht egnahc ot gniog er'eW"
+            )
             self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'en')
 
             # Test with 'de' language - should uppercase the strings
@@ -566,8 +494,9 @@ class DeedsDetailViewAPITestCase(APITestCase):
             self.assertIn('translations', data['data']['meta'])
 
             self.assertIn('description', data['data']['meta']['translations'])
-            self.assertEqual(data['data']['meta']['translations']['description']['value'],
-                             "WE'RE GOING TO CHANGE THE WORLD!")
+            self.assertEqual(
+                data['data']['meta']['translations']['description']['value'], "WE'RE GOING TO CHANGE THE WORLD!"
+            )
             self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'bg')
 
 
@@ -589,7 +518,10 @@ class DeedTransitionListViewAPITestCase(APITestCase):
             'transition': 'publish',
         }
 
-        self.fields = ['resource', 'transition', ]
+        self.fields = [
+            'resource',
+            'transition',
+        ]
 
     def test_publish(self):
         self.perform_create(user=self.activity.owner)
@@ -681,16 +613,11 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         self.assertTotal(5)
 
         self.assertTrue(
-            all(
-                participant['attributes']['status'] == 'accepted'
-                for participant in self.response.json()['data']
-            )
+            all(participant['attributes']['status'] == 'accepted' for participant in self.response.json()['data'])
         )
 
     def test_get_user_hide_first_name(self):
-        DeedParticipantFactory.create(
-            activity=self.activity, status='accepted', user=self.activity.owner
-        )
+        DeedParticipantFactory.create(activity=self.activity, status='accepted', user=self.activity.owner)
         MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
 
         self.perform_get(user=self.user)
@@ -715,10 +642,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         self.assertTotal(5)
 
         self.assertTrue(
-            all(
-                participant['attributes']['status'] == 'succeeded'
-                for participant in self.response.json()['data']
-            )
+            all(participant['attributes']['status'] == 'succeeded' for participant in self.response.json()['data'])
         )
 
     def test_get_anonymous(self):
@@ -728,10 +652,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         self.assertTotal(5)
 
         self.assertTrue(
-            all(
-                participant['attributes']['status'] == 'accepted'
-                for participant in self.response.json()['data']
-            )
+            all(participant['attributes']['status'] == 'accepted' for participant in self.response.json()['data'])
         )
 
     def test_get_anonymous_hide_first_name(self):
@@ -764,9 +685,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
             end=date.today() + timedelta(days=20),
         )
 
-        self.defaults = {
-            'activity': self.activity
-        }
+        self.defaults = {'activity': self.activity}
 
         self.fields = ['activity']
 
@@ -804,10 +723,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         mail.outbox = []
         staff = BlueBottleUserFactory.create(is_staff=True)
         data = self.data
-        data['data']['attributes'] = {
-            'email': self.user.email,
-            'send_messages': True
-        }
+        data['data']['attributes'] = {'email': self.user.email, 'send_messages': True}
         self.perform_create(user=staff, data=data)
 
         self.assertStatus(status.HTTP_201_CREATED)
@@ -821,10 +737,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         mail.outbox = []
         staff = BlueBottleUserFactory.create(is_staff=True)
         data = self.data
-        data['data']['attributes'] = {
-            'email': self.user.email,
-            'send_messages': False
-        }
+        data['data']['attributes'] = {'email': self.user.email, 'send_messages': False}
         self.perform_create(user=staff, data=data)
 
         self.assertStatus(status.HTTP_201_CREATED)
@@ -838,10 +751,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         mail.outbox = []
         # activity.owner is not staff (from DeedFactory default)
         data = self.data
-        data['data']['attributes'] = {
-            'email': self.user.email,
-            'send_messages': True
-        }
+        data['data']['attributes'] = {'email': self.user.email, 'send_messages': True}
         self.perform_create(user=self.activity.owner, data=data)
 
         self.assertStatus(status.HTTP_201_CREATED)
@@ -853,10 +763,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         staff = BlueBottleUserFactory.create(is_staff=True)
 
         data = self.data
-        data['data']['attributes'] = {
-            'email': 'new@example.com',
-            'send_messages': False
-        }
+        data['data']['attributes'] = {'email': 'new@example.com', 'send_messages': False}
         self.perform_create(user=staff, data=data)
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
@@ -866,10 +773,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         MemberPlatformSettings.objects.update_or_create(closed=True)
 
         data = self.data
-        data['data']['attributes'] = {
-            'email': 'new@example.com',
-            'send_messages': False
-        }
+        data['data']['attributes'] = {'email': 'new@example.com', 'send_messages': False}
         self.perform_create(user=staff, data=data)
         self.assertEqual(self.activity.participants.count(), 1)
 
@@ -881,10 +785,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         SCIMPlatformSettings.objects.update_or_create(enabled=True)
 
         data = self.data
-        data['data']['attributes'] = {
-            'email': 'new@example.com',
-            'send_messages': False
-        }
+        data['data']['attributes'] = {'email': 'new@example.com', 'send_messages': False}
         self.perform_create(user=staff, data=data)
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
@@ -895,10 +796,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         MemberPlatformSettings.objects.update_or_create(closed=True)
 
         data = self.data
-        data['data']['attributes'] = {
-            'email': 'new@example.com',
-            'send_messages': False
-        }
+        data['data']['attributes'] = {'email': 'new@example.com', 'send_messages': False}
         self.perform_create(user=staff, data=data)
         self.assertEqual(self.activity.participants.count(), 1)
 
@@ -925,7 +823,10 @@ class DeedParticipantTransitionListViewAPITestCase(APITestCase):
             'transition': 'withdraw',
         }
 
-        self.fields = ['resource', 'transition', ]
+        self.fields = [
+            'resource',
+            'transition',
+        ]
 
     def test_create(self):
         self.perform_create(user=self.participant.user)
@@ -963,9 +864,7 @@ class ParticipantExportViewAPITestCase(APITestCase):
             end=date.today() + timedelta(days=20),
         )
 
-        self.participants = DeedParticipantFactory.create_batch(
-            5, activity=self.activity
-        )
+        self.participants = DeedParticipantFactory.create_batch(5, activity=self.activity)
         self.url = reverse('deed-detail', args=(self.activity.pk,))
 
     @property
@@ -980,9 +879,7 @@ class ParticipantExportViewAPITestCase(APITestCase):
 
         sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
         rows = list(sheet.values)
-        self.assertEqual(
-            rows[0], ('Email', 'Name', 'Registration Date', 'Status')
-        )
+        self.assertEqual(rows[0], ('Email', 'Name', 'Registration Date', 'Status'))
 
     def test_get_owner_incorrect_hash(self):
         self.perform_get(user=self.activity.owner)

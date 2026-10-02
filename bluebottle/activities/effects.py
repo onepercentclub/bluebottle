@@ -2,9 +2,7 @@ from django.template.loader import render_to_string
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.models import (
-    Contributor, Organizer, EffortContribution, Activity, Team, Invite
-)
+from bluebottle.activities.models import Contributor, Organizer, EffortContribution, Activity, Team, Invite
 from bluebottle.fsm.effects import Effect, TransitionEffect
 
 
@@ -14,10 +12,7 @@ class CreateOrganizer(Effect):
     display = False
 
     def post_save(self, **kwargs):
-        Organizer.objects.get_or_create(
-            activity=self.instance,
-            defaults={'user': self.instance.owner}
-        )
+        Organizer.objects.get_or_create(activity=self.instance, defaults={'user': self.instance.owner})
 
     def __str__(self):
         return str(_('Create organizer'))
@@ -44,8 +39,7 @@ class CreateOrganizerContribution(Effect):
 
     def pre_save(self, effects):
         self.contribution = EffortContribution(
-            contributor=self.instance,
-            contribution_type=EffortContribution.ContributionTypeChoices.organizer
+            contributor=self.instance, contribution_type=EffortContribution.ContributionTypeChoices.organizer
         )
         effects.extend(self.contribution.execute_triggers())
 
@@ -82,9 +76,9 @@ class CreateTeamEffect(Effect):
     @property
     def is_valid(self):
         return (
-            super().is_valid and
-            not self.instance.team and
-            self.instance.activity.team_activity == Activity.TeamActivityChoices.teams
+            super().is_valid
+            and not self.instance.team
+            and self.instance.activity.team_activity == Activity.TeamActivityChoices.teams
         )
 
     def pre_save(self, **kwargs):
@@ -105,19 +99,16 @@ class BaseTeamContributionTransitionEffect(Effect):
 
     def __eq__(self, other):
         return (
-            isinstance(other, BaseTeamContributionTransitionEffect) and
-            self.transition == other.transition and
-            self.instance == other.instance
+            isinstance(other, BaseTeamContributionTransitionEffect)
+            and self.transition == other.transition
+            and self.instance == other.instance
         )
 
     @classmethod
     def render(cls, effects):
         effect = effects[0]
         users = [member.user for member in effect.instance.members]
-        context = {
-            'users': users,
-            'transition': cls.transition.name
-        }
+        context = {'users': users, 'transition': cls.transition.name}
         return render_to_string(cls.template, context)
 
     @property
@@ -129,12 +120,11 @@ class BaseTeamContributionTransitionEffect(Effect):
     @property
     def is_valid(self):
         return (
-            super().is_valid and
-            any(
-                self.transition in contribution.states.possible_transitions() for
-                contribution in self.contributions
-            ) and
-            any(
+            super().is_valid
+            and any(
+                self.transition in contribution.states.possible_transitions() for contribution in self.contributions
+            )
+            and any(
                 all(condition(contribution) for condition in self.contribution_conditions)
                 for contribution in self.contributions
             )
@@ -204,6 +194,7 @@ class CreateInviteForOwnerEffect(Effect):
 
 class ResetTeamParticipantsEffect(Effect):
     "Remove all contributors from the team"
+
     display = True
 
     def post_save(self, **kwargs):
@@ -216,6 +207,7 @@ class ResetTeamParticipantsEffect(Effect):
 
 class DeleteRelatedContributionsEffect(Effect):
     "Delete the related contributions when participant is deleted manually"
+
     display = True
 
     def pre_save(self, **kwargs):

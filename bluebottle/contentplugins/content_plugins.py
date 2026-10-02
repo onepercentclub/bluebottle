@@ -1,6 +1,7 @@
 """
 ContentItem plugin definitions for django-fluent-contents
 """
+
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
@@ -14,14 +15,11 @@ class PicturePlugin(ContentPlugin):
     """
     Plugin for pictures in the blog/news content.
     """
+
     model = PictureItem
-    category = _("Multimedia")
+    category = _('Multimedia')
     render_template = 'contentplugins/picture.html'
 
-    fieldsets = (
-        (None, {'fields': ('image', )}),
-    )
+    fieldsets = ((None, {'fields': ('image',)}),)
 
-    radio_fields = {
-        'align': admin.HORIZONTAL
-    }
+    radio_fields = {'align': admin.HORIZONTAL}

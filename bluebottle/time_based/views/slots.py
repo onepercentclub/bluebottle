@@ -10,13 +10,17 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission,
     ActivityStatusPermission,
     DeleteActivityPermission,
-    IsAdminPermission
+    IsAdminPermission,
 )
 from bluebottle.time_based.models import (
-    DateActivitySlot, ScheduleSlot, TeamScheduleSlot,
+    DateActivitySlot,
+    ScheduleSlot,
+    TeamScheduleSlot,
 )
 from bluebottle.time_based.serializers import (
-    DateActivitySlotSerializer, ScheduleSlotSerializer, TeamScheduleSlotSerializer
+    DateActivitySlotSerializer,
+    ScheduleSlotSerializer,
+    TeamScheduleSlotSerializer,
 )
 from bluebottle.time_based.views.mixins import BaseSlotIcalView, prefetch_my_interests
 from bluebottle.utils.permissions import (
@@ -34,7 +38,7 @@ from bluebottle.utils.views import (
 
 class DateSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
-        "activity": [
+        'activity': [
             ActivityStatusPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
         ]
@@ -47,7 +51,7 @@ class DateSlotListView(JsonApiViewMixin, CreateAPIView):
 
 class RelatedDateSlotListView(JsonApiViewMixin, ListAPIView):
     related_permission_classes = {
-        "activity": [
+        'activity': [
             ActivityStatusPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
         ]
@@ -69,21 +73,15 @@ class RelatedDateSlotListView(JsonApiViewMixin, ListAPIView):
         ordering = self.request.GET.get('ordering')
         try:
             if ordering == '-start':
-                queryset = queryset.filter(
-                    start__lte=dateutil.parser.parse(start).astimezone(tz)
-                )
+                queryset = queryset.filter(start__lte=dateutil.parser.parse(start).astimezone(tz))
             else:
-                queryset = queryset.filter(
-                    start__gte=dateutil.parser.parse(start).astimezone(tz)
-                )
+                queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
         except (ValueError, TypeError):
             pass
 
         end = self.request.GET.get('end')
         try:
-            queryset = queryset.filter(
-                start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
-            )
+            queryset = queryset.filter(start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz))
         except (ValueError, TypeError):
             pass
 
@@ -92,7 +90,7 @@ class RelatedDateSlotListView(JsonApiViewMixin, ListAPIView):
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
-        "activity": [
+        'activity': [
             ActivityStatusPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
             DeleteActivityPermission,
@@ -108,7 +106,7 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 
 class ScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
-        "activity": [
+        'activity': [
             ActivityStatusPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
         ]
@@ -121,7 +119,7 @@ class ScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
 
 class ScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
-        "activity": [
+        'activity': [
             ActivityStatusPermission,
             OneOf(ActivityOwnerPermission, IsAdminPermission),
             DeleteActivityPermission,
@@ -134,7 +132,7 @@ class ScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 
 class TeamScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
-        "activity": [
+        'activity': [
             ActivityStatusPermission,
             OneOf(ActivityOwnerPermission, IsAdminPermission),
             DeleteActivityPermission,
@@ -148,7 +146,7 @@ class TeamScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
 
 class TeamScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
-        "activity": [
+        'activity': [
             ActivityStatusPermission,
             OneOf(ActivityOwnerPermission, IsAdminPermission),
         ]
@@ -160,13 +158,13 @@ class TeamScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView)
 
 class ScheduleSlotSlotIcalView(BaseSlotIcalView):
     queryset = ScheduleSlot.objects.exclude(
-        status__in=["cancelled", "deleted", "rejected"],
-        activity__status__in=["cancelled", "deleted", "rejected"],
+        status__in=['cancelled', 'deleted', 'rejected'],
+        activity__status__in=['cancelled', 'deleted', 'rejected'],
     )
 
 
 class TeamScheduleSlotSlotIcalView(BaseSlotIcalView):
     queryset = TeamScheduleSlot.objects.exclude(
-        status__in=["cancelled", "deleted", "rejected"],
-        activity__status__in=["cancelled", "deleted", "rejected"],
+        status__in=['cancelled', 'deleted', 'rejected'],
+        activity__status__in=['cancelled', 'deleted', 'rejected'],
     )

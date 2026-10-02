@@ -12,23 +12,18 @@ from bluebottle.funding.tasks import funding_tasks, donor_tasks
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory, DonorFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.initiatives.tests.factories import (
-    InitiativeFactory
-)
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
 class FundingScheduledTasksTestCase(BluebottleTestCase):
-
     def setUp(self):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
-            initiative=self.initiative,
-            deadline=now() + timedelta(days=10),
-            target=Money(1000, 'EUR')
+            initiative=self.initiative, deadline=now() + timedelta(days=10), target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
         self.bank_account = generate_mock_bank_account()
@@ -46,16 +41,11 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
             self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'cancelled')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            u'Your crowdfunding campaign on Test has expired'
-        )
+        self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign on Test has expired')
 
     def test_funding_scheduled_task_succeed(self):
         donation = DonorFactory.create(
-            activity=self.funding,
-            user=BlueBottleUserFactory.create(),
-            amount=Money(1000, 'EUR')
+            activity=self.funding, user=BlueBottleUserFactory.create(), amount=Money(1000, 'EUR')
         )
         PledgePaymentFactory.create(donation=donation)
         self.funding.deadline = now() - timedelta(days=1)
@@ -70,14 +60,12 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title)
+            'Your crowdfunding campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title),
         )
 
     def test_funding_scheduled_task_partial(self):
         donation = DonorFactory.create(
-            activity=self.funding,
-            user=BlueBottleUserFactory.create(),
-            amount=Money(500, 'EUR')
+            activity=self.funding, user=BlueBottleUserFactory.create(), amount=Money(500, 'EUR')
         )
         PledgePaymentFactory.create(donation=donation)
         self.funding.deadline = now() - timedelta(days=1)
@@ -89,14 +77,10 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
             self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'partially_funded')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'The deadline of your crowdfunding campaign on Test has passed'
-        )
+        self.assertEqual(mail.outbox[0].subject, 'The deadline of your crowdfunding campaign on Test has passed')
 
 
 class DonorScheduledTasksTestCase(BluebottleTestCase):
-
     def setUp(self):
         self.donor = DonorFactory.create()
 

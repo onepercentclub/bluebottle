@@ -14,7 +14,9 @@ from bluebottle.time_based.tests.factories import (
     TeamFactory,
     DeadlineActivityFactory,
     DeadlineRegistrationFactory,
-    PeriodicActivityFactory, ScheduleActivityFactory, TeamScheduleRegistrationFactory,
+    PeriodicActivityFactory,
+    ScheduleActivityFactory,
+    TeamScheduleRegistrationFactory,
     InterestFactory,
 )
 
@@ -43,23 +45,23 @@ class ActivityTriggerTestCase:
 
     def test_initial(self):
         organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, "new")
+        self.assertEqual(organizer.status, 'new')
 
     def test_submit_initiative(self):
         self.initiative.states.submit(save=True)
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, "submitted")
+        self.assertEqual(self.activity.status, 'submitted')
 
     def test_approve_initiative(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
 
         organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, "succeeded")
+        self.assertEqual(organizer.status, 'succeeded')
 
     def test_submit_initiative_already_approved(self):
         self.initiative.states.submit(save=True)
@@ -68,18 +70,18 @@ class ActivityTriggerTestCase:
         activity = self.factory.create(initiative=self.initiative)
         activity.states.publish(save=True)
 
-        self.assertEqual(activity.status, "open")
+        self.assertEqual(activity.status, 'open')
 
     def test_delete(self):
         self.activity.states.delete(save=True)
         organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, "failed")
+        self.assertEqual(organizer.status, 'failed')
 
     def test_reject(self):
         self.activity.states.reject(save=True)
 
         organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, "failed")
+        self.assertEqual(organizer.status, 'failed')
 
         self.assertEqual(
             mail.outbox[-1].subject,
@@ -90,10 +92,10 @@ class ActivityTriggerTestCase:
         self.publish()
         self.activity.states.cancel(save=True)
 
-        self.assertEqual(self.activity.status, "cancelled")
+        self.assertEqual(self.activity.status, 'cancelled')
 
         organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, "failed")
+        self.assertEqual(organizer.status, 'failed')
 
         self.assertEqual(
             mail.outbox[-1].subject,
@@ -108,13 +110,13 @@ class ActivityTriggerTestCase:
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.registration_deadline = date.today() + timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
 
     def test_registration_deadline_today_closes_registration(self):
         self.publish()
@@ -124,7 +126,7 @@ class ActivityTriggerTestCase:
         self.activity.registration_deadline = date.today()
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
 
 class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCase):
@@ -134,16 +136,8 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         user1 = BlueBottleUserFactory()
         user2 = BlueBottleUserFactory()
         self.registrations = [
-            DeadlineRegistrationFactory.create(
-                activity=self.activity,
-                user=user1,
-                as_user=user1
-            ),
-            DeadlineRegistrationFactory.create(
-                activity=self.activity,
-                user=user2,
-                as_user=user2
-            )
+            DeadlineRegistrationFactory.create(activity=self.activity, user=user1, as_user=user1),
+            DeadlineRegistrationFactory.create(activity=self.activity, user=user2, as_user=user2),
         ]
 
     def test_change_capacity(self):
@@ -154,14 +148,14 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.save()
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
         self.activity.capacity = len(self.registrations) + 1
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
 
     def test_registration_closed_reopens_to_full_when_at_capacity(self):
         self.publish()
@@ -170,18 +164,18 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.capacity = len(self.registrations)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.registration_deadline = date.today() + timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
     def test_extend_registration_deadline_notifies_interested(self):
         self.publish()
@@ -193,7 +187,7 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         mail.outbox = []
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
@@ -201,15 +195,13 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.save()
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
         subjects = [message.subject for message in mail.outbox]
         self.assertIn(
             'A spot has opened up for an activity on Test.',
             subjects,
         )
-        self.assertTrue(
-            any(interested.email in message.to for message in mail.outbox)
-        )
+        self.assertTrue(any(interested.email in message.to for message in mail.outbox))
 
     def test_extend_registration_deadline_at_capacity_does_not_notify(self):
         self.publish()
@@ -221,12 +213,12 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.capacity = len(self.registrations)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         mail.outbox = []
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
@@ -234,7 +226,7 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.save()
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
         subjects = [message.subject for message in mail.outbox]
         self.assertNotIn(
             'A spot has opened up for an activity on Test.',
@@ -248,13 +240,13 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         participant = self.registrations[0].participants.first()
         participant.states.withdraw(save=True)
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
     def test_remove_while_registration_closed_does_not_reopen(self):
         self.publish()
@@ -263,13 +255,13 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         participant = self.registrations[0].participants.first()
         participant.states.remove(save=True)
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
     def test_capacity_increase_while_registration_closed_does_not_reopen(self):
         self.publish()
@@ -278,19 +270,19 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.capacity = len(self.registrations)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.capacity = len(self.registrations) + 5
         self.activity.save()
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
     def test_extend_deadline_while_registration_closed_does_not_reopen(self):
         self.publish()
@@ -299,14 +291,14 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.deadline = date.today() + timedelta(weeks=8)
         self.activity.save()
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
     def test_extend_deadline_from_succeeded_closes_registration_when_still_past(self):
         self.publish()
@@ -315,20 +307,20 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.deadline = date.today() - timedelta(days=1)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "succeeded")
+        self.assertEqual(self.activity.status, 'succeeded')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.deadline = date.today() + timedelta(weeks=8)
         self.activity.save()
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(self.activity.status, 'registration_closed')
 
     def test_change_capacity_notifies_interested(self):
         self.publish()
@@ -340,22 +332,20 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.capacity = len(self.registrations)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         mail.outbox = []
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.capacity = len(self.registrations) + 1
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
         subjects = [message.subject for message in mail.outbox]
         self.assertIn(
             'A spot has opened up for an activity on Test.',
             subjects,
         )
-        self.assertTrue(
-            any(interested.email in message.to for message in mail.outbox)
-        )
+        self.assertTrue(any(interested.email in message.to for message in mail.outbox))
 
     def test_change_capacity_after_deadline_does_not_notify(self):
         self.publish()
@@ -367,7 +357,7 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.capacity = len(self.registrations)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         mail.outbox = []
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
@@ -390,23 +380,23 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
         self.activity.capacity = len(self.registrations)
         self.activity.save()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.capacity = len(self.registrations) + 1
         self.activity.save()
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.capacity = len(self.registrations)
         self.activity.save()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         mail.outbox = []
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.capacity = len(self.registrations) + 1
         self.activity.save()
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
 
         subjects = [message.subject for message in mail.outbox]
         self.assertEqual(
@@ -423,18 +413,18 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
         self.activity.capacity = len(self.registrations)
         self.activity.save()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.capacity = len(self.registrations) + 1
         self.activity.save()
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
 
         mail.outbox = []
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.capacity = len(self.registrations) + 2
         self.activity.save()
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
 
         subjects = [message.subject for message in mail.outbox]
         self.assertNotIn(
@@ -446,7 +436,7 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.create_participants()
         super().test_cancel()
         for registration in self.registrations:
-            self.assertEqual(registration.participants.first().status, "cancelled")
+            self.assertEqual(registration.participants.first().status, 'cancelled')
 
 
 class PeriodicActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCase):
@@ -473,9 +463,7 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
     def register_team(self):
         self.registration = TeamScheduleRegistrationFactory.create(activity=self.activity, user=self.user)
         self.team = TeamFactory.create(
-            registration=self.registration,
-            activity=self.activity,
-            user=self.registration.user
+            registration=self.registration, activity=self.activity, user=self.registration.user
         )
         self.team_member = self.team.team_members.first()
         self.slot = self.team.slots.first()
@@ -487,22 +475,22 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.publish()
         self.register_team()
         self.assertEqual(len(self.activity.team_slots.all()), 1)
-        self.assertStatus(self.activity, "open")
-        self.assertStatus(self.registration, "accepted")
-        self.assertStatus(self.team, "accepted")
-        self.assertStatus(self.team_member, "active")
-        self.assertStatus(self.slot, "new")
-        self.assertStatus(self.participant, "accepted")
-        self.assertStatus(self.contribution, "new")
+        self.assertStatus(self.activity, 'open')
+        self.assertStatus(self.registration, 'accepted')
+        self.assertStatus(self.team, 'accepted')
+        self.assertStatus(self.team_member, 'active')
+        self.assertStatus(self.slot, 'new')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.contribution, 'new')
 
         self.activity.states.succeed_manually(save=True)
 
-        self.assertStatus(self.activity, "succeeded")
-        self.assertStatus(self.team, "succeeded")
-        self.assertStatus(self.team_member, "active")
-        self.assertStatus(self.slot, "finished")
-        self.assertStatus(self.participant, "succeeded")
-        self.assertStatus(self.contribution, "succeeded")
+        self.assertStatus(self.activity, 'succeeded')
+        self.assertStatus(self.team, 'succeeded')
+        self.assertStatus(self.team_member, 'active')
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.contribution, 'succeeded')
 
     def test_change_end_date(self):
         self.publish()
@@ -510,12 +498,12 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
         self.activity.deadline = date.today() - timedelta(days=10)
         self.activity.save()
-        self.assertStatus(self.activity, "succeeded")
-        self.assertStatus(self.team, "succeeded")
-        self.assertStatus(self.team_member, "active")
-        self.assertStatus(self.slot, "finished")
-        self.assertStatus(self.participant, "succeeded")
-        self.assertStatus(self.contribution, "succeeded")
+        self.assertStatus(self.activity, 'succeeded')
+        self.assertStatus(self.team, 'succeeded')
+        self.assertStatus(self.team_member, 'active')
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.contribution, 'succeeded')
 
     def test_schedule_team(self):
         self.publish()
@@ -523,11 +511,11 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
         self.slot.start = now() + timedelta(days=1)
         self.slot.save()
-        self.assertStatus(self.team, "scheduled")
-        self.assertStatus(self.team_member, "active")
-        self.assertStatus(self.slot, "scheduled")
-        self.assertStatus(self.participant, "scheduled")
-        self.assertStatus(self.contribution, "new")
+        self.assertStatus(self.team, 'scheduled')
+        self.assertStatus(self.team_member, 'active')
+        self.assertStatus(self.slot, 'scheduled')
+        self.assertStatus(self.participant, 'scheduled')
+        self.assertStatus(self.contribution, 'new')
 
     def test_schedule_team_past(self):
         self.publish()
@@ -535,8 +523,8 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
-        self.assertStatus(self.team, "succeeded")
-        self.assertStatus(self.team_member, "active")
-        self.assertStatus(self.slot, "finished")
-        self.assertStatus(self.participant, "succeeded")
-        self.assertStatus(self.contribution, "succeeded")
+        self.assertStatus(self.team, 'succeeded')
+        self.assertStatus(self.team_member, 'active')
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.contribution, 'succeeded')

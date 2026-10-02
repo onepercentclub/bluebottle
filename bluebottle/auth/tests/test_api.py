@@ -15,7 +15,7 @@ class UserTokenTestCase(BluebottleTestCase):
         super(UserTokenTestCase, self).setUp()
         self.init_projects()
         self.user = BlueBottleUserFactory.create(password='testing')
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = 'JWT {0}'.format(self.user.get_jwt_token())
 
     def user_last_seen(self):
         self.client.get(reverse('user-current'), token=self.user_token)
@@ -26,10 +26,7 @@ class UserTokenTestCase(BluebottleTestCase):
         """
         Test that we get a token from API when using credentials.
         """
-        response = self.client.post(
-            reverse("token-auth"),
-            data={'email': self.user.email, 'password': 'testing'}
-        )
+        response = self.client.post(reverse('token-auth'), data={'email': self.user.email, 'password': 'testing'})
         self.assertContains(response, 'token', status_code=status.HTTP_201_CREATED)
 
     @patch('bluebottle.auth.middleware.LAST_SEEN_DELTA', 0.000001)
@@ -53,12 +50,7 @@ class UserTokenTestCase(BluebottleTestCase):
 
     def test_login_failure_is_logged(self):
         with patch.object(authorization_logger, 'error') as error:
-            response = self.client.post(
-                reverse("token-auth"),
-                data={'email': self.user.email, 'password': 'wrong'}
-            )
+            response = self.client.post(reverse('token-auth'), data={'email': self.user.email, 'password': 'wrong'})
             self.assertEqual(response.status_code, 400)
 
-            self.assertTrue(
-                'Authorization failed: {} 127.0.0.1'.format(self.user.email) in error.call_args[0]
-            )
+            self.assertTrue('Authorization failed: {} 127.0.0.1'.format(self.user.email) in error.call_args[0])

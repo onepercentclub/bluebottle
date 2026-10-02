@@ -9,21 +9,13 @@ from bluebottle.voting.states import PollStateMachine
 
 
 class PollDeadlinePassedTask(ModelPeriodicTask):
-
     def get_queryset(self):
-        return self.model.objects.filter(
-            end_date__lte=date.today(),
-            status='open'
-        )
+        return self.model.objects.filter(end_date__lte=date.today(), status='open')
 
-    effects = [
-        TransitionEffect(PollStateMachine.close)
-    ]
+    effects = [TransitionEffect(PollStateMachine.close)]
 
     def __str__(self):
-        return str(_("Close the poll when the deadline has passed"))
+        return str(_('Close the poll when the deadline has passed'))
 
 
-Poll.periodic_tasks = [
-    PollDeadlinePassedTask
-]
+Poll.periodic_tasks = [PollDeadlinePassedTask]

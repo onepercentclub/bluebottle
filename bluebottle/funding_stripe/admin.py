@@ -11,12 +11,20 @@ from stripe.error import StripeError
 from bluebottle.clients import properties
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.admin import (
-    PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin,
-    BankAccountChildAdmin
+    PaymentChildAdmin,
+    PaymentProviderChildAdmin,
+    PayoutAccountChildAdmin,
+    BankAccountChildAdmin,
 )
 from bluebottle.funding.models import BankAccount, Payment, PaymentProvider, FundingPlatformSettings
-from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount, PaymentIntent
+from bluebottle.funding_stripe.models import (
+    StripePayment,
+    StripePaymentProvider,
+    StripePayoutAccount,
+    StripeSourcePayment,
+    ExternalAccount,
+    PaymentIntent,
+)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.geo.models import Country
 
@@ -52,7 +60,11 @@ class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
 
 class StripeBankAccountInline(admin.TabularInline):
     model = ExternalAccount
-    readonly_fields = ['bank_account_link', 'status', 'account_id', ]
+    readonly_fields = [
+        'bank_account_link',
+        'status',
+        'account_id',
+    ]
     fields = readonly_fields
     extra = 0
     can_delete = False
@@ -61,7 +73,7 @@ class StripeBankAccountInline(admin.TabularInline):
         return False
 
     def bank_account_link(self, obj):
-        url = reverse('admin:funding_stripe_externalaccount_change', args=(obj.id, ))
+        url = reverse('admin:funding_stripe_externalaccount_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
 
 
@@ -79,14 +91,8 @@ class StripePayoutAccountForm(StateMachineModelForm):
             specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
             data.extend(specs2.data)
 
-        countries = Country.objects.filter(
-            alpha2_code__in=(
-                spec.id for spec in data
-            )
-        )
-        self.base_fields['country'].choices = [
-            (country.code, country.name) for country in countries
-        ]
+        countries = Country.objects.filter(alpha2_code__in=(spec.id for spec in data))
+        self.base_fields['country'].choices = [(country.code, country.name) for country in countries]
 
         super().__init__(*args, **kwargs)
 
@@ -97,33 +103,30 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     model = StripePayoutAccount
     inlines = [StripeBankAccountInline]
     readonly_fields = PayoutAccountChildAdmin.readonly_fields + [
-        "verified",
-        "payments_enabled",
-        "payouts_enabled",
+        'verified',
+        'payments_enabled',
+        'payouts_enabled',
         'requirements_list',
         'verification_link',
         'stripe_link',
         'grant_application',
     ]
 
-    search_fields = ["account_id"]
-    list_display = ["id", "account_id", "owner", "status"]
+    search_fields = ['account_id']
+    list_display = ['id', 'account_id', 'owner', 'status']
 
-    fields = PayoutAccountChildAdmin.fields + [
-        'country', 'business_type', 'account_id'
-    ]
+    fields = PayoutAccountChildAdmin.fields + ['country', 'business_type', 'account_id']
 
     def get_status_fields(self, request, obj):
         return super().get_status_fields(request, obj) + [
-            'verified', 'payments_enabled', 'payouts_enabled',
-            'requirements_list'
-
+            'verified',
+            'payments_enabled',
+            'payouts_enabled',
+            'requirements_list',
         ]
 
     def get_basic_fields(self, request, obj):
-        fields = super().get_basic_fields(request, obj) + [
-            'business_type', 'country', 'verification_link'
-        ]
+        fields = super().get_basic_fields(request, obj) + ['business_type', 'country', 'verification_link']
         return fields
 
     def get_fieldsets(self, request, obj=None):
@@ -138,16 +141,11 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             self.message_user(
                 request,
                 'This Account id should start with acct_ The ba_ number is for the StripeBankAccount',
-                messages.ERROR
+                messages.ERROR,
             )
-        if obj.account_id \
-                and StripePayoutAccount.objects.exclude(id=obj.id).filter(account_id=obj.account_id).count():
+        if obj.account_id and StripePayoutAccount.objects.exclude(id=obj.id).filter(account_id=obj.account_id).count():
             obj.account_id = ''
-            self.message_user(
-                request,
-                'There is already a StripePayoutAccount with this account_id.',
-                messages.ERROR
-            )
+            self.message_user(request, 'There is already a StripePayoutAccount with this account_id.', messages.ERROR)
         return super(StripePayoutAccountAdmin, self).save_model(request, obj, form, change)
 
     def get_urls(self):
@@ -174,32 +172,25 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         business = obj.account.get('business_profile', None)
         if individual:
             if obj.status == 'verified':
-                template = loader.get_template(
-                    'admin/funding_stripe/stripepayoutaccount/detail_fields.html'
-                )
+                template = loader.get_template('admin/funding_stripe/stripepayoutaccount/detail_fields.html')
                 return template.render({'info': individual})
             elif obj.status == 'pending':
                 return _('Pending verification')
             else:
-                template = loader.get_template(
-                    'admin/funding_stripe/stripepayoutaccount/missing_fields.html'
-                )
+                template = loader.get_template('admin/funding_stripe/stripepayoutaccount/missing_fields.html')
                 return template.render({'fields': obj.missing_fields})
         elif business:
             if obj.status == 'verified':
-                template = loader.get_template(
-                    'admin/funding_stripe/stripepayoutaccount/business_fields.html'
-                )
+                template = loader.get_template('admin/funding_stripe/stripepayoutaccount/business_fields.html')
                 return template.render({'info': business})
             elif obj.status == 'pending':
                 return _('Pending verification')
             else:
-                template = loader.get_template(
-                    'admin/funding_stripe/stripepayoutaccount/missing_fields.html'
-                )
+                template = loader.get_template('admin/funding_stripe/stripepayoutaccount/missing_fields.html')
                 return template.render({'fields': obj.missing_fields})
 
         return _('All info missing')
+
     account_details.short_description = _('Details')
 
     def stripe_link(self, obj):
@@ -209,15 +200,20 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             url = 'https://dashboard.stripe.com/test/connect/accounts/{}'.format(obj.account_id)
         return format_html(
             '<a href="{}" target="_blank">{}</a><br/>',
-            url, obj.account_id,
+            url,
+            obj.account_id,
         )
+
     stripe_link.short_description = _('Stripe link')
 
     def requirements_list(self, obj):
-        return format_html('<ul>{}</ul>', mark_safe(''.join(
-            format_html('<li>{}</li>', requirement.split('.')[-1])
-            for requirement in obj.requirements
-        )))
+        return format_html(
+            '<ul>{}</ul>',
+            mark_safe(
+                ''.join(format_html('<li>{}</li>', requirement.split('.')[-1]) for requirement in obj.requirements)
+            ),
+        )
+
     requirements_list.short_description = _('Requirements')
 
 
@@ -237,13 +233,9 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
         settings = FundingPlatformSettings.load()
         if not settings.enable_iban_check and 'iban_verified' in fields:
             fields.remove('iban_verified')
-        fieldsets = (
-            (_('Basic'), {'fields': fields}),
-        )
+        fieldsets = ((_('Basic'), {'fields': fields}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': ['force_status']}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': ['force_status']}),)
         return fieldsets
 
     def save_model(self, request, obj, form, change):
@@ -252,24 +244,18 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
             self.message_user(
                 request,
                 'This Account id should start with ba_ The acct_. number is for the StripePayoutAccount',
-                messages.ERROR
+                messages.ERROR,
             )
-        if obj.account_id \
-                and ExternalAccount.objects.exclude(id=obj.id).filter(account_id=obj.account_id).count():
+        if obj.account_id and ExternalAccount.objects.exclude(id=obj.id).filter(account_id=obj.account_id).count():
             obj.account_id = ''
-            self.message_user(
-                request,
-                'There is already a StripeBankAccount with this account_id.',
-                messages.ERROR
-            )
+            self.message_user(request, 'There is already a StripeBankAccount with this account_id.', messages.ERROR)
         return super(StripeBankAccountAdmin, self).save_model(request, obj, form, change)
 
     def account_details(self, obj):
         try:
-            template = loader.get_template(
-                'admin/funding_stripe/stripebankaccount/detail_fields.html'
-            )
+            template = loader.get_template('admin/funding_stripe/stripebankaccount/detail_fields.html')
             return template.render({'info': obj.account})
         except StripeError as e:
-            return "Error retrieving details: {}".format(e)
+            return 'Error retrieving details: {}'.format(e)
+
     account_details.short_description = _('Details')

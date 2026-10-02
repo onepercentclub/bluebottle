@@ -28,6 +28,7 @@ class TokenRedirectView(View):
     """
     Redirect to SSO login page
     """
+
     permanent = False
     query_string = True
 
@@ -87,7 +88,7 @@ class SAMLLoginView(View):
         except PermissionDenied as e:
             return HttpResponseForbidden(str(e))
 
-        target_url = auth.target_url or "/"
+        target_url = auth.target_url or '/'
 
         if target_url and re.match(r'^/\w\w/admin', target_url):
             # Admin login:
@@ -102,7 +103,7 @@ class SAMLLoginView(View):
         template = loader.get_template('utils/login_with.html')
         context = {'token': user.get_jwt_token(), 'link': target_url}
         response = HttpResponse(template.render(context, request), content_type='text/html')
-        response['cache-control'] = "no-store, no-cache, private"
+        response['cache-control'] = 'no-store, no-cache, private'
         return response
 
 
@@ -153,6 +154,7 @@ class TokenLogoutView(TemplateView):
     Process Single Logout
     FIXME: Not working yet
     """
+
     query_string = True
     template_name = 'token/token-logout.tpl'
 
@@ -165,7 +167,6 @@ class TokenLogoutView(TemplateView):
 
 
 class TokenErrorView(TemplateView):
-
     query_string = True
     template_name = 'token/token-error.tpl'
 

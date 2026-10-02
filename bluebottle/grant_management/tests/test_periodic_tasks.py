@@ -15,7 +15,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
-
     def setUp(self):
         self.provider = GrantProviderFactory(
             payment_frequency=1,
@@ -29,7 +28,7 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
         payouts = []
         grants = GrantDonorFactory.create_batch(
             3,
-            amount=Money(1000, "EUR"),
+            amount=Money(1000, 'EUR'),
             fund=self.fund,
         )
 
@@ -37,8 +36,8 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
             payout = GrantPayoutFactory.create(
                 activity=grant.activity,
                 provider=self.provider.name,
-                currency="EUR",
-                status="approved",
+                currency='EUR',
+                status='approved',
                 payment=None,
             )
             grant.payout = payout
@@ -53,7 +52,7 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
 
     def run_periodic_task_for_week(self, week_number):
         """Run the periodic task for a specific week"""
-        with patch("bluebottle.grant_management.periodic_tasks.now") as mock_now:
+        with patch('bluebottle.grant_management.periodic_tasks.now') as mock_now:
             # Mock the current date to be in the specified week
 
             mock_date = timezone.now().replace(
@@ -66,7 +65,7 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
 
     def test_weekly_schedule_frequency_1(self):
         """Test that payments are generated every week when frequency=1"""
-        self.provider.payment_frequency = "1"
+        self.provider.payment_frequency = '1'
         self.provider.save()
 
         for week in range(1, 9):
@@ -80,27 +79,25 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
             self.assertEqual(
                 GrantPayment.objects.count(),
                 initial_payment_count + 1,
-                f"Payment should be created in week {week} for frequency=1",
+                f'Payment should be created in week {week} for frequency=1',
             )
 
             # Verify the payment is linked to the provider
-            latest_payment = GrantPayment.objects.latest("created")
+            latest_payment = GrantPayment.objects.latest('created')
             self.assertEqual(latest_payment.grant_provider, self.provider)
-            self.assertEqual(latest_payment.status, "pending")
+            self.assertEqual(latest_payment.status, 'pending')
             self.assertEqual(latest_payment.payouts.count(), 3)
 
     def test_biweekly_schedule_frequency_2(self):
         """Test that payments are generated every 2 weeks when frequency=2"""
-        self.provider.payment_frequency = "2"
+        self.provider.payment_frequency = '2'
         self.provider.save()
 
         for week in range(1, 9):
             self.create_approved_payouts()
             initial_payment_count = GrantPayment.objects.count()
 
-            GrantPayment.objects.all().update(
-                created=timezone.now() - timedelta(days=8)
-            )
+            GrantPayment.objects.all().update(created=timezone.now() - timedelta(days=8))
 
             # Run periodic task for this week
             self.run_periodic_task_for_week(week)
@@ -110,24 +107,24 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
                 self.assertEqual(
                     GrantPayment.objects.count(),
                     initial_payment_count + 1,
-                    f"Payment should be created in week {week} for frequency=2",
+                    f'Payment should be created in week {week} for frequency=2',
                 )
 
                 # Verify the payment is linked to the provider
-                latest_payment = GrantPayment.objects.latest("created")
+                latest_payment = GrantPayment.objects.latest('created')
                 self.assertEqual(latest_payment.grant_provider, self.provider)
-                self.assertEqual(latest_payment.status, "pending")
+                self.assertEqual(latest_payment.status, 'pending')
                 self.assertEqual(latest_payment.payouts.count(), 6)
             else:
                 self.assertEqual(
                     GrantPayment.objects.count(),
                     initial_payment_count,
-                    f"No payment should be created in week {week} for frequency=2",
+                    f'No payment should be created in week {week} for frequency=2',
                 )
 
     def test_monthly_schedule_frequency_4(self):
         """Test that payments are generated every 4 weeks when frequency=4"""
-        self.provider.payment_frequency = "4"
+        self.provider.payment_frequency = '4'
         self.provider.save()
 
         for week in range(1, 9):
@@ -142,27 +139,27 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
                 self.assertEqual(
                     GrantPayment.objects.count(),
                     initial_payment_count + 1,
-                    f"Payment should be created in week {week} for frequency=4",
+                    f'Payment should be created in week {week} for frequency=4',
                 )
 
                 # Verify the payment is linked to the provider
-                latest_payment = GrantPayment.objects.latest("created")
+                latest_payment = GrantPayment.objects.latest('created')
                 self.assertEqual(latest_payment.grant_provider, self.provider)
-                self.assertEqual(latest_payment.status, "pending")
+                self.assertEqual(latest_payment.status, 'pending')
                 self.assertEqual(latest_payment.payouts.count(), 12)
             else:
                 self.assertEqual(
                     GrantPayment.objects.count(),
                     initial_payment_count,
-                    f"No payment should be created in week {week} for frequency=4",
+                    f'No payment should be created in week {week} for frequency=4',
                 )
 
     def test_multiple_providers_different_frequencies(self):
         """Test multiple providers with different payment frequencies"""
         # Create providers with different frequencies
-        provider_weekly = GrantProviderFactory(payment_frequency="1")
-        provider_biweekly = GrantProviderFactory(payment_frequency="2")
-        provider_monthly = GrantProviderFactory(payment_frequency="4")
+        provider_weekly = GrantProviderFactory(payment_frequency='1')
+        provider_biweekly = GrantProviderFactory(payment_frequency='2')
+        provider_monthly = GrantProviderFactory(payment_frequency='4')
 
         # Create funds and grants for each provider
         fund_weekly = GrantFundFactory.create(grant_provider=provider_weekly)
@@ -170,7 +167,6 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
         fund_monthly = GrantFundFactory.create(grant_provider=provider_monthly)
 
         for week in range(1, 9):
-
             grants_weekly = GrantDonorFactory.create_batch(2, fund=fund_weekly)
             grants_biweekly = GrantDonorFactory.create_batch(2, fund=fund_biweekly)
             grants_monthly = GrantDonorFactory.create_batch(2, fund=fund_monthly)
@@ -180,8 +176,8 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
                     payout = GrantPayoutFactory.create(
                         activity=grant.activity,
                         provider=grant.fund.grant_provider.name,
-                        currency="EUR",
-                        status="approved",
+                        currency='EUR',
+                        status='approved',
                         payment=None,
                     )
                     grant.payout = payout
@@ -204,12 +200,12 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
             self.assertEqual(
                 GrantPayment.objects.count(),
                 initial_payment_count + expected_payments,
-                f"Expected {expected_payments} payments in week {week}",
+                f'Expected {expected_payments} payments in week {week}',
             )
 
     def test_no_payments_when_no_approved_payouts(self):
         """Test that no payments are created when there are no approved payouts"""
-        self.provider.payment_frequency = "1"
+        self.provider.payment_frequency = '1'
         self.provider.save()
 
         # Don't create any approved payouts
@@ -225,12 +221,12 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
             self.assertEqual(
                 GrantPayment.objects.count(),
                 initial_payment_count,
-                f"No payment should be created in week {week} when no approved payouts exist",
+                f'No payment should be created in week {week} when no approved payouts exist',
             )
 
     def test_payment_linking_to_payouts(self):
         """Test that created payments are properly linked to payouts"""
-        self.provider.payment_frequency = "1"
+        self.provider.payment_frequency = '1'
         self.provider.save()
 
         # Create approved payouts

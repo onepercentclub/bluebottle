@@ -26,7 +26,7 @@ from bluebottle.time_based.models import (
     DateParticipant,
     DateActivity,
     RegisteredDateActivity,
-    Interest
+    Interest,
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
@@ -48,18 +48,12 @@ from bluebottle.utils.serializers import ResourcePermissionField
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField()
     registration_status = serializers.SerializerMethodField()
-    my_interest = SerializerMethodResourceRelatedField(
-        model=Interest,
-        read_only=True,
-        source='get_my_interest'
-    )
+    my_interest = SerializerMethodResourceRelatedField(model=Interest, read_only=True, source='get_my_interest')
 
     def get_registration_status(self, instance):
         return dict(
-            (item["status"], item["count"])
-            for item in instance.registrations.values("status").annotate(
-                count=Count("pk")
-            )
+            (item['status'], item['count'])
+            for item in instance.registrations.values('status').annotate(count=Count('pk'))
         )
 
     def get_my_interest(self, instance):
@@ -87,7 +81,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             url_args=('pk',),
             filename='participant.csv',
             permission=CanExportParticipantsPermission,
-            read_only=True
+            read_only=True,
         )
 
         remove_interests_field_for_non_managers(self, instance)
@@ -107,9 +101,9 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registration_flow',
             'permissions',
             'registrations',
-            'hour_registration_data'
+            'hour_registration_data',
         )
-        meta_fields = BaseActivitySerializer.Meta.meta_fields + ("registration_status",)
+        meta_fields = BaseActivitySerializer.Meta.meta_fields + ('registration_status',)
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
@@ -120,11 +114,11 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         BaseActivitySerializer.included_serializers.serializers,
         **{
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
-        }
+        },
     )
 
 
-class StartDateValidator():
+class StartDateValidator:
     requires_context = True
 
     def __call__(self, value, serializer):
@@ -149,10 +143,7 @@ class PeriodActivitySerializer(ModelSerializer):
 
     class Meta:
         model = Activity
-        fields = (
-            'activity_type',
-            'slug'
-        )
+        fields = ('activity_type', 'slug')
         resource_name = 'activities/time-based/periods'
 
 
@@ -160,38 +151,25 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
     model = DeadlineParticipant
 
     def __init__(self, include_my=True, participating_statuses=None, *args, **kwargs):
-        self.statuses = kwargs.pop("statuses") or {}
-        self.related_link_team_view_name = kwargs.pop(
-            "related_link_team_view_name",
-            None
-        )
+        self.statuses = kwargs.pop('statuses') or {}
+        self.related_link_team_view_name = kwargs.pop('related_link_team_view_name', None)
         self.include_my = include_my
         self.participating_statuses = participating_statuses or []
         super().__init__(*args, **kwargs)
 
     def filter_my(self, queryset):
-        return queryset.filter(
-            user=self.context['request'].user
-        )
+        return queryset.filter(user=self.context['request'].user)
 
-    def get_links(self, obj=None, lookup_field="pk"):
+    def get_links(self, obj=None, lookup_field='pk'):
         return_data = super().get_links(obj, lookup_field)
-        queryset = getattr(
-            obj, self.source or self.field_name or self.parent.field_name
-        )
+        queryset = getattr(obj, self.source or self.field_name or self.parent.field_name)
 
         if self.related_link_team_view_name and getattr(obj, 'team_activity', None) == 'teams':
-            url = self.reverse(
-                self.related_link_team_view_name, args=(getattr(obj, lookup_field),)
-            )
+            url = self.reverse(self.related_link_team_view_name, args=(getattr(obj, lookup_field),))
         else:
-            url = self.reverse(
-                self.related_link_view_name, args=(getattr(obj, lookup_field),)
-            )
+            url = self.reverse(self.related_link_view_name, args=(getattr(obj, lookup_field),))
 
-        all_statuses = list(
-            dict.fromkeys(s for group in self.statuses.values() for s in group)
-        )
+        all_statuses = list(dict.fromkeys(s for group in self.statuses.values() for s in group))
         if all_statuses:
             count_by_status = {
                 row['status']: row['_c']
@@ -204,45 +182,28 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
 
         for name, statuses in self.statuses.items():
             return_data[name] = {
-                "href": f'{url}?filter[status]={",".join(statuses)}',
-                "meta": {"count": sum(count_by_status.get(s, 0) for s in statuses)},
+                'href': f'{url}?filter[status]={",".join(statuses)}',
+                'meta': {'count': sum(count_by_status.get(s, 0) for s in statuses)},
             }
 
         if self.include_my:
             if self.context['request'].user.is_authenticated:
                 return_data['my'] = {
                     'href': url + '?filter[my]=true',
-                    'meta': {
-                        'count': self.filter_my(queryset).count()
-                    }
+                    'meta': {'count': self.filter_my(queryset).count()},
                 }
             else:
-                return_data['my'] = {
-                    'href': url + '?filter[my]=true',
-                    'meta': {
-                        'count': 0
-                    }
-
-                }
+                return_data['my'] = {'href': url + '?filter[my]=true', 'meta': {'count': 0}}
 
         if self.participating_statuses:
             statuses_param = ','.join(self.participating_statuses)
-            participating_href = (
-                f'{url}?filter[my]=true&filter[status]={statuses_param}'
-            )
+            participating_href = f'{url}?filter[my]=true&filter[status]={statuses_param}'
             if self.context['request'].user.is_authenticated:
-                participating_count = self.filter_my(queryset).filter(
-                    status__in=self.participating_statuses
-                ).count()
+                participating_count = self.filter_my(queryset).filter(status__in=self.participating_statuses).count()
             else:
                 participating_count = 0
 
-            return_data['participating'] = {
-                'href': participating_href,
-                'meta': {
-                    'count': participating_count
-                }
-            }
+            return_data['participating'] = {'href': participating_href, 'meta': {'count': participating_count}}
 
         return_data['related'] = url
 
@@ -259,20 +220,20 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
-        source="participants",
-        related_link_view_name="deadline-participants",
-        related_link_url_kwarg="activity_id",
+        source='participants',
+        related_link_view_name='deadline-participants',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "active": ["succeeded"],
-            "failed": ["rejected", "withdrawn", "removed"],
+            'active': ['succeeded'],
+            'failed': ['rejected', 'withdrawn', 'removed'],
         },
         participating_statuses=PARTICIPATING_DEADLINE_PARTICIPANT_STATUSES,
     )
     registrations = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name="related-deadline-registrations",
-        related_link_url_kwarg="activity_id",
-        statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
+        related_link_view_name='related-deadline-registrations',
+        related_link_url_kwarg='activity_id',
+        statuses={'new': ['new'], 'accepted': ['accepted'], 'rejected': ['rejected']},
     )
     interests = InterestLinkField(
         read_only=True,
@@ -305,7 +266,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
-        }
+        },
     )
 
 
@@ -318,12 +279,12 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
-        source="participants",
-        related_link_view_name="registered-date-participants",
-        related_link_url_kwarg="activity_id",
+        source='participants',
+        related_link_view_name='registered-date-participants',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "active": ["succeeded", "accepted", "new"],
-            "failed": ["rejected", "withdrawn", "removed"],
+            'active': ['succeeded', 'accepted', 'new'],
+            'failed': ['rejected', 'withdrawn', 'removed'],
         },
         participating_statuses=PARTICIPATING_REGISTERED_DATE_PARTICIPANT_STATUSES,
     )
@@ -345,47 +306,31 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
 
 
 class RelatedTeamsLinkField(RelatedLinkFieldByStatus):
-    def get_links(self, obj=None, lookup_field="pk"):
+    def get_links(self, obj=None, lookup_field='pk'):
         links = super().get_links(obj, lookup_field)
 
-        url = self.reverse(
-            self.related_link_view_name, args=(getattr(obj, lookup_field),)
-        )
+        url = self.reverse(self.related_link_view_name, args=(getattr(obj, lookup_field),))
 
         if self.context['request'].user.is_authenticated:
-            queryset = getattr(
-                obj, self.source or self.field_name or self.parent.field_name
-            )
+            queryset = getattr(obj, self.source or self.field_name or self.parent.field_name)
             links['owned'] = {
-                "href": f'{url}?filter[owned]=true',
-                "meta": {
-                    "count": queryset.filter(
-                        user=self.context['request'].user
-                    ).count()
-                },
+                'href': f'{url}?filter[owned]=true',
+                'meta': {'count': queryset.filter(user=self.context['request'].user).count()},
             }
 
             links['my'] = {
-                "href": f'{url}?filter[my]=true',
-                "meta": {
-                    "count": queryset.filter(
-                        team_members__user=self.context['request'].user
-                    ).count()
-                },
+                'href': f'{url}?filter[my]=true',
+                'meta': {'count': queryset.filter(team_members__user=self.context['request'].user).count()},
             }
         else:
             links['owned'] = {
-                "href": f'{url}?filter[owned]=true',
-                "meta": {
-                    "count": 0
-                },
+                'href': f'{url}?filter[owned]=true',
+                'meta': {'count': 0},
             }
 
             links['my'] = {
-                "href": f'{url}?filter[my]=true',
-                "meta": {
-                    "count": 0
-                },
+                'href': f'{url}?filter[my]=true',
+                'meta': {'count': 0},
             }
 
         return links
@@ -400,16 +345,16 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
-        source="participants",
-        related_link_view_name="schedule-participants",
-        related_link_team_view_name="team-schedule-participants",
-        related_link_url_kwarg="activity_id",
+        source='participants',
+        related_link_view_name='schedule-participants',
+        related_link_team_view_name='team-schedule-participants',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "unscheduled": ["accepted"],
-            "active": ["scheduled", "succeeded"],
-            "scheduled": ["scheduled"],
-            "succeeded": ["succeeded"],
-            "failed": ["rejected", "withdrawn", "removed", "cancelled"],
+            'unscheduled': ['accepted'],
+            'active': ['scheduled', 'succeeded'],
+            'scheduled': ['scheduled'],
+            'succeeded': ['succeeded'],
+            'failed': ['rejected', 'withdrawn', 'removed', 'cancelled'],
         },
         participating_statuses=PARTICIPATING_SCHEDULE_PARTICIPANT_STATUSES,
     )
@@ -417,23 +362,23 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     teams = RelatedTeamsLinkField(
         read_only=True,
         include_my=True,
-        related_link_view_name="related-teams",
-        related_link_url_kwarg="activity_id",
+        related_link_view_name='related-teams',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "unscheduled": ["accepted"],
-            "active": ["scheduled", "succeeded"],
-            "scheduled": ["scheduled"],
-            "succeeded": ["succeeded"],
-            "failed": ["rejected", "withdrawn", "removed", "cancelled"],
+            'unscheduled': ['accepted'],
+            'active': ['scheduled', 'succeeded'],
+            'scheduled': ['scheduled'],
+            'succeeded': ['succeeded'],
+            'failed': ['rejected', 'withdrawn', 'removed', 'cancelled'],
         },
     )
 
     registrations = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name="related-schedule-registrations",
-        related_link_team_view_name="related-team-schedule-registrations",
-        related_link_url_kwarg="activity_id",
-        statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
+        related_link_view_name='related-schedule-registrations',
+        related_link_team_view_name='related-team-schedule-registrations',
+        related_link_url_kwarg='activity_id',
+        statuses={'new': ['new'], 'accepted': ['accepted'], 'rejected': ['rejected']},
     )
     interests = InterestLinkField(
         read_only=True,
@@ -443,24 +388,24 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
 
     @property
     def export_view_name(self):
-        if self.instance and self.instance.team_activity == "teams":
-            return "team-schedule-participant-export"
+        if self.instance and self.instance.team_activity == 'teams':
+            return 'team-schedule-participant-export'
         else:
-            return "schedule-participant-export"
+            return 'schedule-participant-export'
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = ScheduleActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            "start",
-            "deadline",
-            "duration",
-            "is_online",
-            "location",
-            "location_hint",
-            "team_activity",
-            "teams",
-            "my_interest",
-            "interests",
+            'start',
+            'deadline',
+            'duration',
+            'is_online',
+            'location',
+            'location_hint',
+            'team_activity',
+            'teams',
+            'my_interest',
+            'interests',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -475,7 +420,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
-        }
+        },
     )
 
 
@@ -489,22 +434,22 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
-        source="participants",
-        related_link_view_name="periodic-participants",
-        related_link_url_kwarg="activity_id",
+        source='participants',
+        related_link_view_name='periodic-participants',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "active": ["new", "succeeded"],
-            "failed": ["rejected", "withdrawn", "removed"],
+            'active': ['new', 'succeeded'],
+            'failed': ['rejected', 'withdrawn', 'removed'],
         },
     )
     registrations = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name="related-periodic-registrations",
-        related_link_url_kwarg="activity_id",
+        related_link_view_name='related-periodic-registrations',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "new": ["new"],
-            "accepted": ["accepted"],
-            "rejected": ["rejected", "stopped", "removed"],
+            'new': ['new'],
+            'accepted': ['accepted'],
+            'rejected': ['rejected', 'stopped', 'removed'],
         },
         participating_statuses=PARTICIPATING_PERIODIC_REGISTRATION_STATUSES,
     )
@@ -517,9 +462,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     def get_contributor_count(self, instance):
         return (
             instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
+            + instance.contributors.not_instance_of(Organizer).filter(status__in=['accepted', 'participating']).count()
         )
 
     class Meta(TimeBasedBaseSerializer.Meta):
@@ -548,7 +491,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
-        }
+        },
     )
 
 
@@ -561,39 +504,42 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
-        source="participants",
-        related_link_view_name="date-participants",
-        related_link_url_kwarg="activity_id",
+        source='participants',
+        related_link_view_name='date-participants',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "active": ["new", "succeeded"],
-            "failed": ["rejected", "withdrawn", "removed"],
+            'active': ['new', 'succeeded'],
+            'failed': ['rejected', 'withdrawn', 'removed'],
         },
         participating_statuses=PARTICIPATING_DATE_PARTICIPANT_STATUSES,
     )
 
     registrations = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name="related-date-registrations",
-        related_link_url_kwarg="activity_id",
-        statuses={
-            "new": ["new"],
-            "accepted": ["accepted"],
-            "rejected": ["rejected", "removed", "withdrawn"]
-        },
+        related_link_view_name='related-date-registrations',
+        related_link_url_kwarg='activity_id',
+        statuses={'new': ['new'], 'accepted': ['accepted'], 'rejected': ['rejected', 'removed', 'withdrawn']},
         participating_statuses=PARTICIPATING_DATE_REGISTRATION_STATUSES,
     )
 
     slots = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name="related-date-slots",
-        related_link_url_kwarg="activity_id",
+        related_link_view_name='related-date-slots',
+        related_link_url_kwarg='activity_id',
         include_my=False,
         statuses={
-            "upcoming": ["open", "full", "registration_closed", "running"],
-            "passed": ["failed", "succeeded", "expired", "cancelled", "finished"],
-            "total": [
-                "open", "full", "registration_closed", "running",
-                "failed", "succeeded", "expired", "cancelled", "finished"
+            'upcoming': ['open', 'full', 'registration_closed', 'running'],
+            'passed': ['failed', 'succeeded', 'expired', 'cancelled', 'finished'],
+            'total': [
+                'open',
+                'full',
+                'registration_closed',
+                'running',
+                'failed',
+                'succeeded',
+                'expired',
+                'cancelled',
+                'finished',
             ],
         },
     )
@@ -607,9 +553,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     def get_contributor_count(self, instance):
         return (
             instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
+            + instance.contributors.not_instance_of(Organizer).filter(status__in=['accepted', 'participating']).count()
         )
 
     def get_filtered_slots(self, obj, only_upcoming=False):
@@ -626,9 +570,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
                 slots = slots.filter(start__gte=now())
 
             if end:
-                slots = slots.filter(
-                    start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
-                )
+                slots = slots.filter(start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz))
         except ValueError:
             pass
 
@@ -642,9 +584,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         duration = None
 
         if total > 1:
-            starts = set(
-                slots.annotate(date=Trunc('start', kind='day')).values_list('date')
-            )
+            starts = set(slots.annotate(date=Trunc('start', kind='day')).values_list('date'))
             capacity = slots.aggregate(capacity=Sum('capacity'))['capacity']
             count = len(slots)
             end = end.date()
@@ -729,11 +669,9 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             meeting_url = None
             user = self.context['request'].user
             if (
-                is_online and
-                user.is_authenticated and
-                obj.contributors.filter(
-                    user=user, status='accepted'
-                ).instance_of(DateParticipant).count()
+                is_online
+                and user.is_authenticated
+                and obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
             ):
                 meeting_url = slot.online_meeting_url or None
 
@@ -764,8 +702,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
         user = self.context['request'].user
         if (
-                user.is_authenticated and
-                obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+            user.is_authenticated
+            and obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
         ):
             meeting_url = slot.online_meeting_url or None
         else:
@@ -801,7 +739,9 @@ class DeadlineTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/time-based/deadline-transitions'
-        included_resources = ['resource', ]
+        included_resources = [
+            'resource',
+        ]
 
 
 class RegisteredDateTransitionSerializer(TransitionSerializer):
@@ -812,7 +752,9 @@ class RegisteredDateTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/time-based/registered-date-transitions'
-        included_resources = ['resource', ]
+        included_resources = [
+            'resource',
+        ]
 
 
 class ScheduleTransitionSerializer(TransitionSerializer):
@@ -823,7 +765,9 @@ class ScheduleTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/time-based/schedule-transitions'
-        included_resources = ['resource', ]
+        included_resources = [
+            'resource',
+        ]
 
 
 class PeriodicTransitionSerializer(TransitionSerializer):
@@ -834,7 +778,9 @@ class PeriodicTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/time-based/periodic-transitions'
-        included_resources = ['resource', ]
+        included_resources = [
+            'resource',
+        ]
 
 
 class DateTransitionSerializer(TransitionSerializer):
@@ -845,4 +791,6 @@ class DateTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/time-based/date-transitions'
-        included_resources = ['resource', ]
+        included_resources = [
+            'resource',
+        ]

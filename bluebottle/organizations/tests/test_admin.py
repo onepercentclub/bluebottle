@@ -5,7 +5,6 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 class OrganizationAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -22,7 +21,7 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
         form['name'] = 'Dharma Initiative'
         page = form.submit()
         self.assertEqual(Organization.objects.count(), 0)
-        self.assertEqual(page.html.find("p", {'class': 'errornote'}).text.strip(), 'Please correct the error below.')
+        self.assertEqual(page.html.find('p', {'class': 'errornote'}).text.strip(), 'Please correct the error below.')
 
     def test_admin_create_organization(self):
         url = reverse('admin:organizations_organization_changelist')
@@ -33,4 +32,4 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
         form['website'] = 'http://dharma.in'
         page = form.submit().follow()
         self.assertEqual(Organization.objects.count(), 1)
-        self.assertIsNone(page.html.find("p", {'class': 'errornote'}))
+        self.assertIsNone(page.html.find('p', {'class': 'errornote'}))

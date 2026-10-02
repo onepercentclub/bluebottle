@@ -26,9 +26,7 @@ class TelesomBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCre
     serializer_class = TelesomBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}
 
 
 class TelesomBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -36,6 +34,4 @@ class TelesomBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, Retri
     serializer_class = TelesomBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}

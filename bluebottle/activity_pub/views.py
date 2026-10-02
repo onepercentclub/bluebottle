@@ -5,21 +5,56 @@ from rest_framework import generics, status, response
 from bluebottle.celery import app
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept, Create, Organization,
-    GoodDeed, Image, CrowdFunding, CollectCampaign, Place, Address, DoGoodEvent, SubEvent, Update,
-    Delete, Start, Cancel, Finish, GrantApplication
+    Person,
+    Inbox,
+    Outbox,
+    PublicKey,
+    Follow,
+    Accept,
+    Create,
+    Organization,
+    GoodDeed,
+    Image,
+    CrowdFunding,
+    CollectCampaign,
+    Place,
+    Address,
+    DoGoodEvent,
+    SubEvent,
+    Update,
+    Delete,
+    Start,
+    Cancel,
+    Finish,
+    GrantApplication,
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers.json_ld import (
-    PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
-    AcceptSerializer, ActivitySerializer, CreateSerializer,
-    OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
-    CrowdFundingSerializer, CollectCampaignSerializer, PlaceSerializer, AddressSerializer,
+    PersonSerializer,
+    InboxSerializer,
+    OutboxSerializer,
+    PublicKeySerializer,
+    FollowSerializer,
+    AcceptSerializer,
+    ActivitySerializer,
+    CreateSerializer,
+    OrganizationSerializer,
+    GoodDeedSerializer,
+    ImageSerializer,
+    CrowdFundingSerializer,
+    CollectCampaignSerializer,
+    PlaceSerializer,
+    AddressSerializer,
     GrantApplicationSerializer,
-    DoGoodEventSerializer, SubEventSerializer, UpdateSerializer,
-    DeleteSerializer, StartSerializer, CancelSerializer, FinishSerializer
+    DoGoodEventSerializer,
+    SubEventSerializer,
+    UpdateSerializer,
+    DeleteSerializer,
+    StartSerializer,
+    CancelSerializer,
+    FinishSerializer,
 )
 from bluebottle.clients.utils import LocalTenant
 
@@ -45,8 +80,10 @@ class OrganizationView(ActivityPubView):
 
 
 @app.task(
-    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
-    name="bluebottle.activity_pub.view.create_task"
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={'max_retries': 5},
+    name='bluebottle.activity_pub.view.create_task',
 )
 def create_task(serializer, tenant):
     with LocalTenant(tenant):
@@ -79,10 +116,7 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if (
-            getattr(settings, 'TESTING', False) or
-            getattr(settings, 'CELERY_ALWAYS_EAGER', False)
-        ):
+        if getattr(settings, 'TESTING', False) or getattr(settings, 'CELERY_ALWAYS_EAGER', False):
             create_task(serializer, connection.tenant)
         else:
             create_task.delay(serializer, connection.tenant)

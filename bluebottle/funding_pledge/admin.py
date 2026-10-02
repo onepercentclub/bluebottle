@@ -34,7 +34,7 @@ class PledgeBankAccountAdmin(BankAccountChildAdmin):
         'account_holder_country',
         'account_number',
         'account_details',
-        'account_bank_country'
+        'account_bank_country',
     ) + BankAccountChildAdmin.fields
     list_filter = ['reviewed']
     search_fields = ['account_holder_name', 'account_number']

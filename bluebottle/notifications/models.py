@@ -24,12 +24,7 @@ class Message(models.Model):
     body_html = models.TextField(blank=True, null=True)
     insert_method = models.CharField(max_length=10, default='append')
     custom_message = models.TextField(blank=True, null=True)
-    bcc = ArrayField(
-        models.CharField(max_length=200, null=True),
-        blank=True,
-        null=True,
-        default=list
-    )
+    bcc = ArrayField(models.CharField(max_length=200, null=True), blank=True, null=True, default=list)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -37,8 +32,7 @@ class Message(models.Model):
 
     def get_adapter(self):
         adapter_name = 'bluebottle.notifications.adapters.{}.{}MessageAdapter'.format(
-            self.adapter,
-            self.adapter.title()
+            self.adapter, self.adapter.title()
         )
         return get_class(adapter_name)
 
@@ -61,9 +55,7 @@ class NotificationPlatformSettings(BasePlatformSettings):
         ('qrcode', _('QR code')),
     )
 
-    share_options = MultiSelectField(
-        max_length=100, choices=SHARE_OPTIONS, blank=True
-    )
+    share_options = MultiSelectField(max_length=100, choices=SHARE_OPTIONS, blank=True)
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
 
     class Meta(object):
@@ -83,29 +75,16 @@ class NotificationModelMixin(object):
 
 
 class MessageTemplate(TranslatableModel):
+    MESSAGES = (('bluebottle.members.messages.AccountActivationMessage', _('Member activated')),)
 
-    MESSAGES = (
-        (
-            'bluebottle.members.messages.AccountActivationMessage',
-            _('Member activated')
-        ),
-    )
-
-    message = models.CharField(
-        _('Mail'), choices=MESSAGES,
-        unique=True, max_length=500)
+    message = models.CharField(_('Mail'), choices=MESSAGES, unique=True, max_length=500)
 
     INSERT_METHODS = (
         ('replace', _('Replace the entire message')),
         ('append', _('Append this to the original message')),
     )
 
-    insert_method = models.CharField(
-        _('Insert method'),
-        max_length=20,
-        choices=INSERT_METHODS,
-        default='append'
-    )
+    insert_method = models.CharField(_('Insert method'), max_length=20, choices=INSERT_METHODS, default='append')
 
     translations = TranslatedFields(
         subject=models.CharField(_('Subject'), max_length=200),

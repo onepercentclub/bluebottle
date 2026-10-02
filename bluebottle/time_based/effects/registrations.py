@@ -58,8 +58,8 @@ class CreateTeamMemberParticipantEffect(Effect):
 
 
 class CreateInitialPeriodicParticipantEffect(Effect):
-    title = _("Create initial periodic participant for this registration")
-    template = "admin/create_participant.html"
+    title = _('Create initial periodic participant for this registration')
+    template = 'admin/create_participant.html'
 
     def post_save(self, **kwargs):
         self.instance.participants.create(
@@ -73,8 +73,8 @@ class CreateInitialPeriodicParticipantEffect(Effect):
 
 
 class AdjustInitialPeriodicParticipantEffect(Effect):
-    title = _("Adjust initial periodic participant and connect to slot")
-    template = "admin/adjust_participant.html"
+    title = _('Adjust initial periodic participant and connect to slot')
+    template = 'admin/adjust_participant.html'
 
     def post_save(self, **kwargs):
         activity = self.instance.activity
@@ -85,7 +85,7 @@ class AdjustInitialPeriodicParticipantEffect(Effect):
                 start=now(),
                 end=now() + relativedelta(**{activity.period: 1}),
                 status='running',
-                duration=activity.duration
+                duration=activity.duration,
             )
         participant = self.instance.participants.first()
         if participant:
@@ -105,7 +105,6 @@ class AdjustInitialPeriodicParticipantEffect(Effect):
 
 
 class DeleteRegistrationEffect(Effect):
-
     title = _('Delete registration if it no longer has participants')
     template = 'admin/delete_registration.html'
 

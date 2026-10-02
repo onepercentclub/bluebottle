@@ -7,21 +7,25 @@ from bluebottle.utils.forms import CustomMessageFormField
 
 
 class CustomMessageFormFieldTestCase(SimpleTestCase):
-
     def test_uses_limited_quill_toolbar_config(self):
         field = CustomMessageFormField(required=False)
         self.assertIsInstance(field.widget, QuillWidget)
-        self.assertEqual(field.widget.config['modules']['toolbar'], [
-            ['bold', 'italic'],
-            [{'list': 'ordered'}, {'list': 'bullet'}],
-        ])
+        self.assertEqual(
+            field.widget.config['modules']['toolbar'],
+            [
+                ['bold', 'italic'],
+                [{'list': 'ordered'}, {'list': 'bullet'}],
+            ],
+        )
 
     def test_clean_returns_sanitized_html_from_quill_json(self):
         field = CustomMessageFormField(required=False)
-        quill_value = json.dumps({
-            'delta': '',
-            'html': '<p>Hello <strong>world</strong></p><script>alert(1)</script>',
-        })
+        quill_value = json.dumps(
+            {
+                'delta': '',
+                'html': '<p>Hello <strong>world</strong></p><script>alert(1)</script>',
+            }
+        )
         cleaned = field.clean(quill_value)
         self.assertEqual(cleaned, '<p>Hello <strong>world</strong></p>')
 

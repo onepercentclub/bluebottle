@@ -166,7 +166,7 @@ class DeedParticipantStateMachineTestCase(StateMachineTestCase):
                 start=date.today() + timedelta(days=10),
                 end=date.today() + timedelta(days=20),
             ),
-            'user': self.user
+            'user': self.user,
         }
 
         super().setUp()

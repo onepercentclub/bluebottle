@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class CreateGrantPaymentTask(ModelPeriodicTask):
-
     def get_queryset(self):
         current_date = now()
         current_week = current_date.isocalendar()[1]
@@ -24,12 +23,10 @@ class CreateGrantPaymentTask(ModelPeriodicTask):
 
         return GrantProvider.objects.filter(id__in=matching_providers)
 
-    effects = [
-        GenerateGrantPaymentEffect
-    ]
+    effects = [GenerateGrantPaymentEffect]
 
     def __str__(self):
-        return str(_("Create payment for provider with approved payouts."))
+        return str(_('Create payment for provider with approved payouts.'))
 
 
 GrantProvider.periodic_tasks = [CreateGrantPaymentTask]

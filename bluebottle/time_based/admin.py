@@ -69,7 +69,9 @@ from bluebottle.time_based.models import (
     TeamScheduleParticipant,
     TeamScheduleRegistration,
     TeamScheduleSlot,
-    TimeContribution, RegisteredDateActivity, RegisteredDateParticipant,
+    TimeContribution,
+    RegisteredDateActivity,
+    RegisteredDateParticipant,
     Interest,
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
@@ -85,8 +87,8 @@ from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_dura
 
 class DateParticipantAdminInline(BaseContributorInline):
     model = DateParticipant
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
@@ -96,20 +98,9 @@ class TimeBasedAdmin(ActivityChildAdmin):
 
     formfield_overrides = {
         models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
+            'widget': TimeDurationWidget(show_days=False, show_hours=True, show_minutes=True, show_seconds=False)
         },
-        models.TextField: {
-            'widget': Textarea(
-                attrs={
-                    'rows': 3,
-                    'cols': 80
-                }
-            )
-        },
+        models.TextField: {'widget': Textarea(attrs={'rows': 3, 'cols': 80})},
     }
 
     search_fields = ['title', 'description']
@@ -128,15 +119,13 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('owner__email', 'Email'),
         ('office_location', 'Office Location'),
         ('capacity', 'Capacity'),
-        ('review', 'Review participants')
+        ('review', 'Review participants'),
     )
 
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()
         if obj.duration_period and obj.duration_period != 'overall':
-            return _('{duration} per {time_unit}').format(
-                duration=duration,
-                time_unit=obj.duration_period[0:-1])
+            return _('{duration} per {time_unit}').format(duration=duration, time_unit=obj.duration_period[0:-1])
         return duration
 
     duration_string.short_description = _('Duration')
@@ -189,22 +178,15 @@ class TimeBasedAdmin(ActivityChildAdmin):
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
         settings = InitiativePlatformSettings.load()
-        if (
-            settings.hour_registration == 'per_activity'
-            and settings.hour_registration_data
-        ):
+        if settings.hour_registration == 'per_activity' and settings.hour_registration_data:
             initial['hour_registration_data'] = settings.hour_registration_data
         return initial
 
     def registration_link(self, obj):
-        return admin_info_box(
-            _("Answer this question if you selected 'Direct the participants to a questionnaire'")
-        )
+        return admin_info_box(_("Answer this question if you selected 'Direct the participants to a questionnaire'"))
 
     def registration_question(self, obj):
-        return admin_info_box(
-            _("Answer these questions if you selected 'Ask a single question on the platform'")
-        )
+        return admin_info_box(_("Answer these questions if you selected 'Ask a single question on the platform'"))
 
     def participant_count(self, obj):
         return obj.succeeded_contributor_count
@@ -212,7 +194,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
     def registration_count(self, obj):
         return obj.registrations.count()
 
-    participant_count.short_description = _("Participants")
+    participant_count.short_description = _('Participants')
 
 
 class DateActivitySlotInline(TabularInlinePaginated):
@@ -222,22 +204,12 @@ class DateActivitySlotInline(TabularInlinePaginated):
 
     formfield_overrides = {
         models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
+            'widget': TimeDurationWidget(show_days=False, show_hours=True, show_minutes=True, show_seconds=False)
         },
     }
     ordering = ['-start']
     readonly_fields = ['link', 'timezone', 'status_label']
-    fields = [
-        'link',
-        'start',
-        'timezone',
-        'duration',
-        'status_label'
-    ]
+    fields = ['link', 'start', 'timezone', 'duration', 'status_label']
 
     extra = 0
 
@@ -250,29 +222,31 @@ class DateActivitySlotInline(TabularInlinePaginated):
             return f'{obj.location.timezone}'
         else:
             return str(obj.start.astimezone(get_current_timezone()).tzinfo)
+
     timezone.short_description = _('Timezone')
 
     def status_label(self, obj):
         return obj.states.current_state.name
+
     status_label.short_description = _('Status')
 
 
 class DeadlineParticipantAdminInline(BaseContributorInline):
     model = DeadlineParticipant
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
 
 
 class RegisteredDateParticipantAdminInline(BaseContributorInline):
     model = RegisteredDateParticipant
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
 
 
 class ScheduleParticipantAdminInline(BaseContributorInline):
     model = ScheduleParticipant
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
 
     fields = ['edit', 'slot_date', 'user', 'status_label']
     readonly_fields = BaseContributorInline.readonly_fields + ['slot_date']
@@ -286,8 +260,8 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
 
 class TeamScheduleParticipantAdminInline(BaseContributorInline):
     model = TeamScheduleParticipant
-    verbose_name = _("Team participants")
-    verbose_name_plural = _("Team participants")
+    verbose_name = _('Team participants')
+    verbose_name_plural = _('Team participants')
 
     readonly_fields = BaseContributorInline.readonly_fields + ['team_name']
     fields = BaseContributorInline.fields + ['team_name']
@@ -298,15 +272,19 @@ class TeamScheduleParticipantAdminInline(BaseContributorInline):
 
 class TeamScheduleRegistrationAdminInline(BaseContributorInline):
     model = TeamScheduleRegistration
-    verbose_name = _("Team registration")
-    verbose_name_plural = _("Team registrations")
+    verbose_name = _('Team registration')
+    verbose_name_plural = _('Team registrations')
 
 
 @admin.register(TeamMember)
 class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
-    list_display = ('user', 'status', 'created',)
+    list_display = (
+        'user',
+        'status',
+        'created',
+    )
     readonly_fields = ('team', 'created')
     fields = ('team', 'user', 'status', 'states', 'created')
     raw_id_fields = ('user', 'team')
@@ -315,19 +293,19 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
-        fieldsets = (
-            (_('Details'), {'fields': fields}),
-        )
+        fieldsets = ((_('Details'), {'fields': fields}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': self.superadmin_fields}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': self.superadmin_fields}),)
         return fieldsets
 
 
 class TeamMemberAdminInline(TabularInlinePaginated):
     model = TeamMember
-    fields = ('link', 'status_label', 'user',)
+    fields = (
+        'link',
+        'status_label',
+        'user',
+    )
     raw_id_fields = ('user',)
 
     def has_change_permission(self, request, obj):
@@ -370,15 +348,13 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
         'is_online',
         'location',
         'location_hint',
-        'online_meeting_url'
+        'online_meeting_url',
     )
 
     def link(self, obj):
-        url = reverse(
-            "admin:{}_{}_change".format(obj._meta.app_label, obj._meta.model_name),
-            args=(obj.id,)
-        )
+        url = reverse('admin:{}_{}_change'.format(obj._meta.app_label, obj._meta.model_name), args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
+
     link.short_description = _('Edit')
 
     verbose_name = _('Time, date & location')
@@ -386,6 +362,7 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
 
     def status_label(self, obj):
         return obj.states.current_state.name
+
     status_label.short_description = _('Status')
 
     def has_add_permission(self, request, obj):
@@ -393,20 +370,9 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
 
     formfield_overrides = {
         models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
+            'widget': TimeDurationWidget(show_days=False, show_hours=True, show_minutes=True, show_seconds=False)
         },
-        models.TextField: {
-            'widget': Textarea(
-                attrs={
-                    'rows': 3,
-                    'cols': 80
-                }
-            )
-        },
+        models.TextField: {'widget': Textarea(attrs={'rows': 3, 'cols': 80})},
     }
 
 
@@ -423,7 +389,7 @@ class TeamBulkAddForm(ActivityBulkAddForm):
         label=_('Send messages'),
         help_text=_('Email participants that they have been added to this team.'),
         initial=True,
-        required=False
+        required=False,
     )
 
     title = _('Bulk add participants')
@@ -442,8 +408,13 @@ class TeamAdmin(
     fields = (
         'activity',
         'user',
-        'name', 'description', 'registration_info',
-        'status', 'states', 'created', 'invite_code'
+        'name',
+        'description',
+        'registration_info',
+        'status',
+        'states',
+        'created',
+        'invite_code',
     )
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
@@ -463,29 +434,23 @@ class TeamAdmin(
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
-        fieldsets = (
-            (_('Details'), {'fields': fields}),
-        )
+        fieldsets = ((_('Details'), {'fields': fields}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': self.superadmin_fields}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': self.superadmin_fields}),)
         return fieldsets
 
     def registration_info(self, obj):
         url = reverse(
-            "admin:{}_{}_change".format(
-                obj.registration._meta.app_label, obj.registration._meta.model_name
-            ),
+            'admin:{}_{}_change'.format(obj.registration._meta.app_label, obj.registration._meta.model_name),
             args=(obj.registration.id,),
         )
 
         status = obj.registration.states.current_state.name
-        if obj.registration.status == "new":
-            template = loader.get_template("admin/time_based/team_registration_info.html")
-            return template.render({"status": status, "url": url})
+        if obj.registration.status == 'new':
+            template = loader.get_template('admin/time_based/team_registration_info.html')
+            return template.render({'status': status, 'url': url})
         else:
-            title = _("Change review")
+            title = _('Change review')
             return format_html(
                 'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
                 url=url,
@@ -523,13 +488,14 @@ class TeamAdminInline(TabularInlinePaginated):
 
     def team_members_count(self, obj):
         return obj.team_members.filter(status='active').count()
+
     team_members_count.short_description = _('Members')
 
 
 class PeriodicParticipantAdminInline(BaseContributorInline):
     model = PeriodicParticipant
-    verbose_name = _("Participation")
-    verbose_name_plural = _("Participation")
+    verbose_name = _('Participation')
+    verbose_name_plural = _('Participation')
     readonly_fields = ['edit', 'start', 'end', 'status_label']
     fields = readonly_fields
 
@@ -541,11 +507,15 @@ class PeriodicParticipantAdminInline(BaseContributorInline):
 
 
 class BaseRegistrationAdminInline(TabularInlinePaginated):
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
 
     readonly_fields = ('status_label', 'edit')
-    fields = ('edit', 'user', 'status_label',)
+    fields = (
+        'edit',
+        'user',
+        'status_label',
+    )
     raw_id_fields = ('user',)
 
     def edit(self, obj):
@@ -555,10 +525,8 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
             return '-'
         return format_html(
             '<a href="{}">{}</a>',
-            reverse(
-                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
-                args=(obj.id,)),
-            _('Edit')
+            reverse('admin:time_based_{}_change'.format(obj.__class__.__name__.lower()), args=(obj.id,)),
+            _('Edit'),
         )
 
     def has_change_permission(self, request, obj=None):
@@ -582,8 +550,8 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
         formset = super().get_formset(request, obj, **kwargs)
         if obj and obj.slots.count() > 1:
             formset.info_message = _(
-                "This activity has multiple time slots. If you want to add participants "
-                "to this activity, you need to add them to a specific time slot."
+                'This activity has multiple time slots. If you want to add participants '
+                'to this activity, you need to add them to a specific time slot.'
             )
 
         return formset
@@ -596,7 +564,7 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         if obj and obj.slots.count() > 1:
-            fields += ('slots', )
+            fields += ('slots',)
         return fields
 
     def has_add_permission(self, request, obj):
@@ -684,12 +652,7 @@ class DateActivityAdmin(TimeBasedAdmin):
         ('expertise', SortedRelatedFieldListFilter),
     ]
 
-    list_display = TimeBasedAdmin.list_display + [
-        'start',
-        'duration',
-        'participant_count',
-        'registration_count'
-    ]
+    list_display = TimeBasedAdmin.list_display + ['start', 'duration', 'participant_count', 'registration_count']
 
     def start(self, obj):
         first_slot = obj.slots.order_by('start').first()
@@ -715,15 +678,11 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
     ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
-    list_filter = TimeBasedAdmin.list_filter + [
-        ('expertise', SortedRelatedFieldListFilter)
-    ]
+    list_filter = TimeBasedAdmin.list_filter + [('expertise', SortedRelatedFieldListFilter)]
 
-    list_display = TimeBasedAdmin.list_display + [
-        'start', 'end_date', 'duration_string', 'participant_count'
-    ]
+    list_display = TimeBasedAdmin.list_display + ['start', 'end_date', 'duration_string', 'participant_count']
 
-    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
 
     date_fields = [
         'duration',
@@ -737,7 +696,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(2, (_("Date & time"), {"fields": self.date_fields}))
+        fieldsets.insert(2, (_('Date & time'), {'fields': self.date_fields}))
         return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -766,11 +725,9 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
 
-    list_display = TimeBasedAdmin.list_display + [
-        'start', 'duration_string', 'participant_count'
-    ]
+    list_display = TimeBasedAdmin.list_display + ['start', 'duration_string', 'participant_count']
 
-    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
 
     date_fields = [
         'start',
@@ -781,7 +738,7 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(2, (_("Date & time"), {"fields": self.date_fields}))
+        fieldsets.insert(2, (_('Date & time'), {'fields': self.date_fields}))
         return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -811,9 +768,13 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
             stored = ScheduleActivity.objects.get(id=obj.id)
             if stored.team_activity == 'teams':
                 return (
-                    TeamAdminInline,
-                    TeamScheduleParticipantAdminInline,
-                ) + inlines + interest_inline
+                    (
+                        TeamAdminInline,
+                        TeamScheduleParticipantAdminInline,
+                    )
+                    + inlines
+                    + interest_inline
+                )
             else:
                 return (ScheduleParticipantAdminInline,) + inlines + interest_inline
         return inlines + interest_inline
@@ -823,25 +784,21 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     def team_registration_warning(self, obj):
         return admin_info_box(
-            _(
-                "You can't change between teams/individuals anymore because there are already registrations."
-            )
+            _("You can't change between teams/individuals anymore because there are already registrations.")
         )
 
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if obj and obj.registrations.count():
-            fields = tuple(fields) + ("team_activity", "team_registration_warning")
+            fields = tuple(fields) + ('team_activity', 'team_registration_warning')
         return fields
 
-    list_filter = TimeBasedAdmin.list_filter + [
-        ('expertise', SortedRelatedFieldListFilter)
-    ]
+    list_filter = TimeBasedAdmin.list_filter + [('expertise', SortedRelatedFieldListFilter)]
 
     list_display = TimeBasedAdmin.list_display + [
-        "start",
-        "end_date",
-        "participant_count",
+        'start',
+        'end_date',
+        'participant_count',
     ]
 
     date_fields = [
@@ -854,19 +811,20 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
-    registration_fields = ("team_activity", "capacity",) + TimeBasedAdmin.registration_fields
+    registration_fields = (
+        'team_activity',
+        'capacity',
+    ) + TimeBasedAdmin.registration_fields
 
     def get_registration_fields(self, request, obj):
         fields = super().get_registration_fields(request, obj)
         if obj and obj.registrations.count():
-            fields = ["team_registration_warning"] + list(fields)
+            fields = ['team_registration_warning'] + list(fields)
         return fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(2, (
-            _('Date & time'), {'fields': self.date_fields}
-        ))
+        fieldsets.insert(2, (_('Date & time'), {'fields': self.date_fields}))
         return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -889,18 +847,18 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
-    participant_count.short_description = _("Participants/Teams")
+    participant_count.short_description = _('Participants/Teams')
 
 
 @admin.register(PeriodicSlot)
 class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
-    list_display = ("start", "duration", "activity", "participant_count")
+    list_display = ('start', 'duration', 'activity', 'participant_count')
     inlines = (PeriodicParticipantAdminInline,)
 
-    readonly_fields = ("activity", "status")
-    fields = readonly_fields + ("start", "end", "duration")
+    readonly_fields = ('activity', 'status')
+    fields = readonly_fields + ('start', 'end', 'duration')
 
-    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -908,43 +866,31 @@ class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         if request.user.is_superuser:
-            fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
+            fieldsets += ((_('Super admin'), {'fields': ('force_status', 'states')}),)
         return fieldsets
 
 
 @admin.register(ScheduleSlot)
 class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
-
-    list_display = ("start", "duration", "activity", "participant")
-    raw_id_fields = ('activity', "location")
-    readonly_fields = ("activity", "participant")
+    list_display = ('start', 'duration', 'activity', 'participant')
+    raw_id_fields = ('activity', 'location')
+    readonly_fields = ('activity', 'participant')
     fields = readonly_fields + (
-        "status",
-        "states",
-        "start",
-        "duration",
-        "is_online",
-        "location",
-        "location_hint",
-        "online_meeting_url"
+        'status',
+        'states',
+        'start',
+        'duration',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
     )
 
     formfield_overrides = {
         models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
+            'widget': TimeDurationWidget(show_days=False, show_hours=True, show_minutes=True, show_seconds=False)
         },
-        models.TextField: {
-            'widget': Textarea(
-                attrs={
-                    'rows': 3,
-                    'cols': 80
-                }
-            )
-        },
+        models.TextField: {'widget': Textarea(attrs={'rows': 3, 'cols': 80})},
     }
 
     def participant(self, obj):
@@ -955,25 +901,28 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         if request.user.is_superuser:
-            fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
+            fieldsets += ((_('Super admin'), {'fields': ('force_status', 'states')}),)
         return fieldsets
 
 
 @admin.register(TeamScheduleSlot)
 class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
     inlines = [TeamScheduleParticipantAdminInline]
-    list_display = ("start", "duration", "activity", "participant_count")
-    raw_id_fields = ScheduleSlotAdmin.raw_id_fields + ('team', )
-    readonly_fields = ('activity', 'team', )
+    list_display = ('start', 'duration', 'activity', 'participant_count')
+    raw_id_fields = ScheduleSlotAdmin.raw_id_fields + ('team',)
+    readonly_fields = (
+        'activity',
+        'team',
+    )
     fields = readonly_fields + (
-        "status",
-        "states",
-        "start",
-        "duration",
-        "is_online",
-        "location",
-        "location_hint",
-        "online_meeting_url"
+        'status',
+        'states',
+        'start',
+        'duration',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
     )
 
     def participant_count(self, obj):
@@ -982,11 +931,11 @@ class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
 
 class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
-    verbose_name = _("Slot")
-    verbose_name_plural = _("Slots")
-    readonly_fields = ("edit", "start_date", "end_date", "duration_readable", "participant_count", "status_label")
+    verbose_name = _('Slot')
+    verbose_name_plural = _('Slots')
+    readonly_fields = ('edit', 'start_date', 'end_date', 'duration_readable', 'participant_count', 'status_label')
     fields = readonly_fields
-    ordering = ["-start"]
+    ordering = ['-start']
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -995,20 +944,23 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
 
     def start_date(self, obj):
         return obj.start.date()
+
     start_date.short_description = _('Start')
 
     def end_date(self, obj):
         return obj.end.date()
+
     end_date.short_description = _('End')
 
     def duration_readable(self, obj):
         return get_human_readable_duration(str(obj.duration)).lower()
+
     duration_readable.short_description = _('Hours')
 
     def current_status(self, obj):
         return obj.states.current_state.name
 
-    current_status.short_description = _("Status")
+    current_status.short_description = _('Status')
 
     def has_add_permission(self, request, obj):
         return False
@@ -1022,10 +974,10 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
         return format_html(
             '<a href="{}">{}</a>',
             reverse(
-                "admin:time_based_{}_change".format(obj.__class__.__name__.lower()),
+                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
                 args=(obj.id,),
             ),
-            _("Edit"),
+            _('Edit'),
         )
 
     def status_label(self, obj):
@@ -1046,13 +998,9 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
     ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
-    list_filter = TimeBasedAdmin.list_filter + [
-        ('expertise', SortedRelatedFieldListFilter)
-    ]
+    list_filter = TimeBasedAdmin.list_filter + [('expertise', SortedRelatedFieldListFilter)]
 
-    list_display = TimeBasedAdmin.list_display + [
-        'start', 'end_date', 'duration_string', 'participant_count'
-    ]
+    list_display = TimeBasedAdmin.list_display + ['start', 'end_date', 'duration_string', 'participant_count']
 
     date_fields = [
         'period',
@@ -1065,13 +1013,11 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
-    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(2, (
-            _('Date & time'), {'fields': self.date_fields}
-        ))
+        fieldsets.insert(2, (_('Date & time'), {'fields': self.date_fields}))
         return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -1107,6 +1053,7 @@ class DateParticipantInline(admin.TabularInline):
     def participant_link(self, obj):
         url = reverse('admin:time_based_dateparticipant_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, _('Edit'))
+
     participant_link.short_description = _('Edit')
 
     def smart_status(self, obj):
@@ -1123,27 +1070,13 @@ class SlotAdmin(StateMachineAdmin):
 
     formfield_overrides = {
         models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
+            'widget': TimeDurationWidget(show_days=False, show_hours=True, show_minutes=True, show_seconds=False)
         },
-        models.TextField: {
-            'widget': Textarea(
-                attrs={
-                    'rows': 3,
-                    'cols': 80
-                }
-            )
-        },
+        models.TextField: {'widget': Textarea(attrs={'rows': 3, 'cols': 80})},
     }
 
     def activity_link(self, obj):
-        url = reverse(
-            'admin:time_based_{}_change'.format(obj.activity._meta.model_name),
-            args=(obj.activity.id,)
-        )
+        url = reverse('admin:time_based_{}_change'.format(obj.activity._meta.model_name), args=(obj.activity.id,))
         return format_html('<a href="{}">{}</a>', url, obj.activity)
 
     activity_link.short_description = _('Activity')
@@ -1164,7 +1097,7 @@ class SlotAdmin(StateMachineAdmin):
                     local_time=defaultfilters.time(local_start),
                     offset=abs(offset.total_seconds() / 3600.0),
                     relation=_('later') if offset.total_seconds() > 0 else _('earlier'),
-                    current_timezone=get_current_timezone()
+                    current_timezone=get_current_timezone(),
                 )
 
                 help_texts = {'start': timezone_text}
@@ -1184,36 +1117,16 @@ class SlotAdmin(StateMachineAdmin):
         if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
 
-        errors += [
-            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            for field in required
-        ]
+        errors += [_('{} is required').format(obj._meta.get_field(field).verbose_name.title()) for field in required]
 
-        template = loader.get_template(
-            'admin/validation_steps.html'
-        )
+        template = loader.get_template('admin/validation_steps.html')
         return template.render({'errors': errors})
 
     valid.short_description = _('Validation')
 
-    readonly_fields = [
-        'created',
-        'updated',
-        'valid'
-    ]
-    detail_fields = [
-        'activity',
-        'is_online',
-        'location',
-        'location_hint',
-        'online_meeting_url'
-    ]
-    status_fields = [
-        'status',
-        'states',
-        'created',
-        'updated'
-    ]
+    readonly_fields = ['created', 'updated', 'valid']
+    detail_fields = ['activity', 'is_online', 'location', 'location_hint', 'online_meeting_url']
+    status_fields = ['status', 'states', 'created', 'updated']
 
     def get_status_fields(self, request, obj):
         fields = self.status_fields
@@ -1228,11 +1141,7 @@ class SlotAdmin(StateMachineAdmin):
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': (
-                    'force_status',
-                )}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': ('force_status',)}),)
         return fieldsets
 
 
@@ -1251,13 +1160,9 @@ class SlotTimeFilter(SimpleListFilter):
         if self.value() == 'all':
             return queryset
         elif self.value() == 'upcoming':
-            return queryset.filter(
-                start__date__gte=now().date()
-            )
+            return queryset.filter(start__date__gte=now().date())
         elif self.value() == 'passed':
-            return queryset.filter(
-                start__date__lte=now().date()
-            )
+            return queryset.filter(start__date__lte=now().date())
         else:
             return queryset
 
@@ -1281,7 +1186,7 @@ class SlotDuplicateForm(forms.Form):
             'This is the date the time slots will repeat until. '
             'Allow for a long loading time if more than 20 time blocks have to be created.'
         ),
-        widget=widgets.AdminDateWidget()
+        widget=widgets.AdminDateWidget(),
     )
 
     title = _('Duplicate slot')
@@ -1295,16 +1200,11 @@ class SlotDuplicateForm(forms.Form):
         else:
             super(SlotDuplicateForm, self).__init__()
         interval_day = _('Daily')
-        interval_week = _('Weekly on the  {weekday}').format(
-            weekday=start.strftime('%A')
-        )
+        interval_week = _('Weekly on the  {weekday}').format(weekday=start.strftime('%A'))
         interval_month = _('Monthly on the {nth} {weekday}').format(
-            nth=ordinalize(nth_weekday(start)),
-            weekday=start.strftime('%A')
+            nth=ordinalize(nth_weekday(start)), weekday=start.strftime('%A')
         )
-        interval_monthday = _('Monthly on the {monthday}').format(
-            monthday=ordinalize(slot.start.strftime('%-d'))
-        )
+        interval_monthday = _('Monthly on the {monthday}').format(monthday=ordinalize(slot.start.strftime('%-d')))
         interval_choices = (
             ('day', interval_day),
             ('week', interval_week),
@@ -1321,17 +1221,16 @@ class SlotBulkAddForm(forms.Form):
     emails = forms.CharField(
         label=_('Emails'),
         help_text=_(
-            'Separate the email addresses by commas, one per '
-            'line or copy & paste a column from a spreadsheet.'
+            'Separate the email addresses by commas, one per line or copy & paste a column from a spreadsheet.'
         ),
-        widget=forms.Textarea
+        widget=forms.Textarea,
     )
 
     send_messages = forms.BooleanField(
         label=_('Send messages'),
         help_text=_('Email participants that they have been added to this slot.'),
         initial=True,
-        required=False
+        required=False,
     )
 
     title = _('Bulk add participants')
@@ -1351,12 +1250,12 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
 
     date_hierarchy = 'start'
     list_display = [
-        "__str__",
-        "start",
-        "activity_link",
-        "attendee_limit",
-        "participants",
-        "duration_string",
+        '__str__',
+        'start',
+        'activity_link',
+        'attendee_limit',
+        'participants',
+        'duration_string',
     ]
     list_filter = [
         'status',
@@ -1385,22 +1284,19 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
             path(
                 '<int:pk>/duplicate/',
                 self.admin_site.admin_view(self.duplicate_slot),
-                name='time_based_dateactivityslot_duplicate'
+                name='time_based_dateactivityslot_duplicate',
             )
         ]
         return extra_urls + urls
 
     def duplicate_slot(self, request, pk, *args, **kwargs):
         slot = DateActivitySlot.objects.get(pk=pk)
-        if request.method == "POST":
+        if request.method == 'POST':
             form = SlotDuplicateForm(data=request.POST, slot=slot)
             if form.is_valid():
                 data = form.cleaned_data
                 dates = duplicate_slot(slot, data['interval'], data['end'])
-                messages.success(
-                    request,
-                    _('%(dates)s time slots created' % {'dates': len(dates)})
-                )
+                messages.success(request, _('%(dates)s time slots created' % {'dates': len(dates)}))
 
                 slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
                 return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
@@ -1417,11 +1313,9 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
             'slot': slot,
             'time': start.strftime('%H:%M %Z'),
             'form': SlotDuplicateForm(slot=slot),
-            'closed': settings.closed
+            'closed': settings.closed,
         }
-        return TemplateResponse(
-            request, 'admin/time_based/duplicate_slot.html', context
-        )
+        return TemplateResponse(request, 'admin/time_based/duplicate_slot.html', context)
 
     bulk_add_form = SlotBulkAddForm
     bulk_add_template = 'admin/time_based/bulk_add.html'
@@ -1430,16 +1324,17 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
 class TimeContributionInlineAdmin(admin.TabularInline):
     model = TimeContribution
     extra = 0
-    readonly_fields = ('edit', 'contribution_type', 'status', 'start',)
+    readonly_fields = (
+        'edit',
+        'contribution_type',
+        'status',
+        'start',
+    )
     fields = readonly_fields + ('value',)
 
     formfield_overrides = {
         models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
+            'widget': TimeDurationWidget(show_days=False, show_hours=True, show_minutes=True, show_seconds=False)
         }
     }
 
@@ -1448,10 +1343,8 @@ class TimeContributionInlineAdmin(admin.TabularInline):
             return '-'
         return format_html(
             '<a href="{}">{}</a>',
-            reverse(
-                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
-                args=(obj.id,)),
-            _('Edit')
+            reverse('admin:time_based_{}_change'.format(obj.__class__.__name__.lower()), args=(obj.id,)),
+            _('Edit'),
         )
 
 
@@ -1495,16 +1388,12 @@ class ParticipantSlotForm(ModelForm):
 
 
 class ParticipantSlotFormSet(BaseInlineFormSet):
-
     def __init__(self, *args, **kwargs):
         if 'data' not in kwargs:
             instance = kwargs['instance']
             new = []
             for slot in instance.activity.slots.exclude(participants__registration=instance).all():
-                new.append({
-                    'slot': slot,
-                    'checked': False
-                })
+                new.append({'slot': slot, 'checked': False})
 
             kwargs.update({'initial': new})
         super(ParticipantSlotFormSet, self).__init__(*args, **kwargs)
@@ -1560,42 +1449,33 @@ class ParticipantSlotInline(admin.TabularInline):
 
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
-
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
         for inline in inlines:
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + (
-        TimeContributionInlineAdmin,
-    )
+    inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin,)
     raw_id_fields = ContributorChildAdmin.raw_id_fields + ('slot',)
     fields = ContributorChildAdmin.fields + ['registration_info', 'slot']
     list_display = ['__str__', 'email', 'activity_link', 'status']
     pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
 
-    readonly_fields = ContributorChildAdmin.readonly_fields + [
-        'registration_info'
-    ]
+    readonly_fields = ContributorChildAdmin.readonly_fields + ['registration_info']
 
     def registration_info(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj.registration._meta.app_label,
-            obj.registration._meta.model_name),
-            args=(obj.registration.id,)
+        url = reverse(
+            'admin:{}_{}_change'.format(obj.registration._meta.app_label, obj.registration._meta.model_name),
+            args=(obj.registration.id,),
         )
         status = obj.registration.states.current_state.name
         if obj.registration.status == 'new':
-            template = loader.get_template(
-                'admin/time_based/registration_info.html'
-            )
+            template = loader.get_template('admin/time_based/registration_info.html')
             return template.render({'status': status, 'url': url})
         else:
             title = _('Change review')
             return format_html(
-                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
-                url=url, status=status, title=title
+                'Current status <b>{status}</b>. <a href="{url}">{title}</a>', url=url, status=status, title=title
             )
 
     registration_info.short_description = _('Registration')
@@ -1620,16 +1500,13 @@ class DateParticipantAdmin(ContributorChildAdmin):
 
 @admin.register(DeadlineParticipant)
 class DeadlineParticipantAdmin(ContributorChildAdmin):
-
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
         for inline in inlines:
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + (
-        TimeContributionInlineAdmin,
-    )
+    inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin,)
     fields = ContributorChildAdmin.fields + ['registration_info']
     pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
 
@@ -1638,27 +1515,21 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
             return self.pending_fields
         return self.fields
 
-    readonly_fields = ContributorChildAdmin.readonly_fields + [
-        'registration_info'
-    ]
+    readonly_fields = ContributorChildAdmin.readonly_fields + ['registration_info']
 
     def registration_info(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj.registration._meta.app_label,
-            obj.registration._meta.model_name),
-            args=(obj.registration.id,)
+        url = reverse(
+            'admin:{}_{}_change'.format(obj.registration._meta.app_label, obj.registration._meta.model_name),
+            args=(obj.registration.id,),
         )
         status = obj.registration.states.current_state.name
         if obj.registration.status == 'new':
-            template = loader.get_template(
-                'admin/time_based/registration_info.html'
-            )
+            template = loader.get_template('admin/time_based/registration_info.html')
             return template.render({'status': status, 'url': url})
         else:
             title = _('Change review')
             return format_html(
-                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
-                url=url, status=status, title=title
+                'Current status <b>{status}</b>. <a href="{url}">{title}</a>', url=url, status=status, title=title
             )
 
     registration_info.short_description = _('Registration')
@@ -1668,16 +1539,13 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
 
 @admin.register(RegisteredDateParticipant)
 class RegisteredDateParticipantAdmin(ContributorChildAdmin):
-
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
         for inline in inlines:
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + (
-        TimeContributionInlineAdmin,
-    )
+    inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin,)
     fields = ContributorChildAdmin.fields
     pending_fields = ['activity', 'user', 'created', 'updated']
 
@@ -1686,7 +1554,7 @@ class RegisteredDateParticipantAdmin(ContributorChildAdmin):
 
 @admin.register(PeriodicParticipant)
 class PeriodicParticipantAdmin(ContributorChildAdmin):
-    raw_id_fields = ContributorChildAdmin.raw_id_fields + ("slot",)
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('slot',)
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
@@ -1694,12 +1562,10 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + (
-        TimeContributionInlineAdmin,
-    )
+    inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin,)
 
-    fields = ContributorChildAdmin.fields + ["registration_info", "slot_info", "slot"]
-    pending_fields = ["activity", "user", "registration_info", "created", "updated"]
+    fields = ContributorChildAdmin.fields + ['registration_info', 'slot_info', 'slot']
+    pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
 
     def get_fields(self, request, obj=None):
         if obj and obj.registration and obj.registration.status == 'new':
@@ -1707,41 +1573,36 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
         return self.fields
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
-        "registration_info",
-        "slot_info",
+        'registration_info',
+        'slot_info',
     ]
 
     def registration_info(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj.registration._meta.app_label,
-            obj.registration._meta.model_name),
-            args=(obj.registration.id,)
+        url = reverse(
+            'admin:{}_{}_change'.format(obj.registration._meta.app_label, obj.registration._meta.model_name),
+            args=(obj.registration.id,),
         )
         status = obj.registration.states.current_state.name
         if obj.registration.status == 'new':
-            template = loader.get_template(
-                'admin/time_based/registration_info.html'
-            )
+            template = loader.get_template('admin/time_based/registration_info.html')
             return template.render({'status': status, 'url': url})
         else:
             title = _('Change review')
             return format_html(
-                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
-                url=url, status=status, title=title
+                'Current status <b>{status}</b>. <a href="{url}">{title}</a>', url=url, status=status, title=title
             )
 
     def slot_info(self, obj):
         if not obj.slot:
-            return "-"
-        return format_html("{} to {}", obj.slot.start.date(), obj.slot.end.date())
+            return '-'
+        return format_html('{} to {}', obj.slot.start.date(), obj.slot.end.date())
 
-    registration_info.short_description = _("Registration")
+    registration_info.short_description = _('Registration')
 
-    list_display = ["__str__", "activity_link", "status"]
+    list_display = ['__str__', 'activity_link', 'status']
 
 
 class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
-
     def __init__(self, rel, admin_site, attrs=None, using=None):
         attrs['class'] = 'slot-selector'
         super().__init__(rel, admin_site, attrs, using)
@@ -1751,18 +1612,20 @@ class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
         rel_to = self.rel.model
         if value:
             related_url = reverse(
-                'admin:%s_%s_change' % (
+                'admin:%s_%s_change'
+                % (
                     rel_to._meta.app_label,
                     rel_to._meta.model_name,
                 ),
                 current_app=self.admin_site.name,
-                args=(value,)
+                args=(value,),
             )
             context['related_url'] = related_url
             context['link_label'] = _('View slot')
         else:
             related_url = reverse(
-                'admin:%s_%s_add' % (
+                'admin:%s_%s_add'
+                % (
                     rel_to._meta.app_label,
                     rel_to._meta.model_name,
                 ),
@@ -1779,7 +1642,6 @@ class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
                     'online_meeting_url': parent.activity.online_meeting_url,
                     '_to_field': 'id',
                     '_popup': 1,
-
                 }
                 if parent.activity.location:
                     params['location'] = parent.activity.location.id
@@ -1790,36 +1652,35 @@ class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
 
 @admin.register(ScheduleParticipant)
 class ScheduleParticipantAdmin(ContributorChildAdmin):
+    inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin,)
 
-    inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin, )
-
-    fields = ContributorChildAdmin.fields + ["registration_info", "slot_info"]
-    pending_fields = ["activity", "user", "registration_info", "created", "updated"]
+    fields = ContributorChildAdmin.fields + ['registration_info', 'slot_info']
+    pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
 
     def get_fields(self, request, obj=None):
-        if obj and obj.registration and obj.registration.status == "new":
+        if obj and obj.registration and obj.registration.status == 'new':
             return self.pending_fields
         return self.fields
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
-        "activity", "created", "updated",
-        "registration_info",
-        "slot_info",
+        'activity',
+        'created',
+        'updated',
+        'registration_info',
+        'slot_info',
     ]
 
     def registration_info(self, obj):
         url = reverse(
-            "admin:{}_{}_change".format(
-                obj.registration._meta.app_label, obj.registration._meta.model_name
-            ),
+            'admin:{}_{}_change'.format(obj.registration._meta.app_label, obj.registration._meta.model_name),
             args=(obj.registration.id,),
         )
         status = obj.registration.states.current_state.name
-        if obj.registration.status == "new":
-            template = loader.get_template("admin/time_based/registration_info.html")
-            return template.render({"status": status, "url": url})
+        if obj.registration.status == 'new':
+            template = loader.get_template('admin/time_based/registration_info.html')
+            return template.render({'status': status, 'url': url})
         else:
-            title = _("Change review")
+            title = _('Change review')
             return format_html(
                 'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
                 url=url,
@@ -1831,21 +1692,22 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
 
     def slot_info(self, obj):
         if not obj.slot:
-            return "- no slot set -"
-        url = reverse("admin:time_based_scheduleslot_change", args=(obj.slot.id,))
+            return '- no slot set -'
+        url = reverse('admin:time_based_scheduleslot_change', args=(obj.slot.id,))
         if obj.slot.start:
             return format_html(
                 "<div style='display:inline-block'>{}<br/>{} - {} <br/>{}<br/><a href='{}'>Edit</a></span>",
                 obj.slot.start.date(),
                 obj.slot.start.time(),
                 obj.slot.end.time(),
-                obj.slot.is_online and _("Remote/Online") or obj.slot.location,
+                obj.slot.is_online and _('Remote/Online') or obj.slot.location,
                 url,
             )
         return format_html(
             "<a href='{}'>- no time set -</a>",
             url,
         )
+
     slot_info.short_description = _('Date, Time & Location')
 
     list_display = ['__str__', 'activity_link', 'status']
@@ -1854,8 +1716,8 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
 @admin.register(TeamScheduleParticipant)
 class TeamScheduleParticipantAdmin(ScheduleParticipantAdmin):
     model = TeamScheduleParticipant
-    readonly_fields = ScheduleParticipantAdmin.readonly_fields + ["slot", "team_member"]
-    fields = ContributorChildAdmin.fields + ["registration_info", "slot", "team_member"]
+    readonly_fields = ScheduleParticipantAdmin.readonly_fields + ['slot', 'team_member']
+    fields = ContributorChildAdmin.fields + ['registration_info', 'slot', 'team_member']
 
 
 @admin.register(Registration)
@@ -1866,10 +1728,13 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         DeadlineRegistration,
         ScheduleRegistration,
         TeamScheduleRegistration,
-        DateRegistration
+        DateRegistration,
     )
     list_display = ['created', 'user', 'type', 'activity', 'state_name']
-    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
+    list_filter = (
+        PolymorphicChildModelFilter,
+        StateMachineFilter,
+    )
     date_hierarchy = 'created'
     ordering = ('-created',)
 
@@ -1879,25 +1744,22 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    readonly_fields = ["created", "activity", "user", "show_answer"]
-    fields = readonly_fields + ["document", "status", "states"]
-    list_display = ["__str__", "activity", "user", "status_label"]
+    readonly_fields = ['created', 'activity', 'user', 'show_answer']
+    fields = readonly_fields + ['document', 'status', 'states']
+    list_display = ['__str__', 'activity', 'user', 'status_label']
 
     def show_answer(self, obj):
         return format_html(f'<div style="display: flow-root">{obj.answer}</div>')
+
     show_answer.short_description = _('Answer')
 
-    formfield_overrides = {
-        PrivateDocumentField: {
-            "widget": PrivateDocumentWidget
-        }
-    }
+    formfield_overrides = {PrivateDocumentField: {'widget': PrivateDocumentWidget}}
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         if request.user.is_superuser:
             fieldsets += [
-                (_("Super admin"), {"fields": ("force_status",)}),
+                (_('Super admin'), {'fields': ('force_status',)}),
             ]
         return fieldsets
 
@@ -1946,11 +1808,8 @@ class SkillAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, Tr
         return actions
 
     def member_link(self, obj):
-        url = "{}?skills__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)
-        return format_html(
-            "<a href='{}'>{} {}</a>",
-            url, obj.member_set.count(), _('users')
-        )
+        url = '{}?skills__id__exact={}'.format(reverse('admin:members_member_changelist'), obj.id)
+        return format_html("<a href='{}'>{} {}</a>", url, obj.member_set.count(), _('users'))
 
     member_link.short_description = _('Users with this skill')
 

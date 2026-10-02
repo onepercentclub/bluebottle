@@ -21,16 +21,11 @@ class StripePaymentStateMachine(BasePaymentStateMachine):
         return self.instance.status not in ['refunded', 'disputed']
 
     authorize = Transition(
-        [
-            BasePaymentStateMachine.new,
-            charged
-        ],
+        [BasePaymentStateMachine.new, charged],
         BasePaymentStateMachine.pending,
         name=_('Authorize'),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'succeed')
-        ]
+        effects=[RelatedTransitionEffect('donation', 'succeed')],
     )
 
     succeed = Transition(
@@ -39,22 +34,16 @@ class StripePaymentStateMachine(BasePaymentStateMachine):
             BasePaymentStateMachine.new,
             BasePaymentStateMachine.pending,
             BasePaymentStateMachine.action_needed,
-            charged
+            charged,
         ],
         BasePaymentStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'succeed')
-        ]
+        effects=[RelatedTransitionEffect('donation', 'succeed')],
     )
 
     charge = Transition(
-        BasePaymentStateMachine.new,
-        charged,
-        name=_('Charge'),
-        automatic=True,
-        conditions=[has_charge_token]
+        BasePaymentStateMachine.new, charged, name=_('Charge'), automatic=True, conditions=[has_charge_token]
     )
 
     cancel = Transition(
@@ -62,9 +51,7 @@ class StripePaymentStateMachine(BasePaymentStateMachine):
         canceled,
         name=_('Canceled'),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'fail')
-        ]
+        effects=[RelatedTransitionEffect('donation', 'fail')],
     )
 
     dispute = Transition(
@@ -75,9 +62,7 @@ class StripePaymentStateMachine(BasePaymentStateMachine):
         disputed,
         name=_('Dispute'),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'refund')
-        ]
+        effects=[RelatedTransitionEffect('donation', 'refund')],
     )
 
 
@@ -94,38 +79,23 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
         return self.instance.status not in ['refunded', 'disputed']
 
     authorize = Transition(
-        [
-            BasePaymentStateMachine.new,
-            charged
-        ],
+        [BasePaymentStateMachine.new, charged],
         BasePaymentStateMachine.pending,
         name=_('Authorize'),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'succeed')
-        ]
+        effects=[RelatedTransitionEffect('donation', 'succeed')],
     )
 
     succeed = Transition(
-        [
-            BasePaymentStateMachine.new,
-            BasePaymentStateMachine.pending,
-            charged
-        ],
+        [BasePaymentStateMachine.new, BasePaymentStateMachine.pending, charged],
         BasePaymentStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'succeed')
-        ]
+        effects=[RelatedTransitionEffect('donation', 'succeed')],
     )
 
     charge = Transition(
-        BasePaymentStateMachine.new,
-        charged,
-        name=_('Charge'),
-        automatic=True,
-        conditions=[has_charge_token]
+        BasePaymentStateMachine.new, charged, name=_('Charge'), automatic=True, conditions=[has_charge_token]
     )
 
     cancel = Transition(
@@ -133,9 +103,7 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
         canceled,
         name=_('Canceled'),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'fail')
-        ]
+        effects=[RelatedTransitionEffect('donation', 'fail')],
     )
 
     dispute = Transition(
@@ -146,15 +114,13 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
         disputed,
         name=_('Dispute'),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'refund')
-        ]
+        effects=[RelatedTransitionEffect('donation', 'refund')],
     )
 
 
 @register(StripePayoutAccount)
 class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
-    disabled = State(_("disabled"), "disabled")
+    disabled = State(_('disabled'), 'disabled')
 
     disable = Transition(
         [
@@ -162,7 +128,7 @@ class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
             PayoutAccountStateMachine.verified,
         ],
         disabled,
-        name=_("Disable"),
+        name=_('Disable'),
         automatic=True,
     )
 
@@ -172,11 +138,11 @@ class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
             PayoutAccountStateMachine.incomplete,
             PayoutAccountStateMachine.rejected,
             PayoutAccountStateMachine.pending,
-            disabled
+            disabled,
         ],
         PayoutAccountStateMachine.verified,
         name=_('Verify'),
-        description=_("Verify the payout account."),
+        description=_('Verify the payout account.'),
         automatic=True,
     )
 
@@ -186,13 +152,12 @@ class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
             PayoutAccountStateMachine.verified,
             PayoutAccountStateMachine.rejected,
             PayoutAccountStateMachine.new,
-            disabled
+            disabled,
         ],
         PayoutAccountStateMachine.incomplete,
         name=_('Set incomplete'),
-        description=_(
-            "Mark the payout account as incomplete. The initiator will have to add more information."),
-        automatic=False
+        description=_('Mark the payout account as incomplete. The initiator will have to add more information.'),
+        automatic=False,
     )
 
 
@@ -205,29 +170,22 @@ class StripeBankAccountStateMachine(BankAccountStateMachine):
     initiate = Transition(
         EmptyState(),
         BankAccountStateMachine.unverified,
-        name=_("Initiate"),
-        description=_("Bank account details are entered.")
+        name=_('Initiate'),
+        description=_('Bank account details are entered.'),
     )
 
     reject = Transition(
-        [
-            BankAccountStateMachine.verified,
-            BankAccountStateMachine.unverified,
-            BankAccountStateMachine.incomplete],
+        [BankAccountStateMachine.verified, BankAccountStateMachine.unverified, BankAccountStateMachine.incomplete],
         BankAccountStateMachine.rejected,
         name=_('Reject'),
-        description=_("Reject bank account"),
-        automatic=True
+        description=_('Reject bank account'),
+        automatic=True,
     )
 
     verify = Transition(
-        [
-            BankAccountStateMachine.rejected,
-            BankAccountStateMachine.incomplete,
-            BankAccountStateMachine.unverified
-        ],
+        [BankAccountStateMachine.rejected, BankAccountStateMachine.incomplete, BankAccountStateMachine.unverified],
         BankAccountStateMachine.verified,
         name=_('Verify'),
-        description=_("Verify that the bank account is complete."),
-        automatic=True
+        description=_('Verify that the bank account is complete.'),
+        automatic=True,
     )

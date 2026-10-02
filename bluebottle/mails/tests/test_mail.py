@@ -22,9 +22,9 @@ class TestMailLogo(BluebottleTestCase):
 
     def test_complete(self):
         # Upload an email logo
-        with open("./bluebottle/mails/tests/images/logo-email.gif", "rb") as image_file:
+        with open('./bluebottle/mails/tests/images/logo-email.gif', 'rb') as image_file:
             mail_settings = MailPlatformSettings.load()
-            mail_settings.email_logo.save("email-logo.gif", File(image_file), save=True)
+            mail_settings.email_logo.save('email-logo.gif', File(image_file), save=True)
             mail_settings.save()
 
         BlueBottleUserFactory.create()

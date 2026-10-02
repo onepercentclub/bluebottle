@@ -33,19 +33,20 @@ class GrantProvider(TriggerMixin, models.Model):
     """
     A provider of grants, e.g. a foundation or government body.
     """
+
     include_in_documentation = True
 
     FREQUENCY_CHOICES = (
-        ("1", _("Every week")),
-        ("2", _("Every two weeks")),
-        ("4", _("Every four weeks")),
+        ('1', _('Every week')),
+        ('2', _('Every two weeks')),
+        ('4', _('Every four weeks')),
     )
 
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(
         'members.Member',
-        verbose_name=_("Finance manager"),
-        help_text=_("This person will receive the payment requests."),
+        verbose_name=_('Finance manager'),
+        help_text=_('This person will receive the payment requests.'),
         related_name='grant_providers',
         null=True,
         blank=True,
@@ -54,19 +55,17 @@ class GrantProvider(TriggerMixin, models.Model):
 
     description = QuillField(blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=200, blank=True, null=True)
-    payment_frequency = models.CharField(
-        max_length=100, choices=FREQUENCY_CHOICES, default="weekly"
-    )
+    payment_frequency = models.CharField(max_length=100, choices=FREQUENCY_CHOICES, default='weekly')
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     class Meta(object):
-        verbose_name = _("Grant provider")
-        verbose_name_plural = _("Grant providers")
+        verbose_name = _('Grant provider')
+        verbose_name_plural = _('Grant providers')
 
     def __str__(self):
-        return self.name or f"Grant Provider #{self.pk}"
+        return self.name or f'Grant Provider #{self.pk}'
 
     def create_payment(self):
         """
@@ -75,7 +74,7 @@ class GrantProvider(TriggerMixin, models.Model):
         # Get all grants with approved payouts that don't have a payment yet
         grants = GrantDonor.objects.filter(
             fund__grant_provider=self,
-            payout__status__in=["approved", "scheduled"],
+            payout__status__in=['approved', 'scheduled'],
             payout__payment=None,
         )
 
@@ -98,16 +97,12 @@ class GrantPayment(TriggerMixin, models.Model):
     """
     A payment made to a grant donor.
     """
+
     include_in_documentation = True
 
-    total = MoneyField(default=Money(0, "EUR"), null=True, blank=True)
+    total = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     status = models.CharField(max_length=40)
-    grant_provider = models.ForeignKey(
-        GrantProvider,
-        related_name="payments",
-        null=True,
-        on_delete=models.SET_NULL
-    )
+    grant_provider = models.ForeignKey(GrantProvider, related_name='payments', null=True, on_delete=models.SET_NULL)
     checkout_id = models.CharField(max_length=500, null=True, blank=True)
     intent_id = models.CharField(max_length=500, null=True, blank=True)
     payment_link = models.URLField(max_length=500, null=True, blank=True)
@@ -116,11 +111,11 @@ class GrantPayment(TriggerMixin, models.Model):
     paid_on = models.DateTimeField(null=True, blank=True)
 
     class Meta(object):
-        verbose_name = _("Grant payment")
-        verbose_name_plural = _("Grant payments")
+        verbose_name = _('Grant payment')
+        verbose_name_plural = _('Grant payments')
 
     def __str__(self):
-        return f"Grant Payment #{self.pk}"
+        return f'Grant Payment #{self.pk}'
 
     @property
     def donors(self):
@@ -148,41 +143,36 @@ class GrantPayment(TriggerMixin, models.Model):
         if not session.payment_intent:
             return None
 
-        intent = stripe.PaymentIntent.retrieve(
-            session.payment_intent,
-            expand=['latest_charge']
-        )
+        intent = stripe.PaymentIntent.retrieve(session.payment_intent, expand=['latest_charge'])
         if not self.intent_id:
             self.intent_id = intent.id
             self.save()
 
-        if intent.status == "requires_action":
+        if intent.status == 'requires_action':
             self.states.wait(save=True)
             return None
 
-        if intent.status == "succeeded":
+        if intent.status == 'succeeded':
             charge_id = intent.latest_charge.id if intent.latest_charge else None
             if not charge_id:
                 return None
 
-            charge = stripe.Charge.retrieve(
-                charge_id,
-                expand=["balance_transaction"]
-            )
+            charge = stripe.Charge.retrieve(charge_id, expand=['balance_transaction'])
             balance_transaction = charge.balance_transaction
 
             if balance_transaction and balance_transaction.available_on:
                 import time
+
                 now = int(time.time())
                 if balance_transaction.available_on <= now:
                     # Funds are actually available for payout
                     self.states.succeed(save=True)
                 elif self.status != 'pending':
-                    date = datetime.datetime.fromtimestamp(
-                        balance_transaction.available_on
-                    ).strftime('%Y-%m-%d %H:%M:%S')
+                    date = datetime.datetime.fromtimestamp(balance_transaction.available_on).strftime(
+                        '%Y-%m-%d %H:%M:%S'
+                    )
                     self.states.wait(save=True)
-                    raise Exception(f"Will become available on {date}")
+                    raise Exception(f'Will become available on {date}')
 
         return None
 
@@ -194,12 +184,11 @@ class GrantPayment(TriggerMixin, models.Model):
         donation_currencies = {str(d.amount.currency).lower() for d in donations}
         if len(donation_currencies) != 1:
             raise ValueError(
-                f"All line items must use the same currency for bank transfer. "
-                f"Found: {sorted(donation_currencies)}"
+                f'All line items must use the same currency for bank transfer. Found: {sorted(donation_currencies)}'
             )
         if currency not in donation_currencies:
             raise ValueError(
-                f"Total currency ({currency}) must match line item currency ({list(donation_currencies)[0]})."
+                f'Total currency ({currency}) must match line item currency ({list(donation_currencies)[0]}).'
             )
 
         if donations:
@@ -209,35 +198,35 @@ class GrantPayment(TriggerMixin, models.Model):
             )
             if self.total != total_amount:
                 self.total = total_amount
-                self.save(update_fields=["total", "updated"])
+                self.save(update_fields=['total', 'updated'])
 
         metadata = {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "grant_payment_id": self.id,
-            "grant_provider": self.grant_provider.name,
+            'tenant_name': connection.tenant.client_name,
+            'tenant_domain': connection.tenant.domain_url,
+            'grant_payment_id': self.id,
+            'grant_provider': self.grant_provider.name,
         }
 
         bank_transfer_type = {
-            "eur": "eu_bank_transfer",
-            "usd": "us_bank_transfer",
-            "gbp": "gb_bank_transfer",
-            "mxn": "mx_bank_transfer",
-            "jpy": "jp_bank_transfer",
+            'eur': 'eu_bank_transfer',
+            'usd': 'us_bank_transfer',
+            'gbp': 'gb_bank_transfer',
+            'mxn': 'mx_bank_transfer',
+            'jpy': 'jp_bank_transfer',
         }.get(currency, None)
 
         if not bank_transfer_type:
-            payment_method_types = ["card", "ideal"]
+            payment_method_types = ['card', 'ideal']
             payment_method_options = {}
         else:
-            payment_method_types = ["customer_balance", "card", "ideal"]
-            bank_transfer_opts = {"type": bank_transfer_type}
-            if currency == "eur":
-                bank_transfer_opts["eu_bank_transfer"] = {"country": "NL"}
+            payment_method_types = ['customer_balance', 'card', 'ideal']
+            bank_transfer_opts = {'type': bank_transfer_type}
+            if currency == 'eur':
+                bank_transfer_opts['eu_bank_transfer'] = {'country': 'NL'}
             payment_method_options = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": bank_transfer_opts,
+                'customer_balance': {
+                    'funding_type': 'bank_transfer',
+                    'bank_transfer': bank_transfer_opts,
                 }
             }
 
@@ -245,30 +234,29 @@ class GrantPayment(TriggerMixin, models.Model):
         for donation in donations:
             product = stripe.Product.create(
                 name=donation.activity.title,
-                description=f"Payment for grant {donation.activity.title} for fund {donation.fund.name}",
+                description=f'Payment for grant {donation.activity.title} for fund {donation.fund.name}',
             )
             price = stripe.Price.create(
                 unit_amount=int(donation.amount.amount * 100),
                 currency=currency,
-                product=product["id"],
+                product=product['id'],
             )
-            line_items.append({"price": price['id'], "quantity": 1})
+            line_items.append({'price': price['id'], 'quantity': 1})
 
         init_args = {
-            "payment_intent_data": {"metadata": metadata},
-            "metadata": metadata,
-            "payment_method_types": payment_method_types,
-            "payment_method_options": payment_method_options,
-            "line_items": line_items,
-            "customer": self.grant_provider.stripe_customer_id,  # REQUIRED for bank transfer in Checkout
-            "success_url": (
-                get_current_host()
-                + reverse("admin:grant_management_grantpayment_change", args=(self.pk,))
+            'payment_intent_data': {'metadata': metadata},
+            'metadata': metadata,
+            'payment_method_types': payment_method_types,
+            'payment_method_options': payment_method_options,
+            'line_items': line_items,
+            'customer': self.grant_provider.stripe_customer_id,  # REQUIRED for bank transfer in Checkout
+            'success_url': (
+                get_current_host() + reverse('admin:grant_management_grantpayment_change', args=(self.pk,))
             ),
-            "cancel_url": get_current_host(),  # pick a sensible cancel target
+            'cancel_url': get_current_host(),  # pick a sensible cancel target
         }
 
-        checkout = stripe.checkout.Session.create(mode="payment", **init_args)
+        checkout = stripe.checkout.Session.create(mode='payment', **init_args)
         self.checkout_id = checkout.id
         self.payment_link = checkout.url
         self.save()
@@ -281,6 +269,7 @@ class GrantPayment(TriggerMixin, models.Model):
 
     def get_admin_url(self):
         from django.urls import reverse
+
         return get_current_host() + reverse('admin:grant_management_grantpayment_change', args=[self.pk])
 
 
@@ -288,21 +277,22 @@ class GrantPayout(TriggerMixin, models.Model):
     """
     The payout of a awarded grant
     """
+
     include_in_documentation = True
 
     activity = models.ForeignKey(
         'grant_management.GrantApplication',
-        verbose_name=_("Grant application"),
-        related_name="payouts",
-        on_delete=models.CASCADE
+        verbose_name=_('Grant application'),
+        related_name='payouts',
+        on_delete=models.CASCADE,
     )
-    provider = models.CharField(max_length=100, default="stripe")
+    provider = models.CharField(max_length=100, default='stripe')
     currency = models.CharField(max_length=5)
     payment = models.ForeignKey(
         GrantPayment,
         null=True,
         blank=True,
-        related_name="payouts",
+        related_name='payouts',
         on_delete=models.SET_NULL,
     )
 
@@ -318,21 +308,16 @@ class GrantPayout(TriggerMixin, models.Model):
     @classmethod
     def generate(cls, activity):
         from .states import GrantPayoutStateMachine
+
         for payout in cls.objects.filter(activity=activity):
             if payout.status == GrantPayoutStateMachine.new.value:
                 payout.delete()
             elif payout.grants.count() == 0:
                 raise AssertionError('Payout without donations already started!')
         ready_grants = GrantDonor.objects.filter(activity=activity, payout__isnull=True)
-        groups = set([
-            don.amount_currency for don in
-            ready_grants
-        ])
+        groups = set([don.amount_currency for don in ready_grants])
         for currency in groups:
-            payout = cls.objects.create(
-                activity=activity,
-                currency=currency
-            )
+            payout = cls.objects.create(activity=activity, currency=currency)
             for grant in ready_grants:
                 grant.payout = payout
                 grant.save()
@@ -347,11 +332,11 @@ class GrantPayout(TriggerMixin, models.Model):
             amount=amount_in_cents,
             currency=str(total_amount.currency).lower(),
             destination=connect_account_id,
-            description=f"Grant payout for {self.activity.title}",
+            description=f'Grant payout for {self.activity.title}',
             metadata={
-                "payout_id": str(self.id),
-                "grant_application_id": str(self.activity.id),
-                "grant_application_title": self.activity.title,
+                'payout_id': str(self.id),
+                'grant_application_id': str(self.activity.id),
+                'grant_application_title': self.activity.title,
             },
         )
         return transfer
@@ -368,6 +353,7 @@ class GrantPayout(TriggerMixin, models.Model):
 
     def get_admin_url(self):
         from django.urls import reverse
+
         return get_current_host() + reverse('admin:grant_management_grantpayout_change', args=[self.pk])
 
     class Meta(object):
@@ -382,15 +368,13 @@ class GrantApplication(Activity):
     """
     An application for a grant. This is a type of activity.
     """
+
     include_in_documentation = True
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
     impact_location = models.ForeignKey(
-        'geo.Geolocation',
-        null=True, blank=True,
-        related_name='grant_applications',
-        on_delete=models.SET_NULL
+        'geo.Geolocation', null=True, blank=True, related_name='grant_applications', on_delete=models.SET_NULL
     )
 
     bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
@@ -411,9 +395,9 @@ class GrantApplication(Activity):
     @property
     def required_fields(self):
         fields = [
-            "title",
-            "description.html",
-            "target",
+            'title',
+            'description.html',
+            'target',
         ]
         return fields
 
@@ -443,14 +427,13 @@ class GrantApplication(Activity):
         resource_name = 'activities/grant-applications'
 
     class Meta(object):
-        verbose_name = _("Grant application")
-        verbose_name_plural = _("Grant applications")
+        verbose_name = _('Grant application')
+        verbose_name_plural = _('Grant applications')
         permissions = (
             ('api_read_grantapplication', 'Can view grant application through the API'),
             ('api_add_grantapplication', 'Can add funding through the API'),
             ('api_change_grantapplication', 'Can change funding through the API'),
             ('api_delete_grantapplication', 'Can delete funding through the API'),
-
             ('api_read_own_grantapplication', 'Can view own funding through the API'),
             ('api_add_own_grantapplication', 'Can add own funding through the API'),
             ('api_change_own_grantapplication', 'Can change own funding through the API'),
@@ -464,21 +447,15 @@ class GrantApplication(Activity):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        return f"{domain}/{language}/activities/details/grant-application/{self.id}/{self.slug}"
+        return f'{domain}/{language}/activities/details/grant-application/{self.id}/{self.slug}'
 
     def __str__(self):
         return self.title or f'Grant application #{self.pk}'
 
 
 class LedgerItemChoices(DjangoChoices):
-    debit = ChoiceItem(
-        'debit',
-        label=_("Debit")
-    )
-    credit = ChoiceItem(
-        'credit',
-        label=_("credit")
-    )
+    debit = ChoiceItem('debit', label=_('Debit'))
+    credit = ChoiceItem('credit', label=_('credit'))
 
 
 class GrantFund(models.Model):
@@ -486,18 +463,14 @@ class GrantFund(models.Model):
 
     currency = models.CharField(max_length=10, default='EUR')
 
-    description = QuillField(_("Description"), blank=True)
-    organization = models.ForeignKey(
-        'organizations.Organization',
-        null=True, blank=True,
-        on_delete=SET_NULL
-    )
+    description = QuillField(_('Description'), blank=True)
+    organization = models.ForeignKey('organizations.Organization', null=True, blank=True, on_delete=SET_NULL)
 
     grant_provider = models.ForeignKey(
         GrantProvider,
         null=True,
         blank=True,
-        related_name="funds",
+        related_name='funds',
         on_delete=models.SET_NULL,
     )
 
@@ -509,7 +482,6 @@ class GrantFund(models.Model):
             ('api_add_grantfund', 'Can add funding through the API'),
             ('api_change_grantfund', 'Can change funding through the API'),
             ('api_delete_grantfund', 'Can delete funding through the API'),
-
             ('api_read_own_grantfund', 'Can view own funding through the API'),
             ('api_add_own_grantfund', 'Can add own funding through the API'),
             ('api_change_own_grantfund', 'Can change own funding through the API'),
@@ -545,28 +517,24 @@ class GrantFund(models.Model):
         return self.credit_items.count()
 
     @property
-    @admin.display(description=_("Total budget"))
+    @admin.display(description=_('Total budget'))
     def total_debit(self):
         amount = self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description=_("Pending payments"))
+    @admin.display(description=_('Pending payments'))
     def total_pending(self):
-        amount = self.ledger_items.filter(
-            status='pending'
-        ).aggregate(total=Sum('amount'))['total'] or 0
+        amount = self.ledger_items.filter(status='pending').aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description=_("Pending applications"))
+    @admin.display(description=_('Pending applications'))
     def pending_applications(self):
-        return self.ledger_items.filter(
-            status='pending'
-        ).count()
+        return self.ledger_items.filter(status='pending').count()
 
     @property
-    @admin.display(description=_("Available budget"))
+    @admin.display(description=_('Available budget'))
     def balance(self):
         return self.total_debit - self.total_credit
 
@@ -574,13 +542,14 @@ class GrantFund(models.Model):
         return self.total_debit - self.total_credit - self.total_pending
 
     class JSONAPIMeta(object):
-        resource_name = "activities/grant-funds"
+        resource_name = 'activities/grant-funds'
 
 
 class LedgerItem(TriggerMixin, models.Model):
     """
     Ledger item for a grant. For accounting purposes.
     """
+
     include_in_documentation = True
 
     status = models.CharField(max_length=40)
@@ -589,9 +558,7 @@ class LedgerItem(TriggerMixin, models.Model):
     type = models.CharField(choices=LedgerItemChoices.choices)
     fund = models.ForeignKey(GrantFund, related_name='ledger_items', on_delete=models.CASCADE)
 
-    object_type = models.ForeignKey(
-        ContentType, related_name='ledger_item', on_delete=models.CASCADE
-    )
+    object_type = models.ForeignKey(ContentType, related_name='ledger_item', on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_type', 'object_id')
 
@@ -609,28 +576,21 @@ class GrantDonor(Contributor):
     """
     The granted amount to a grant application. This is a type of contribution.
     """
+
     include_in_documentation = True
 
     amount = MoneyField()
-    fund = models.ForeignKey(
-        GrantFund,
-        null=True, blank=True,
-        related_name="grants",
-        on_delete=models.CASCADE
-    )
+    fund = models.ForeignKey(GrantFund, null=True, blank=True, related_name='grants', on_delete=models.CASCADE)
 
     ledger_items = GenericRelation(
-        LedgerItem, object_id_field="object_id", content_type_field='object_type',
-        related_name="grants",
-        on_delete=models.SET_NULL
+        LedgerItem,
+        object_id_field='object_id',
+        content_type_field='object_type',
+        related_name='grants',
+        on_delete=models.SET_NULL,
     )
 
-    payout = models.ForeignKey(
-        GrantPayout,
-        null=True, blank=True,
-        on_delete=SET_NULL,
-        related_name='grants'
-    )
+    payout = models.ForeignKey(GrantPayout, null=True, blank=True, on_delete=SET_NULL, related_name='grants')
 
     class Meta:
         verbose_name = _('Grant')
@@ -640,7 +600,6 @@ class GrantDonor(Contributor):
             ('api_add_grantdonor', 'Can add funding through the API'),
             ('api_change_grantdonor', 'Can change funding through the API'),
             ('api_delete_grantdonor', 'Can delete funding through the API'),
-
             ('api_read_own_grantdonor', 'Can view own funding through the API'),
             ('api_add_own_grantdonor', 'Can add own funding through the API'),
             ('api_change_own_grantdonor', 'Can change own funding through the API'),
@@ -648,7 +607,7 @@ class GrantDonor(Contributor):
         )
 
     class JSONAPIMeta(object):
-        resource_name = "contributors/grants"
+        resource_name = 'contributors/grants'
 
     def clean(self):
         if str(self.amount.currency) != self.fund.currency:
@@ -663,10 +622,7 @@ class GrantDonor(Contributor):
         super().save(*args, **kwargs)
         if not self.ledger_items.exists():
             self.ledger_item = LedgerItem.objects.create(
-                fund=self.fund,
-                amount=self.amount,
-                object=self,
-                type=LedgerItemChoices.credit
+                fund=self.fund, amount=self.amount, object=self, type=LedgerItemChoices.credit
             )
             self.save()
 
@@ -687,9 +643,7 @@ class GrantTransaction(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     fund = models.ForeignKey(GrantFund, on_delete=models.CASCADE)
-    ledger_items = GenericRelation(
-        LedgerItem, object_id_field="object_id", content_type_field='object_type'
-    )
+    ledger_items = GenericRelation(LedgerItem, object_id_field='object_id', content_type_field='object_type')
 
     def clean(self):
         if str(self.amount.currency) != self.fund.currency:

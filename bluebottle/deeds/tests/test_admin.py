@@ -10,7 +10,6 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 class DeedAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True

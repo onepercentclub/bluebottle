@@ -14,16 +14,13 @@ class DonorAdminStatusFilter(SimpleListFilter):
     default_status = DonorStateMachine.succeeded.value
 
     def lookups(self, request, model_admin):
-        return [('all', _('All'))] + [
-            (s.value, s.name.title()) for s in list(DonorStateMachine.states.values())
-        ]
+        return [('all', _('All'))] + [(s.value, s.name.title()) for s in list(DonorStateMachine.states.values())]
 
     def choices(self, cl):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup if self.value() else lookup == self.default_status,
-                'query_string': cl.get_query_string(
-                    {self.parameter_name: lookup}, []),
+                'query_string': cl.get_query_string({self.parameter_name: lookup}, []),
                 'display': title,
             }
 
@@ -41,14 +38,15 @@ class DonorAdminCurrencyFilter(SimpleListFilter):
     parameter_name = 'amount_currency__exact'
 
     def lookups(self, request, model_admin):
-        return [('all', _('All')), ] + PaymentProvider.get_currency_choices()
+        return [
+            ('all', _('All')),
+        ] + PaymentProvider.get_currency_choices()
 
     def choices(self, cl):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup,
-                'query_string': cl.get_query_string(
-                    {self.parameter_name: lookup}, []),
+                'query_string': cl.get_query_string({self.parameter_name: lookup}, []),
                 'display': title,
             }
 

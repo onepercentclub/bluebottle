@@ -1,14 +1,13 @@
-from django.core.mail import \
-    EmailMultiAlternatives as BaseEmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives as BaseEmailMultiAlternatives
 
 from bluebottle.mails.models import MailPlatformSettings
 
 
 def construct_from_header():
     """
-        construct a from header based on what's in 'properties'. Return
-        None if no sender data (address) is available, which shoud result
-        in the system default being used.
+    construct a from header based on what's in 'properties'. Return
+    None if no sender data (address) is available, which shoud result
+    in the system default being used.
     """
 
     # The tenant properties will not be set if the call to this method
@@ -21,7 +20,7 @@ def construct_from_header():
     if not settings.address:
         return None
 
-    return f"{settings.sender} <{settings.address}>"
+    return f'{settings.sender} <{settings.address}>'
 
 
 class EmailMultiAlternatives(BaseEmailMultiAlternatives):

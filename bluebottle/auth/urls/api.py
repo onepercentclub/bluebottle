@@ -3,9 +3,5 @@ from django.urls import path
 
 
 urlpatterns = [
-    path(
-        'social-login',
-        SocialLoginView.as_view(),
-        name='social-login'
-    ),
+    path('social-login', SocialLoginView.as_view(), name='social-login'),
 ]

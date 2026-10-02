@@ -18,8 +18,13 @@ from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, Link
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
-    AdoptionTypeChoices, Follow, Accept, Event,
-    Recipient, RepetitionModeChoices, GoodDeed
+    AdoptionTypeChoices,
+    Follow,
+    Accept,
+    Event,
+    Recipient,
+    RepetitionModeChoices,
+    GoodDeed,
 )
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -44,7 +49,8 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
     DeadlineActivityFactory,
-    RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
+    RegisteredDateActivityFactory,
+    RegisteredDateParticipantFactory,
     PeriodicActivityFactory,
     ScheduleActivityFactory,
 )
@@ -78,9 +84,7 @@ def execute(method, url, data=None, auth=None):
     headers = {'content_type': 'application/ld+json'}
 
     if auth:
-        request = Request(
-            method.upper(), url, data=data, headers={'content-type': 'application/ld+json'}
-        ).prepare()
+        request = Request(method.upper(), url, data=data, headers={'content-type': 'application/ld+json'}).prepare()
 
         signed = auth(request)
         headers.update(signed.headers)
@@ -91,9 +95,7 @@ def execute(method, url, data=None, auth=None):
         response = getattr(client, method)(url, data=data, headers=headers)
 
     if response.status_code in (200, 201, 204):
-        return (
-            BytesIO(response.content) if response.content else None, response.accepted_media_type
-        )
+        return (BytesIO(response.content) if response.content else None, response.accepted_media_type)
     else:
         raise Exception(f'Failed request: {method.upper()}: {url}, {response.json()} status={response.status_code}')
 
@@ -111,13 +113,9 @@ def do_request(url):
         raise Exception(url, response.json())
 
 
-adapter_mock = mock.patch(
-    "bluebottle.activity_pub.adapters.JSONLDAdapter.execute", wraps=execute
-)
+adapter_mock = mock.patch('bluebottle.activity_pub.adapters.JSONLDAdapter.execute', wraps=execute)
 
-webfinger_mock = mock.patch(
-    "bluebottle.webfinger.client.WebFingerClient._do_request", wraps=do_request
-)
+webfinger_mock = mock.patch('bluebottle.webfinger.client.WebFingerClient._do_request', wraps=do_request)
 
 
 class ActivityPubTestCase:
@@ -134,9 +132,7 @@ class ActivityPubTestCase:
         self.country = CountryFactory.create()
 
         with LocalTenant(self.other_tenant):
-            CountryFactory.create(
-                alpha2_code=self.country.alpha2_code
-            )
+            CountryFactory.create(alpha2_code=self.country.alpha2_code)
             CountryFactory.create()
 
             site_settings = SitePlatformSettings.load()
@@ -182,9 +178,7 @@ class ActivityPubTestCase:
     def test_accept(self):
         self.test_follow()
 
-        Accept.objects.create(
-            object=self.follow
-        )
+        Accept.objects.create(object=self.follow)
 
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())
@@ -193,12 +187,7 @@ class ActivityPubTestCase:
             self.assertTrue(accept.actor.organization.logo)
 
     def create(self, **kwargs):
-        self.model = self.factory.create(
-            owner=self.user,
-            initiative=None,
-            image=ImageFactory.create(),
-            **kwargs
-        )
+        self.model = self.factory.create(owner=self.user, initiative=None, image=ImageFactory.create(), **kwargs)
 
     def submit(self):
         self.model.states.submit()
@@ -229,9 +218,7 @@ class ActivityPubTestCase:
 
         publish = activity.event.create_set.first()
         self.assertIsNotNone(publish)
-        self.assertTrue(
-            Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists()
-        )
+        self.assertTrue(Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists())
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()
@@ -326,9 +313,7 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(
-                    Geolocation, 'save', _geolocation_save_skip_mapbox
-                ):
+                with mock.patch.object(Geolocation, 'save', _geolocation_save_skip_mapbox):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
@@ -360,9 +345,7 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(
-                    Geolocation, 'save', _geolocation_save_skip_mapbox
-                ):
+                with mock.patch.object(Geolocation, 'save', _geolocation_save_skip_mapbox):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
@@ -376,10 +359,8 @@ class LinkTestCase(ActivityPubTestCase):
         with LocalTenant(self.other_tenant):
             with mock.patch('requests.get', return_value=self.mock_response):
                 follow = Follow(
-                    automatic_adoption_activity_types=[
-                        self.factory._meta.model._meta.model_name
-                    ],
-                    adoption_type=AdoptionTypeChoices.link
+                    automatic_adoption_activity_types=[self.factory._meta.model._meta.model_name],
+                    adoption_type=AdoptionTypeChoices.link,
                 )
                 adapter.follow(platform_url, follow)
                 follow.save()
@@ -469,7 +450,7 @@ class AdoptDeedTestCase(AdoptTestCase, BluebottleTestCase):
             start=(datetime.now() + timedelta(days=10)).date(),
             end=(datetime.now() + timedelta(days=20)).date(),
             organization=None,
-            **kwargs
+            **kwargs,
         )
         self.submit()
 
@@ -494,7 +475,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             start=(datetime.now() + timedelta(days=10)).date(),
             end=(datetime.now() + timedelta(days=20)).date(),
             organization=None,
-            **kwargs
+            **kwargs,
         )
         if 'status' not in kwargs:
             self.submit()
@@ -562,9 +543,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             self.assertEqual(link.status, 'succeeded')
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
     factory = FundingFactory
 
@@ -573,14 +552,14 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
             impact_location=GeolocationFactory.create(country=self.country),
             deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
             bank_account=ExternalAccountFactory.create(
-                account_id="some-external-account-id",
-                status="verified",
+                account_id='some-external-account-id',
+                status='verified',
                 connect_account=StripePayoutAccountFactory.create(
-                    account_id="test-account-id",
-                    status="verified",
+                    account_id='test-account-id',
+                    status='verified',
                 ),
             ),
-            **kwargs
+            **kwargs,
         )
 
         BudgetLineFactory.create_batch(2, activity=self.model)
@@ -590,12 +569,12 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
         BudgetLineFactory.create_batch(2, activity=activity)
 
         activity.bank_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
+            account_id='some-external-account-id',
+            status='verified',
             connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id",
-                status="verified",
-            )
+                account_id='test-account-id',
+                status='verified',
+            ),
         )
         activity.theme = ThemeFactory.create()
         activity.states.submit()
@@ -636,8 +615,8 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
 
         with LocalTenant(self.other_tenant):
             link = LinkedFunding.objects.get()
-            self.assertIsNotNone(self.model.image, "Original Funding should have an image")
-            self.assertIsNotNone(link.image, "LinkedFunding should have an image mapped from Funding")
+            self.assertIsNotNone(self.model.image, 'Original Funding should have an image')
+            self.assertIsNotNone(link.image, 'LinkedFunding should have an image mapped from Funding')
 
     def test_impact_location_maps_to_linked_funding_location(self):
         self.test_link()
@@ -647,10 +626,7 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
             self.assertIsNotNone(self.model.impact_location)
             self.assertIsNotNone(link.location)
             self.assertEqual(link.location.locality, self.model.impact_location.locality)
-            self.assertEqual(
-                link.location.country.alpha2_code,
-                self.model.impact_location.country.alpha2_code
-            )
+            self.assertEqual(link.location.country.alpha2_code, self.model.impact_location.country.alpha2_code)
 
 
 class FundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
@@ -661,14 +637,14 @@ class FundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
             impact_location=GeolocationFactory.create(country=self.country),
             deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
             bank_account=ExternalAccountFactory.create(
-                account_id="some-external-account-id",
-                status="verified",
+                account_id='some-external-account-id',
+                status='verified',
                 connect_account=StripePayoutAccountFactory.create(
-                    account_id="test-account-id",
-                    status="verified",
+                    account_id='test-account-id',
+                    status='verified',
                 ),
             ),
-            **kwargs
+            **kwargs,
         )
 
         BudgetLineFactory.create_batch(2, activity=self.model)
@@ -679,12 +655,12 @@ class FundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
         BudgetLineFactory.create_batch(2, activity=self.adopted)
 
         self.adopted.bank_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
+            account_id='some-external-account-id',
+            status='verified',
             connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id",
-                status="verified",
-            )
+                account_id='test-account-id',
+                status='verified',
+            ),
         )
         super().complete()
 
@@ -701,12 +677,8 @@ class FundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
             self.assertEqual(self.event.location.latitude, self.model.impact_location.position.x)
             self.assertEqual(self.event.location.longitude, self.model.impact_location.position.y)
             self.assertEqual(self.event.location.name, self.model.impact_location.formatted_address)
-            self.assertEqual(
-                self.event.location.address.country, self.model.impact_location.country.code
-            )
-            self.assertEqual(
-                self.event.location.address.locality, self.model.impact_location.locality
-            )
+            self.assertEqual(self.event.location.address.country, self.model.impact_location.country.code)
+            self.assertEqual(self.event.location.address.locality, self.model.impact_location.locality)
 
     def test_adopt(self):
         super().test_adopt()
@@ -714,14 +686,11 @@ class FundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.target, self.model.target)
         self.assertEqual(self.adopted.impact_location.position, self.model.impact_location.position)
         self.assertEqual(
-            self.adopted.impact_location.country.alpha2_code,
-            self.model.impact_location.country.alpha2_code
+            self.adopted.impact_location.country.alpha2_code, self.model.impact_location.country.alpha2_code
         )
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
     factory = GrantApplicationFactory
 
@@ -729,7 +698,7 @@ class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
         super().create(
             impact_location=GeolocationFactory.create(country=self.country),
             started=datetime.now(get_current_timezone()),
-            **kwargs
+            **kwargs,
         )
         self.submit()
 
@@ -763,10 +732,7 @@ class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
             self.assertIsNotNone(self.model.impact_location)
             self.assertIsNotNone(link.location)
             self.assertEqual(link.location.locality, self.model.impact_location.locality)
-            self.assertEqual(
-                link.location.country.alpha2_code,
-                self.model.impact_location.country.alpha2_code
-            )
+            self.assertEqual(link.location.country.alpha2_code, self.model.impact_location.country.alpha2_code)
 
 
 class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
@@ -776,7 +742,7 @@ class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
         super().create(
             impact_location=GeolocationFactory.create(country=self.country),
             started=datetime.now(get_current_timezone()),
-            **kwargs
+            **kwargs,
         )
         self.model.states.submit(save=True)
         self.model.states.approve(save=True)
@@ -792,12 +758,8 @@ class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
             self.assertEqual(self.event.location.latitude, self.model.impact_location.position.x)
             self.assertEqual(self.event.location.longitude, self.model.impact_location.position.y)
             self.assertEqual(self.event.location.name, self.model.impact_location.formatted_address)
-            self.assertEqual(
-                self.event.location.address.country, self.model.impact_location.country.code
-            )
-            self.assertEqual(
-                self.event.location.address.locality, self.model.impact_location.locality
-            )
+            self.assertEqual(self.event.location.address.country, self.model.impact_location.country.code)
+            self.assertEqual(self.event.location.address.locality, self.model.impact_location.locality)
 
     def test_adopt(self):
         super().test_adopt()
@@ -805,14 +767,11 @@ class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.target, self.model.target)
         self.assertEqual(self.adopted.impact_location.position, self.model.impact_location.position)
         self.assertEqual(
-            self.adopted.impact_location.country.alpha2_code,
-            self.model.impact_location.country.alpha2_code
+            self.adopted.impact_location.country.alpha2_code, self.model.impact_location.country.alpha2_code
         )
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
 
@@ -821,7 +780,7 @@ class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(country=self.country),
             start=(datetime.now() + timedelta(days=10)).date(),
             deadline=(datetime.now() + timedelta(days=20)).date(),
-            **kwargs
+            **kwargs,
         )
         self.submit()
 
@@ -834,7 +793,7 @@ class AdoptDeadlineActivityTestCase(AdoptTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(country=self.country),
             start=(datetime.now() + timedelta(days=10)).date(),
             deadline=(datetime.now() + timedelta(days=20)).date(),
-            **kwargs
+            **kwargs,
         )
         self.submit()
 
@@ -846,7 +805,7 @@ class AdoptDeadlineActivityTestCase(AdoptTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(country=self.country),
             start=(datetime.now() + timedelta(days=10)).date(),
             deadline=(datetime.now() + timedelta(days=20)).date(),
-            organization=organization
+            organization=organization,
         )
         self.submit()
 
@@ -872,23 +831,15 @@ class AdoptDeadlineActivityTestCase(AdoptTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.deadline, self.model.deadline)
         self.assertEqual(self.adopted.duration, self.model.duration)
         if self.model.location:
-            self.assertEqual(
-                self.adopted.location.position,
-                self.model.location.position
-            )
+            self.assertEqual(self.adopted.location.position, self.model.location.position)
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkScheduleActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
 
     def create(self):
-        super().create(
-            location=GeolocationFactory.create(country=self.country),
-            organization=None
-        )
+        super().create(location=GeolocationFactory.create(country=self.country), organization=None)
         self.submit()
 
     def test_link(self):
@@ -899,10 +850,7 @@ class AdoptScheduleActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
 
     def create(self):
-        super().create(
-            location=GeolocationFactory.create(country=self.country),
-            organization=None
-        )
+        super().create(location=GeolocationFactory.create(country=self.country), organization=None)
         self.submit()
 
     def test_publish(self):
@@ -920,23 +868,15 @@ class AdoptScheduleActivityTestCase(AdoptTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.deadline, self.model.deadline)
         self.assertEqual(self.adopted.duration, self.model.duration)
         if self.model.location:
-            self.assertEqual(
-                self.adopted.location.position,
-                self.model.location.position
-            )
+            self.assertEqual(self.adopted.location.position, self.model.location.position)
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkPeriodicActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
 
     def create(self):
-        super().create(
-            location=GeolocationFactory.create(country=self.country),
-            organization=None
-        )
+        super().create(location=GeolocationFactory.create(country=self.country), organization=None)
         self.submit()
 
 
@@ -944,10 +884,7 @@ class AdoptPeriodicActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
 
     def create(self):
-        super().create(
-            location=GeolocationFactory.create(country=self.country),
-            organization=None
-        )
+        super().create(location=GeolocationFactory.create(country=self.country), organization=None)
         self.submit()
 
     def test_publish(self):
@@ -966,15 +903,10 @@ class AdoptPeriodicActivityTestCase(AdoptTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.period, self.model.period)
 
         if self.model.location:
-            self.assertEqual(
-                self.adopted.location.position,
-                self.model.location.position
-            )
+            self.assertEqual(self.adopted.location.position, self.model.location.position)
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = RegisteredDateActivityFactory
     expected_link_status = 'succeeded'
@@ -983,7 +915,7 @@ class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
         super().create(
             location=GeolocationFactory.create(country=self.country),
             start=datetime.now(tz=UTC) - timedelta(days=10),
-            organization=None
+            organization=None,
         )
         RegisteredDateParticipantFactory.create(activity=self.model)
         self.submit()
@@ -1002,7 +934,7 @@ class AdoptRegisteredDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
         super().create(
             location=GeolocationFactory.create(country=self.country),
             start=datetime.now(tz=UTC) - timedelta(days=10),
-            organization=None
+            organization=None,
         )
         RegisteredDateParticipantFactory.create(activity=self.model)
         self.submit()
@@ -1027,28 +959,17 @@ class AdoptRegisteredDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.start.date(), self.model.start.date())
         self.assertEqual(self.adopted.duration, self.model.duration)
         if self.model.location:
-            self.assertEqual(
-                self.adopted.location.position,
-                self.model.location.position
-            )
+            self.assertEqual(self.adopted.location.position, self.model.location.position)
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
     def create(self, **kwargs):
         super().create(slots=[], organization=None)
 
-        DateActivitySlotFactory.create_batch(
-            3,
-            activity=self.model,
-            location=None,
-            is_online=True,
-            **kwargs
-        )
+        DateActivitySlotFactory.create_batch(3, activity=self.model, location=None, is_online=True, **kwargs)
 
         self.submit()
 
@@ -1059,12 +980,7 @@ class AdoptDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
     def create(self, **kwargs):
         super().create(slots=[], organization=None, **kwargs)
 
-        DateActivitySlotFactory.create_batch(
-            3,
-            activity=self.model,
-            location=None,
-            is_online=True
-        )
+        DateActivitySlotFactory.create_batch(3, activity=self.model, location=None, is_online=True)
 
         self.submit()
 
@@ -1080,9 +996,7 @@ class AdoptDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
             self.assertEqual(self.adopted.slots.count(), 3)
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkedSingleSlotDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
@@ -1124,9 +1038,7 @@ class AdoptSingleSlotDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
             self.assertEqual(self.adopted.slots.count(), 1)
 
 
-@override_settings(
-    MAPBOX_API_KEY=None
-)
+@override_settings(MAPBOX_API_KEY=None)
 class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
 
@@ -1137,7 +1049,7 @@ class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
             start=(datetime.now() + timedelta(days=10)).date(),
             end=(datetime.now() + timedelta(days=20)).date(),
             collect_type=CollectTypeFactory.create(),
-            organization=None
+            organization=None,
         )
         self.submit()
 
@@ -1162,7 +1074,7 @@ class AdoptCollectActivityTestCase(AdoptTestCase, BluebottleTestCase):
             start=(datetime.now() + timedelta(days=10)).date(),
             end=(datetime.now() + timedelta(days=20)).date(),
             collect_type=CollectTypeFactory.create(),
-            organization=None
+            organization=None,
         )
         self.submit()
 
@@ -1180,7 +1092,4 @@ class AdoptCollectActivityTestCase(AdoptTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.end, self.model.end)
         self.assertEqual(self.adopted.collect_type.name, self.model.collect_type.name)
         if self.model.location:
-            self.assertEqual(
-                self.adopted.location.position,
-                self.model.location.position
-            )
+            self.assertEqual(self.adopted.location.position, self.model.location.position)

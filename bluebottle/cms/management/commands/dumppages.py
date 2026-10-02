@@ -18,10 +18,19 @@ class Command(BaseCommand):
     def _get_fields(self, block):
         fields = block.__dict__
         skip_fields = [
-            'id', '_state', 'parent_type_id', 'parent_id',
-            'polymorphic_ctype_id', 'contentitem_ptr_id',
-            'placeholder_id', 'block_id', 'order_field',
-            'order_field_name', '_block_cache', '_django_version']
+            'id',
+            '_state',
+            'parent_type_id',
+            'parent_id',
+            'polymorphic_ctype_id',
+            'contentitem_ptr_id',
+            'placeholder_id',
+            'block_id',
+            'order_field',
+            'order_field_name',
+            '_block_cache',
+            '_django_version',
+        ]
         for field in skip_fields:
             if field in fields:
                 del fields[field]
@@ -33,47 +42,48 @@ class Command(BaseCommand):
             items = []
             if hasattr(block, 'items'):
                 for item in block.items.all():
-                    items.append({
-                        'model': item.__class__.__name__,
-                        'app': item.__class__._meta.app_label,
-                        'data': self._get_fields(item)
-                    })
+                    items.append(
+                        {
+                            'model': item.__class__.__name__,
+                            'app': item.__class__._meta.app_label,
+                            'data': self._get_fields(item),
+                        }
+                    )
             fields = self._get_fields(block)
-            data.append({
-                'model': block.__class__.__name__,
-                'app': block.__class__._meta.app_label,
-                'fields': fields,
-                'items': items
-            })
+            data.append(
+                {
+                    'model': block.__class__.__name__,
+                    'app': block.__class__._meta.app_label,
+                    'fields': fields,
+                    'items': items,
+                }
+            )
         return data
 
     def handle(self, *args, **options):
         data = []
         page = HomePage.objects.get(pk=1)
 
-        data.append({
-            'model': 'HomePage',
-            'app': 'cms',
-            'properties': {},
-            'data': self._dump(page)
-        })
+        data.append({'model': 'HomePage', 'app': 'cms', 'properties': {}, 'data': self._dump(page)})
 
         for page in Page.objects.all():
-            data.append({
-                'model': 'Page',
-                'app': 'pages',
-                'properties': {
-                    'title': page.title,
-                    'slug': page.slug,
-                    'status': page.status,
-                    'language': page.language,
-                    'full_page': page.full_page,
-                    'publication_date': page.publication_date.strftime('%Y-%m-%d %H:%M')
-                },
-                'data': self._dump(page)
-            })
+            data.append(
+                {
+                    'model': 'Page',
+                    'app': 'pages',
+                    'properties': {
+                        'title': page.title,
+                        'slug': page.slug,
+                        'status': page.status,
+                        'language': page.language,
+                        'full_page': page.full_page,
+                        'publication_date': page.publication_date.strftime('%Y-%m-%d %H:%M'),
+                    },
+                    'data': self._dump(page),
+                }
+            )
         if options['file']:
-            text_file = open(options['file'], "w")
+            text_file = open(options['file'], 'w')
             text_file.write(json.dumps(data, indent=2))
             text_file.close()
         else:

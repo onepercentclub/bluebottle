@@ -22,9 +22,7 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 class InterestSerializer(ModelSerializer):
     permissions = ResourcePermissionField('interest-detail', view_args=('pk',))
-    user = ResourceRelatedField(
-        read_only=True, default=serializers.CurrentUserDefault()
-    )
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     activity = PolymorphicResourceRelatedField(
         ActivitySerializer,
         queryset=Activity.objects.all(),
@@ -88,29 +86,16 @@ class InterestSerializer(ModelSerializer):
 
         if isinstance(activity, DateActivity):
             if not slot:
-                raise ValidationError(
-                    {'slot': [_('A slot is required for date activities.')]}
-                )
+                raise ValidationError({'slot': [_('A slot is required for date activities.')]})
             if slot.activity_id != activity.id:
-                raise ValidationError(
-                    {'slot': [_('Slot does not belong to this activity.')]}
-                )
-            if not already_interested and (
-                slot.status != 'full'
-                or activity.status == 'registration_closed'
-            ):
-                raise ValidationError(
-                    _('Interests can only be registered for full slots.')
-                )
+                raise ValidationError({'slot': [_('Slot does not belong to this activity.')]})
+            if not already_interested and (slot.status != 'full' or activity.status == 'registration_closed'):
+                raise ValidationError(_('Interests can only be registered for full slots.'))
         else:
             if slot:
-                raise ValidationError(
-                    {'slot': [_('Slot is only allowed for date activities.')]}
-                )
+                raise ValidationError({'slot': [_('Slot is only allowed for date activities.')]})
             if not already_interested and activity.status != 'full':
-                raise ValidationError(
-                    _('Interests can only be registered for full activities.')
-                )
+                raise ValidationError(_('Interests can only be registered for full activities.'))
 
         UserAlreadyInvolvedValidator().validate(user, activity, slot)
 

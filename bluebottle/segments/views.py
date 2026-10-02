@@ -6,7 +6,10 @@ from bluebottle.activities.permissions import ActivitySegmentPermission
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.segments.permissions import OpenSegmentOrMember
 from bluebottle.segments.serializers import (
-    SegmentDetailSerializer, SegmentPublicDetailSerializer, SegmentListSerializer, SegmentTypeSerializer
+    SegmentDetailSerializer,
+    SegmentPublicDetailSerializer,
+    SegmentListSerializer,
+    SegmentTypeSerializer,
 )
 from bluebottle.utils.permissions import TenantConditionalOpenClose
 from bluebottle.utils.views import ListAPIView, RetrieveAPIView, JsonApiViewMixin
@@ -14,7 +17,6 @@ from rest_framework import exceptions
 
 
 class ClosedSegmentActivityViewMixin(object):
-
     def check_object_permissions(self, request, obj):
         for permission in self.get_permissions():
             if not permission.has_object_permission(request, self, obj):
@@ -26,9 +28,7 @@ class ClosedSegmentActivityViewMixin(object):
                     raise exceptions.PermissionDenied(detail=message, code=code)
                 else:
                     self.permission_denied(
-                        request,
-                        message=getattr(permission, 'message', None),
-                        code=getattr(permission, 'code', None)
+                        request, message=getattr(permission, 'message', None), code=getattr(permission, 'code', None)
                     )
 
 
@@ -39,20 +39,26 @@ class SegmentPagination(PageNumberPagination):
 class SegmentTypeList(JsonApiViewMixin, ListAPIView):
     serializer_class = SegmentTypeSerializer
     queryset = SegmentType.objects.filter(is_active=True).prefetch_related('segments')
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
 
 
 class SegmentTypeDetail(JsonApiViewMixin, RetrieveAPIView):
     serializer_class = SegmentTypeSerializer
     queryset = SegmentType.objects.filter(is_active=True).prefetch_related('segments')
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
 
 
 class SegmentList(JsonApiViewMixin, ListAPIView):
     serializer_class = SegmentListSerializer
     queryset = Segment.objects.filter(segment_type__is_active=True).select_related('segment_type')
 
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
     pagination_class = SegmentPagination
 
 
@@ -78,8 +84,12 @@ class RelatedSegmentDetail(JsonApiViewMixin, ListAPIView):
     ]
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(
-            segment_type_id=self.kwargs['segment_type'],
+        queryset = (
+            super()
+            .get_queryset()
+            .filter(
+                segment_type_id=self.kwargs['segment_type'],
+            )
         )
 
         if not self.request.user.is_staff:
@@ -88,9 +98,7 @@ class RelatedSegmentDetail(JsonApiViewMixin, ListAPIView):
             else:
                 user_segments = []
 
-            queryset = queryset.filter(
-                Q(closed=False) | Q(pk__in=user_segments)
-            )
+            queryset = queryset.filter(Q(closed=False) | Q(pk__in=user_segments))
 
         return queryset
 

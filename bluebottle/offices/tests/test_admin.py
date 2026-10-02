@@ -25,6 +25,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
     """
     Test Offices in admin
     """
+
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -38,26 +39,11 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.subregions = OfficeSubRegionFactory.create_batch(6, region=self.europe)
         self.ghana = OfficeSubRegionFactory.create(name='Ghana', region=self.africa)
         OfficeSubRegionFactory.create_batch(3, region=self.africa)
-        self.location1 = Location.objects.create(
-            name='Lyutidol',
-            subregion=self.bulgaria
-        )
-        self.location2 = Location.objects.create(
-            name='Sofia',
-            subregion=self.bulgaria
-        )
-        self.location3 = Location.objects.create(
-            name='Lozenets',
-            subregion=self.bulgaria
-        )
-        self.location4 = Location.objects.create(
-            name='Batak',
-            subregion=self.bulgaria
-        )
-        self.location5 = Location.objects.create(
-            name='Accra',
-            subregion=self.ghana
-        )
+        self.location1 = Location.objects.create(name='Lyutidol', subregion=self.bulgaria)
+        self.location2 = Location.objects.create(name='Sofia', subregion=self.bulgaria)
+        self.location3 = Location.objects.create(name='Lozenets', subregion=self.bulgaria)
+        self.location4 = Location.objects.create(name='Batak', subregion=self.bulgaria)
+        self.location5 = Location.objects.create(name='Accra', subregion=self.ghana)
         self.site = AdminSite()
         self.location_admin = LocationAdmin(Location, self.site)
         self.subregion_admin = OfficeSubRegionAdmin(OfficeSubRegion, self.site)
@@ -74,16 +60,14 @@ class OfficeAdminTest(BluebottleAdminTestCase):
     def test_activities_link(self):
         activities_link = self.location_admin.activities(self.location1)
         self.assertEqual(
-            f'<a href="/en/admin/activities/activity/?'
-            f'office_location__id__exact={self.location1.id}">1</a>',
-            activities_link
+            f'<a href="/en/admin/activities/activity/?office_location__id__exact={self.location1.id}">1</a>',
+            activities_link,
         )
 
         activities_link = self.location_admin.activities(self.location5)
         self.assertEqual(
-            f'<a href="/en/admin/activities/activity/?'
-            f'office_location__id__exact={self.location5.id}">8</a>',
-            activities_link
+            f'<a href="/en/admin/activities/activity/?office_location__id__exact={self.location5.id}">8</a>',
+            activities_link,
         )
 
     def test_activities_link_regions_enabled(self):
@@ -94,14 +78,14 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertEqual(
             f'<a href="/en/admin/activities/activity/?'
             f'office_location__subregion__region__id__exact={self.europe.id}">10</a>',
-            activities_link
+            activities_link,
         )
 
         activities_link = self.region_admin.activities(self.africa)
         self.assertEqual(
             f'<a href="/en/admin/activities/activity/?'
             f'office_location__subregion__region__id__exact={self.africa.id}">8</a>',
-            activities_link
+            activities_link,
         )
 
     def test_office_filters(self):
@@ -164,20 +148,26 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Work location group')
         self.assertContains(response, 'Work location region')
-        response = self.client.get(self.activities_url, {
-            'office_location__subregion__region__id__exact': self.location1.subregion.region.id,
-            'office_location__subregion__id__exact': self.location1.subregion.id,
-            'office_location__id__exact': self.location1.id,
-        })
+        response = self.client.get(
+            self.activities_url,
+            {
+                'office_location__subregion__region__id__exact': self.location1.subregion.region.id,
+                'office_location__subregion__id__exact': self.location1.subregion.id,
+                'office_location__id__exact': self.location1.id,
+            },
+        )
         self.assertEqual(response.status_code, 200)
 
     def test_dateactivity_admin_region_filters(self):
         self.client.force_login(self.superuser)
-        response = self.client.get(self.dateactivities_url, {
-            'office_location__subregion__region__id__exact': self.location1.subregion.region.id,
-            'office_location__subregion__id__exact': self.location1.subregion.id,
-            'office_location__id__exact': self.location1.id,
-        })
+        response = self.client.get(
+            self.dateactivities_url,
+            {
+                'office_location__subregion__region__id__exact': self.location1.subregion.region.id,
+                'office_location__subregion__id__exact': self.location1.subregion.id,
+                'office_location__id__exact': self.location1.id,
+            },
+        )
         self.assertEqual(response.status_code, 200)
 
     def test_office_menu_for_staff(self):
@@ -196,6 +186,7 @@ class RegionManagerAdminTest(BluebottleAdminTestCase):
     """
     Test Offices in admin
     """
+
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -222,15 +213,9 @@ class RegionManagerAdminTest(BluebottleAdminTestCase):
     def test_activity_list(self):
         DeadlineActivityFactory.create()
         DeadlineActivityFactory.create(
-            office_location=LocationFactory.create(
-                subregion=OfficeSubRegionFactory.create()
-            )
+            office_location=LocationFactory.create(subregion=OfficeSubRegionFactory.create())
         )
-        DeadlineActivityFactory.create(
-            office_location=LocationFactory.create(
-                subregion=self.subregion
-            )
-        )
+        DeadlineActivityFactory.create(office_location=LocationFactory.create(subregion=self.subregion))
         DeadlineActivityFactory.create(office_location=self.office)
         url = reverse('admin:activities_activity_changelist')
         page = self.app.get(url)
@@ -241,17 +226,10 @@ class RegionManagerAdminTest(BluebottleAdminTestCase):
         owner = BlueBottleUserFactory.create(location=self.office)
 
         DeadlineActivityFactory.create(
-            initiative=InitiativeFactory.create(owner=owner),
-            office_location=LocationFactory.create()
+            initiative=InitiativeFactory.create(owner=owner), office_location=LocationFactory.create()
         )
-        DeadlineActivityFactory.create(
-            initiative=InitiativeFactory.create(),
-            office_location=self.office
-        )
-        DeadlineActivityFactory.create(
-            initiative=InitiativeFactory.create(),
-            office_location=LocationFactory.create()
-        )
+        DeadlineActivityFactory.create(initiative=InitiativeFactory.create(), office_location=self.office)
+        DeadlineActivityFactory.create(initiative=InitiativeFactory.create(), office_location=LocationFactory.create())
 
         url = reverse('admin:initiatives_initiative_changelist')
         page = self.app.get(url)

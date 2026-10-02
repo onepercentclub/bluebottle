@@ -9,6 +9,7 @@ class JSONLDParser(JSONParser):
     """
     JSON-LD parser.
     """
+
     media_type = 'application/ld+json'
 
     def parse(self, stream, media_type=None, parser_context=None):
@@ -20,11 +21,7 @@ class JSONLDParser(JSONParser):
 
         try:
             result = super().parse(stream, media_type, parser_context)
-            compacted = processor.compact(
-                result,
-                default_context,
-                {}
-            )
+            compacted = processor.compact(result, default_context, {})
             del compacted['@context']
             return underscore(compacted)
         except Exception as e:

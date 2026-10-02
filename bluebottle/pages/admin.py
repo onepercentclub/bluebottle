@@ -36,8 +36,7 @@ class PageImportForm(Form):
 
 class PageTranslateForm(Form):
     target_language = forms.ChoiceField(
-        label=_('Target Language'),
-        help_text=_('Select the language to translate this page to')
+        label=_('Target Language'), help_text=_('Select the language to translate this page to')
     )
     title = _('Translate page')
 
@@ -69,16 +68,15 @@ class PageTranslateForm(Form):
 @admin.register(Page)
 class PageAdmin(CMSNestedPlaceholderFieldAdmin):
     model = Page
-    list_display = ('title', 'slug', 'online', 'status',
-                    'publication_date', 'language')
+    list_display = ('title', 'slug', 'online', 'status', 'publication_date', 'language')
     list_filter = ('status', 'language')
     date_hierarchy = 'publication_date'
     search_fields = ('slug', 'title')
     actions = ['make_published', 'export_selected']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
-    raw_id_fields = ('author', )
-    readonly_fields = ('online', )
+    raw_id_fields = ('author',)
+    readonly_fields = ('online',)
 
     # Reserved slugs for platform pages
     RESERVED_SLUGS = ['terms', 'terms-and-conditions', 'privacy', 'start']
@@ -89,25 +87,31 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
     }
 
     fieldsets = (
-        (None, {
-            'fields': ('title', 'slug', 'author', 'language', 'full_page', 'show_title', 'body'),
-        }),
-        (_('Publication settings'), {
-            'fields': ('status', 'publication_date', 'publication_end_date', 'online'),
-        }),
+        (
+            None,
+            {
+                'fields': ('title', 'slug', 'author', 'language', 'full_page', 'show_title', 'body'),
+            },
+        ),
+        (
+            _('Publication settings'),
+            {
+                'fields': ('status', 'publication_date', 'publication_end_date', 'online'),
+            },
+        ),
     )
 
     def online(self, obj):
         if (
-            obj.status == 'published' and
-            obj.publication_date and
-            obj.publication_date < now() and
-            (obj.publication_end_date is None or obj.publication_end_date > now())
+            obj.status == 'published'
+            and obj.publication_date
+            and obj.publication_date < now()
+            and (obj.publication_end_date is None or obj.publication_end_date > now())
         ):
-            return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
-        return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
+            return format_html('<span class="admin-label admin-label-green">{}</span>', _('Online'))
+        return format_html('<span class="admin-label admin-label-gray">{}</span>', _('Offline'))
 
-    online.help_text = _("Is this item currently visible online or not.")
+    online.help_text = _('Is this item currently visible online or not.')
 
     def preview_slide(self, obj):
         return obj.body
@@ -119,31 +123,15 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
         urlpatterns = [
             path(
                 '<int:pk>/preview/',
-                self.admin_site.admin_view(
-                    self.preview_canvas
-                ),
-                name="{0}_{1}_preview".format(*info)
+                self.admin_site.admin_view(self.preview_canvas),
+                name='{0}_{1}_preview'.format(*info),
             ),
-            path(
-                '<int:pk>/export/',
-                self.admin_site.admin_view(
-                    self.export_page
-                ),
-                name="{0}_{1}_export".format(*info)
-            ),
-            path(
-                'import/',
-                self.admin_site.admin_view(
-                    self.import_pages
-                ),
-                name="{0}_{1}_import".format(*info)
-            ),
+            path('<int:pk>/export/', self.admin_site.admin_view(self.export_page), name='{0}_{1}_export'.format(*info)),
+            path('import/', self.admin_site.admin_view(self.import_pages), name='{0}_{1}_import'.format(*info)),
             path(
                 '<int:pk>/translate/',
-                self.admin_site.admin_view(
-                    self.translate_page
-                ),
-                name="{0}_{1}_translate".format(*info)
+                self.admin_site.admin_view(self.translate_page),
+                name='{0}_{1}_translate'.format(*info),
             ),
         ]
 
@@ -160,10 +148,11 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
     def preview_canvas(self, request, pk):
         # Avoid the proxy model stuff, allow both to work.
         page = self.get_base_object(pk)
-        return render(request, 'admin/pages/preview_canvas.html', {
-            'page': page,
-            'body': mark_safe(render_placeholder(request, page.body).html)
-        })
+        return render(
+            request,
+            'admin/pages/preview_canvas.html',
+            {'page': page, 'body': mark_safe(render_placeholder(request, page.body).html)},
+        )
 
     def _get_formset_objects(self, formset):
         all_objects = []
@@ -190,27 +179,23 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
 
         return all_objects
 
-    def render_change_form(self, request, context, add=False, change=False,
-                           form_url='', obj=None):
+    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
         info = self.model._meta.app_label, self.model._meta.model_name
-        context.update({
-            'preview_canvas_url': reverse('admin:{0}_{1}_preview'.format(*info),
-                                          kwargs={'pk': obj.pk if obj else 0}),
-        })
-        if change and obj and request.user.is_superuser:
-            context.update({
-                'export_url': reverse(
-                    'admin:{0}_{1}_export'.format(*info),
-                    kwargs={'pk': obj.pk}
+        context.update(
+            {
+                'preview_canvas_url': reverse(
+                    'admin:{0}_{1}_preview'.format(*info), kwargs={'pk': obj.pk if obj else 0}
                 ),
-                'translate_url': reverse(
-                    'admin:{0}_{1}_translate'.format(*info),
-                    kwargs={'pk': obj.pk}
-                ),
-            })
-        return super().render_change_form(
-            request, context, add=add, change=change, form_url=form_url, obj=obj
+            }
         )
+        if change and obj and request.user.is_superuser:
+            context.update(
+                {
+                    'export_url': reverse('admin:{0}_{1}_export'.format(*info), kwargs={'pk': obj.pk}),
+                    'translate_url': reverse('admin:{0}_{1}_translate'.format(*info), kwargs={'pk': obj.pk}),
+                }
+            )
+        return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
     def save_model(self, request, obj, form, change):
         # Check if slug is reserved for platform pages
@@ -218,7 +203,7 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
             platform_page_url = reverse('admin:pages_platformpage_changelist')
             message = format_html(
                 _('You are trying to create a platform page. Please do so at <a href="{}">Platform pages</a>.'),
-                platform_page_url
+                platform_page_url,
             )
             messages.error(request, message)
             # Store flag to prevent saving and redirect
@@ -251,13 +236,10 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
 
     def status_column(self, page):
         status = page.status
-        title = [rec[1] for rec in page.PageStatus.choices if
-                 rec[0] == status].pop()
+        title = [rec[1] for rec in page.PageStatus.choices if rec[0] == status].pop()
         icon = self.STATUS_ICONS[status]
         admin = settings.STATIC_URL + 'admin/img/'
-        return format_html(
-            u'<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
-            admin, icon, title, title)
+        return format_html('<img src="{}{}" width="10" height="10" alt="{}" title="{}" />', admin, icon, title, title)
 
     status_column.short_description = _('Status')
 
@@ -265,13 +247,12 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
         rows_updated = queryset.update(status=Page.PageStatus.published)
 
         if rows_updated == 1:
-            message = "1 entry was marked as published."
+            message = '1 entry was marked as published.'
         else:
-            message = "{0} entries were marked as published.".format(
-                rows_updated)
+            message = '{0} entries were marked as published.'.format(rows_updated)
         self.message_user(request, message)
 
-    make_published.short_description = _("Mark selected entries as published")
+    make_published.short_description = _('Mark selected entries as published')
 
     def export_selected(self, request, queryset):
         """Export selected pages to JSON file."""
@@ -280,36 +261,33 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
             export_data.append(export_page_to_dict(page))
 
         if not export_data:
-            self.message_user(request, _("No pages were selected."), messages.WARNING)
+            self.message_user(request, _('No pages were selected.'), messages.WARNING)
             return
 
         # Create JSON response
         response = HttpResponse(
-            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
-            content_type='application/json'
+            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder), content_type='application/json'
         )
-        filename = f"pages_export_{now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = f'pages_export_{now().strftime("%Y%m%d_%H%M%S")}.json'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
-    export_selected.short_description = _("Export selected pages")
+    export_selected.short_description = _('Export selected pages')
 
     def export_page(self, request, pk):
         """Export a single page to JSON file."""
         page = self.get_object(request, pk)
         if page is None:
             from django.contrib.admin.exceptions import DisallowedModelAdminToField
-            raise DisallowedModelAdminToField(
-                "Page object with primary key '%s' does not exist." % pk
-            )
+
+            raise DisallowedModelAdminToField("Page object with primary key '%s' does not exist." % pk)
 
         export_data = [export_page_to_dict(page)]
 
         response = HttpResponse(
-            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
-            content_type='application/json'
+            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder), content_type='application/json'
         )
-        filename = f"page_{page.slug}_{page.pk}.json"
+        filename = f'page_{page.slug}_{page.pk}.json'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
@@ -325,9 +303,7 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
                     result = import_pages_from_data(data)
 
                     message = render_to_string(
-                        'admin/pages/page/import_message.html',
-                        {'result': result},
-                        request=request
+                        'admin/pages/page/import_message.html', {'result': result}, request=request
                     ).strip()
 
                     if result['imported'] > 0 or result['updated'] > 0:
@@ -342,9 +318,9 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
                     else:
                         return redirect('admin:pages_page_changelist')
                 except json.JSONDecodeError:
-                    messages.error(request, _("Invalid JSON file. Please check the file format."))
+                    messages.error(request, _('Invalid JSON file. Please check the file format.'))
                 except Exception as e:
-                    messages.error(request, _("Error importing pages: {0}").format(str(e)))
+                    messages.error(request, _('Error importing pages: {0}').format(str(e)))
         else:
             form = PageImportForm()
 
@@ -359,11 +335,7 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
         }
         return render(request, 'admin/pages/page/import.html', context)
 
-    @admin_form(
-        PageTranslateForm,
-        Page,
-        'admin/pages/page/translate.html'
-    )
+    @admin_form(PageTranslateForm, Page, 'admin/pages/page/translate.html')
     def translate_page(self, request, page, form):
         """Translate a page to another language."""
         target_language = form.cleaned_data['target_language']
@@ -372,9 +344,8 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
             messages.error(
                 request,
                 _('A page with slug "{slug}" already exists for language {language}.').format(
-                    slug=page.slug,
-                    language=target_language
-                )
+                    slug=page.slug, language=target_language
+                ),
             )
             return redirect('admin:pages_page_change', page.pk)
 
@@ -384,16 +355,12 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
             messages.success(
                 request,
                 _('Page "{title}" has been translated to {language}.').format(
-                    title=new_page.title,
-                    language=target_language
-                )
+                    title=new_page.title, language=target_language
+                ),
             )
             return redirect('admin:pages_page_change', new_page.pk)
         except Exception as e:
-            messages.error(
-                request,
-                _('Error translating page: {error}').format(error=str(e))
-            )
+            messages.error(request, _('Error translating page: {error}').format(error=str(e)))
             return redirect('admin:pages_page_change', page.pk)
 
     def changelist_view(self, request, extra_context=None):

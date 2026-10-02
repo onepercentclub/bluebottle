@@ -21,10 +21,7 @@ class SegmentStateMachineModelFormMetaClass(StateMachineModelFormMetaClass):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
                 field_name = field.name
-                attrs[field.field_name] = forms.CharField(
-                    required=False,
-                    label=field_name
-                )
+                attrs[field.field_name] = forms.CharField(required=False, label=field_name)
 
         return super(SegmentStateMachineModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
@@ -34,10 +31,7 @@ class SegmentAdminFormMetaClass(ModelFormMetaclass):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
                 field_name = field.name
-                attrs[field.field_name] = forms.CharField(
-                    required=False,
-                    label=field_name
-                )
+                attrs[field.field_name] = forms.CharField(required=False, label=field_name)
 
         return super(SegmentAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
@@ -61,18 +55,11 @@ class SegmentInlineForm(TranslatableModelForm):
         super().__init__(*args, **kwargs)
         instance = self.instance
         language_code = getattr(self, 'language_code', None)
-        if (
-            instance
-            and instance.pk
-            and language_code
-            and not instance.has_translation(language_code)
-        ):
+        if instance and instance.pk and language_code and not instance.has_translation(language_code):
             for field_name in instance._parler_meta.get_all_fields():
                 if field_name not in self.fields:
                     continue
-                fallback = instance.safe_translation_getter(
-                    field_name, any_language=True
-                )
+                fallback = instance.safe_translation_getter(field_name, any_language=True)
                 if fallback is not None:
                     self.initial.setdefault(field_name, fallback)
 
@@ -89,91 +76,101 @@ class SegmentInline(TranslatableTabularInline, TabularInlinePaginated):
 
 class SegmentMergeForm(forms.Form):
     to = forms.ModelChoiceField(
-        label=_("Merge with"),
-        help_text=_("Choose location to merge with"),
+        label=_('Merge with'),
+        help_text=_('Choose location to merge with'),
         queryset=Segment.objects.all(),
     )
 
-    title = _("Merge")
+    title = _('Merge')
 
     def __init__(self, obj, *args, **kwargs):
         super(SegmentMergeForm, self).__init__(*args, **kwargs)
 
-        self.fields["to"].queryset = (
-            self.fields["to"]
-            .queryset.exclude(pk=obj.pk)
-            .filter(segment_type=obj.segment_type)
-        )
+        self.fields['to'].queryset = self.fields['to'].queryset.exclude(pk=obj.pk).filter(segment_type=obj.segment_type)
 
 
 class SegmentAdminForm(TranslatableModelForm):
     email_domains = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={"rows": 3}),
-        help_text=_("Enter one domain per line or separate by commas."),
-        label=_("Email domains"),
+        widget=forms.Textarea(attrs={'rows': 3}),
+        help_text=_('Enter one domain per line or separate by commas.'),
+        label=_('Email domains'),
     )
 
     class Meta:
         model = Segment
-        fields = "__all__"
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
-            self.initial["email_domains"] = "\n".join(self.instance.email_domains or [])
+            self.initial['email_domains'] = '\n'.join(self.instance.email_domains or [])
 
     def clean_email_domains(self):
-        raw_value = self.cleaned_data.get("email_domains", "") or ""
+        raw_value = self.cleaned_data.get('email_domains', '') or ''
         # Accept both comma-separated and newline-separated input.
-        values = raw_value.replace(",", "\n").splitlines()
+        values = raw_value.replace(',', '\n').splitlines()
         return [value.strip() for value in values if value.strip()]
 
 
 @admin.register(Segment)
-class SegmentAdmin(
-    TranslatableLabelAdminMixin,
-    AdminMergeMixin,
-    TranslatableAdminOrderingMixin,
-    TranslatableAdmin
-):
+class SegmentAdmin(TranslatableLabelAdminMixin, AdminMergeMixin, TranslatableAdminOrderingMixin, TranslatableAdmin):
     model = Segment
     form = SegmentAdminForm
 
     readonly_fields = ('translatable_info', 'text_color', 'activities_link', 'members_link', 'type_link')
 
-    list_display = ['name', 'segment_type', 'activities_link', ]
+    list_display = [
+        'name',
+        'segment_type',
+        'activities_link',
+    ]
 
     list_filter = ['segment_type']
     search_fields = ['translations__name']
     fieldsets = (
-        (None, {
-            'fields': [
-                'translatable_info',
-                'type_link', 'name', 'slug', 'email_domains', 'closed',
-                'activities_link', 'members_link'
-            ]
-        }),
-
-        (_('Content'), {
-            'fields': [
-                'slogan', 'story', 'logo', 'cover_image',
-                'background_color', 'text_color',
-                'button_color', 'button_text_color'
-            ],
-        }),
-
-        (_('SSO'), {
-            'fields': ['alternate_names'],
-        }),
+        (
+            None,
+            {
+                'fields': [
+                    'translatable_info',
+                    'type_link',
+                    'name',
+                    'slug',
+                    'email_domains',
+                    'closed',
+                    'activities_link',
+                    'members_link',
+                ]
+            },
+        ),
+        (
+            _('Content'),
+            {
+                'fields': [
+                    'slogan',
+                    'story',
+                    'logo',
+                    'cover_image',
+                    'background_color',
+                    'text_color',
+                    'button_color',
+                    'button_text_color',
+                ],
+            },
+        ),
+        (
+            _('SSO'),
+            {
+                'fields': ['alternate_names'],
+            },
+        ),
     )
 
     merge_form = SegmentMergeForm
 
     def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(
-            request, queryset, search_term
-        )
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
         segment_type = request.GET.get('segment_type')
         if segment_type:
             queryset = queryset.filter(segment_type_id=segment_type)
@@ -183,19 +180,19 @@ class SegmentAdmin(
         return False
 
     def activities_link(self, obj):
-        url = "{}?segments__id__exact={}".format(reverse('admin:activities_activity_changelist'), obj.id)
+        url = '{}?segments__id__exact={}'.format(reverse('admin:activities_activity_changelist'), obj.id)
         return format_html("<a href='{}'>{} activities</a>", url, obj.activities.count())
 
     activities_link.short_description = _('Activities')
 
     def members_link(self, obj):
-        url = "{}?segments__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)
+        url = '{}?segments__id__exact={}'.format(reverse('admin:members_member_changelist'), obj.id)
         return format_html("<a href='{}'>{} members</a>", url, obj.users.count())
 
     members_link.short_description = _('Members')
 
     def type_link(self, obj):
-        url = "{}".format(reverse('admin:segments_segmenttype_change', args=(obj.segment_type.pk, )))
+        url = '{}'.format(reverse('admin:segments_segmenttype_change', args=(obj.segment_type.pk,)))
         segment_type_name = obj.segment_type.name
         return format_html("<a href='{}'>{}</a>", url, segment_type_name)
 
@@ -204,15 +201,12 @@ class SegmentAdmin(
     def text_color(self, obj):
         return obj.text_color
 
-    text_color.short_description = _("Text colour")
+    text_color.short_description = _('Text colour')
 
 
 @admin.register(SegmentType)
 class SegmentTypeAdmin(
-    TranslatableLabelAdminMixin,
-    TranslatableAdminOrderingMixin,
-    TranslatableAdmin,
-    DynamicArrayMixin
+    TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin, DynamicArrayMixin
 ):
     model = SegmentType
     inlines = [SegmentInline]
@@ -233,7 +227,18 @@ class SegmentTypeAdmin(
     list_display = ['name', 'slug', 'segments', 'is_active', 'required', 'visibility']
     list_editable = ['is_active', 'required', 'visibility']
 
-    fields = ['name', 'slug', 'inherit', 'visibility', 'required', 'needs_verification', 'is_active', 'user_editable',
-              'enable_search', 'admin_user_filter', 'admin_activity_filter']
+    fields = [
+        'name',
+        'slug',
+        'inherit',
+        'visibility',
+        'required',
+        'needs_verification',
+        'is_active',
+        'user_editable',
+        'enable_search',
+        'admin_user_filter',
+        'admin_activity_filter',
+    ]
 
     translatable_ordering = 'translations__name'

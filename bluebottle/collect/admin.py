@@ -4,9 +4,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
-from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, TeamInline, BaseContributorInline
-)
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, TeamInline, BaseContributorInline
 from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType, CollectContribution
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -14,7 +12,10 @@ from bluebottle.utils.admin import export_as_csv_action
 class CollectContributionInline(admin.TabularInline):
     model = CollectContribution
     extra = 0
-    readonly_fields = ('status', 'start',)
+    readonly_fields = (
+        'status',
+        'start',
+    )
     fields = readonly_fields + ('value',)
 
     def has_change_permission(self, request, obj=None):
@@ -32,29 +33,27 @@ class CollectContributorAdmin(ContributorChildAdmin):
 
 class CollectContributorInline(BaseContributorInline):
     model = CollectContributor
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
 
 
 @admin.register(CollectActivity)
 class CollectActivityAdmin(ActivityChildAdmin):
     base_model = CollectActivity
-    inlines = (TeamInline, CollectContributorInline,) + ActivityChildAdmin.inlines
+    inlines = (
+        TeamInline,
+        CollectContributorInline,
+    ) + ActivityChildAdmin.inlines
     list_filter = ['status', 'collect_type']
     search_fields = ['title', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
     readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']
 
-    list_display = ActivityChildAdmin.list_display + [
-        'start',
-        'end',
-        'collect_type',
-        'contributor_count',
-        'target'
-    ]
+    list_display = ActivityChildAdmin.list_display + ['start', 'end', 'collect_type', 'contributor_count', 'target']
 
     def contributor_count(self, obj):
         return obj.contributors.count() + obj.deleted_successful_contributors or 0
+
     contributor_count.short_description = _('Participants')
 
     registration_fields = (
@@ -89,10 +88,15 @@ class CollectActivityAdmin(ActivityChildAdmin):
 class CollectTypeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('activity_link',)
     readonly_fields = ('activity_link',)
-    fields = ('name', 'unit', 'unit_plural', 'disabled', ) + readonly_fields
+    fields = (
+        'name',
+        'unit',
+        'unit_plural',
+        'disabled',
+    ) + readonly_fields
 
     def activity_link(self, obj):
-        url = "{}?type__id__exact={}".format(reverse('admin:collect_collectactivity_changelist'), obj.id)
+        url = '{}?type__id__exact={}'.format(reverse('admin:collect_collectactivity_changelist'), obj.id)
         return format_html("<a href='{}'>{} activities</a>".format(url, obj.collectactivity_set.count()))
 
     activity_link.short_description = _('Activity')

@@ -8,8 +8,10 @@ from rest_framework import status
 from bluebottle.collect.models import CollectType
 from bluebottle.collect.serializers import (
     CollectActivitySerializer,
-    CollectActivityTransitionSerializer, CollectContributorSerializer,
-    CollectContributorTransitionSerializer, CollectTypeSerializer
+    CollectActivityTransitionSerializer,
+    CollectContributorSerializer,
+    CollectContributorTransitionSerializer,
+    CollectTypeSerializer,
 )
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory, CollectTypeFactory
 from bluebottle.files.tests.factories import ImageFactory
@@ -37,13 +39,10 @@ class CollectActivityListViewAPITestCase(APITestCase):
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
             'location': GeolocationFactory.create(),
-            'collect_type': self.collect_type
+            'collect_type': self.collect_type,
         }
 
-        self.fields = [
-            'initiative', 'start', 'end', 'title', 'description', 'collect_type',
-            'location', 'theme'
-        ]
+        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type', 'location', 'theme']
 
         settings = InitiativePlatformSettings.load()
         settings.activity_types.append('collect')
@@ -125,20 +124,14 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
             'end': date.today() + timedelta(days=20),
             'location': GeolocationFactory.create(),
             'collect_type': self.collect_type,
-            'owner': BlueBottleUserFactory.create(
-                avatar=ImageFactory.create()
-            )
+            'owner': BlueBottleUserFactory.create(avatar=ImageFactory.create()),
         }
         self.model = self.factory.create(**self.defaults)
 
-        self.active_contributors = CollectContributorFactory.create_batch(
-            4, activity=self.model
-        )
-        self.withdrawn_contributors = CollectContributorFactory.create_batch(
-            4, activity=self.model, status='withdrawn'
-        )
+        self.active_contributors = CollectContributorFactory.create_batch(4, activity=self.model)
+        self.withdrawn_contributors = CollectContributorFactory.create_batch(4, activity=self.model, status='withdrawn')
 
-        self.url = reverse('collect-activity-detail', args=(self.model.pk, ))
+        self.url = reverse('collect-activity-detail', args=(self.model.pk,))
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type']
 
@@ -161,21 +154,14 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
         self.assertTransition('publish')
         self.assertTransition('delete')
         contributors = self.loadLinkedRelated('contributors')
-        self.assertObjectList(
-            contributors,
-            (self.active_contributors + self.withdrawn_contributors).reverse()
-        )
+        self.assertObjectList(contributors, (self.active_contributors + self.withdrawn_contributors).reverse())
 
     def test_get_calendar_links(self):
         self.perform_get(user=self.model.owner)
 
         links = self.response.json()['data']['attributes']['links']
 
-        self.assertTrue(
-            links['ical'].startswith(
-                reverse('collect-ical', args=(self.model.pk, ))
-            )
-        )
+        self.assertTrue(links['ical'].startswith(reverse('collect-ical', args=(self.model.pk,))))
         self.url = links['ical']
         self.perform_get(user=self.model.owner)
         self.assertStatus(200)
@@ -203,10 +189,7 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
         contributors = self.loadLinkedRelated('contributors')
-        self.assertObjectList(
-            contributors,
-            (self.active_contributors + [contributor]).reverse()
-        )
+        self.assertObjectList(contributors, (self.active_contributors + [contributor]).reverse())
         links = self.response.data['links']
 
         self.assertTrue(f'/api/collect/ical/{self.model.id}' in links['ical'])
@@ -227,10 +210,7 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
         contributors = self.loadLinkedRelated('contributors')
-        self.assertObjectList(
-            contributors,
-            self.active_contributors.reverse()
-        )
+        self.assertObjectList(contributors, self.active_contributors.reverse())
 
     def test_get_closed_site(self):
         with self.closed_site():
@@ -256,10 +236,7 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
 
     def test_put_initiative_activity_manager(self):
         new_description = 'Test description'
-        self.perform_update(
-            {'description': new_description},
-            user=self.model.initiative.activity_managers.first()
-        )
+        self.perform_update({'description': new_description}, user=self.model.initiative.activity_managers.first())
 
         self.assertStatus(status.HTTP_200_OK)
 
@@ -296,7 +273,10 @@ class CollectActivityTransitionListViewAPITestCase(APITestCase):
             'transition': 'publish',
         }
 
-        self.fields = ['resource', 'transition', ]
+        self.fields = [
+            'resource',
+            'transition',
+        ]
 
     def test_submit(self):
         self.perform_create(user=self.activity.owner)
@@ -338,7 +318,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
         CollectContributorFactory.create_batch(5, activity=self.activity)
         CollectContributorFactory.create_batch(5, activity=self.activity, status='withdrawn')
 
-        self.url = reverse('related-collect-contributors', args=(self.activity.pk, ))
+        self.url = reverse('related-collect-contributors', args=(self.activity.pk,))
 
     def test_get(self):
         self.perform_get(user=self.activity.owner)
@@ -372,10 +352,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
         self.assertTotal(5)
 
         self.assertTrue(
-            all(
-                contributor['attributes']['status'] == 'accepted'
-                for contributor in self.response.json()['data']
-            )
+            all(contributor['attributes']['status'] == 'accepted' for contributor in self.response.json()['data'])
         )
 
     def test_get_user_hide_first_name(self):
@@ -398,10 +375,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
         self.assertTotal(5)
 
         self.assertTrue(
-            all(
-                contributor['attributes']['status'] == 'succeeded'
-                for contributor in self.response.json()['data']
-            )
+            all(contributor['attributes']['status'] == 'succeeded' for contributor in self.response.json()['data'])
         )
 
     def test_get_anonymous(self):
@@ -411,10 +385,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
         self.assertTotal(5)
 
         self.assertTrue(
-            all(
-                contributor['attributes']['status'] == 'accepted'
-                for contributor in self.response.json()['data']
-            )
+            all(contributor['attributes']['status'] == 'accepted' for contributor in self.response.json()['data'])
         )
 
     def test_get_anonymous_hide_first_name(self):
@@ -447,9 +418,7 @@ class CollectActivityContributorListViewAPITestCase(APITestCase):
             end=date.today() + timedelta(days=20),
         )
 
-        self.defaults = {
-            'activity': self.activity
-        }
+        self.defaults = {'activity': self.activity}
 
         self.fields = ['activity']
 
@@ -490,7 +459,10 @@ class CollectActivityContributorTranistionListViewAPITestCase(APITestCase):
             'transition': 'withdraw',
         }
 
-        self.fields = ['resource', 'transition', ]
+        self.fields = [
+            'resource',
+            'transition',
+        ]
 
     def test_create(self):
         self.perform_create(user=self.contributor.user)
@@ -528,10 +500,8 @@ class ContributorExportViewAPITestCase(APITestCase):
             end=date.today() + timedelta(days=20),
         )
 
-        self.contributors = CollectContributorFactory.create_batch(
-            5, activity=self.activity
-        )
-        self.url = reverse('collect-activity-detail', args=(self.activity.pk, ))
+        self.contributors = CollectContributorFactory.create_batch(5, activity=self.activity)
+        self.url = reverse('collect-activity-detail', args=(self.activity.pk,))
 
     @property
     def export_url(self):
@@ -545,9 +515,7 @@ class ContributorExportViewAPITestCase(APITestCase):
         response = self.client.get(self.export_url)
         sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
         rows = list(sheet.values)
-        self.assertEqual(
-            rows[0], ('Email', 'Name', 'Registration Date', 'Status')
-        )
+        self.assertEqual(rows[0], ('Email', 'Name', 'Registration Date', 'Status'))
 
     def test_get_owner_incorrect_hash(self):
         self.perform_get(user=self.activity.owner)

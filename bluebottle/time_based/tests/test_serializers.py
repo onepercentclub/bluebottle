@@ -10,8 +10,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, CountryFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.serializers import DateActivitySerializer
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, \
-    DateParticipantFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory
 
 
 class DateActivitySerializerTestCase(BluebottleTestCase):
@@ -58,31 +57,37 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
         self.assertEqual(data[attr], value)
 
     def test_date_info_no_slots(self):
-        self.assertAttribute('date_info', {
-            'capacity': None,
-            'count': 0,
-            'first': None,
-            'end': None,
-            'is_full': True,
-            'duration': None,
-            'has_multiple': False,
-            'spots_left': None,
-            'total': 0
-        })
+        self.assertAttribute(
+            'date_info',
+            {
+                'capacity': None,
+                'count': 0,
+                'first': None,
+                'end': None,
+                'is_full': True,
+                'duration': None,
+                'has_multiple': False,
+                'spots_left': None,
+                'total': 0,
+            },
+        )
 
     def test_date_info_single_slot(self):
         slot = DateActivitySlotFactory.create(activity=self.activity)
-        self.assertAttribute('date_info', {
-            'capacity': 10,
-            'count': 1,
-            'first': slot.start,
-            'end': slot.end,
-            'duration': timedelta(hours=2),
-            'is_full': False,
-            'has_multiple': False,
-            'spots_left': 10,
-            'total': 1
-        })
+        self.assertAttribute(
+            'date_info',
+            {
+                'capacity': 10,
+                'count': 1,
+                'first': slot.start,
+                'end': slot.end,
+                'duration': timedelta(hours=2),
+                'is_full': False,
+                'has_multiple': False,
+                'spots_left': 10,
+                'total': 1,
+            },
+        )
 
     def test_date_info_multiple_dates(self):
         slots = [
@@ -91,42 +96,42 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=6)),
         ]
 
-        self.assertAttribute('date_info', {
-            'capacity': 30,
-            'count': 3,
-            'first': min(slot.start.date() for slot in slots),
-            'end': max(slot.end.date() for slot in slots),
-            'duration': None,
-            'is_full': False,
-            'has_multiple': True,
-            'spots_left': 30,
-            'total': 3
-        })
+        self.assertAttribute(
+            'date_info',
+            {
+                'capacity': 30,
+                'count': 3,
+                'first': min(slot.start.date() for slot in slots),
+                'end': max(slot.end.date() for slot in slots),
+                'duration': None,
+                'is_full': False,
+                'has_multiple': True,
+                'spots_left': 30,
+                'total': 3,
+            },
+        )
 
     def test_date_info_multiple_dates_full(self):
         slots = [
-            DateActivitySlotFactory.create(
-                activity=self.activity, start=now() + timedelta(days=2), status='full'
-            ),
-            DateActivitySlotFactory.create(
-                activity=self.activity, start=now() + timedelta(days=4), status='full'
-            ),
-            DateActivitySlotFactory.create(
-                activity=self.activity, start=now() + timedelta(days=6), status='full'
-            ),
+            DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=2), status='full'),
+            DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=4), status='full'),
+            DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=6), status='full'),
         ]
 
-        self.assertAttribute('date_info', {
-            'capacity': 30,
-            'count': 3,
-            'first': min(slot.start.date() for slot in slots),
-            'end': max(slot.end.date() for slot in slots),
-            'duration': None,
-            'is_full': True,
-            'has_multiple': True,
-            'spots_left': 30,
-            'total': 3
-        })
+        self.assertAttribute(
+            'date_info',
+            {
+                'capacity': 30,
+                'count': 3,
+                'first': min(slot.start.date() for slot in slots),
+                'end': max(slot.end.date() for slot in slots),
+                'duration': None,
+                'is_full': True,
+                'has_multiple': True,
+                'spots_left': 30,
+                'total': 3,
+            },
+        )
 
     def test_date_info_multiple_dates_overlapping(self):
         slots = [
@@ -135,17 +140,20 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=6)),
         ]
 
-        self.assertAttribute('date_info', {
-            'capacity': 30,
-            'count': 3,
-            'first': min(slot.start.date() for slot in slots),
-            'end': max(slot.end.date() for slot in slots),
-            'duration': None,
-            'is_full': False,
-            'has_multiple': True,
-            'spots_left': 30,
-            'total': 3
-        })
+        self.assertAttribute(
+            'date_info',
+            {
+                'capacity': 30,
+                'count': 3,
+                'first': min(slot.start.date() for slot in slots),
+                'end': max(slot.end.date() for slot in slots),
+                'duration': None,
+                'is_full': False,
+                'has_multiple': True,
+                'spots_left': 30,
+                'total': 3,
+            },
+        )
 
     def test_date_info_multiple_dates_filtered(self):
         slots = [
@@ -165,13 +173,12 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'end': max(slot.end.date() for slot in slots),
                 'has_multiple': True,
                 'spots_left': 20,
-                'total': 2
+                'total': 2,
             },
             {
                 'filter[start]': (now() + timedelta(days=1)).strftime('%Y-%m-%d'),
-                'filter[end]': (now() + timedelta(days=4)).strftime('%Y-%m-%d')
-            }
-
+                'filter[end]': (now() + timedelta(days=4)).strftime('%Y-%m-%d'),
+            },
         )
 
     def test_location_info_no_slots(self):
@@ -183,7 +190,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'location': None,
                 'online_meeting_url': None,
                 'location_hint': None,
-            }
+            },
         )
 
     def test_location_info_single_slot(self):
@@ -196,14 +203,12 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'location': activity_geolocation_display([slot.location]),
                 'online_meeting_url': None,
                 'location_hint': None,
-            }
+            },
         )
 
     def test_location_info_all_online(self):
         DateActivitySlotFactory.create_batch(
-            3,
-            activity=self.activity, is_online=True,
-            location=None, online_meeting_url='http://meet.up'
+            3, activity=self.activity, is_online=True, location=None, online_meeting_url='http://meet.up'
         )
 
         self.assertAttribute(
@@ -214,14 +219,12 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'location': None,
                 'online_meeting_url': None,
                 'location_hint': None,
-            }
+            },
         )
 
     def test_location_info_all_online_participant(self):
         DateActivitySlotFactory.create_batch(
-            3,
-            activity=self.activity, is_online=True,
-            location=None, online_meeting_url='http://meet.up'
+            3, activity=self.activity, is_online=True, location=None, online_meeting_url='http://meet.up'
         )
 
         user = BlueBottleUserFactory.create()
@@ -238,7 +241,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'online_meeting_url': 'http://meet.up',
                 'location_hint': None,
             },
-            user=user
+            user=user,
         )
 
     def test_location_info_multiple_locations(self):
@@ -254,7 +257,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'location': None,
                 'online_meeting_url': None,
                 'location_hint': None,
-            }
+            },
         )
 
     def test_location_info_multiple_locations_same_street(self):
@@ -296,7 +299,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 },
                 'online_meeting_url': None,
                 'location_hint': None,
-            }
+            },
         )
 
     def test_location_info_multiple_locations_same_region(self):
@@ -338,7 +341,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 },
                 'online_meeting_url': None,
                 'location_hint': None,
-            }
+            },
         )
 
     def test_location_info_multiple_slots_single_location(self):
@@ -346,11 +349,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
 
         DateActivitySlotFactory.create(activity=self.activity, location=location)
         DateActivitySlotFactory.create(activity=self.activity, location=location)
-        DateActivitySlotFactory.create(
-            activity=self.activity,
-            location=location,
-            location_hint='test hint'
-        )
+        DateActivitySlotFactory.create(activity=self.activity, location=location, location_hint='test hint')
 
         expected = activity_geolocation_display([location])
         self.assertAttribute(
@@ -361,7 +360,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'location': expected,
                 'online_meeting_url': None,
                 'location_hint': None,
-            }
+            },
         )
 
     def test_location_info_multiple_dates_filtered(self):
@@ -383,6 +382,6 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             },
             {
                 'filter[start]': (now() + timedelta(days=1)).strftime('%Y-%m-%d'),
-                'filter[end]': (now() + timedelta(days=3)).strftime('%Y-%m-%d')
-            }
+                'filter[end]': (now() + timedelta(days=3)).strftime('%Y-%m-%d'),
+            },
         )

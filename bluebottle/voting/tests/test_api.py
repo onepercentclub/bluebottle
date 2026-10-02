@@ -9,9 +9,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.voting.models import PollVote
 from bluebottle.voting.serializers import PollSerializer, PollVoteSerializer
-from bluebottle.voting.tests.factories import (
-    PollFactory, PollOptionFactory, PollVoteFactory
-)
+from bluebottle.voting.tests.factories import PollFactory, PollOptionFactory, PollVoteFactory
 
 
 class PollDetailAPITestCase(APITestCase):
@@ -27,16 +25,10 @@ class PollDetailAPITestCase(APITestCase):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('title', 'Favourite colour')
-        self.assertEqual(
-            self.response.json()['data']['attributes']['votes-cast'],
-            0
-        )
+        self.assertEqual(self.response.json()['data']['attributes']['votes-cast'], 0)
         self.assertRelationship('options', [self.option])
         self.assertRelationship('my-vote')
-        self.assertEqual(
-            self.response.json()['data']['relationships']['my-vote']['data'],
-            None
-        )
+        self.assertEqual(self.response.json()['data']['relationships']['my-vote']['data'], None)
 
     def test_get_with_votes(self):
         PollVoteFactory.create(poll=self.poll, option=self.option)
@@ -46,9 +38,7 @@ class PollDetailAPITestCase(APITestCase):
         self.assertAttribute('votes_cast', 2)
 
     def test_get_authenticated_includes_my_vote(self):
-        vote = PollVoteFactory.create(
-            poll=self.poll, option=self.option, owner=self.user
-        )
+        vote = PollVoteFactory.create(poll=self.poll, option=self.option, owner=self.user)
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('votes_cast', 1)
@@ -59,10 +49,7 @@ class PollDetailAPITestCase(APITestCase):
         PollVoteFactory.create(poll=self.poll, option=self.option)
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertEqual(
-            self.response.json()['data']['relationships']['my-vote']['data'],
-            None
-        )
+        self.assertEqual(self.response.json()['data']['relationships']['my-vote']['data'], None)
 
     def test_get_closed_poll(self):
         other = PollOptionFactory.create(poll=self.poll, title='Green')
@@ -92,10 +79,7 @@ class PollDetailAPITestCase(APITestCase):
         PollVoteFactory.create(poll=self.poll, option=self.option)
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        option = [
-            included for included in self.response.json()['included']
-            if included['type'] == 'polls/options'
-        ][0]
+        option = [included for included in self.response.json()['included'] if included['type'] == 'polls/options'][0]
         self.assertNotIn('votes', option['attributes'])
         self.assertNotIn('percentage', option['attributes'])
         self.assertNotIn('winner', option['attributes'])
@@ -107,10 +91,7 @@ class PollDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_404_NOT_FOUND)
 
     def test_get_without_translation_in_request_language(self):
-        self.response = self.client.get(
-            self.url,
-            HTTP_X_APPLICATION_LANGUAGE='nl'
-        )
+        self.response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('title', 'Favourite colour')
 
@@ -125,9 +106,7 @@ class PollVoteExportViewAPITestCase(APITestCase):
 
         self.poll = PollFactory.create(status='open', title='Favourite colour')
         self.option = PollOptionFactory.create(poll=self.poll, title='Blue')
-        self.votes = PollVoteFactory.create_batch(
-            3, poll=self.poll, option=self.option
-        )
+        self.votes = PollVoteFactory.create_batch(3, poll=self.poll, option=self.option)
         self.staff = BlueBottleUserFactory.create(is_staff=True)
         self.url = reverse('poll-detail', args=(self.poll.pk,))
 
@@ -143,9 +122,7 @@ class PollVoteExportViewAPITestCase(APITestCase):
 
         sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
         rows = list(sheet.values)
-        self.assertEqual(
-            rows[0], ('Name', 'Email', 'Date', 'Option')
-        )
+        self.assertEqual(rows[0], ('Name', 'Email', 'Date', 'Option'))
         self.assertEqual(len(rows), 4)
         self.assertEqual(rows[1][3], 'Blue')
 
@@ -188,9 +165,7 @@ class PollVoteListAPITestCase(APITestCase):
         self.url = reverse('poll-vote-list')
 
     def test_list_own_votes(self):
-        own = PollVoteFactory.create(
-            poll=self.poll, option=self.option, owner=self.user
-        )
+        own = PollVoteFactory.create(poll=self.poll, option=self.option, owner=self.user)
         PollVoteFactory.create(poll=self.poll, option=self.other_option)
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
@@ -203,9 +178,7 @@ class PollVoteListAPITestCase(APITestCase):
         closed_poll = PollFactory.create(status='closed', title='Closed poll')
         winning = PollOptionFactory.create(poll=closed_poll, title='Winning')
         losing = PollOptionFactory.create(poll=closed_poll, title='Losing')
-        PollVoteFactory.create(
-            poll=closed_poll, option=winning, owner=self.user
-        )
+        PollVoteFactory.create(poll=closed_poll, option=winning, owner=self.user)
         PollVoteFactory.create(poll=closed_poll, option=winning)
         PollVoteFactory.create(poll=closed_poll, option=losing)
 
@@ -215,8 +188,7 @@ class PollVoteListAPITestCase(APITestCase):
         options = {
             included['id']: included['attributes']
             for included in self.response.json()['included']
-            if included['type'] == 'polls/options'
-            and included['id'] in {str(winning.pk), str(losing.pk)}
+            if included['type'] == 'polls/options' and included['id'] in {str(winning.pk), str(losing.pk)}
         }
         self.assertEqual(options[str(winning.pk)]['votes'], 2)
         self.assertTrue(options[str(winning.pk)]['winner'])
@@ -226,29 +198,21 @@ class PollVoteListAPITestCase(APITestCase):
     def test_list_filter_by_status(self):
         closed_poll = PollFactory.create(status='closed')
         closed_option = PollOptionFactory.create(poll=closed_poll)
-        PollVoteFactory.create(
-            poll=self.poll, option=self.option, owner=self.user
-        )
-        closed_vote = PollVoteFactory.create(
-            poll=closed_poll, option=closed_option, owner=self.user
-        )
+        PollVoteFactory.create(poll=self.poll, option=self.option, owner=self.user)
+        closed_vote = PollVoteFactory.create(poll=closed_poll, option=closed_option, owner=self.user)
 
         self.perform_get(user=self.user, query={'filter[status]': 'closed'})
         self.assertStatus(status.HTTP_200_OK)
         self.assertEqual(len(self.response.json()['data']), 1)
-        self.assertEqual(
-            self.response.json()['data'][0]['id'], str(closed_vote.pk)
-        )
+        self.assertEqual(self.response.json()['data'][0]['id'], str(closed_vote.pk))
 
         self.perform_get(user=self.user, query={'filter[status]': 'open'})
         self.assertStatus(status.HTTP_200_OK)
         self.assertEqual(len(self.response.json()['data']), 1)
-        self.assertEqual(
-            self.response.json()['data'][0]['relationships']['poll']['data']['id'],
-            str(self.poll.pk)
-        )
+        self.assertEqual(self.response.json()['data'][0]['relationships']['poll']['data']['id'], str(self.poll.pk))
         included_poll = [
-            included for included in self.response.json()['included']
+            included
+            for included in self.response.json()['included']
             if included['type'] == 'polls' and included['id'] == str(self.poll.pk)
         ][0]
         self.assertEqual(included_poll['attributes']['votes-cast'], 1)
@@ -264,14 +228,10 @@ class PollVoteListAPITestCase(APITestCase):
         self.assertRelationship('option', [self.option])
         self.assertEqual(PollVote.objects.filter(owner=self.user).count(), 1)
         self.assertIncluded('poll', self.poll)
-        included_poll = [
-            included for included in self.response.json()['included']
-            if included['type'] == 'polls'
-        ][0]
+        included_poll = [included for included in self.response.json()['included'] if included['type'] == 'polls'][0]
         self.assertEqual(included_poll['attributes']['votes-cast'], 1)
         self.assertEqual(
-            included_poll['relationships']['my-vote']['data']['id'],
-            str(PollVote.objects.get(owner=self.user).pk)
+            included_poll['relationships']['my-vote']['data']['id'], str(PollVote.objects.get(owner=self.user).pk)
         )
 
     def test_create_anonymous(self):
@@ -279,9 +239,7 @@ class PollVoteListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_duplicate(self):
-        PollVoteFactory.create(
-            poll=self.poll, option=self.option, owner=self.user
-        )
+        PollVoteFactory.create(poll=self.poll, option=self.option, owner=self.user)
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
         self.assertEqual(PollVote.objects.filter(owner=self.user).count(), 1)
@@ -309,16 +267,11 @@ class PollVoteDetailAPITestCase(APITestCase):
         self.poll = PollFactory.create(status='open')
         self.option = PollOptionFactory.create(poll=self.poll)
         self.other_option = PollOptionFactory.create(poll=self.poll)
-        self.model = PollVoteFactory.create(
-            poll=self.poll, option=self.option, owner=self.user
-        )
+        self.model = PollVoteFactory.create(poll=self.poll, option=self.option, owner=self.user)
         self.url = reverse('poll-vote-detail', args=(self.model.pk,))
 
     def test_update_option(self):
-        self.perform_update(
-            to_change={'option': self.other_option},
-            user=self.user
-        )
+        self.perform_update(to_change={'option': self.other_option}, user=self.user)
         self.assertStatus(status.HTTP_200_OK)
         self.assertRelationship('option', [self.other_option])
         self.assertEqual(PollVote.objects.filter(owner=self.user).count(), 1)
@@ -330,27 +283,18 @@ class PollVoteDetailAPITestCase(APITestCase):
 
     def test_update_other_user(self):
         other = BlueBottleUserFactory.create()
-        self.perform_update(
-            to_change={'option': self.other_option},
-            user=other
-        )
+        self.perform_update(to_change={'option': self.other_option}, user=other)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_update_option_from_other_poll(self):
         other_option = PollOptionFactory.create()
-        self.perform_update(
-            to_change={'option': other_option},
-            user=self.user
-        )
+        self.perform_update(to_change={'option': other_option}, user=self.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_update_closed_poll(self):
         self.poll.status = 'closed'
         self.poll.save()
-        self.perform_update(
-            to_change={'option': self.other_option},
-            user=self.user
-        )
+        self.perform_update(to_change={'option': self.other_option}, user=self.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_delete(self):

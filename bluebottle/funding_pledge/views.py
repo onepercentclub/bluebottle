@@ -28,9 +28,7 @@ class PledgeBankAccountAccountList(JsonApiViewMixin, ListCreateAPIView):
         queryset = super(PledgeBankAccountAccountList, self).get_queryset(*args, **kwargs)
         return queryset.filter(connect_account__owner=self.request.user)
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}
 
 
 class PledgeBankAccountAccountDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
@@ -38,6 +36,4 @@ class PledgeBankAccountAccountDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     serializer_class = PledgeBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}

@@ -18,8 +18,12 @@ from stripe.error import AuthenticationError, StripeError
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor, IbanCheck
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices,
-    FundingPlatformSettings
+    Payment,
+    PaymentProvider,
+    PayoutAccount,
+    BankAccount,
+    BusinessTypeChoices,
+    FundingPlatformSettings,
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host, get_tenant_name
@@ -45,17 +49,16 @@ class PaymentIntent(models.Model):
             )
         except InvalidRequestError:
             return stripe.PaymentIntent.retrieve(
-                self.intent_id,
-                stripe_account=self.donation.activity.bank_account.connect_account.account_id
+                self.intent_id, stripe_account=self.donation.activity.bank_account.connect_account.account_id
             )
 
     @property
     def metadata(self):
         return {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "activity_id": self.donation.activity.pk,
-            "activity_title": self.donation.activity.title,
+            'tenant_name': connection.tenant.client_name,
+            'tenant_domain': connection.tenant.domain_url,
+            'activity_id': self.donation.activity.pk,
+            'activity_title': self.donation.activity.title,
         }
 
     class JSONAPIMeta(object):
@@ -80,6 +83,7 @@ class StripePayment(Payment):
     """
     A payment through stripe, related to a donation to a crowdfunding campaign.
     """
+
     include_in_documentation = True
 
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment', on_delete=models.CASCADE)
@@ -105,9 +109,9 @@ class StripePayment(Payment):
             if intent.status == 'failed' and self.status != self.states.failed.value:
                 self.states.require_action(save=True)
         elif (
-            intent.latest_charge and
-            stripe.Charge.retrieve(intent.latest_charge).refunded and
-            self.status != self.states.refunded.value
+            intent.latest_charge
+            and stripe.Charge.retrieve(intent.latest_charge).refunded
+            and self.status != self.states.refunded.value
         ):
             self.states.refund(save=True)
         elif intent.status == 'pending' and self.status != self.states.pending.value:
@@ -119,22 +123,15 @@ class StripePayment(Payment):
                 charge = stripe.Charge.retrieve(intent.latest_charge)
                 if 'transfer' in charge:
                     transfer = stripe.Transfer.retrieve(charge.transfer)
-                    self.donation.payout_amount = Money(
-                        transfer.amount / 100.0, transfer.currency
-                    )
+                    self.donation.payout_amount = Money(transfer.amount / 100.0, transfer.currency)
             elif 'amount_received' in intent:
-                self.donation.payout_amount = Money(
-                    intent.amount_received / 100.0, intent.currency
-                )
+                self.donation.payout_amount = Money(intent.amount_received / 100.0, intent.currency)
 
             if (
                 self.donation.amount.currency == self.donation.payout_amount.currency
                 and self.donation.amount.amount != self.donation.payout_amount.amount
             ):
-                self.donation.amount = Money(
-                    self.donation.payout_amount.amount,
-                    self.donation.payout_amount.currency
-                )
+                self.donation.amount = Money(self.donation.payout_amount.amount, self.donation.payout_amount.currency)
 
             self.donation.save()
             if self.status != self.states.succeeded.value:
@@ -178,7 +175,7 @@ class StripeSourcePayment(Payment):
                 'destination': connect_account.account_id,
             },
             statement_descriptor_suffix=statement_descriptor[:18],
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
         charge = stripe.Charge.create(**charge_args)
@@ -232,10 +229,10 @@ class StripeSourcePayment(Payment):
     @property
     def metadata(self):
         return {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "activity_id": self.donation.activity.pk,
-            "activity_title": self.donation.activity.title,
+            'tenant_name': connection.tenant.client_name,
+            'tenant_domain': connection.tenant.domain_url,
+            'activity_id': self.donation.activity.pk,
+            'activity_title': self.donation.activity.title,
         }
 
 
@@ -244,11 +241,11 @@ class StripePaymentProvider(PaymentProvider):
 
     country = models.CharField(
         max_length=2,
-        default="NL",
+        default='NL',
         verbose_name=_('Country of primary stripe account'),
         help_text=_(
             'Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. '
-        )
+        ),
     )
 
     stripe_publishable_key = models.CharField(
@@ -256,7 +253,7 @@ class StripePaymentProvider(PaymentProvider):
         null=True,
         blank=True,
         verbose_name=_('Stripe publishable key'),
-        help_text=_('This is only needed if you want to use a specific Stripe account.')
+        help_text=_('This is only needed if you want to use a specific Stripe account.'),
     )
 
     stripe_secret = models.CharField(
@@ -264,7 +261,7 @@ class StripePaymentProvider(PaymentProvider):
         null=True,
         blank=True,
         verbose_name=_('Stripe secret key'),
-        help_text=_('This is only needed if you want to use a specific Stripe account.')
+        help_text=_('This is only needed if you want to use a specific Stripe account.'),
     )
 
     webhook_secret_connect = models.CharField(
@@ -272,7 +269,7 @@ class StripePaymentProvider(PaymentProvider):
         null=True,
         blank=True,
         verbose_name=_('Stripe connect webhook secret'),
-        help_text=_('The secret for connect webhook.')
+        help_text=_('The secret for connect webhook.'),
     )
 
     webhook_secret_intents = models.CharField(
@@ -280,7 +277,7 @@ class StripePaymentProvider(PaymentProvider):
         null=True,
         blank=True,
         verbose_name=_('Stripe payment intents webhook secret'),
-        help_text=_('The secret for payment intents webhook.')
+        help_text=_('The secret for payment intents webhook.'),
     )
 
     webhook_secret_checkout = models.CharField(
@@ -288,14 +285,11 @@ class StripePaymentProvider(PaymentProvider):
         null=True,
         blank=True,
         verbose_name=_('Stripe payment checkout session webhook secret'),
-        help_text=_('The secret for payment checkout session webhook.')
+        help_text=_('The secret for payment checkout session webhook.'),
     )
 
     currency = models.CharField(
-        max_length=3,
-        default='EUR',
-        verbose_name=_('Currency'),
-        help_text=_('The currency for the global account.')
+        max_length=3, default='EUR', verbose_name=_('Currency'), help_text=_('The currency for the global account.')
     )
 
     refund_enabled = True
@@ -329,25 +323,62 @@ def get_specs(country):
 
 
 STRIPE_EUROPEAN_COUNTRY_CODES = [
-    "AD", "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE",
-    "FO", "FI", "FR", "DE", "GI", "GR", "GL", "GG", "VA",
-    "HU", "IS", "IE", "IM", "IL", "IT", "JE", "LV", "LI",
-    "LT", "LU", "MT", "MC", "NL", "NO", "PL", "PT", "RO",
-    "PM", "SM", "SK", "SI", "ES", "SE", "TR", "GB"
+    'AD',
+    'AT',
+    'BE',
+    'BG',
+    'HR',
+    'CY',
+    'CZ',
+    'DK',
+    'EE',
+    'FO',
+    'FI',
+    'FR',
+    'DE',
+    'GI',
+    'GR',
+    'GL',
+    'GG',
+    'VA',
+    'HU',
+    'IS',
+    'IE',
+    'IM',
+    'IL',
+    'IT',
+    'JE',
+    'LV',
+    'LI',
+    'LT',
+    'LU',
+    'MT',
+    'MC',
+    'NL',
+    'NO',
+    'PL',
+    'PT',
+    'RO',
+    'PM',
+    'SM',
+    'SK',
+    'SI',
+    'ES',
+    'SE',
+    'TR',
+    'GB',
 ]
 
 
 class VerificationMethodChoices(DjangoChoices):
-    personal = ChoiceItem(
-        'personal',
-        label=_("Personal")
-    )
+    personal = ChoiceItem('personal', label=_('Personal'))
 
 
 class StripePayoutAccount(PayoutAccount):
     """
     Stripe payout account (KYC) for a beneficiary.
     """
+
     include_in_documentation = True
 
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
@@ -357,7 +388,6 @@ class StripePayoutAccount(PayoutAccount):
         max_length=100,
         null=True,
         choices=BusinessTypeChoices.choices,
-
     )
     verification_method = models.CharField(
         max_length=100,
@@ -379,22 +409,22 @@ class StripePayoutAccount(PayoutAccount):
     def account_settings(self):
         statement_descriptor = connection.tenant.name[:22]
         while len(statement_descriptor) < 5:
-            statement_descriptor += "-"
+            statement_descriptor += '-'
         return {
-            "payouts": {
-                "schedule": {"interval": "manual"},
-                "statement_descriptor": statement_descriptor,
+            'payouts': {
+                'schedule': {'interval': 'manual'},
+                'statement_descriptor': statement_descriptor,
             },
-            "payments": {"statement_descriptor": statement_descriptor},
-            "card_payments": {"statement_descriptor_prefix": statement_descriptor[:10]},
+            'payments': {'statement_descriptor': statement_descriptor},
+            'card_payments': {'statement_descriptor_prefix': statement_descriptor[:10]},
         }
 
     @property
     def metadata(self):
         return {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "member_id": self.owner.pk,
+            'tenant_name': connection.tenant.client_name,
+            'tenant_domain': connection.tenant.domain_url,
+            'member_id': self.owner.pk,
         }
 
     def prefill_business_profile(self):
@@ -409,15 +439,12 @@ class StripePayoutAccount(PayoutAccount):
                     and company
                     and getattr(company, 'structure', None) == 'incorporated_non_profit'
                 ):
-                    stripe.Account.modify(
-                        self.account_id,
-                        company={"structure": None}
-                    )
+                    stripe.Account.modify(self.account_id, company={'structure': None})
                 elif not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
-                    business_profile.mcc = "8398"  # Default MCC for non-profits and crowdfunding
-                    company = {"structure": "incorporated_non_profit"}
+                    business_profile.mcc = '8398'  # Default MCC for non-profits and crowdfunding
+                    company = {'structure': 'incorporated_non_profit'}
 
-                    if self.country == "MX":
+                    if self.country == 'MX':
                         company = {}
 
                     stripe.Account.modify(
@@ -429,8 +456,8 @@ class StripePayoutAccount(PayoutAccount):
                 if not business_profile.product_description:
                     platform = get_tenant_name()
                     business_profile.product_description = _(
-                        "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
-                    ) % {"platform": platform}
+                        'Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform.'
+                    ) % {'platform': platform}
                     stripe.Account.modify(
                         self.account_id,
                         business_profile=business_profile,
@@ -463,17 +490,17 @@ class StripePayoutAccount(PayoutAccount):
 
         if self.country and not self.account_id:
             business_profile = {
-                "mcc": "8398" if self.business_type != BusinessTypeChoices.company else "",
-                "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform."
+                'mcc': '8398' if self.business_type != BusinessTypeChoices.company else '',
+                'product_description': 'Not applicable - raising funds for a do-good project on a GoodUp platform.',
             }
-            if not self.business_type or self.business_type == BusinessTypeChoices.individual or self.country == "MX":
+            if not self.business_type or self.business_type == BusinessTypeChoices.individual or self.country == 'MX':
                 company = None
             else:
-                company = {"structure": "incorporated_non_profit"}
+                company = {'structure': 'incorporated_non_profit'}
 
             account = stripe.Account.create(
                 country=self.country,
-                type="custom",
+                type='custom',
                 settings=self.account_settings,
                 business_type=self.business_type,
                 company=company,
@@ -512,11 +539,11 @@ class StripePayoutAccount(PayoutAccount):
     @property
     def capabilities(self):
         capabilities = {
-            "transfers": {"requested": True},
+            'transfers': {'requested': True},
         }
 
         if self.spec.supported_bank_account_currencies:
-            capabilities['card_payments'] = {"requested": True}
+            capabilities['card_payments'] = {'requested': True}
 
         return capabilities
 
@@ -530,11 +557,11 @@ class StripePayoutAccount(PayoutAccount):
             account=self.account_id,
             refresh_url=f'{get_current_host()}/activities/stripe/expired',
             return_url=f'{get_current_host()}/activities/stripe/complete',
-            type="account_onboarding",
+            type='account_onboarding',
             collection_options={
-                "fields": "eventually_due",
-                "future_requirements": "include",
-            }
+                'fields': 'eventually_due',
+                'future_requirements': 'include',
+            },
         )
         return account_link.url
 
@@ -550,13 +577,11 @@ class StripePayoutAccount(PayoutAccount):
 
         if self.business_type == BusinessTypeChoices.individual:
             try:
-                self.verified = data.individual.verification.status == "verified"
+                self.verified = data.individual.verification.status == 'verified'
             except AttributeError:
                 stripe = get_stripe()
                 persons = stripe.Account.persons(data.id)
-                self.verified = len(persons) and all(
-                    person.verification.status == 'verified' for person in persons
-                )
+                self.verified = len(persons) and all(person.verification.status == 'verified' for person in persons)
         else:
             requirements = data.requirements
             if (
@@ -570,10 +595,7 @@ class StripePayoutAccount(PayoutAccount):
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
 
-        if (
-            self.verified and self.payouts_enabled
-            and self.payments_enabled
-        ):
+        if self.verified and self.payouts_enabled and self.payments_enabled:
             if self.status != self.states.verified.value:
                 self.states.verify()
         elif self.status and self.status != self.states.incomplete.value:
@@ -602,7 +624,7 @@ class StripePayoutAccount(PayoutAccount):
             return self.account.business_profile.name
 
         if self.account.individual.first_name:
-            return f"{self.account.individual.first_name} {self.account.individual.last_name}"
+            return f'{self.account.individual.first_name} {self.account.individual.last_name}'
 
         return self.owner.full_name
 
@@ -620,13 +642,13 @@ class StripePayoutAccount(PayoutAccount):
         for external_account in external_accounts:
             status = 'unverified'
             if (
-                self.status == 'verified' and
-                external_account.requirements.currently_due == [] and
-                external_account.requirements.past_due == [] and
-                external_account.requirements.pending_verification == [] and
-                external_account.future_requirements.currently_due == [] and
-                external_account.future_requirements.past_due == [] and
-                external_account.future_requirements.pending_verification == []
+                self.status == 'verified'
+                and external_account.requirements.currently_due == []
+                and external_account.requirements.past_due == []
+                and external_account.requirements.pending_verification == []
+                and external_account.future_requirements.currently_due == []
+                and external_account.future_requirements.past_due == []
+                and external_account.future_requirements.pending_verification == []
             ):
                 status = 'verified'
 
@@ -636,11 +658,9 @@ class StripePayoutAccount(PayoutAccount):
                 defaults={
                     'status': status,
                     'currency': external_account.currency,
-                }
+                },
             )
-        external_ids = [
-            external_account.id for external_account in external_accounts
-        ]
+        external_ids = [external_account.id for external_account in external_accounts]
         # Remove external accounts that are no longer in Stripe
         ExternalAccount.objects.exclude(account_id__in=external_ids).filter(connect_account=self).delete()
 
@@ -653,7 +673,7 @@ class StripePayoutAccount(PayoutAccount):
         resource_name = 'payout-accounts/stripes'
 
     def __str__(self):
-        return u"Stripe connect account {}".format(self.account_id)
+        return 'Stripe connect account {}'.format(self.account_id)
 
 
 @python_2_unicode_compatible
@@ -697,15 +717,15 @@ class ExternalAccount(BankAccount):
         checks = IbanCheck.objects.filter(
             fingerprint=self.account.fingerprint,
             name=self.account.account_holder_name,
-            matched__in=['match', 'close_match', 'mistype']
+            matched__in=['match', 'close_match', 'mistype'],
         )
         return checks.exists()
 
     @property
     def metadata(self):
         return {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
+            'tenant_name': connection.tenant.client_name,
+            'tenant_domain': connection.tenant.domain_url,
         }
 
     class JSONAPIMeta(object):
@@ -716,7 +736,7 @@ class ExternalAccount(BankAccount):
         verbose_name_plural = _('Bank accounts')
 
     def __str__(self):
-        return "Stripe external account {}".format(self.account_id)
+        return 'Stripe external account {}'.format(self.account_id)
 
 
 from .states import *  # noqa

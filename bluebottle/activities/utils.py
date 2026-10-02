@@ -14,15 +14,25 @@ from moneyed import Money
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
-    ResourceRelatedField, SerializerMethodResourceRelatedField,
+    ResourceRelatedField,
+    SerializerMethodResourceRelatedField,
     PolymorphicResourceRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.activities.models import (
-    Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite,
-    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer,
-    ConfirmationAnswer
+    Activity,
+    Contributor,
+    Contribution,
+    Organizer,
+    EffortContribution,
+    Team,
+    Invite,
+    ActivityAnswer,
+    TextAnswer,
+    SegmentAnswer,
+    FileUploadAnswer,
+    ConfirmationAnswer,
 )
 from bluebottle.bluebottle_drf2.serializers import RelativeHyperlinkedRelatedField
 from bluebottle.clients import properties
@@ -38,9 +48,16 @@ from bluebottle.organizations.models import Organization
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import (
-    TeamMember, TeamScheduleParticipant, TimeContribution, DeadlineActivity, DeadlineParticipant,
-    DateActivitySlot, DateParticipant, RegisteredDateParticipant, RegisteredDateActivity,
-    Team as ScheduleTeam
+    TeamMember,
+    TeamScheduleParticipant,
+    TimeContribution,
+    DeadlineActivity,
+    DeadlineParticipant,
+    DateActivitySlot,
+    DateParticipant,
+    RegisteredDateParticipant,
+    RegisteredDateActivity,
+    Team as ScheduleTeam,
 )
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.exchange_rates import convert
@@ -108,7 +125,8 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
                 except AttributeError:
                     try:
                         positions = [
-                            slot.location.position.tuple for slot in obj.slots.all()
+                            slot.location.position.tuple
+                            for slot in obj.slots.all()
                             if slot.location and not slot.is_online
                         ]
                     except AttributeError:
@@ -116,10 +134,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 
                 if positions and self.context['location'].position:
                     dist = min(
-                        distance(
-                            lonlat(*pos),
-                            lonlat(*self.context['location'].position.tuple)
-                        ) for pos in positions
+                        distance(lonlat(*pos), lonlat(*self.context['location'].position.tuple)) for pos in positions
                     )
 
                     if dist.km < settings.MATCHING_DISTANCE:
@@ -189,9 +204,7 @@ class FileUploadAnswerSerializer(BaseAnswerSerializer):
         resource_name = 'file-upload-answers'
         included_resources = ['file']
 
-    included_serializers = {
-        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
-    }
+    included_serializers = {'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'}
 
 
 class ActivityAnswerSerializer(PolymorphicModelSerializer):
@@ -199,10 +212,10 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
         TextAnswerSerializer,
         ConfirmationAnswerSerializer,
         SegmentAnswerSerializer,
-        FileUploadAnswerSerializer
+        FileUploadAnswerSerializer,
     ]
 
-    class Meta():
+    class Meta:
         model = ActivityAnswer
 
     class JSONAPIMeta:
@@ -211,7 +224,7 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
     included_serializers = {
         'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
         'segment': 'bluebottle.segments.serializers.SegmentListSerializer',
-        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
+        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer',
     }
 
 
@@ -238,9 +251,7 @@ class BaseActivitySerializer(ModelSerializer):
         required=False,
         allow_null=True,
     )
-    host_organization = ResourceRelatedField(
-        read_only=True
-    )
+    host_organization = ResourceRelatedField(read_only=True)
 
     updates = RelativeHyperlinkedRelatedField(
         many=True,
@@ -249,33 +260,22 @@ class BaseActivitySerializer(ModelSerializer):
         related_link_url_kwarg='activity_pk',
     )
 
-    segments = SerializerMethodResourceRelatedField(
-        source='segments',
-        model=Segment,
-        many=True,
-        read_only=True
-    )
+    segments = SerializerMethodResourceRelatedField(source='segments', model=Segment, many=True, read_only=True)
 
     answers = PolymorphicResourceRelatedField(
-        ActivityAnswerSerializer,
-        queryset=ActivityAnswer.objects.all(),
-        many=True
+        ActivityAnswerSerializer, queryset=ActivityAnswer.objects.all(), many=True
     )
 
     translations = TranslationsSerializer(fields=['description', 'title'])
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        user = self.context["request"].user
+        user = self.context['request'].user
 
-        if not (
-            user in instance.owners
-            or user.is_staff
-            or user.is_superuser
-        ):
-            visible_answers = instance.answers.filter(question__visibility="all")
-            field = self.fields["answers"]
-            data["answers"] = field.to_representation(list(visible_answers))
+        if not (user in instance.owners or user.is_staff or user.is_superuser):
+            visible_answers = instance.answers.filter(question__visibility='all')
+            field = self.fields['answers']
+            data['answers'] = field.to_representation(list(visible_answers))
         return data
 
     def create(self, validated_data):
@@ -312,9 +312,11 @@ class BaseActivitySerializer(ModelSerializer):
         settings = InitiativePlatformSettings.load()
 
         if 'office_restriction' in data and data['office_restriction'] not in settings.available_office_restrictions:
-            raise ValidationError({
-                'office_restriction': f'{data["office_restriction"]} is not a valid value',
-            })
+            raise ValidationError(
+                {
+                    'office_restriction': f'{data["office_restriction"]} is not a valid value',
+                }
+            )
 
         return data
 
@@ -355,9 +357,12 @@ class BaseActivitySerializer(ModelSerializer):
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
     def get_contributor_count(self, instance):
-        return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
-            status__in=['accepted', 'succeeded', 'activity_refunded']
-        ).count()
+        return (
+            instance.deleted_successful_contributors
+            + instance.contributors.not_instance_of(Organizer)
+            .filter(status__in=['accepted', 'succeeded', 'activity_refunded'])
+            .count()
+        )
 
     def get_team_count(self, instance):
         return instance.old_teams.filter(status__in=['open', 'finished']).count()
@@ -442,7 +447,7 @@ class BaseActivitySerializer(ModelSerializer):
             'answers',
             'answers.segment',
             'answers.file',
-            'answers.question'
+            'answers.question',
         ]
 
 
@@ -490,16 +495,10 @@ class BaseActivityListSerializer(ModelSerializer):
             'stats',
             'goals',
             'team_activity',
-            'current_status'
+            'current_status',
         )
 
-        meta_fields = (
-            'permissions',
-            'created',
-            'updated',
-            'matching_properties',
-            'current_status'
-        )
+        meta_fields = ('permissions', 'created', 'updated', 'matching_properties', 'current_status')
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -539,11 +538,7 @@ class ActivitySubmitSerializer(ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(required=True, queryset=Member.objects.all())
     title = serializers.CharField(required=True)
     description = serializers.CharField(
-        required=True,
-        error_messages={
-            'blank': _('Description is required'),
-            'null': _('Description is required')
-        }
+        required=True, error_messages={'blank': _('Description is required'), 'null': _('Description is required')}
     )
 
     class Meta(object):
@@ -573,19 +568,8 @@ class BaseContributorListSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contributor
-        fields = (
-            "user",
-            "activity",
-            "status",
-            "created",
-            "updated",
-            "start"
-        )
-        meta_fields = (
-            "created",
-            "updated",
-            "start"
-        )
+        fields = ('user', 'activity', 'status', 'created', 'updated', 'start')
+        meta_fields = ('created', 'updated', 'start')
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -629,32 +613,25 @@ class BaseContributorSerializer(ModelSerializer):
                 try:
                     validate_email(email)
                 except Exception:
-                    raise ValidationError(_('Not a valid email address'), code="invalid")
+                    raise ValidationError(_('Not a valid email address'), code='invalid')
                 member_settings = MemberPlatformSettings.load()
                 scim_settings = SCIMPlatformSettings.load()
 
-                if (
-                    (member_settings.closed or member_settings.confirm_signup) and
-                    not scim_settings.enabled
-                ):
+                if (member_settings.closed or member_settings.confirm_signup) and not scim_settings.enabled:
                     try:
                         data['user'] = Member.create_by_email(email.strip())
                     except Exception:
-                        raise ValidationError(_('Not a valid email address'), code="invalid")
+                        raise ValidationError(_('Not a valid email address'), code='invalid')
                 else:
-                    raise ValidationError(_('User with email address not found'), code="not_found")
+                    raise ValidationError(_('User with email address not found'), code='not_found')
         elif self.context['request'].user.is_authenticated and not self.instance:
             data['user'] = self.context['request'].user
 
             if data['user'].required:
-                raise ValidationError('Required fields', code="required")
+                raise ValidationError('Required fields', code='required')
 
-        if (
-            not self.allow_multiple and
-            data.get('user') and
-            self.Meta.model.objects.filter(**data).exists()
-        ):
-            raise ValidationError(_('Already participating'), code="exists")
+        if not self.allow_multiple and data.get('user') and self.Meta.model.objects.filter(**data).exists():
+            raise ValidationError(_('Already participating'), code='exists')
 
         data['send_messages'] = send_messages
 
@@ -694,8 +671,8 @@ class BaseContributionSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contribution
-        fields = ("value", "status", "start", "end")
-        meta_fields = ("created", 'end', 'start')
+        fields = ('value', 'status', 'start', 'end')
+        meta_fields = ('created', 'end', 'start')
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'
@@ -707,58 +684,45 @@ def get_stats_for_activities(activities):
     default_currency = properties.DEFAULT_CURRENCY
 
     effort = EffortContribution.objects.filter(
-        contribution_type='deed',
-        status='succeeded',
-        contributor__activity__id__in=ids
-    ).aggregate(
-        count=Count('id', distinct=True),
-        activities=Count('contributor__activity', distinct=True)
+        contribution_type='deed', status='succeeded', contributor__activity__id__in=ids
+    ).aggregate(count=Count('id', distinct=True), activities=Count('contributor__activity', distinct=True))
+
+    time = TimeContribution.objects.filter(status='succeeded', contributor__activity__id__in=ids).aggregate(
+        count=Count('id', distinct=True), activities=Count('contributor__activity', distinct=True), value=Sum('value')
     )
 
-    time = TimeContribution.objects.filter(
-        status='succeeded',
-        contributor__activity__id__in=ids
-    ).aggregate(
-        count=Count('id', distinct=True),
-        activities=Count('contributor__activity', distinct=True),
-        value=Sum('value')
+    amounts = (
+        MoneyContribution.objects.filter(status='succeeded', contributor__activity__id__in=ids)
+        .values('value_currency')
+        .annotate(amount=Sum('value'))
+        .order_by()
     )
 
-    amounts = MoneyContribution.objects.filter(
-        status='succeeded',
-        contributor__activity__id__in=ids
-    ).values(
-        'value_currency'
-    ).annotate(
-        amount=Sum('value')
-    ).order_by()
-
-    contributor_count = Contributor.objects.filter(
-        user__isnull=False,
-        activity__id__in=ids,
-        contributions__status='succeeded',
-    ).exclude(
-        Q(instance_of=Organizer)
-    ).values('user_id').distinct().count()
+    contributor_count = (
+        Contributor.objects.filter(
+            user__isnull=False,
+            activity__id__in=ids,
+            contributions__status='succeeded',
+        )
+        .exclude(Q(instance_of=Organizer))
+        .values('user_id')
+        .distinct()
+        .count()
+    )
 
     anonymous_donations = MoneyContribution.objects.filter(
-        contributor__user__isnull=True,
-        status='succeeded',
-        contributor__activity__id__in=ids
+        contributor__user__isnull=True, status='succeeded', contributor__activity__id__in=ids
     ).count()
 
     contributor_count += anonymous_donations
 
-    contributor_count += Activity.objects.filter(
-        id__in=ids
-    ).aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
+    contributor_count += (
+        Activity.objects.filter(id__in=ids).aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
+    )
 
     types = CollectType.objects.all()
     collect = (
-        CollectActivity.objects.filter(
-            status__in=['succeeded', 'open'],
-            id__in=ids
-        )
+        CollectActivity.objects.filter(status__in=['succeeded', 'open'], id__in=ids)
         .values('collect_type_id')
         .annotate(amount=Sum('realized'))
     )
@@ -766,39 +730,24 @@ def get_stats_for_activities(activities):
     type_dict = {int(type_obj.id): type_obj for type_obj in types}
 
     collected = [
-        {
-            'name': type_dict[int(col['collect_type_id'])].name,
-            'value': col['amount']
-        }
+        {'name': type_dict[int(col['collect_type_id'])].name, 'value': col['amount']}
         for col in collect
         if col['collect_type_id']
     ]
 
     amount = {
         'amount': sum(
-            convert(
-                Money(c['amount'], c['value_currency']),
-                default_currency
-            ).amount
-            for c in amounts if c['amount']
+            convert(Money(c['amount'], c['value_currency']), default_currency).amount for c in amounts if c['amount']
         ),
-        'currency': default_currency
+        'currency': default_currency,
     }
 
     impact = []
-    for type, goals in groupby(
-        ImpactGoal.objects.filter(activity__in=ids).order_by('type'),
-        lambda goal: goal.type
-    ):
+    for type, goals in groupby(ImpactGoal.objects.filter(activity__in=ids).order_by('type'), lambda goal: goal.type):
         value = sum(goal.realized or goal.realized_from_contributions or 0 for goal in goals)
 
         if value:
-            impact.append({
-                'name': type.text_passed,
-                'iconName': type.icon,
-                'unit': type.unit,
-                'value': value
-            })
+            impact.append({'name': type.text_passed, 'iconName': type.icon, 'unit': type.unit, 'value': value})
 
     return {
         'impact': impact,
@@ -806,27 +755,27 @@ def get_stats_for_activities(activities):
         'effort': effort['count'],
         'collected': collected,
         'contributors': contributor_count,
-        'amount': amount
+        'amount': amount,
     }
 
 
 class InviteSerializer(ModelSerializer):
-    team = SerializerMethodResourceRelatedField(
-        model=Team,
-        many=False,
-        read_only=True
-    )
+    team = SerializerMethodResourceRelatedField(model=Team, many=False, read_only=True)
 
     def get_team(self, obj):
         return obj.contributor.team
 
     class Meta(object):
         model = Invite
-        fields = ('id', 'team',)
+        fields = (
+            'id',
+            'team',
+        )
 
     class JSONAPIMeta(object):
         included_resources = [
-            'team', 'team.owner',
+            'team',
+            'team.owner',
         ]
 
         resource_name = 'activities/invites'
@@ -867,10 +816,7 @@ def bulk_add_participants(activity, emails, send_messages):
             user = Member.objects.filter(email__iexact=email.strip()).first()
             if not user:
                 new = True
-                if (
-                    (settings.closed or settings.confirm_signup) and
-                    not scim_settings.enabled
-                ):
+                if (settings.closed or settings.confirm_signup) and not scim_settings.enabled:
                     email = email.strip()
                     try:
                         user = Member.create_by_email(email)
@@ -883,11 +829,7 @@ def bulk_add_participants(activity, emails, send_messages):
                     continue
             if isinstance(activity, DateActivitySlot):
                 slot = activity
-                participant, cr = DateParticipant.objects.get_or_create(
-                    user=user,
-                    activity=slot.activity,
-                    slot=slot
-                )
+                participant, cr = DateParticipant.objects.get_or_create(user=user, activity=slot.activity, slot=slot)
                 if cr:
                     if not new:
                         added += 1
@@ -895,10 +837,7 @@ def bulk_add_participants(activity, emails, send_messages):
                     existing += 1
             if isinstance(activity, ScheduleTeam):
                 team = activity
-                member, cr = TeamMember.objects.get_or_create(
-                    user=user,
-                    team=team
-                )
+                member, cr = TeamMember.objects.get_or_create(user=user, team=team)
                 if cr:
                     if not new:
                         added += 1
@@ -910,18 +849,9 @@ def bulk_add_participants(activity, emails, send_messages):
                 else:
                     if not new:
                         added += 1
-                    Participant.objects.create(
-                        user=user,
-                        activity=activity,
-                        send_messages=send_messages
-                    )
+                    Participant.objects.create(user=user, activity=activity, send_messages=send_messages)
         except Exception as e:
             logger.error(e)
             failed += 1
 
-    return {
-        'added': added,
-        'existing': existing,
-        'failed': failed,
-        'created': created
-    }
+    return {'added': added, 'existing': existing, 'failed': failed, 'created': created}

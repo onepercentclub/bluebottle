@@ -9,9 +9,7 @@ from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.members.models import MemberPlatformSettings, Member
-from bluebottle.statistics.models import (
-    BaseStatistic, DatabaseStatistic, ManualStatistic, ImpactStatistic
-)
+from bluebottle.statistics.models import BaseStatistic, DatabaseStatistic, ManualStatistic, ImpactStatistic
 
 tz = get_current_timezone()
 
@@ -39,17 +37,17 @@ class BaseStatisticSerializer(ModelSerializer):
 
         if 'filter[type]' in params and current_user and isinstance(current_user, Member):
             if (
-                params['filter[type]'] == 'office_region' and
-                current_user.location and
-                current_user.location.subregion and
-                current_user.location.subregion.region
+                params['filter[type]'] == 'office_region'
+                and current_user.location
+                and current_user.location.subregion
+                and current_user.location.subregion.region
             ):
                 region = current_user.location.subregion.region
                 value = obj.get_value(start, end, region=region)
             elif (
-                params['filter[type]'] == 'office_subregion' and
-                current_user.location and
-                current_user.location.subregion
+                params['filter[type]'] == 'office_subregion'
+                and current_user.location
+                and current_user.location.subregion
             ):
                 subregion = current_user.location.subregion
                 value = obj.get_value(start, end, subregion=subregion)
@@ -62,10 +60,7 @@ class BaseStatisticSerializer(ModelSerializer):
                 value = obj.get_value(start, end)
 
         try:
-            return {
-                'amount': value.amount,
-                'currency': str(value.currency)
-            }
+            return {'amount': value.amount, 'currency': str(value.currency)}
         except AttributeError:
             return value
 
@@ -103,11 +98,7 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
 
 
 class OldStatisticSerializer(PolymorphicModelSerializer):
-    polymorphic_serializers = [
-        DatabaseStatisticSerializer,
-        ManualStatisticSerializer,
-        ImpactStatisticSerializer
-    ]
+    polymorphic_serializers = [DatabaseStatisticSerializer, ManualStatisticSerializer, ImpactStatisticSerializer]
 
     class Meta(object):
         model = BaseStatistic
@@ -126,6 +117,5 @@ class StatisticSerializer(BaseStatisticSerializer):
 
 
 class UserStatisticSerializer(StatisticSerializer):
-
     def get_user(self):
         return get_current_user()

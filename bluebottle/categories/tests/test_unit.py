@@ -4,9 +4,10 @@ from bluebottle.test.utils import BluebottleTestCase
 
 class TestCategoryModel(BluebottleTestCase):
     """
-        save() automatically updates some fields, specifically
-        the status field. Make sure it picks the right one
+    save() automatically updates some fields, specifically
+    the status field. Make sure it picks the right one
     """
+
     def test_save_slug(self):
         category = CategoryFactory.create(title='test-title')
 
@@ -17,5 +18,5 @@ class TestCategoryModel(BluebottleTestCase):
 
         self.assertEqual(
             category.get_absolute_url(),
-            f'http://test.localhost/en/categories/{category.id}/{category.slug}/activities/list'
+            f'http://test.localhost/en/categories/{category.id}/{category.slug}/activities/list',
         )

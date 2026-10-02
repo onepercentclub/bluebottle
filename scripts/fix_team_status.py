@@ -8,11 +8,10 @@ from bluebottle.time_based.models import Team
 def run(*args):
     fix = 'fix' in args
     for client in Client.objects.all():
-        with (LocalTenant(client)):
+        with LocalTenant(client):
             for team in Team.objects.all():
                 slot = team.slots.get()
                 if slot.start:
-
                     delta = slot.start - slot.created
 
                     if delta < timedelta(minutes=1) and delta > timedelta(minutes=-1):
@@ -52,7 +51,7 @@ def run(*args):
                                 slot.status,
                                 member.status,
                                 participant.status,
-                                contribution.status
+                                contribution.status,
                             )
 
     if not fix:

@@ -41,13 +41,12 @@ class Trigger(object):
                 previous_effects.append(effect)
                 effect.pre_save(effects=previous_effects)
                 if effect.post_save and effect not in instance._postponed_effects:
-
                     instance._postponed_effects.insert(0, effect)
 
         return previous_effects
 
     def __str__(self):
-        return str(_("Model has been changed"))
+        return str(_('Model has been changed'))
 
 
 @python_2_unicode_compatible
@@ -55,37 +54,30 @@ class ModelChangedTrigger(Trigger):
     def __init__(self, fields, *args, **kwargs):
         super(ModelChangedTrigger, self).__init__(*args, **kwargs)
         if not isinstance(fields, (tuple, list)):
-            fields = (fields, )
+            fields = (fields,)
         self.fields = fields
 
     @property
     def title(self):
-        return 'change the {}'.format(
-            ', '.join(field.capitalize() for field in self.fields)
-        )
+        return 'change the {}'.format(', '.join(field.capitalize() for field in self.fields))
 
     def changed(self, instance):
-        return any(
-            instance._initial_values.get(field) != getattr(instance, field)
-            for field in self.fields
-        )
+        return any(instance._initial_values.get(field) != getattr(instance, field) for field in self.fields)
 
     def __str__(self):
         if self.fields:
-            return _("{} has been changed").format(
-                ', '.join(field.capitalize() for field in self.fields)
-            )
-        return str(_("Object has been changed"))
+            return _('{} has been changed').format(', '.join(field.capitalize() for field in self.fields))
+        return str(_('Object has been changed'))
 
 
 class ModelDeletedTrigger(Trigger):
     def __str__(self):
-        return str(_("Model has been deleted"))
+        return str(_('Model has been deleted'))
 
 
 class ModelCreatedTrigger(Trigger):
     def __str__(self):
-        return str(_("Model has been created"))
+        return str(_('Model has been created'))
 
 
 @receiver(pre_delete)
@@ -111,10 +103,10 @@ class TransitionTrigger(Trigger):
         self.transition = transition
 
     def __str__(self):
-        return str(_("Model has changed status"))
+        return str(_('Model has changed status'))
 
     def title(self):
-        return "MISSING TITLE"
+        return 'MISSING TITLE'
 
 
 @receiver(pre_state_transition)
@@ -248,9 +240,7 @@ class TriggerMixin(object):
             self._postponed_effects = []
 
         self._initial_values = dict(
-            (field.name, getattr(self, field.name))
-            for field in self._meta.fields
-            if not field.is_relation
+            (field.name, getattr(self, field.name)) for field in self._meta.fields if not field.is_relation
         )
 
         current_user = get_current_user()
@@ -263,7 +253,7 @@ class TriggerMixin(object):
                         self.pk,
                         str(self),
                         TRANSITION,
-                        f"Changed status to {transition.target.name}"
+                        f'Changed status to {transition.target.name}',
                     )
 
         self._transitions = []

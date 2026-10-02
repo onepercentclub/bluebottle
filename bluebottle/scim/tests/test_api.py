@@ -1,4 +1,5 @@
 from future import standard_library
+
 standard_library.install_aliases()
 
 import factory
@@ -26,9 +27,7 @@ class SCIMEndpointTestCaseMixin(object):
         settings.enabled = True
         settings.save()
 
-        self.token = 'Bearer {}'.format(
-            settings.bearer_token
-        )
+        self.token = 'Bearer {}'.format(settings.bearer_token)
         super(SCIMEndpointTestCaseMixin, self).setUp()
 
 
@@ -38,9 +37,7 @@ class AuthenticatedSCIMEndpointTestCaseMixin(object):
         settings.enabled = True
         settings.save()
 
-        self.token = 'Bearer {}'.format(
-            settings.bearer_token
-        )
+        self.token = 'Bearer {}'.format(settings.bearer_token)
         super(AuthenticatedSCIMEndpointTestCaseMixin, self).setUp()
 
     def test_get_no_authentication(self):
@@ -59,10 +56,7 @@ class AuthenticatedSCIMEndpointTestCaseMixin(object):
         """
         Test incorrectly authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token='Bearer blibli'
-        )
+        response = self.client.get(self.url, token='Bearer blibli')
         data = response.data
 
         self.assertEqual(response.status_code, 401)
@@ -75,10 +69,7 @@ class AuthenticatedSCIMEndpointTestCaseMixin(object):
         Test authenticated with user token request
         """
         user = BlueBottleUserFactory.create()
-        response = self.client.get(
-            self.url,
-            token="JWT {0}".format(user.get_jwt_token())
-        )
+        response = self.client.get(self.url, token='JWT {0}'.format(user.get_jwt_token()))
         data = response.data
 
         self.assertEqual(response.status_code, 401)
@@ -93,10 +84,7 @@ class AuthenticatedSCIMEndpointTestCaseMixin(object):
         settings.save()
 
         user = BlueBottleUserFactory.create()
-        response = self.client.get(
-            self.url,
-            token="JWT {0}".format(user.get_jwt_token())
-        )
+        response = self.client.get(self.url, token='JWT {0}'.format(user.get_jwt_token()))
         data = response.data
 
         self.assertEqual(response.status_code, 403)
@@ -115,51 +103,25 @@ class SCIMServiceProviderConfigViewTest(SCIMEndpointTestCaseMixin, BluebottleTes
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            data['bulk']['supported'], False
-        )
-        self.assertEqual(
-            data['filter']['supported'], False
-        )
-        self.assertEqual(
-            data['etag']['supported'], False
-        )
-        self.assertEqual(
-            data['sort']['supported'], False
-        )
-        self.assertEqual(
-            data['patch']['supported'], False
-        )
-        self.assertEqual(
-            data['changePassword']['supported'], False
-        )
-        self.assertEqual(
-            data['schemas'],
-            ['urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig']
-        )
-        self.assertEqual(
-            len(data['authenticationSchemes']), 1
-        )
-        self.assertEqual(
-            data['authenticationSchemes'][0]['type'],
-            'oauthbearertoken'
-        )
+        self.assertEqual(data['bulk']['supported'], False)
+        self.assertEqual(data['filter']['supported'], False)
+        self.assertEqual(data['etag']['supported'], False)
+        self.assertEqual(data['sort']['supported'], False)
+        self.assertEqual(data['patch']['supported'], False)
+        self.assertEqual(data['changePassword']['supported'], False)
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig'])
+        self.assertEqual(len(data['authenticationSchemes']), 1)
+        self.assertEqual(data['authenticationSchemes'][0]['type'], 'oauthbearertoken')
 
     def test_get_unauthenticated(self):
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -173,20 +135,14 @@ class SCIMSchemaListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['totalResults'], 6)
         self.assertEqual(data['startIndex'], 1)
         self.assertEqual(data['itemsPerPage'], 1000)
-        self.assertEqual(
-            data['schemas'],
-            ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
-        )
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:ListResponse'])
         self.assertEqual(
             {resource['id'] for resource in data['Resources']},
             {
@@ -196,7 +152,7 @@ class SCIMSchemaListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
                 'urn:ietf:params:scim:schemas:core:2.0:Group',
                 'urn:ietf:params:scim:schemas:core:2.0:User',
                 'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User',
-            }
+            },
         )
 
 
@@ -211,10 +167,7 @@ class SCIMSchemaDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTes
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 200)
@@ -225,18 +178,12 @@ class SCIMSchemaDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTes
         Test authenticated request
         """
         url = reverse('scim-schema-detail', args=(self.schema_id + ':something',))
-        response = self.client.get(
-            url,
-            token=self.token
-        )
+        response = self.client.get(url, token=self.token)
         data = response.data
         self.assertEqual(response.status_code, 404)
 
         self.assertEqual(data['status'], 404)
-        self.assertEqual(
-            data['details'],
-            'Resource not found: urn:ietf:params:scim:schemas:core:2.0:Schema:something'
-        )
+        self.assertEqual(data['details'], 'Resource not found: urn:ietf:params:scim:schemas:core:2.0:Schema:something')
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
 
@@ -249,24 +196,15 @@ class SCIMResourceTypeListTest(AuthenticatedSCIMEndpointTestCaseMixin, Bluebottl
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['totalResults'], 2)
         self.assertEqual(data['startIndex'], 1)
         self.assertEqual(data['itemsPerPage'], 1000)
-        self.assertEqual(
-            data['schemas'],
-            ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
-        )
-        self.assertEqual(
-            {resource['id'] for resource in data['Resources']},
-            {'Group', 'User'}
-        )
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:ListResponse'])
+        self.assertEqual({resource['id'] for resource in data['Resources']}, {'Group', 'User'})
 
 
 class SCIMResourceTypeDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
@@ -278,27 +216,19 @@ class SCIMResourceTypeDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, Bluebot
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['id'], 'User')
-        self.assertEqual(
-            data['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:ResourceType']
-        )
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:ResourceType'])
 
     def test_get_unknown(self):
         """
         Test authenticated request
         """
         url = reverse('scim-resource-type-detail', args=('SomethingElse',))
-        response = self.client.get(
-            url,
-            token=self.token
-        )
+        response = self.client.get(url, token=self.token)
         self.assertEqual(response.status_code, 404)
 
 
@@ -321,20 +251,14 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['totalResults'], 10)
         self.assertEqual(data['startIndex'], 1)
         self.assertEqual(data['itemsPerPage'], 1000)
-        self.assertEqual(
-            data['schemas'],
-            ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
-        )
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:ListResponse'])
 
         first = data['Resources'][0]
         user = Member.objects.get(remote_id=first['userName'])
@@ -347,76 +271,46 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(first['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:User'])
 
     def test_get_filtered(self):
-        response = self.client.get(
-            self.url + f"?filter=userName eq {self.users[0].remote_id}",
-            token=self.token
-        )
+        response = self.client.get(self.url + f'?filter=userName eq {self.users[0].remote_id}', token=self.token)
         data = response.json()
         self.assertEqual(data['totalResults'], 1)
         self.assertEqual(data['startIndex'], 1)
 
     def test_get_filtered_with_quotes(self):
-        response = self.client.get(
-            self.url + f"?filter=userName eq \"{self.users[0].remote_id}\"",
-            token=self.token
-        )
+        response = self.client.get(self.url + f'?filter=userName eq "{self.users[0].remote_id}"', token=self.token)
         data = response.json()
         self.assertEqual(data['totalResults'], 1)
         self.assertEqual(data['startIndex'], 1)
 
     def test_get_invalid_filter(self):
-        response = self.client.get(
-            self.url + f"?filter=userName ge {self.users[0].remote_id}",
-            token=self.token
-        )
+        response = self.client.get(self.url + f'?filter=userName ge {self.users[0].remote_id}', token=self.token)
         self.assertEqual(response.status_code, 400)
 
-        response = self.client.get(
-            self.url + f"?filter=somefield eq {self.users[0].remote_id}",
-            token=self.token
-        )
+        response = self.client.get(self.url + f'?filter=somefield eq {self.users[0].remote_id}', token=self.token)
         self.assertEqual(response.status_code, 400)
 
     def test_get_paged(self):
-        params = urlencode({
-            'count': 8,
-            'startIndex': 1
-        })
+        params = urlencode({'count': 8, 'startIndex': 1})
 
-        response = self.client.get(
-            '{}?{}'.format(self.url, params),
-            token=self.token
-        )
+        response = self.client.get('{}?{}'.format(self.url, params), token=self.token)
         data = response.data
         self.assertEqual(data['totalResults'], 10)
         self.assertEqual(data['startIndex'], 1)
         self.assertEqual(len(data['Resources']), 8)
 
     def test_get_next_page(self):
-        params = urlencode({
-            'count': 8,
-            'startIndex': 9
-        })
+        params = urlencode({'count': 8, 'startIndex': 9})
 
-        response = self.client.get(
-            '{}?{}'.format(self.url, params),
-            token=self.token
-        )
+        response = self.client.get('{}?{}'.format(self.url, params), token=self.token)
         data = response.data
         self.assertEqual(data['totalResults'], 10)
         self.assertEqual(data['startIndex'], 9)
         self.assertEqual(len(data['Resources']), 2)
 
     def test_get_page_to_far(self):
-        params = urlencode({
-            'count': 8,
-            'startIndex': 12
-        })
+        params = urlencode({'count': 8, 'startIndex': 12})
 
-        response = self.client.get(
-            '{}?{}'.format(self.url, params),
-            token=self.token
-        )
+        response = self.client.get('{}?{}'.format(self.url, params), token=self.token)
         data = response.data
         self.assertEqual(data['totalResults'], 10)
         self.assertEqual(data['startIndex'], 12)
@@ -432,22 +326,11 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             'externalId': '123',
             'username': 'some-id-for-smal',
             'active': True,
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 201)
@@ -459,14 +342,9 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(user.is_active, data['active'])
         self.assertEqual(user.first_name, data['name']['givenName'])
         self.assertEqual(user.last_name, data['name']['familyName'])
-        self.assertEqual(
-            data['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:User']
-        )
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:User'])
         self.assertEqual(data['meta']['resourceType'], 'User')
-        self.assertEqual(
-            data['meta']['location'],
-            reverse('scim-user-detail', args=(user.pk, ))
-        )
+        self.assertEqual(data['meta']['location'], reverse('scim-user-detail', args=(user.pk,)))
         self.assertEqual(len(mail.outbox), 0)
 
     def test_post_empty_email(self):
@@ -477,29 +355,15 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'externalId': '123',
             'active': True,
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': ''
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': ''}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            data['details'],
-            'emails: This field may not be blank.'
-        )
+        self.assertEqual(data['details'], 'emails: This field may not be blank.')
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
     def test_post_missing_remote_id(self):
@@ -509,29 +373,15 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'active': True,
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            data['details'],
-            'externalId: This field is required.'
-        )
+        self.assertEqual(data['details'], 'externalId: This field is required.')
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
     @override_settings(SEND_WELCOME_MAIL=True)
@@ -544,27 +394,12 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             'externalId': '123',
             'userName': '123',
             'active': True,
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        self.client.post(self.url, data, token=self.token)
+        response = self.client.post(self.url, data, token=self.token)
 
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.data['status'], 409)
@@ -585,22 +420,11 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             'active': True,
             'userName': remote_id,
             'externalId': 'some-external-id',
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
 
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.data['status'], 409)
@@ -613,31 +437,18 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         Test creating a user twice request
         """
         remote_id = '123'
-        user = BlueBottleUserFactory.create(
-            email='test@example.com', remote_id=remote_id, scim_external_id=None
-        )
+        user = BlueBottleUserFactory.create(email='test@example.com', remote_id=remote_id, scim_external_id=None)
 
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'active': True,
             'userName': remote_id,
             'externalId': 'some-external-id',
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -652,31 +463,18 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         """
         Test creating a user twice request
         """
-        user = BlueBottleUserFactory.create(
-            email='test@example.com', remote_id=None, scim_external_id=None
-        )
+        user = BlueBottleUserFactory.create(email='test@example.com', remote_id=None, scim_external_id=None)
 
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'active': True,
             'userName': 'some-remote-id',
             'externalId': 'some-external-id',
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -691,31 +489,18 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         """
         Test creating a user twice request
         """
-        user = BlueBottleUserFactory.create(
-            email='Test@example.com', remote_id=None, scim_external_id=None
-        )
+        user = BlueBottleUserFactory.create(email='Test@example.com', remote_id=None, scim_external_id=None)
 
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'active': True,
             'userName': 'some-remote-id',
             'externalId': 'some-external-id',
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -735,26 +520,17 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             'active': True,
             'userName': '123',
             'externalId': 'some-external-id',
-            'addresses': [{
-                'type': 'work',
-                'locality': location.name,
-            }],
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'addresses': [
+                {
+                    'type': 'work',
+                    'locality': location.name,
+                }
+            ],
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -772,26 +548,17 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             'active': True,
             'userName': '123',
             'externalId': 'some-external-id',
-            'addresses': [{
-                'type': 'work',
-                'locality': location_name,
-            }],
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'addresses': [
+                {
+                    'type': 'work',
+                    'locality': location_name,
+                }
+            ],
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
         self.assertEqual(response.status_code, 201)
 
         self.assertEqual(response.json()['addresses'][0]['locality'], location_name)
@@ -802,18 +569,14 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         """
         Create a user with a location that does not exist yet.
         """
-        department = SegmentTypeFactory.create(name="Department", slug="department")
+        department = SegmentTypeFactory.create(name='Department', slug='department')
 
         SCIMSegmentSetting.objects.create(
-            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
-            segment_type=department
+            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department', segment_type=department
         )
 
         country = SegmentTypeFactory.create(name='Country', slug='country')
-        SCIMSegmentSetting.objects.create(
-            path='addresses[type eq "work"].country',
-            segment_type=country
-        )
+        SCIMSegmentSetting.objects.create(path='addresses[type eq "work"].country', segment_type=country)
         country_name = 'NL'
         department_name = f'Engineering {uuid4().hex[:8]}'
 
@@ -822,39 +585,20 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             'active': True,
             'userName': '123',
             'externalId': 'some-external-id',
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            },
-            'addresses': [
-                {'country': 'NL', 'type': 'work'}
-            ],
-            'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User': {
-                'department': department_name
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
+            'addresses': [{'country': 'NL', 'type': 'work'}],
+            'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User': {'department': department_name},
         }
 
-        response = self.client.post(
-            self.url,
-            data,
-            token=self.token
-        )
+        response = self.client.post(self.url, data, token=self.token)
         self.assertEqual(response.status_code, 201)
 
         self.assertEqual(
-            response.json()['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'],
-            department_name
+            response.json()['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'], department_name
         )
 
-        self.assertEqual(
-            response.json()['addresses'][0]['country'],
-            country_name
-        )
+        self.assertEqual(response.json()['addresses'][0]['country'], country_name)
         user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
         self.assertEqual(user.segments.get(segment_type=department).name, department_name)
         self.assertEqual(user.segments.get(segment_type=country).name, country_name)
@@ -863,7 +607,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
 class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
-        return reverse('scim-user-detail', args=(self.user.pk, ))
+        return reverse('scim-user-detail', args=(self.user.pk,))
 
     def setUp(self):
         self.user = BlueBottleUserFactory.create(is_superuser=False)
@@ -878,10 +622,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.data
@@ -894,17 +635,10 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(data['emails'][0]['primary'], True)
         self.assertEqual(data['emails'][0]['type'], 'work')
         self.assertEqual(data['addresses'], [])
-        self.assertEqual(
-            data['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:User']
-        )
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:User'])
         self.assertEqual(data['meta']['resourceType'], 'User')
-        self.assertEqual(
-            data['meta']['location'],
-            reverse('scim-user-detail', args=(self.user.pk, ))
-        )
-        self.assertEqual(
-            len(data['groups']), 1
-        )
+        self.assertEqual(data['meta']['location'], reverse('scim-user-detail', args=(self.user.pk,)))
+        self.assertEqual(len(data['groups']), 1)
         group = data['groups'][0]
         self.assertEqual(group['id'], 'goodup-group-{}'.format(Group.objects.get(name='Staff').pk))
 
@@ -912,26 +646,19 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         """
         Test authenticated request
         """
-        segment_type = SegmentTypeFactory.create(name="Department", slug="department")
+        segment_type = SegmentTypeFactory.create(name='Department', slug='department')
         segment = SegmentFactory.create(segment_type=segment_type)
 
         SCIMSegmentSetting.objects.create(
-            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
-            segment_type=segment_type
+            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department', segment_type=segment_type
         )
         self.user.segments.add(segment)
 
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.data
-        self.assertEqual(
-            data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'],
-            segment.name
-        )
+        self.assertEqual(data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'], segment.name)
 
     def test_put(self):
         """
@@ -943,22 +670,11 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
             'userName': self.user.remote_id,
             'externalId': '123',
             'active': False,
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'OostrumA@delagelanden.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'OostrumA@delagelanden.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
 
-        response = self.client.put(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.put(self.url, request_data, token=self.token)
         self.assertEqual(response.status_code, 200)
         data = response.data
         self.assertEqual(data['id'], request_data['id'])
@@ -978,42 +694,29 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         department = SegmentTypeFactory.create(name='Department', slug='department')
 
         SCIMSegmentSetting.objects.create(
-            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
-            segment_type=department
+            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department', segment_type=department
         )
         division = SegmentTypeFactory.create(name='Division', slug='division')
         SCIMSegmentSetting.objects.create(
-            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:division',
-            segment_type=division
+            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:division', segment_type=division
         )
 
         request_data = {
-            "userName": "nick.baring@pggm.nl",
-            "name": {
-                "givenName": "Nick",
-                "familyName": "Baring"
+            'userName': 'nick.baring@pggm.nl',
+            'name': {'givenName': 'Nick', 'familyName': 'Baring'},
+            'emails': [{'primary': True, 'type': 'work', 'value': 'nick.baring@pggm.nl'}],
+            'active': True,
+            'externalId': '109849',
+            'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User': {
+                'department': 'Identity and Access Management',
+                'division': 'IT',
             },
-            "emails": [{
-                "primary": True,
-                "type": "work",
-                "value": "nick.baring@pggm.nl"
-            }],
-            "active": True,
-            "externalId": "109849",
-            "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
-                "department": "Identity and Access Management",
-                "division": "IT",
-            },
-            "schemas": [
-                "urn:ietf:params:scim:schemas:core:2.0:User",
-                "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
-            ]
+            'schemas': [
+                'urn:ietf:params:scim:schemas:core:2.0:User',
+                'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User',
+            ],
         }
-        response = self.client.put(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.put(self.url, request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -1023,15 +726,13 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(department_segment.name, 'Identity and Access Management')
 
         self.assertEqual(
-            data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'],
-            department_segment.name
+            data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'], department_segment.name
         )
         division_segment = self.user.segments.get(segment_type=division)
         self.assertEqual(division_segment.name, 'IT')
 
         self.assertEqual(
-            data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['division'],
-            division_segment.name
+            data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['division'], division_segment.name
         )
 
     def test_put_location(self):
@@ -1045,26 +746,12 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
             'userName': self.user.remote_id,
             'externalId': '123',
             'active': False,
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': self.user.email
-            }],
-            'name': {
-                'givenName': self.user.first_name,
-                'familyName': self.user.first_name
-            },
-            'addresses': [{
-                'type': 'work',
-                'locality': location.name
-            }],
+            'emails': [{'type': 'work', 'primary': True, 'value': self.user.email}],
+            'name': {'givenName': self.user.first_name, 'familyName': self.user.first_name},
+            'addresses': [{'type': 'work', 'locality': location.name}],
         }
 
-        response = self.client.put(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.put(self.url, request_data, token=self.token)
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
@@ -1083,26 +770,12 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
             'userName': self.user.remote_id,
             'externalId': '123',
             'active': False,
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': self.user.email
-            }],
-            'name': {
-                'givenName': self.user.first_name,
-                'familyName': self.user.first_name
-            },
-            'addresses': [{
-                'type': 'work',
-                'locality': location_name
-            }],
+            'emails': [{'type': 'work', 'primary': True, 'value': self.user.email}],
+            'name': {'givenName': self.user.first_name, 'familyName': self.user.first_name},
+            'addresses': [{'type': 'work', 'locality': location_name}],
         }
 
-        response = self.client.put(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.put(self.url, request_data, token=self.token)
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
@@ -1120,55 +793,28 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
             'userName': self.user.remote_id,
             'externalId': '123',
             'active': False,
-            'emails': [{
-                'type': 'work',
-                'primary': True,
-                'value': 'test@example.com'
-            }],
-            'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+            'emails': [{'type': 'work', 'primary': True, 'value': 'test@example.com'}],
+            'name': {'givenName': 'Tester', 'familyName': 'Example'},
         }
         url = self.url
         self.user.delete()
 
-        response = self.client.put(
-            url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.put(url, request_data, token=self.token)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()['status'], 404)
         self.assertEqual(response.json()['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
     def test_patch(self):
         request_data = {
-            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-            "Operations": [
-                {
-                    "op": "Replace",
-                    "path": "name.givenName",
-                    "value": "Tester"
-                },
-                {
-                    "op": "Replace",
-                    "path": "name.familyName",
-                    "value": "Example"
-                },
-                {
-                    "op": "Add",
-                    "path": 'emails[type eq "work"].value',
-                    "value": 'test@example.com'
-                }
-            ]
+            'schemas': ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+            'Operations': [
+                {'op': 'Replace', 'path': 'name.givenName', 'value': 'Tester'},
+                {'op': 'Replace', 'path': 'name.familyName', 'value': 'Example'},
+                {'op': 'Add', 'path': 'emails[type eq "work"].value', 'value': 'test@example.com'},
+            ],
         }
 
-        response = self.client.patch(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.patch(self.url, request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -1186,38 +832,24 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         department = SegmentTypeFactory.create(name='Department', slug='department')
 
         SCIMSegmentSetting.objects.create(
-            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
-            segment_type=department
+            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department', segment_type=department
         )
         country = SegmentTypeFactory.create(name='Country', slug='country')
-        SCIMSegmentSetting.objects.create(
-            path='addresses[type eq "work"].country',
-            segment_type=country
-        )
+        SCIMSegmentSetting.objects.create(path='addresses[type eq "work"].country', segment_type=country)
 
         request_data = {
-            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-            "Operations": [
+            'schemas': ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+            'Operations': [
                 {
-                    "op": "Add",
-                    "path": 'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
-                    "value": 'Engineering'
+                    'op': 'Add',
+                    'path': 'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
+                    'value': 'Engineering',
                 },
-
-                {
-                    "op": "Add",
-                    "path": 'addresses[type eq "work"].country',
-                    "value": 'NL'
-                },
-
-            ]
+                {'op': 'Add', 'path': 'addresses[type eq "work"].country', 'value': 'NL'},
+            ],
         }
 
-        response = self.client.patch(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.patch(self.url, request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -1226,32 +858,18 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         segment = self.user.segments.get(segment_type=department)
         self.assertEqual(segment.name, 'Engineering')
 
-        self.assertEqual(
-            data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'],
-            segment.name
-        )
-        self.assertEqual(
-            data['addresses'][0]['country'],
-            'NL'
-        )
+        self.assertEqual(data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'], segment.name)
+        self.assertEqual(data['addresses'][0]['country'], 'NL')
 
     def test_patch_deactivate(self):
         request_data = {
-            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-            "Operations": [
-                {
-                    "op": "Replace",
-                    "path": "active",
-                    "value": "False"
-                },
-            ]
+            'schemas': ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+            'Operations': [
+                {'op': 'Replace', 'path': 'active', 'value': 'False'},
+            ],
         }
 
-        response = self.client.patch(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.patch(self.url, request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         self.user.refresh_from_db()
@@ -1260,21 +878,13 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
     def test_patch_location(self):
         location = LocationFactory.create()
         request_data = {
-            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-            "Operations": [
-                {
-                    'op': 'Add',
-                    'path': 'addresses[type eq "work"].locality',
-                    'value': location.name
-                },
-            ]
+            'schemas': ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+            'Operations': [
+                {'op': 'Add', 'path': 'addresses[type eq "work"].locality', 'value': location.name},
+            ],
         }
 
-        response = self.client.patch(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.patch(self.url, request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -1286,22 +896,13 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
     def test_patch_new_location(self):
         location_name = 'Test Location'
         request_data = {
-            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-            "Operations": [{
-                "op": "Add",
-                "path": 'addresses[type eq \\"work\\"].locality',
-                "value": "Test Location"
-            }, {
-                "op": "Add",
-                "path": 'addresses[type eq \\"work\\"].country',
-                "value": "Netherlands"
-            }]
+            'schemas': ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+            'Operations': [
+                {'op': 'Add', 'path': 'addresses[type eq \\"work\\"].locality', 'value': 'Test Location'},
+                {'op': 'Add', 'path': 'addresses[type eq \\"work\\"].country', 'value': 'Netherlands'},
+            ],
         }
-        response = self.client.patch(
-            self.url,
-            request_data,
-            token=self.token
-        )
+        response = self.client.patch(self.url, request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -1311,10 +912,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.location.name, location_name)
 
     def test_delete(self):
-        response = self.client.delete(
-            self.url,
-            token=self.token
-        )
+        response = self.client.delete(self.url, token=self.token)
 
         self.user.refresh_from_db()
 
@@ -1323,10 +921,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.is_anonymized, True)
         self.assertEqual(self.user.first_name, 'Deactivated')
 
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         self.assertEqual(response.status_code, 404)
 
@@ -1340,46 +935,37 @@ class SCIMGroupListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCa
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         data = response.data
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            data["totalResults"],
+            data['totalResults'],
             len(
                 Group.objects.exclude(
                     name__in=(
-                        "Anonymous",
-                        "Authenticated",
+                        'Anonymous',
+                        'Authenticated',
                     )
                 )
             ),
         )
         self.assertEqual(data['startIndex'], 1)
         self.assertEqual(data['itemsPerPage'], 1000)
-        self.assertEqual(
-            data['schemas'],
-            ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
-        )
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:ListResponse'])
 
     def test_post(self):
         """
         Test authenticated request
         """
-        response = self.client.post(
-            self.url,
-            token=self.token
-        )
+        response = self.client.post(self.url, token=self.token)
         self.assertEqual(response.status_code, 405)
 
 
 class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
-        return reverse('scim-group-detail', args=(self.group.pk, ))
+        return reverse('scim-group-detail', args=(self.group.pk,))
 
     def setUp(self):
         self.group = Group.objects.create(name='test')
@@ -1392,10 +978,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         """
         Test authenticated request
         """
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.data
@@ -1403,13 +986,8 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         self.assertEqual(data['displayName'], self.group.name)
         self.assertEqual(len(data['members']), 1)
         self.assertEqual(data['members'][0]['value'], 'goodup-user-{}'.format(self.user.pk))
-        self.assertEqual(
-            data['members'][0]['$ref'],
-            reverse('scim-user-detail', args=(self.user.pk, ))
-        )
-        self.assertEqual(
-            data['members'][0]['type'], 'User'
-        )
+        self.assertEqual(data['members'][0]['$ref'], reverse('scim-user-detail', args=(self.user.pk,)))
+        self.assertEqual(data['members'][0]['type'], 'User')
 
     def test_put_add_to_group(self):
         new_user = BlueBottleUserFactory.create()
@@ -1419,45 +997,33 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
             'members': [
                 {'value': 'goodup-user-{}'.format(self.user.pk)},
                 {'value': 'goodup-user-{}'.format(new_user.pk)},
-            ]
+            ],
         }
-        response = self.client.put(
-            self.url,
-            data=request_data,
-            token=self.token
-        )
+        response = self.client.put(self.url, data=request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.data
         self.assertEqual(len(data['members']), 2)
-        self.assertTrue(
-            self.group in new_user.groups.all()
-        )
+        self.assertTrue(self.group in new_user.groups.all())
         self.assertFalse(new_user.is_staff)
 
     def test_put_add_to_staff(self):
         new_user = BlueBottleUserFactory.create()
         group = Group.objects.get(name='Staff')
-        url = reverse('scim-group-detail', args=(group.pk, ))
+        url = reverse('scim-group-detail', args=(group.pk,))
         request_data = {
             'id': 'goodup-group-{}'.format(group.pk),
             'displayName': group.name,
             'members': [
                 {'value': 'goodup-user-{}'.format(new_user.pk)},
-            ]
+            ],
         }
-        response = self.client.put(
-            url,
-            data=request_data,
-            token=self.token
-        )
+        response = self.client.put(url, data=request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.data
         self.assertEqual(len(data['members']), 1)
-        self.assertTrue(
-            group in new_user.groups.all()
-        )
+        self.assertTrue(group in new_user.groups.all())
         new_user.refresh_from_db()
         self.assertTrue(new_user.is_staff)
 
@@ -1467,11 +1033,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
             'displayName': self.group.name,
             'members': [],
         }
-        response = self.client.put(
-            self.url,
-            data=request_data,
-            token=self.token
-        )
+        response = self.client.put(self.url, data=request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.data
@@ -1485,11 +1047,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
                 {'value': 1234},
             ],
         }
-        response = self.client.put(
-            self.url,
-            data=request_data,
-            token=self.token
-        )
+        response = self.client.put(self.url, data=request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.data
@@ -1503,11 +1061,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
                 {'value': 'goodup-user-bla-bla-bla'},
             ],
         }
-        response = self.client.put(
-            self.url,
-            data=request_data,
-            token=self.token
-        )
+        response = self.client.put(self.url, data=request_data, token=self.token)
 
         self.assertEqual(response.status_code, 200)
         data = response.data
@@ -1516,8 +1070,5 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
     def test_get_superuser(self):
         super_user = BlueBottleUserFactory.create(is_superuser=True)
         super_user.groups.add(self.group)
-        response = self.client.get(
-            self.url,
-            token=self.token
-        )
+        response = self.client.get(self.url, token=self.token)
         self.assertEqual(len(response.data['members']), 1)

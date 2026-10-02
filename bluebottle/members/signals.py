@@ -19,7 +19,7 @@ def member_created_groups(sender, instance, created, **kwargs):
             group = Group.objects.get(name='Authenticated')
             group.user_set.add(instance)
         except Group.DoesNotExist:
-            logger.error('Group \'{}\' could not be found'.format('Authenticated'))
+            logger.error("Group '{}' could not be found".format('Authenticated'))
 
 
 @receiver(m2m_changed, sender=Member.segments.through)
@@ -30,17 +30,20 @@ def segments_changed(sender, instance, action, pk_set, *args, **kwargs):
     All closed or succeeded activities remain untouched, so that historical data
     will stay accurate.
     """
-    open_statuses = ('draft', 'needs_work', 'submitted', 'open', 'running', 'full',)
+    open_statuses = (
+        'draft',
+        'needs_work',
+        'submitted',
+        'open',
+        'running',
+        'full',
+    )
     if action == 'post_add':
-        for activity in instance.activities.filter(
-            status__in=open_statuses
-        ):
+        for activity in instance.activities.filter(status__in=open_statuses):
             for segment in instance.segments.filter(segment_type__inherit=True):
                 activity.segments.add(segment)
 
     if action == 'post_remove':
-        for activity in instance.activities.filter(
-            status__in=open_statuses
-        ):
+        for activity in instance.activities.filter(status__in=open_statuses):
             for segment in activity.segments.filter(segment_type__inherit=True, pk__in=pk_set):
                 activity.segments.remove(segment)

@@ -2,9 +2,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.models import (
-    Accept, Follow, Start, Update, Cancel, Delete, Finish
-)
+from bluebottle.activity_pub.models import Accept, Follow, Start, Update, Cancel, Delete, Finish
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
 
@@ -42,6 +40,7 @@ class PublishAdoptionEffect(Effect):
     """
     Announce that the activity has been adopted through GoodUp Connect.
     """
+
     display = True
     template = 'admin/activity_pub/publish_adoption_effect.html'
 
@@ -57,8 +56,7 @@ class PublishAdoptionEffect(Effect):
     @property
     def is_valid(self):
         return (
-            getattr(self.instance, 'origin', False) or
-            isinstance(self.instance, LinkedActivity)
+            getattr(self.instance, 'origin', False) or isinstance(self.instance, LinkedActivity)
         ) and get_platform_actor() is not None
 
     def __str__(self):
@@ -71,9 +69,7 @@ class UpdateEventEffect(Effect):
 
     def post_save(self, **kwargs):
         adapter.create_or_update_event(self.instance)
-        Update.objects.create(
-            object=self.instance.event
-        )
+        Update.objects.create(object=self.instance.event)
 
     @property
     def is_valid(self):
@@ -87,9 +83,7 @@ class CancelEffect(Effect):
     template = 'admin/activity_pub/cancel_effect.html'
 
     def post_save(self, **kwargs):
-        Cancel.objects.create(
-            object=self.instance.event
-        )
+        Cancel.objects.create(object=self.instance.event)
 
     @property
     def is_valid(self):
@@ -103,9 +97,7 @@ class StartEffect(Effect):
     template = 'admin/activity_pub/start_effect.html'
 
     def post_save(self, **kwargs):
-        Start.objects.create(
-            object=self.instance.event
-        )
+        Start.objects.create(object=self.instance.event)
 
     @property
     def is_valid(self):
@@ -119,9 +111,7 @@ class FinishEffect(Effect):
     template = 'admin/activity_pub/finish_effect.html'
 
     def post_save(self, **kwargs):
-        Finish.objects.create(
-            object=self.instance.event
-        )
+        Finish.objects.create(object=self.instance.event)
 
     @property
     def is_valid(self):
@@ -135,9 +125,7 @@ class DeletedEffect(Effect):
     template = 'admin/activity_pub/delete_effect.html'
 
     def post_save(self, **kwargs):
-        Delete.objects.create(
-            object=self.instance.event
-        )
+        Delete.objects.create(object=self.instance.event)
 
     @property
     def is_valid(self):

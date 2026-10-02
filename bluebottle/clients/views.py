@@ -19,6 +19,7 @@ class SettingsView(views.APIView):
     """
     Return the tenant settings as a json object
     """
+
     permission_classes = ()
 
     def get(self, request, format=None):
@@ -31,9 +32,8 @@ class SettingsView(views.APIView):
         content_settings = obj['platform']['content']
         languages = obj['languages']
 
-        is_jwt_authenticated = (
-            request.user.is_authenticated
-            and request.headers.get('authorization', '').startswith('JWT ')
+        is_jwt_authenticated = request.user.is_authenticated and request.headers.get('authorization', '').startswith(
+            'JWT '
         )
 
         if member_settings['closed'] and not is_jwt_authenticated:
@@ -55,8 +55,8 @@ class SettingsView(views.APIView):
                         'request_access_instructions': member_settings['request_access_instructions'],
                         'request_access_email': member_settings['request_access_email'],
                         'account_creation_rules': member_settings['account_creation_rules'],
-                    }
-                }
+                    },
+                },
             }
 
         return response.Response(obj)

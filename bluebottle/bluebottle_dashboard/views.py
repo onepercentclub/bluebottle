@@ -17,9 +17,7 @@ def locked_out(request):
             ip = get_client_ip(request)
             reset(ip=ip)
 
-            return HttpResponseRedirect(
-                reverse('admin:login')
-            )
+            return HttpResponseRedirect(reverse('admin:login'))
     else:
         form = AxesCaptchaForm()
 

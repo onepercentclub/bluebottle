@@ -4,8 +4,14 @@ from moneyed import Money
 from pytz import UTC
 
 from bluebottle.funding.models import (
-    Funding, Donor, Reward, BudgetLine, Payment, BankAccount,
-    PlainPayoutAccount, Payout
+    Funding,
+    Donor,
+    Reward,
+    BudgetLine,
+    Payment,
+    BankAccount,
+    PlainPayoutAccount,
+    Payout,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models import generate_rich_text

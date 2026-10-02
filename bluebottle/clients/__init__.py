@@ -14,6 +14,7 @@ class TenantProperties(local):
     A tenant property file is read from the MULTI_TENANT_DIR/<tenant_name>/properties.py.
     It can contain arbitrary python expressions and a reference to 'settings' will be available.
     """
+
     tenant_properties = {}
 
     def set_tenant(self, tenant):
@@ -25,14 +26,12 @@ class TenantProperties(local):
         # or when no MULTI_TENANT_DIR is configured
 
         from tenant_schemas.postgresql_backend.base import FakeTenant
+
         try:
-            props_mod = safe_join(settings.MULTI_TENANT_DIR,
-                                  tenant.client_name,
-                                  "settings.py")
+            props_mod = safe_join(settings.MULTI_TENANT_DIR, tenant.client_name, 'settings.py')
             # try to load tenant specific properties. We're using execfile since tenant
             # directories are not python packages (e.g. no __init__.py)
-            execfile(props_mod, dict(settings=settings),
-                     self.tenant_properties)
+            execfile(props_mod, dict(settings=settings), self.tenant_properties)
 
         except (ImportError, AttributeError, IOError):
             if not isinstance(tenant, FakeTenant):

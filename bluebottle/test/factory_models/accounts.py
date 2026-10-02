@@ -10,10 +10,10 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Member
 
-    username = factory.Sequence(lambda n: u'user_{0}'.format(n))
-    email = factory.Sequence(lambda o: u'user_{0}@onepercentclub.com'.format(o))
-    first_name = factory.Sequence(lambda name: u'user_{0}'.format(name))
-    last_name = factory.Sequence(lambda name: u'user_{0}'.format(name))
+    username = factory.Sequence(lambda n: 'user_{0}'.format(n))
+    email = factory.Sequence(lambda o: 'user_{0}@onepercentclub.com'.format(o))
+    first_name = factory.Sequence(lambda name: 'user_{0}'.format(name))
+    last_name = factory.Sequence(lambda name: 'user_{0}'.format(name))
     is_active = True
     is_staff = False
     is_superuser = False
@@ -22,7 +22,7 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs):
         user = super(BlueBottleUserFactory, cls)._create(model_class, *args, **kwargs)
         # ensure the raw password gets set after the initial save
-        password = kwargs.pop("password", None)
+        password = kwargs.pop('password', None)
         if password:
             user.set_password(password)
         user.save()
@@ -33,4 +33,4 @@ class GroupFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Group
 
-    name = factory.Sequence(lambda n: u'group_{0}'.format(n))
+    name = factory.Sequence(lambda n: 'group_{0}'.format(n))

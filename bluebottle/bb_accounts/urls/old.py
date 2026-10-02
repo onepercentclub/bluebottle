@@ -3,10 +3,22 @@ from django.urls import re_path
 
 from bluebottle.bb_accounts.views import UserActivityDetail
 from bluebottle.bb_accounts.views import (
-    ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
-    PasswordReset, PasswordResetConfirm, UserVerification, UserDataExport, EmailSetView,
-    PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
-    SignUpTokenConfirmation, CaptchaVerification,
+    ManageProfileDetail,
+    UserProfileDetail,
+    CurrentUser,
+    UserCreate,
+    PasswordReset,
+    PasswordResetConfirm,
+    UserVerification,
+    UserDataExport,
+    EmailSetView,
+    PasswordSetView,
+    TokenLogin,
+    Logout,
+    MemberDetail,
+    SignUpToken,
+    SignUpTokenConfirmation,
+    CaptchaVerification,
     PasswordStrengthDetail,
 )
 
@@ -37,30 +49,10 @@ urlpatterns = [
     path('passwordreset', PasswordReset.as_view(), name='password-reset'),
     path('passwordreset/confirm', PasswordResetConfirm.as_view(), name='password-reset-confirm'),
     path('member/<int:pk>', MemberDetail.as_view(), name='member-detail'),
-    path(
-        'profiles/manage/<int:pk>',
-        ManageProfileDetail.as_view(),
-        name='manage-profile'
-    ),
-    path(
-        'profiles/<int:pk>',
-        UserProfileDetail.as_view(),
-        name='user-profile-detail'
-    ),
+    path('profiles/manage/<int:pk>', ManageProfileDetail.as_view(), name='manage-profile'),
+    path('profiles/<int:pk>', UserProfileDetail.as_view(), name='user-profile-detail'),
     path('tokenlogin', TokenLogin.as_view(), name='token-login'),
-    path(
-        'verification/',
-        UserVerification.as_view(),
-        name='user-verification'
-    ),
-    path(
-        'export/',
-        UserDataExport.as_view(),
-        name='user-export'
-    ),
-    path(
-        'password-strength',
-        PasswordStrengthDetail.as_view(),
-        name='password-strength'
-    ),
+    path('verification/', UserVerification.as_view(), name='user-verification'),
+    path('export/', UserDataExport.as_view(), name='user-export'),
+    path('password-strength', PasswordStrengthDetail.as_view(), name='password-strength'),
 ]

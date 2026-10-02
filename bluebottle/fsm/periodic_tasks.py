@@ -6,7 +6,6 @@ from future.utils import python_2_unicode_compatible
 
 @python_2_unicode_compatible
 class ModelPeriodicTask(object):
-
     def __init__(self, model, field='states'):
         self.model = model
         self.field = field
@@ -31,4 +30,4 @@ class ModelPeriodicTask(object):
             instance.save()
 
     def __str__(self):
-        return str(_("Periodic task") + ": " + self.__class__.__name__)
+        return str(_('Periodic task') + ': ' + self.__class__.__name__)

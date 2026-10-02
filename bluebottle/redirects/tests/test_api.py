@@ -7,7 +7,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class RedirectApiTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(RedirectApiTestCase, self).setUp()
         self.redirect_url = reverse('redirect-list')

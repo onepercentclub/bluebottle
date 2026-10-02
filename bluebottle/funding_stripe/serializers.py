@@ -8,9 +8,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.fsm.serializers import CurrentStatusField
 from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding.models import Donor
-from bluebottle.funding_stripe.models import (
-    StripePayment, StripePayoutAccount,
-    ExternalAccount)
+from bluebottle.funding_stripe.models import StripePayment, StripePayoutAccount, ExternalAccount
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.utils import get_stripe
 
@@ -66,7 +64,7 @@ class StripePaymentSerializer(PaymentSerializer):
 
     class Meta(PaymentSerializer.Meta):
         model = StripePayment
-        fields = PaymentSerializer.Meta.fields + ('payment_intent', )
+        fields = PaymentSerializer.Meta.fields + ('payment_intent',)
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/stripe-payments'
@@ -87,49 +85,48 @@ class ConnectAccountSerializer(ModelSerializer):
         model = StripePayoutAccount
 
         fields = (
-            "id",
-            "account_id",
-            "owner",
-            "country",
-            "verified",
-            "payments_enabled",
-            "payouts_enabled",
-            "external_accounts",
-            "partner_organization",
-            "country",
-            "current_status",
-            "business_type",
-            "verification_method",
-            "tos_accepted",
-            "service_agreement",
+            'id',
+            'account_id',
+            'owner',
+            'country',
+            'verified',
+            'payments_enabled',
+            'payouts_enabled',
+            'external_accounts',
+            'partner_organization',
+            'country',
+            'current_status',
+            'business_type',
+            'verification_method',
+            'tos_accepted',
+            'service_agreement',
         )
         meta_fields = ('current_status',)
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripes'
-        included_resources = [
-            'external_accounts',
-            'owner',
-            'partner_organization'
-        ]
+        included_resources = ['external_accounts', 'owner', 'partner_organization']
 
 
 class ConnectAccountSessionSerializer(serializers.Serializer):
     client_secret = serializers.CharField()
-    account_id = serializers.CharField(source="account")
+    account_id = serializers.CharField(source='account')
 
     class Meta(object):
-        fields = ("id", "account_id", "client_secret")
+        fields = ('id', 'account_id', 'client_secret')
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripe-sessions'
 
 
 class ConnectVerificationLinkSerializer(serializers.Serializer):
-    link = serializers.CharField(source="url")
+    link = serializers.CharField(source='url')
 
     class Meta(object):
-        fields = ("id", "link", )
+        fields = (
+            'id',
+            'link',
+        )
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripe-verification-links'
@@ -140,7 +137,10 @@ class StripeSourcePaymentSerializer(PaymentSerializer):
 
     class Meta(PaymentSerializer.Meta):
         model = StripeSourcePayment
-        fields = PaymentSerializer.Meta.fields + ('source_token', 'charge_token', )
+        fields = PaymentSerializer.Meta.fields + (
+            'source_token',
+            'charge_token',
+        )
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/stripe-source-payments'
@@ -167,9 +167,9 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
     def create(self, data):
         stripe = get_stripe()
         account = stripe.Account.create_external_account(
-            data["connect_account"].account_id, external_account=data.pop("token")
+            data['connect_account'].account_id, external_account=data.pop('token')
         )
-        data["account_id"] = account.id
+        data['account_id'] = account.id
 
         return super().create(data)
 
@@ -185,7 +185,7 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
             'currency',
             'routing_number',
             'bank_name',
-            'account_name'
+            'account_name',
         )
 
     class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
@@ -199,12 +199,7 @@ class PayoutStripeBankSerializer(ModelSerializer):
     currency = serializers.CharField(read_only=True, source='account.currency')
 
     class Meta(object):
-        fields = (
-            'id',
-            'account_id',
-            'external_account_id',
-            'currency'
-        )
+        fields = ('id', 'account_id', 'external_account_id', 'currency')
         model = ExternalAccount
 
 
@@ -217,22 +212,19 @@ class CountrySpecSerializer(serializers.Serializer):
     verification_fields = serializers.SerializerMethodField()
 
     def get_verification_fields(self, obj):
-        return (
-            obj.verification_fields.individual.minimum
-            + obj.verification_fields.individual.additional
-        )
+        return obj.verification_fields.individual.minimum + obj.verification_fields.individual.additional
 
     class Meta(object):
         fields = (
-            "id",
-            "default_currency",
-            "supported_bank_account_currencies",
-            "supported_payment_currencies",
-            "supported_payments_methods",
-            "supported_transfer_countries",
-            "verification_fields",
+            'id',
+            'default_currency',
+            'supported_bank_account_currencies',
+            'supported_payment_currencies',
+            'supported_payments_methods',
+            'supported_transfer_countries',
+            'verification_fields',
         )
         model = ExternalAccount
 
     class JSONAPIMeta:
-        resource_name = "country-specs"
+        resource_name = 'country-specs'

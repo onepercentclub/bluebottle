@@ -2,11 +2,18 @@ from bluebottle.activities.effects import SetPublishedDateEffect
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register, ModelChangedTrigger
-from bluebottle.initiatives.messages.initiator import InitiativeApprovedInitiatorMessage, \
-    InitiativeRejectedInitiatorMessage, InitiativeCancelledInitiatorMessage, InitiativePublishedInitiatorMessage, \
-    InitiativeSubmittedInitiatorMessage
-from bluebottle.initiatives.messages.reviewer import InitiativeSubmittedReviewerMessage, AssignedReviewerMessage, \
-    InitiativePublishedReviewerMessage
+from bluebottle.initiatives.messages.initiator import (
+    InitiativeApprovedInitiatorMessage,
+    InitiativeRejectedInitiatorMessage,
+    InitiativeCancelledInitiatorMessage,
+    InitiativePublishedInitiatorMessage,
+    InitiativeSubmittedInitiatorMessage,
+)
+from bluebottle.initiatives.messages.reviewer import (
+    InitiativeSubmittedReviewerMessage,
+    AssignedReviewerMessage,
+    InitiativePublishedReviewerMessage,
+)
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.notifications.effects import NotificationEffect
@@ -25,19 +32,17 @@ class InitiativeTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect('activities', ActivityStateMachine.auto_submit),
                 NotificationEffect(InitiativeSubmittedReviewerMessage),
-                NotificationEffect(InitiativeSubmittedInitiatorMessage)
-            ]
+                NotificationEffect(InitiativeSubmittedInitiatorMessage),
+            ],
         ),
-
         TransitionTrigger(
             ReviewStateMachine.publish,
             effects=[
                 SetPublishedDateEffect,
                 NotificationEffect(InitiativePublishedInitiatorMessage),
-                NotificationEffect(InitiativePublishedReviewerMessage)
-            ]
+                NotificationEffect(InitiativePublishedReviewerMessage),
+            ],
         ),
-
         TransitionTrigger(
             ReviewStateMachine.approve,
             effects=[
@@ -50,43 +55,34 @@ class InitiativeTriggers(TriggerManager):
                     'activities',
                     DateStateMachine.auto_publish,
                 ),
-                NotificationEffect(InitiativeApprovedInitiatorMessage)
-            ]
+                NotificationEffect(InitiativeApprovedInitiatorMessage),
+            ],
         ),
-
         TransitionTrigger(
             ReviewStateMachine.reject,
             effects=[
                 RelatedTransitionEffect('activities', ActivityStateMachine.reject),
-                NotificationEffect(InitiativeRejectedInitiatorMessage)
-            ]
+                NotificationEffect(InitiativeRejectedInitiatorMessage),
+            ],
         ),
-
         TransitionTrigger(
             ReviewStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('activities', ActivityStateMachine.auto_cancel),
-                NotificationEffect(InitiativeCancelledInitiatorMessage)
-            ]
+                NotificationEffect(InitiativeCancelledInitiatorMessage),
+            ],
         ),
-
         TransitionTrigger(
             ReviewStateMachine.delete,
             effects=[
                 RelatedTransitionEffect('activities', ActivityStateMachine.delete),
-            ]
+            ],
         ),
-
         TransitionTrigger(
             ReviewStateMachine.restore,
             effects=[
                 RelatedTransitionEffect('activities', ActivityStateMachine.restore),
-            ]
+            ],
         ),
-        ModelChangedTrigger(
-            'reviewer_id',
-            effects=[
-                NotificationEffect(AssignedReviewerMessage)
-            ]
-        ),
+        ModelChangedTrigger('reviewer_id', effects=[NotificationEffect(AssignedReviewerMessage)]),
     ]

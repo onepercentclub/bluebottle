@@ -8,18 +8,17 @@ from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.files.views import FileContentView, ImageContentView
 from bluebottle.updates.models import Update, UpdateDocument, UpdateImage, AudienceChoices
 from bluebottle.updates.permissions import (
-    IsAuthorPermission, ActivityOwnerUpdatePermission,
-    UpdateRelatedActivityPermission, IsStaffMember,
-    CanPostUpdatePermission, ContributorAudiencePermission,
+    IsAuthorPermission,
+    ActivityOwnerUpdatePermission,
+    UpdateRelatedActivityPermission,
+    IsStaffMember,
+    CanPostUpdatePermission,
+    ContributorAudiencePermission,
 )
-from bluebottle.updates.serializers import (
-    UpdateSerializer, UpdateImageListSerializer, UpdateDocumentListSerializer
-)
+from bluebottle.updates.serializers import UpdateSerializer, UpdateImageListSerializer, UpdateDocumentListSerializer
 from bluebottle.updates.utils import get_effective_audience, user_can_view_contributor_updates
 from bluebottle.utils.permissions import TenantConditionalOpenClose, OneOf
-from bluebottle.utils.views import (
-    CreateAPIView, RetrieveUpdateDestroyAPIView, JsonApiViewMixin, ListAPIView
-)
+from bluebottle.utils.views import CreateAPIView, RetrieveUpdateDestroyAPIView, JsonApiViewMixin, ListAPIView
 
 
 class UpdateThrottle(UserRateThrottle):
@@ -39,9 +38,7 @@ class UpdateThrottle(UserRateThrottle):
 class UpdateList(JsonApiViewMixin, CreateAPIView):
     queryset = Update.objects.all()
     serializer_class = UpdateSerializer
-    related_permission_classes = {
-        'activity': [CanPostUpdatePermission]
-    }
+    related_permission_classes = {'activity': [CanPostUpdatePermission]}
 
     permission_classes = (
         permissions.IsAuthenticated,
@@ -52,8 +49,7 @@ class UpdateList(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):
             self.check_object_permissions(
-                self.request,
-                serializer.Meta.model(author=self.request.user, **serializer.validated_data)
+                self.request, serializer.Meta.model(author=self.request.user, **serializer.validated_data)
             )
 
         serializer.validated_data['author'] = self.request.user
@@ -78,7 +74,7 @@ class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 
     permission_classes = [
         ContributorAudiencePermission,
-        OneOf(IsAuthorPermission, UpdateRelatedActivityPermission, IsStaffMember)
+        OneOf(IsAuthorPermission, UpdateRelatedActivityPermission, IsStaffMember),
     ]
 
     def check_object_permissions(self, request, obj):
@@ -102,13 +98,15 @@ class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
         return self._activity
 
     def get_visible_queryset(self):
-        queryset = super().get_queryset().filter(
-            activity=self.get_activity(),
-            parent__isnull=True,
+        queryset = (
+            super()
+            .get_queryset()
+            .filter(
+                activity=self.get_activity(),
+                parent__isnull=True,
+            )
         )
-        if not user_can_view_contributor_updates(
-            self.request.user, self.get_activity()
-        ):
+        if not user_can_view_contributor_updates(self.request.user, self.get_activity()):
             queryset = queryset.filter(audience=AudienceChoices.everyone)
         return queryset
 

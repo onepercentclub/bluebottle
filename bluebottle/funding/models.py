@@ -28,7 +28,8 @@ from bluebottle.funding.validators import (
     DeadlineMaxValidator,
     DeadlineValidator,
     KYCReadyValidator,
-    TargetValidator, TosAcceptedValidator,
+    TargetValidator,
+    TosAcceptedValidator,
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.exchange_rates import convert
@@ -39,7 +40,6 @@ logger = logging.getLogger(__name__)
 
 
 class PaymentCurrency(models.Model):
-
     provider = models.ForeignKey('funding.PaymentProvider', on_delete=models.CASCADE)
     code = models.CharField(max_length=3, default='EUR')
     min_amount = models.DecimalField(default=5.0, decimal_places=2, max_digits=10)
@@ -57,7 +57,6 @@ class PaymentCurrency(models.Model):
 
 @python_2_unicode_compatible
 class PaymentProvider(PolymorphicModel):
-
     title = 'Payment Service Provider'
     provider = 'default'
 
@@ -136,19 +135,18 @@ class PaymentProvider(PolymorphicModel):
 
 
 class Funding(Activity):
-
     deadline = models.DateTimeField(
         _('deadline'),
         null=True,
         blank=True,
-        help_text=_('If you enter a deadline, leave the duration field empty. This will override the duration.')
+        help_text=_('If you enter a deadline, leave the duration field empty. This will override the duration.'),
     )
 
     duration = models.PositiveIntegerField(
         _('duration'),
         null=True,
         blank=True,
-        help_text=_('If you enter a duration, leave the deadline field empty for it to be automatically calculated.')
+        help_text=_('If you enter a duration, leave the deadline field empty for it to be automatically calculated.'),
     )
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
@@ -157,10 +155,7 @@ class Funding(Activity):
     amount_pledged = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
     impact_location = models.ForeignKey(
-        'geo.Geolocation',
-        null=True, blank=True,
-        related_name='funding_activities',
-        on_delete=models.SET_NULL
+        'geo.Geolocation', null=True, blank=True, related_name='funding_activities', on_delete=models.SET_NULL
     )
 
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
@@ -179,7 +174,7 @@ class Funding(Activity):
         TargetValidator,
         BudgetLineValidator,
         KYCReadyValidator,
-        TosAcceptedValidator
+        TosAcceptedValidator,
     ]
 
     auto_approve = False
@@ -208,9 +203,9 @@ class Funding(Activity):
         settings = FundingPlatformSettings.load()
 
         fields = super().required_fields + [
-            "title",
-            "description.html",
-            "target",
+            'title',
+            'description.html',
+            'target',
         ]
 
         if settings.public_accounts:
@@ -225,14 +220,13 @@ class Funding(Activity):
         resource_name = 'activities/fundings'
 
     class Meta(object):
-        verbose_name = _("Funding")
-        verbose_name_plural = _("Funding Activities")
+        verbose_name = _('Funding')
+        verbose_name_plural = _('Funding Activities')
         permissions = (
             ('api_read_funding', 'Can view funding through the API'),
             ('api_add_funding', 'Can add funding through the API'),
             ('api_change_funding', 'Can change funding through the API'),
             ('api_delete_funding', 'Can delete funding through the API'),
-
             ('api_read_own_funding', 'Can view own funding through the API'),
             ('api_add_own_funding', 'Can add own funding through the API'),
             ('api_change_own_funding', 'Can change own funding through the API'),
@@ -255,10 +249,7 @@ class Funding(Activity):
 
             self.amount_donated = calculate_total(donations, currency)
             self.amount_pledged = calculate_total(
-                donations.filter(
-                    donor__payment__pledgepayment__isnull=False
-                ),
-                currency
+                donations.filter(donor__payment__pledgepayment__isnull=False), currency
             )
             self.save()
 
@@ -301,10 +292,7 @@ class Funding(Activity):
             currency = 'EUR'
         total = convert(self.amount_donated, currency)
         if self.amount_matching:
-            total += convert(
-                self.amount_matching,
-                currency
-            )
+            total += convert(self.amount_matching, currency)
         return total
 
     @property
@@ -317,11 +305,8 @@ class Funding(Activity):
     @property
     def stats(self):
         from .states import DonorStateMachine
-        stats = self.donations.filter(
-            status=DonorStateMachine.succeeded.value
-        ).aggregate(
-            count=Count('user__id')
-        )
+
+        stats = self.donations.filter(status=DonorStateMachine.succeeded.value).aggregate(count=Count('user__id'))
         stats['amount'] = {'amount': self.amount_raised.amount, 'currency': str(self.amount_raised.currency)}
         return stats
 
@@ -345,6 +330,7 @@ class Reward(models.Model):
     """
     Rewards for donations
     """
+
     amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=200)
     description = models.CharField(_('Description'), max_length=500, null=True, blank=True)
@@ -352,10 +338,7 @@ class Reward(models.Model):
         'funding.Funding', verbose_name=_('Activity'), related_name='rewards', on_delete=models.CASCADE
     )
     limit = models.IntegerField(
-        _('Limit'),
-        null=True,
-        blank=True,
-        help_text=_('How many of this rewards are available')
+        _('Limit'), null=True, blank=True, help_text=_('How many of this rewards are available')
     )
 
     created = models.DateTimeField(default=timezone.now)
@@ -364,17 +347,16 @@ class Reward(models.Model):
     @property
     def count(self):
         from .states import DonorStateMachine
-        return self.donations.filter(
-            status=DonorStateMachine.succeeded.value
-        ).count()
+
+        return self.donations.filter(status=DonorStateMachine.succeeded.value).count()
 
     def __str__(self):
         return self.title
 
     class Meta(object):
         ordering = ['-activity__created', 'amount']
-        verbose_name = _("Gift")
-        verbose_name_plural = _("Gifts")
+        verbose_name = _('Gift')
+        verbose_name_plural = _('Gifts')
 
     class JSONAPIMeta(object):
         resource_name = 'activities/rewards'
@@ -391,9 +373,8 @@ class BudgetLine(models.Model):
     """
     BudgetLine: Entries to the Activity Budget sheet.
     """
-    activity = models.ForeignKey(
-        'funding.Funding', related_name='budget_lines', on_delete=models.CASCADE
-    )
+
+    activity = models.ForeignKey('funding.Funding', related_name='budget_lines', on_delete=models.CASCADE)
     description = models.CharField(_('description'), max_length=255, default='')
 
     amount = MoneyField()
@@ -409,27 +390,22 @@ class BudgetLine(models.Model):
         verbose_name_plural = _('budget lines')
 
     def __str__(self):
-        return u'{0} - {1}'.format(self.description, self.amount)
+        return '{0} - {1}'.format(self.description, self.amount)
 
 
 @python_2_unicode_compatible
 class Fundraiser(models.Model):
-    owner = models.ForeignKey(
-        'members.Member', related_name="funding_fundraisers", on_delete=models.CASCADE
-    )
+    owner = models.ForeignKey('members.Member', related_name='funding_fundraisers', on_delete=models.CASCADE)
     activity = models.ForeignKey(
-        'funding.Funding',
-        verbose_name=_("activity"),
-        related_name="fundraisers",
-        on_delete=models.CASCADE
+        'funding.Funding', verbose_name=_('activity'), related_name='fundraisers', on_delete=models.CASCADE
     )
 
-    title = models.CharField(_("title"), max_length=255)
-    description = models.TextField(_("description"), blank=True)
+    title = models.CharField(_('title'), max_length=255)
+    description = models.TextField(_('description'), blank=True)
 
     image = ImageField(blank=True, null=True)
 
-    amount = MoneyField(_("amount"))
+    amount = MoneyField(_('amount'))
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     created = models.DateTimeField(default=timezone.now)
@@ -441,6 +417,7 @@ class Fundraiser(models.Model):
     @cached_property
     def amount_donated(self):
         from .states import DonorStateMachine
+
         donations = self.donations.filter(
             status__in=[
                 DonorStateMachine.succeeded.value,
@@ -449,8 +426,8 @@ class Fundraiser(models.Model):
         )
 
         totals = [
-            Money(data['amount__sum'], data['amount_currency']) for data in
-            donations.values('amount_currency').annotate(Sum('amount')).order_by()
+            Money(data['amount__sum'], data['amount_currency'])
+            for data in donations.values('amount_currency').annotate(Sum('amount')).order_by()
         ]
 
         totals = [convert(amount, self.amount.currency) for amount in totals]
@@ -465,10 +442,7 @@ class Fundraiser(models.Model):
 @python_2_unicode_compatible
 class Payout(TriggerMixin, models.Model):
     activity = models.ForeignKey(
-        'funding.Funding',
-        verbose_name=_("activity"),
-        related_name="payouts",
-        on_delete=models.CASCADE
+        'funding.Funding', verbose_name=_('activity'), related_name='payouts', on_delete=models.CASCADE
     )
     provider = models.CharField(max_length=100)
     currency = models.CharField(max_length=5)
@@ -488,6 +462,7 @@ class Payout(TriggerMixin, models.Model):
 
         if isinstance(activity, Funding):
             from .states import PayoutStateMachine
+
             for payout in cls.objects.filter(activity=activity):
                 if payout.status == PayoutStateMachine.new.value:
                     payout.delete()
@@ -498,21 +473,14 @@ class Payout(TriggerMixin, models.Model):
         elif isinstance(activity, GrantApplication):
             ready_donations = activity.grants.filter(status='new', donor__payout__isnull=True)
 
-        groups = set([
-            (don.payout_amount_currency, don.payment.provider) for don in
-            ready_donations
-        ])
+        groups = set([(don.payout_amount_currency, don.payment.provider) for don in ready_donations])
         for currency, provider in groups:
             donations = [
-                don for don in
-                ready_donations.filter(donor__payout_amount_currency=currency)
+                don
+                for don in ready_donations.filter(donor__payout_amount_currency=currency)
                 if don.payment.provider == provider
             ]
-            payout = cls.objects.create(
-                activity=activity,
-                provider=provider,
-                currency=currency
-            )
+            payout = cls.objects.create(activity=activity, provider=provider, currency=currency)
             for donation in donations:
                 donation.payout = payout
                 donation.save()
@@ -536,23 +504,24 @@ class Donor(Contributor):
     """
     A donation to a crowdfunding campaign.
     """
+
     include_in_documentation = True
     amount = MoneyField()
     payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
-    reward = models.ForeignKey(
-        Reward, null=True, blank=True, related_name="donations", on_delete=models.CASCADE
-    )
+    reward = models.ForeignKey(Reward, null=True, blank=True, related_name='donations', on_delete=models.CASCADE)
     fundraiser = models.ForeignKey(
-        Fundraiser, null=True, blank=True, related_name="donations", on_delete=models.CASCADE
+        Fundraiser, null=True, blank=True, related_name='donations', on_delete=models.CASCADE
     )
-    name = models.CharField(max_length=200, null=True, blank=True,
-                            verbose_name=_('Fake name'),
-                            help_text=_('Override donor name / Name for guest donation'))
+    name = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Fake name'),
+        help_text=_('Override donor name / Name for guest donation'),
+    )
     anonymous = models.BooleanField(_('anonymous'), default=False)
-    payout = models.ForeignKey(
-        'funding.Payout', null=True, blank=True, on_delete=SET_NULL, related_name='donations'
-    )
+    payout = models.ForeignKey('funding.Payout', null=True, blank=True, on_delete=SET_NULL, related_name='donations')
 
     def save(self, *args, **kwargs):
         if not self.user and not self.client_secret:
@@ -591,6 +560,7 @@ class MoneyContribution(Contribution):
     """
     A donation contribution, for reporting purposes.
     """
+
     include_in_documentation = True
 
     value = MoneyField()
@@ -605,6 +575,7 @@ class Payment(TriggerMixin, PolymorphicModel):
     """
     A payment related to a donation to a crowdfunding campaign.
     """
+
     include_in_documentation = True
 
     status = models.CharField(max_length=40)
@@ -628,12 +599,10 @@ class Payment(TriggerMixin, PolymorphicModel):
         super(Payment, self).save(*args, **kwargs)
 
     def __str__(self):
-        return "{} - {}".format(self.polymorphic_ctype, self.id)
+        return '{} - {}'.format(self.polymorphic_ctype, self.id)
 
     class Meta(object):
-        permissions = (
-            ('refund_payment', 'Can refund payments'),
-        )
+        permissions = (('refund_payment', 'Can refund payments'),)
 
 
 class LegacyPayment(Payment):
@@ -664,7 +633,7 @@ class PaymentMethod(object):
 
     @property
     def id(self):
-        return "{}-{}".format(self.provider, self.code)
+        return '{}-{}'.format(self.provider, self.code)
 
     @property
     def pk(self):
@@ -678,11 +647,7 @@ class PaymentMethod(object):
 class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
-    owner = models.ForeignKey(
-        'members.Member',
-        related_name='funding_payout_account',
-        on_delete=models.CASCADE
-    )
+    owner = models.ForeignKey('members.Member', related_name='funding_payout_account', on_delete=models.CASCADE)
 
     created = models.DateTimeField(_('created'), default=timezone.now)
     updated = models.DateTimeField(_('updated'), auto_now=True)
@@ -691,47 +656,45 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     public = models.BooleanField(
         _('Public payout account'),
         default=False,
-        help_text=_((
-            "Allow users to choose this payout account when setting up a "
-            "crowdfunding campaign (only applies if crowdfunding for public "
-            "payout accounts is enabled)."
-        ))
+        help_text=_(
+            (
+                'Allow users to choose this payout account when setting up a '
+                'crowdfunding campaign (only applies if crowdfunding for public '
+                'payout accounts is enabled).'
+            )
+        ),
     )
 
     partner_organization = models.ForeignKey(
         'organizations.Organization',
-        blank=True, null=True,
+        blank=True,
+        null=True,
         related_name='payout_accounts',
         verbose_name=_('Partner organisation'),
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
     )
 
     @property
     def funding(self):
         if self.id:
-            return Funding.objects.filter(
-                bank_account__in=self.external_accounts.all()
-            ).all()
+            return Funding.objects.filter(bank_account__in=self.external_accounts.all()).all()
         else:
             return Funding.objects.none()
 
     @property
     def grant_application(self):
         from bluebottle.grant_management.models import GrantApplication
+
         if self.id:
-            return GrantApplication.objects.filter(
-                bank_account__in=self.external_accounts.all()
-            ).all()
+            return GrantApplication.objects.filter(bank_account__in=self.external_accounts.all()).all()
         return GrantApplication.objects.none()
 
     def __str__(self):
-        return "Payout account #{}".format(self.id)
+        return 'Payout account #{}'.format(self.id)
 
 
 class PlainPayoutAccount(PayoutAccount):
-    document = PrivateDocumentField(
-        blank=True, null=True, on_delete=models.deletion.SET_NULL, view_name='kyc-document'
-    )
+    document = PrivateDocumentField(blank=True, null=True, on_delete=models.deletion.SET_NULL, view_name='kyc-document')
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 
@@ -754,7 +717,7 @@ class PlainPayoutAccount(PayoutAccount):
         return required
 
     def __str__(self):
-        return "KYC account for {}".format(self.owner.full_name)
+        return 'KYC account for {}'.format(self.owner.full_name)
 
 
 @python_2_unicode_compatible
@@ -766,10 +729,7 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     provider = 'default'
 
     connect_account = models.ForeignKey(
-        'funding.PayoutAccount',
-        null=True, blank=True,
-        related_name='external_accounts',
-        on_delete=models.CASCADE
+        'funding.PayoutAccount', null=True, blank=True, related_name='external_accounts', on_delete=models.CASCADE
     )
 
     status = models.CharField(max_length=40)
@@ -812,33 +772,21 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     public_data = {}
 
     def __str__(self):
-        return "Bank account #{}".format(self.id)
+        return 'Bank account #{}'.format(self.id)
 
     class Meta:
         ordering = ('id',)
 
 
 class BusinessTypeChoices(DjangoChoices):
-    individual = ChoiceItem(
-        'individual',
-        label=_("Individual person")
-    )
-    non_profit = ChoiceItem(
-        'non_profit',
-        label=_("Non-profit organization")
-    )
+    individual = ChoiceItem('individual', label=_('Individual person'))
+    non_profit = ChoiceItem('non_profit', label=_('Non-profit organization'))
 
-    company = ChoiceItem(
-        'company',
-        label=_("Commercial company")
-    )
+    company = ChoiceItem('company', label=_('Commercial company'))
 
 
 class FundingPlatformSettings(BasePlatformSettings):
-
-    anonymous_donations = models.BooleanField(
-        _('Hide names from all donations'), default=False
-    )
+    anonymous_donations = models.BooleanField(_('Hide names from all donations'), default=False)
     public_accounts = models.BooleanField(
         _('Crowdfunding for verified organisations'),
         default=False,
@@ -846,7 +794,7 @@ class FundingPlatformSettings(BasePlatformSettings):
             'When enabled, campaign initiators must select from a list of organisations with a '
             'public payout account that will receive the raised money, rather than providing the '
             'bank account details themselves.'
-        )
+        ),
     )
 
     enable_iban_check = models.BooleanField(
@@ -855,15 +803,13 @@ class FundingPlatformSettings(BasePlatformSettings):
         help_text=_(
             'In the KYC flow do a check to see if bank account number and name match. '
             'This will be done by the Surepay API, and only Dutch IBANs are supported. '
-        )
+        ),
     )
 
     fixed_target = models.BooleanField(
         _('Limit donations'),
         default=False,
-        help_text=_(
-            'Automatically stop accepting donations once the target is reached.'
-        )
+        help_text=_('Automatically stop accepting donations once the target is reached.'),
     )
 
     matching_name = models.CharField(
@@ -871,23 +817,24 @@ class FundingPlatformSettings(BasePlatformSettings):
         max_length=60,
         null=True,
         blank=True,
-        help_text=_('Change this if you want to use something else then the platform name for matching amounts.')
+        help_text=_('Change this if you want to use something else then the platform name for matching amounts.'),
     )
 
     business_types = MultiSelectField(
         _('verification types'),
         max_length=300,
         choices=BusinessTypeChoices.choices,
-        default=[BusinessTypeChoices.individual]
+        default=[BusinessTypeChoices.individual],
     )
 
     @property
     def stripe_publishable_key(self):
         from bluebottle.funding_stripe.utils import get_stripe_settings
+
         settings = get_stripe_settings()
         if settings:
             return settings['publishable_key']
-        return ""
+        return ''
 
     class Meta(object):
         verbose_name_plural = _('funding settings')
@@ -895,7 +842,6 @@ class FundingPlatformSettings(BasePlatformSettings):
 
 
 class IbanCheck(models.Model):
-
     MATCH_CHOICES = (
         ('match', _('Match')),
         ('mistype', _('Mistype')),
@@ -909,10 +855,7 @@ class IbanCheck(models.Model):
     token = ''
     suggestion = ''
 
-    hashed_iban = models.CharField(
-        max_length=64,
-        help_text=_('Hashed IBAN to check against')
-    )
+    hashed_iban = models.CharField(max_length=64, help_text=_('Hashed IBAN to check against'))
     matched = models.CharField(
         help_text=_('Result of the IBAN check'),
         max_length=100,
@@ -920,10 +863,7 @@ class IbanCheck(models.Model):
         default='no_match',
     )
 
-    name = models.CharField(
-        max_length=255, blank=True, null=True,
-        help_text=_('Name of the account holder')
-    )
+    name = models.CharField(max_length=255, blank=True, null=True, help_text=_('Name of the account holder'))
     result = models.JSONField(null=True)
 
     def get_stripe_token(self):
@@ -934,16 +874,17 @@ class IbanCheck(models.Model):
             iban = 'NL39RABO0300065264'
         token = stripe.Token.create(
             bank_account={
-                "currency": "EUR",
-                "account_holder_name": self.name,
-                "account_holder_type": "individual",
-                "account_number": iban,
+                'currency': 'EUR',
+                'account_holder_name': self.name,
+                'account_holder_type': 'individual',
+                'account_number': iban,
             }
         )
         return token
 
     def check_iban(self):
         from bluebottle.funding.adapters.rabobank import RabobankAdapter
+
         adapter = RabobankAdapter()
 
         result = adapter.check_iban_name(self.iban, self.name)

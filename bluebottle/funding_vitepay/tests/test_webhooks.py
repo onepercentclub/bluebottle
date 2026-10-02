@@ -17,7 +17,6 @@ class MockEvent(object):
 
 
 class VitepayPaymentTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(VitepayPaymentTestCase, self).setUp()
         VitepayPaymentProvider.objects.all().delete()
@@ -36,11 +35,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.webhook = reverse('vitepay-payment-webhook')
 
     def test_success(self):
-        data = {
-            'success': 1,
-            'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB',
-            'order_id': 'some-id'
-        }
+        data = {'success': 1, 'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB', 'order_id': 'some-id'}
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.content, b'{"status": "1"}')
@@ -48,11 +43,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.assertEqual(self.payment.status, 'succeeded')
 
     def test_failed(self):
-        data = {
-            'failure': 1,
-            'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB',
-            'order_id': 'some-id'
-        }
+        data = {'failure': 1, 'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB', 'order_id': 'some-id'}
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.content, b'{"status": "1"}')
@@ -60,11 +51,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.assertEqual(self.payment.status, 'failed')
 
     def test_not_found(self):
-        data = {
-            'failure': 1,
-            'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB',
-            'order_id': 'another-id'
-        }
+        data = {'failure': 1, 'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB', 'order_id': 'another-id'}
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.content, b'{"status": "0", "message": "Order not found."}')

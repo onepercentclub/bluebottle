@@ -40,7 +40,7 @@ class UnreviewedContributorsField(SerializerMethodHyperlinkedRelatedField):
         url = super().get_url(*args, **kwargs)
 
         if url:
-            return f"{url}?filter[status]=new"
+            return f'{url}?filter[status]=new'
 
 
 class ActivitySlotSerializer(ModelSerializer):
@@ -57,7 +57,7 @@ class ActivitySlotSerializer(ModelSerializer):
         url_args=('pk',),
         filename='participant.csv',
         permission=CanExportParticipantsPermission,
-        read_only=True
+        read_only=True,
     )
 
     def get_timezone(self, instance):
@@ -78,7 +78,7 @@ class ActivitySlotSerializer(ModelSerializer):
             'online_meeting_url',
             'location',
             'participants_export_url',
-            'translations'
+            'translations',
         )
         meta_fields = (
             'status',
@@ -90,7 +90,7 @@ class ActivitySlotSerializer(ModelSerializer):
             'errors',
             'created',
             'updated',
-            'translations'
+            'translations',
         )
 
     class JSONAPIMeta(object):
@@ -109,21 +109,17 @@ class ActivitySlotSerializer(ModelSerializer):
 class DateActivitySlotSerializer(ActivitySlotSerializer):
     participants = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name="date-slot-related-participants",
-        related_link_url_kwarg="slot_id",
+        related_link_view_name='date-slot-related-participants',
+        related_link_url_kwarg='slot_id',
         include_my=True,
         statuses={
-            "active": ["accepted", "succeeded"],
-            "failed": ["rejected", "withdrawn", "removed", "cancelled"],
+            'active': ['accepted', 'succeeded'],
+            'failed': ['rejected', 'withdrawn', 'removed', 'cancelled'],
         },
         participating_statuses=PARTICIPATING_DATE_SLOT_PARTICIPANT_STATUSES,
     )
 
-    my_interest = SerializerMethodResourceRelatedField(
-        model=Interest,
-        read_only=True,
-        source='get_my_interest'
-    )
+    my_interest = SerializerMethodResourceRelatedField(model=Interest, read_only=True, source='get_my_interest')
     interests = InterestLinkField(
         read_only=True,
         related_link_view_name='date-slot-interests',
@@ -161,15 +157,13 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
         if many:
             try:
                 activity_id = self.context['request'].GET['activity']
-                queryset = self.context['view'].queryset.filter(
-                    activity_id=int(activity_id)
-                ).order_by('start')
+                queryset = self.context['view'].queryset.filter(activity_id=int(activity_id)).order_by('start')
 
                 try:
                     contributor_id = self.context['request'].GET['contributor']
                     queryset = queryset.filter(
                         participants__status__in=['registered', 'succeeded'],
-                        participants__participant_id=contributor_id
+                        participants__participant_id=contributor_id,
                     )
                 except KeyError:
                     pass
@@ -205,7 +199,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'my_contributor.user',
             'my_interest',
             'location',
-            'location.country'
+            'location.country',
         ]
 
     included_serializers = dict(
@@ -215,7 +209,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'country': 'bluebottle.geo.serializers.CountrySerializer',
             'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
-        }
+        },
     )
 
 
@@ -236,7 +230,9 @@ class DateSlotTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        included_resources = ['resource', ]
+        included_resources = [
+            'resource',
+        ]
         resource_name = 'activities/time-based/slot-transitions'
 
 
@@ -245,8 +241,8 @@ class TimeContributionSerializer(BaseContributionSerializer):
 
     class Meta(BaseContributionSerializer.Meta):
         model = TimeContribution
-        fields = BaseContributionSerializer.Meta.fields + ("contribution_type", "start")
-        meta_fields = BaseContributionSerializer.Meta.meta_fields + ("permissions",)
+        fields = BaseContributionSerializer.Meta.fields + ('contribution_type', 'start')
+        meta_fields = BaseContributionSerializer.Meta.meta_fields + ('permissions',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/time-contributions'

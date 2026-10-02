@@ -1,9 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, TeamInline, BaseContributorInline
-)
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, TeamInline, BaseContributorInline
 from bluebottle.activities.models import EffortContribution
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.utils.admin import export_as_csv_action, admin_info_box
@@ -12,7 +10,11 @@ from bluebottle.utils.admin import export_as_csv_action, admin_info_box
 class EffortContributionInlineAdmin(admin.TabularInline):
     model = EffortContribution
     extra = 0
-    readonly_fields = ('contribution_type', 'status', 'start',)
+    readonly_fields = (
+        'contribution_type',
+        'status',
+        'start',
+    )
     fields = readonly_fields
 
 
@@ -22,19 +24,22 @@ class DeedParticipantAdmin(ContributorChildAdmin):
     raw_id_fields = ['user', 'activity']
     fields = ['activity', 'user', 'status', 'states'] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
-    inlines = ContributorChildAdmin.inlines + (EffortContributionInlineAdmin, )
+    inlines = ContributorChildAdmin.inlines + (EffortContributionInlineAdmin,)
 
 
 class DeedParticipantInline(BaseContributorInline):
     model = DeedParticipant
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
 
 
 @admin.register(Deed)
 class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
-    inlines = (TeamInline, DeedParticipantInline, ) + ActivityChildAdmin.inlines
+    inlines = (
+        TeamInline,
+        DeedParticipantInline,
+    ) + ActivityChildAdmin.inlines
     list_filter = ['status']
     search_fields = ['title', 'description']
     readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity', 'next_step_info']
@@ -49,12 +54,12 @@ class DeedAdmin(ActivityChildAdmin):
 
     def participant_count(self, obj):
         return obj.participants.count() + obj.deleted_successful_contributors or 0
+
     participant_count.short_description = _('Participants')
 
     def next_step_info(self, obj):
         return admin_info_box(
-            _('Redirect participants to an external website so '
-              'they can complete an action such as registering a vote.')
+            _('Redirect participants to an external website so they can complete an action such as registering a vote.')
         )
 
     registration_fields = (
@@ -66,7 +71,6 @@ class DeedAdmin(ActivityChildAdmin):
         'next_step_description',
         'next_step_button_label',
         'next_step_link',
-
     )
 
     export_as_csv_fields = (

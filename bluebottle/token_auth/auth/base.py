@@ -16,7 +16,7 @@ from django.utils import translation
 logger = logging.getLogger(__name__)
 
 
-class BaseTokenAuthentication():
+class BaseTokenAuthentication:
     """
     Base class for TokenAuthentication.
     """
@@ -53,11 +53,11 @@ class BaseTokenAuthentication():
         return dict([(key, value) for key, value in list(data.items()) if hasattr(user_model, key)])
 
     def set_location(self, user, data):
-        name = data.get("location.name", data.get("location.slug", None))
+        name = data.get('location.name', data.get('location.slug', None))
 
         if name and not user.location_verified:
             location = Location.objects.extra(
-                where=["%s ILIKE ANY (alternate_names)"],
+                where=['%s ILIKE ANY (alternate_names)'],
                 params=[
                     name.lower(),
                 ],
@@ -74,12 +74,8 @@ class BaseTokenAuthentication():
 
     def get_segments_from_data(self, data):
         segment_list = {}
-        segment_data = [
-            (field, value)
-            for field, value in list(data.items())
-            if field.startswith('segment.')
-        ]
-        for (path, value) in segment_data:
+        segment_data = [(field, value) for field, value in list(data.items()) if field.startswith('segment.')]
+        for path, value in segment_data:
             type_slug = path.split('.')[-1]
             try:
                 segment_type = SegmentType.objects.get(slug=type_slug)
@@ -92,26 +88,32 @@ class BaseTokenAuthentication():
             segment_list[segment_type.id] = []
             for val in value:
                 try:
-                    segment = Segment.objects.filter(
-                        segment_type__slug=type_slug,
-                    ).extra(
-                        where=['%s ILIKE ANY (alternate_names)'],
-                        params=[val, ]
-                    ).first()
+                    segment = (
+                        Segment.objects.filter(
+                            segment_type__slug=type_slug,
+                        )
+                        .extra(
+                            where=['%s ILIKE ANY (alternate_names)'],
+                            params=[
+                                val,
+                            ],
+                        )
+                        .first()
+                    )
                     if segment:
                         segment_list[segment_type.id].append(segment)
                     else:
-                        segment = Segment.objects.filter(
-                            segment_type__slug=type_slug,
-                        ).filter(slug=slugify(val)).first()
+                        segment = (
+                            Segment.objects.filter(
+                                segment_type__slug=type_slug,
+                            )
+                            .filter(slug=slugify(val))
+                            .first()
+                        )
                         if segment:
                             segment_list[segment_type.id].append(segment)
                         elif MemberPlatformSettings.load().create_segments:
-                            segment = Segment.objects.create(
-                                segment_type=segment_type,
-                                name=val,
-                                alternate_names=[val]
-                            )
+                            segment = Segment.objects.create(segment_type=segment_type, name=val, alternate_names=[val])
                             segment_list[segment_type.id].append(segment)
                 except IntegrityError:
                     pass
@@ -121,10 +123,8 @@ class BaseTokenAuthentication():
         segment_list = self.get_segments_from_data(data)
         for segment_type_id, segments in segment_list.items():
             if (
-                segments != user.segments.filter(segment_type__id=segment_type_id) and
-                not user.segments.filter(
-                    segment_type__id=segment_type_id, usersegment__verified=True
-                ).count()
+                segments != user.segments.filter(segment_type__id=segment_type_id)
+                and not user.segments.filter(segment_type__id=segment_type_id, usersegment__verified=True).count()
             ):
                 user.segments.remove(*user.segments.filter(segment_type__id=segment_type_id))
                 for segment in segments:
@@ -156,9 +156,7 @@ class BaseTokenAuthentication():
                         created = True
                     else:
                         logger.error('Login error: User not found, and provisioning is disabled')
-                        raise TokenAuthenticationError(
-                            "Account not found"
-                        )
+                        raise TokenAuthenticationError('Account not found')
 
         if not created:
             user_model.objects.filter(pk=user.pk).update(**user_data)

@@ -16,6 +16,4 @@ task_acks_late = True
 if getattr(settings, 'CELERY_ALWAYS_EAGER', False):
     task_always_eager = True
     task_eager_propagates = True
-    eager_propagates_exceptions = getattr(
-        settings, 'CELERY_EAGER_PROPAGATES_EXCEPTIONS', True
-    )
+    eager_propagates_exceptions = getattr(settings, 'CELERY_EAGER_PROPAGATES_EXCEPTIONS', True)

@@ -1,18 +1,19 @@
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from rest_framework.generics import (
-    ListAPIView, RetrieveAPIView, CreateAPIView,
-    RetrieveUpdateAPIView
-)
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateAPIView
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.geo.models import Location, Country, Geolocation, Place
 from bluebottle.geo.permissions import IsConnectedToProfile
 from bluebottle.geo.serializers import (
-    GeolocationSerializer, OfficeSerializer, OfficeListSerializer,
-    InitiativeCountrySerializer, PlaceSerializer, CountrySerializer
+    GeolocationSerializer,
+    OfficeSerializer,
+    OfficeListSerializer,
+    InitiativeCountrySerializer,
+    PlaceSerializer,
+    CountrySerializer,
 )
 from bluebottle.utils.views import TranslatedApiViewMixin, JsonApiViewMixin
 
@@ -22,7 +23,12 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
     queryset = Country.objects
 
     public_statuses = [
-        'open', 'running', 'full', 'succeeded', 'partially_funded', 'refunded',
+        'open',
+        'running',
+        'full',
+        'succeeded',
+        'partially_funded',
+        'refunded',
     ]
 
     @method_decorator(cache_page(3600))
@@ -34,12 +40,12 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
 
         if 'filter[used]' in self.request.GET:
             qs = qs.filter(
-                Q(location__initiative__status='approved') |
-                Q(geolocation__initiative__status='approved') |
-                Q(geolocation__periodicactivity__status__in=self.public_statuses) |
-                (
-                    Q(geolocation__dateactivityslot__activity__status__in=self.public_statuses) &
-                    Q(geolocation__dateactivityslot__status__in=self.public_statuses)
+                Q(location__initiative__status='approved')
+                | Q(geolocation__initiative__status='approved')
+                | Q(geolocation__periodicactivity__status__in=self.public_statuses)
+                | (
+                    Q(geolocation__dateactivityslot__activity__status__in=self.public_statuses)
+                    & Q(geolocation__dateactivityslot__status__in=self.public_statuses)
                 )
             )
         return qs
@@ -59,17 +65,13 @@ class OfficeList(JsonApiViewMixin, ListAPIView):
     queryset = Location.objects.all()
 
     pagination_class = None
-    permission_classes = [
-        IsAuthenticatedOrOpenPermission
-    ]
+    permission_classes = [IsAuthenticatedOrOpenPermission]
 
 
 class OfficeDetail(JsonApiViewMixin, RetrieveAPIView):
     serializer_class = OfficeSerializer
     queryset = Location.objects.all()
-    permission_classes = [
-        IsAuthenticatedOrOpenPermission
-    ]
+    permission_classes = [IsAuthenticatedOrOpenPermission]
 
 
 # Remove this after we deployed json-api office locations
@@ -91,9 +93,7 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
     queryset = Place.objects.all()
 
     serializer_class = PlaceSerializer
-    permission_classes = [
-        IsAuthenticatedOrOpenPermission
-    ]
+    permission_classes = [IsAuthenticatedOrOpenPermission]
 
     def perform_create(self, serializer):
         try:
@@ -109,10 +109,7 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 
 class PlaceDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Place.objects.all()
-    permission_classes = [
-        IsAuthenticatedOrOpenPermission,
-        IsConnectedToProfile
-    ]
+    permission_classes = [IsAuthenticatedOrOpenPermission, IsConnectedToProfile]
     serializer_class = PlaceSerializer
 
 

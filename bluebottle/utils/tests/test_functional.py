@@ -24,9 +24,7 @@ class AdminPermissionsTest(BluebottleTestCase):
         self.user.save()
 
         # Login user
-        self.client.login(
-            request=RequestFactory().post('/'), email=self.user.email, password='testing'
-        )
+        self.client.login(request=RequestFactory().post('/'), email=self.user.email, password='testing')
 
     def tearDown(self):
         self.client.logout()
@@ -52,7 +50,8 @@ class AdminPermissionsTest(BluebottleTestCase):
         self.user.save()
 
         self.assertTrue(
-            self.client.login(request=RequestFactory().post('/'), email=self.user.email, password='testing'))
+            self.client.login(request=RequestFactory().post('/'), email=self.user.email, password='testing')
+        )
 
         response = self.client.get(reverse('admin:auth_group_changelist'))
         self.assertIsInstance(response, TemplateResponse)

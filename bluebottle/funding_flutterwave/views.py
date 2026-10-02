@@ -24,7 +24,8 @@ class FlutterwavePaymentList(PaymentList):
     serializer_class = FlutterwavePaymentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
+        JSONWebTokenAuthentication,
+        DonorAuthentication,
     )
 
     def perform_create(self, serializer):
@@ -33,7 +34,6 @@ class FlutterwavePaymentList(PaymentList):
 
 
 class FlutterwaveWebhookView(View):
-
     def post(self, request, **kwargs):
         logger.info('Flutterwave webhook: {}'.format(request.body))
         try:
@@ -51,10 +51,7 @@ class FlutterwaveWebhookView(View):
         except FlutterwavePayment.DoesNotExist:
             try:
                 donation = Donor.objects.get(id=tx_ref)
-                payment = FlutterwavePayment.objects.create(
-                    donation=donation,
-                    tx_ref=tx_ref
-                )
+                payment = FlutterwavePayment.objects.create(donation=donation, tx_ref=tx_ref)
                 payment.save()
             except Donor.DoesNotExist:
                 return HttpResponseNotFound()
@@ -67,9 +64,7 @@ class FlutterwaveBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, Lis
     serializer_class = FlutterwaveBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}
 
 
 class FlutterwaveBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -77,6 +72,4 @@ class FlutterwaveBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, R
     serializer_class = FlutterwaveBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}

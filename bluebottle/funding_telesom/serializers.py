@@ -20,7 +20,6 @@ class TelesomPaymentSerializer(PaymentSerializer):
 
 
 class TelesomBankAccountSerializer(BaseBankAccountSerializer):
-
     class Meta(BaseBankAccountSerializer.Meta):
         model = TelesomBankAccount
 
@@ -28,6 +27,7 @@ class TelesomBankAccountSerializer(BaseBankAccountSerializer):
             'account_name',
             'mobile_number',
         )
+
     included_serializers = {
         'connect_account': 'bluebottle.funding.serializers.PlainPayoutAccountSerializer',
     }

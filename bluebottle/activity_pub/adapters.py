@@ -11,9 +11,7 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.celery import app
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import (
-    Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start
-)
+from bluebottle.activity_pub.models import Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
@@ -23,16 +21,14 @@ from bluebottle.webfinger.client import client
 logger = logging.getLogger(__name__)
 
 
-class JSONLDAdapter():
+class JSONLDAdapter:
     def __init__(self):
         self.parser = JSONLDParser()
         self.renderer = JSONLDRenderer()
 
     def get_auth(self, actor):
         auth = HTTPSignatureAuth(
-            key_id=actor.pub_url,
-            key_resolver=key_resolver,
-            signature_algorithm=algorithms.ED25519
+            key_id=actor.pub_url, key_resolver=key_resolver, signature_algorithm=algorithms.ED25519
         )
         return auth
 
@@ -44,7 +40,7 @@ class JSONLDAdapter():
         response = getattr(requests, method)(url, **kwargs)
         response.raise_for_status()
         stream = BytesIO(response.content)
-        return (stream, response.headers.get("content-type"))
+        return (stream, response.headers.get('content-type'))
 
     def do_request(self, method, url, data=None, auth=None):
         if is_local(url):
@@ -55,7 +51,7 @@ class JSONLDAdapter():
             return self.parser.parse(stream, media_type)
 
     def get(self, url, auth=None):
-        return self.do_request("get", url, auth=auth)
+        return self.do_request('get', url, auth=auth)
 
     def post(self, url, data, auth):
         rendered_data = self.renderer.render(data)
@@ -99,18 +95,11 @@ class JSONLDAdapter():
 
         data = EventSerializer(instance=event).data
         linked_activity = event.linked_activity
-        serializer = LinkedActivitySerializer(
-            data=data,
-            instance=linked_activity,
-            context={'request': request}
-        )
+        serializer = LinkedActivitySerializer(data=data, instance=linked_activity, context={'request': request})
         serializer.is_valid(raise_exception=True)
         organization = Create.objects.filter(object=event).first().actor.organization
 
-        save_kwargs = {
-            'host_organization': organization,
-            'event': event
-        }
+        save_kwargs = {'host_organization': organization, 'event': event}
 
         return serializer.save(**save_kwargs)
 
@@ -129,9 +118,7 @@ class JSONLDAdapter():
 
         federated_serializer = FederatedActivitySerializer(activity)
 
-        serializer = EventSerializer(
-            data=federated_serializer.data, instance=instance
-        )
+        serializer = EventSerializer(data=federated_serializer.data, instance=instance)
         serializer.is_valid(raise_exception=True)
         event = serializer.save(activity=activity)
 
@@ -145,8 +132,10 @@ adapter = JSONLDAdapter()
 
 
 @app.task(
-    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
-    name="bluebottle.activity_pub.adapters.publish_activities"
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={'max_retries': 5},
+    name='bluebottle.activity_pub.adapters.publish_activities',
 )
 def publish_activities(recipient, activities, tenant):
     with LocalTenant(tenant, clear_tenant=True):
@@ -159,15 +148,18 @@ def publish_activities(recipient, activities, tenant):
 
 
 @app.task(
-    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
-    name="bluebottle.activity_pub.adapters.publish_to_recipient"
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={'max_retries': 5},
+    name='bluebottle.activity_pub.adapters.publish_to_recipient',
 )
 def publish_to_recipient(recipient, tenant):
     from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
+
     with LocalTenant(tenant, clear_tenant=True):
         activity = recipient.activity
         actor = recipient.actor
-        inbox = getattr(actor, "inbox", None)
+        inbox = getattr(actor, 'inbox', None)
 
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
@@ -176,7 +168,7 @@ def publish_to_recipient(recipient, tenant):
             raise TypeError('Already published activity to actor')
 
         if inbox is None or inbox.is_local or not inbox.iri:
-            logger.warning(f"Actor {actor} has no inbox, skipping publish")
+            logger.warning(f'Actor {actor} has no inbox, skipping publish')
             return
 
         try:
@@ -187,7 +179,10 @@ def publish_to_recipient(recipient, tenant):
             recipient.save()
 
             if isinstance(activity, Create):
-                if activity.object.activity.status in ('open', 'granted', ):
+                if activity.object.activity.status in (
+                    'open',
+                    'granted',
+                ):
                     Start.objects.create(object=activity.object)
                 elif activity.object.activity.status == 'succeeded':
                     Finish.objects.create(object=activity.object)
@@ -195,17 +190,14 @@ def publish_to_recipient(recipient, tenant):
                     Cancel.objects.create(object=activity.object)
 
         except Exception as e:
-            logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
+            logger.error(f'Error in publish_to_recipient: {type(e).__name__}: {str(e)}', exc_info=True)
             raise
 
 
 @receiver(post_save, sender=Recipient)
 def publish_recipient(instance, created, **kwargs):
     if created:
-        if (
-            getattr(settings, 'TESTING', False) or
-            getattr(settings, 'CELERY_ALWAYS_EAGER', False)
-        ):
+        if getattr(settings, 'TESTING', False) or getattr(settings, 'CELERY_ALWAYS_EAGER', False):
             publish_to_recipient(instance, connection.tenant)
         else:
             publish_to_recipient.delay(instance, connection.tenant)
@@ -215,10 +207,7 @@ def publish_recipient(instance, created, **kwargs):
         for transition_cls in [Start, Finish, Cancel]:
             if isinstance(instance.activity, Create):
                 for transition in transition_cls.objects.filter(object=instance.activity.object):
-                    Recipient.objects.get_or_create(
-                        actor=instance.actor,
-                        activity=transition
-                    )
+                    Recipient.objects.get_or_create(actor=instance.actor, activity=transition)
 
 
 @receiver([post_save])
@@ -226,12 +215,11 @@ def create_organization(sender, instance, **kwargs):
     try:
         if isinstance(instance, Organization) and kwargs['created'] and not instance.organization_id:
             from bluebottle.activity_pub.serializers.federated_activities import (
-                OrganizationSerializer as FederatedOrganizationSerializer
+                OrganizationSerializer as FederatedOrganizationSerializer,
             )
 
-            from bluebottle.activity_pub.serializers.json_ld import (
-                OrganizationSerializer
-            )
+            from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
+
             data = OrganizationSerializer(instance=instance).data
             serializer = FederatedOrganizationSerializer(data=data)
             serializer.is_valid(raise_exception=True)
@@ -240,4 +228,4 @@ def create_organization(sender, instance, **kwargs):
             instance.save(update_fields=['organization'])
 
     except Exception as e:
-        logger.error(f"Failed to create related organization: {str(e)}")
+        logger.error(f'Failed to create related organization: {str(e)}')

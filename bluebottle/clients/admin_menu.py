@@ -2,7 +2,6 @@ from fluent_dashboard.menu import FluentMenu
 
 
 class AdminMenu(FluentMenu):
-
     def init_with_context(self, context):
         """
         Initialize the menu items.

@@ -1,6 +1,7 @@
 from future import standard_library
 
 from bluebottle.token_auth.models import SAMLLog
+
 standard_library.install_aliases()
 import logging
 import urllib.parse
@@ -30,7 +31,7 @@ def get_saml_request(request):
         'http_host': http_host,
         'script_name': request.META['PATH_INFO'],
         'get_data': request.GET.copy() or request.POST.copy(),
-        'post_data': request.POST.copy()
+        'post_data': request.POST.copy(),
     }
 
     if server_port:
@@ -40,16 +41,12 @@ def get_saml_request(request):
 
 
 class SAMLAuthentication(BaseTokenAuthentication):
-
     def __init__(self, request, settings, saml_request=None, **kwargs):
         super(SAMLAuthentication, self).__init__(request, settings, **kwargs)
         self.auth = OneLogin_Saml2_Auth(saml_request or get_saml_request(request), self.settings)
 
     def sso_url(self, target_url=None):
-        result = self.auth.login(
-            return_to=target_url,
-            set_nameid_policy=False
-        )
+        result = self.auth.login(return_to=target_url, set_nameid_policy=False)
         self.request.session['saml_request_id'] = self.auth.get_last_request_id()
 
         return result
@@ -60,18 +57,16 @@ class SAMLAuthentication(BaseTokenAuthentication):
         if relay_state:
             parsed = urllib.parse.urlparse(relay_state)
 
-            if (
-                (parsed.scheme.startswith('http') and parsed.netloc == self.request.get_host()) or
-                (((not parsed.scheme and not parsed.netloc) or parsed.scheme == 'https') and
-                 parsed.path.startswith('/'))
+            if (parsed.scheme.startswith('http') and parsed.netloc == self.request.get_host()) or (
+                ((not parsed.scheme and not parsed.netloc) or parsed.scheme == 'https') and parsed.path.startswith('/')
             ):
                 return parsed.path
 
     def get_metadata(self):
         base_path = self.settings.get('base_path', None)
-        saml_settings = OneLogin_Saml2_Settings(settings=self.settings,
-                                                custom_base_path=base_path,
-                                                sp_validation_only=True)
+        saml_settings = OneLogin_Saml2_Settings(
+            settings=self.settings, custom_base_path=base_path, sp_validation_only=True
+        )
         metadata = saml_settings.get_sp_metadata()
         errors = saml_settings.validate_metadata(metadata)
         if len(errors):
@@ -106,8 +101,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
         return data
 
     def authenticate_request(self):
-        saml_request_id = self.request.session.get('saml_request_id',
-                                                   self.auth.get_last_request_id())
+        saml_request_id = self.request.session.get('saml_request_id', self.auth.get_last_request_id())
         # See BB-17150
         # if 'saml_request_id' not in self.request.session:
         #     error = 'SAML request id missing from session'
@@ -127,7 +121,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
             return self.parse_user(self.attributes)
         else:
-            error = "Saml login error: {}, reason: {}, assertions: {}".format(
+            error = 'Saml login error: {}, reason: {}, assertions: {}'.format(
                 self.auth.get_errors(),
                 self.auth.get_last_error_reason(),
                 self.auth.get_attributes(),

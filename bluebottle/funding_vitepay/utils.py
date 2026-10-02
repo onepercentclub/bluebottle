@@ -15,6 +15,7 @@ def get_payment_url(payment):
     Get payment url from VitePay to redirect the user to.
     """
     from bluebottle.funding_vitepay.models import VitepayPaymentProvider
+
     domain = connection.tenant.domain_url
     if 'localhost' in domain:
         # Use a mocked url that will always return the expected result
@@ -23,27 +24,25 @@ def get_payment_url(payment):
     provider = VitepayPaymentProvider.objects.get()
     credentials = provider.private_settings
 
-    return_url = "https://{}/initiatives/activities/details/funding/{}/{}?donation_id={}".format(
-        domain,
-        payment.donation.activity.id,
-        payment.donation.activity.slug,
-        payment.donation.id
+    return_url = 'https://{}/initiatives/activities/details/funding/{}/{}?donation_id={}'.format(
+        domain, payment.donation.activity.id, payment.donation.activity.slug, payment.donation.id
     )
 
     description = _('payment for {activity_title} on {tenant_name}').format(
-        activity_title=payment.donation.activity.title,
-        tenant_name=connection.tenant.name)
+        activity_title=payment.donation.activity.title, tenant_name=connection.tenant.name
+    )
 
     api_secret = credentials['api_secret']
     amount_100 = int(payment.donation.amount.amount * 100)
-    callback_url = "https://{}{}".format(domain, reverse('vitepay-payment-webhook'))
+    callback_url = 'https://{}{}'.format(domain, reverse('vitepay-payment-webhook'))
 
-    message = "{order_id};{amount_100};{currency};" \
-              "{callback_url};{api_secret}".format(order_id=payment.unique_id,
-                                                   currency=payment.donation.amount.currency,
-                                                   amount_100=amount_100,
-                                                   callback_url=callback_url,
-                                                   api_secret=api_secret)
+    message = '{order_id};{amount_100};{currency};{callback_url};{api_secret}'.format(
+        order_id=payment.unique_id,
+        currency=payment.donation.amount.currency,
+        amount_100=amount_100,
+        callback_url=callback_url,
+        api_secret=api_secret,
+    )
 
     payment_hash = hashlib.sha1(message.upper().encode('utf-8')).hexdigest()
 
@@ -52,23 +51,23 @@ def get_payment_url(payment):
         email = payment.donation.user.email
 
     data = {
-        "payment": {
-            "language_code": "fr",
-            "currency_code": "XOF",
-            "country_code": "ML",
-            "order_id": payment.unique_id,
-            "description": description,
-            "email": email,
-            "amount_100": int(payment.donation.amount.amount * 100),
-            "return_url": return_url,
-            "decline_url": return_url,
-            "cancel_url": return_url,
-            "callback_url": callback_url,
-            "p_type": "orange_money",
+        'payment': {
+            'language_code': 'fr',
+            'currency_code': 'XOF',
+            'country_code': 'ML',
+            'order_id': payment.unique_id,
+            'description': description,
+            'email': email,
+            'amount_100': int(payment.donation.amount.amount * 100),
+            'return_url': return_url,
+            'decline_url': return_url,
+            'cancel_url': return_url,
+            'callback_url': callback_url,
+            'p_type': 'orange_money',
         },
-        "redirect": 0,
-        "api_key": credentials['api_key'],
-        "hash": payment_hash
+        'redirect': 0,
+        'api_key': credentials['api_key'],
+        'hash': payment_hash,
     }
     url = credentials['api_url']
     headers = {'Content-Type': 'application/json'}
@@ -88,13 +87,14 @@ def update_payment_status(payment, authenticity, success, failure):
     us an update.
     """
     from bluebottle.funding_vitepay.models import VitepayPaymentProvider
+
     credentials = VitepayPaymentProvider.objects.get().private_settings
     api_secret = credentials['api_secret']
     message = '{order_id};{amount};{currency};{api_secret}'.format(
         order_id=payment.unique_id,
         amount=int(payment.donation.amount.amount * 100),
         currency=payment.donation.amount.currency,
-        api_secret=api_secret
+        api_secret=api_secret,
     )
 
     update_hash = hashlib.sha1(message.encode('utf-8')).hexdigest().upper()

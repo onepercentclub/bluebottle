@@ -89,34 +89,19 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
             {
                 'data': {
                     'type': 'activities/time-based/date-slots',
-                    'attributes': {
-                        'start': '2026-01-01 10:00:00',
-                        'duration': '01:00',
-                        'is-online': True,
-                        'title': ''
-                    },
-                    'relationships': {
-                        'activity': {
-                            'data': {
-                                'id': activity_id,
-                                'type': 'activities/time-based/dates'
-                            }
-                        }
-                    }
+                    'attributes': {'start': '2026-01-01 10:00:00', 'duration': '01:00', 'is-online': True, 'title': ''},
+                    'relationships': {'activity': {'data': {'id': activity_id, 'type': 'activities/time-based/dates'}}},
                 }
             },
-            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            HTTP_AUTHORIZATION='JWT {0}'.format(user.get_jwt_token()),
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         activity = [
-            resource for resource in response.json()['included']
-            if resource['type'] == 'activities/time-based/dates'
+            resource for resource in response.json()['included'] if resource['type'] == 'activities/time-based/dates'
         ][0]
 
-        self.assertTrue(
-            'publish' in [transition['name'] for transition in activity['meta']['transitions']]
-        )
+        self.assertTrue('publish' in [transition['name'] for transition in activity['meta']['transitions']])
 
 
 class DateActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestCase):
@@ -246,7 +231,13 @@ class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer',)
+            (
+                'Email',
+                'Name',
+                'Registration Date',
+                'Status',
+                'Registration answer',
+            ),
         )
 
 
@@ -256,9 +247,7 @@ class DateSlotDetailAPITestCase(APITestCase):
     factory = DateActivitySlotFactory
 
     fields = []
-    attributes = [
-        'start', 'duration', 'is-online'
-    ]
+    attributes = ['start', 'duration', 'is-online']
     included = ['activity']
 
     defaults = {}
@@ -320,32 +309,26 @@ class DateSlotDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_ical_download(self):
-        start = (date.today() + timedelta(days=10)).strftime("%Y-%m-%d %H:00:00")
-        self.perform_update(
-            {"start": start, "duration": "4:0:0", "is_online": True}, user=self.admin
-        )
+        start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
+        self.perform_update({'start': start, 'duration': '4:0:0', 'is_online': True}, user=self.admin)
 
         ical_response = self.client.get(
-            self.response.json()["data"]["attributes"]["links"]["ical"],
+            self.response.json()['data']['attributes']['links']['ical'],
         )
 
         calendar = icalendar.Calendar.from_ical(ical_response.content)
 
-        for ical_event in calendar.walk("vevent"):
+        for ical_event in calendar.walk('vevent'):
+            self.assertAlmostEqual(ical_event['dtstart'].dt, self.model.start, delta=timedelta(seconds=10))
             self.assertAlmostEqual(
-                ical_event["dtstart"].dt, self.model.start, delta=timedelta(seconds=10)
-            )
-            self.assertAlmostEqual(
-                ical_event["dtend"].dt,
+                ical_event['dtend'].dt,
                 self.model.start + self.model.duration,
                 delta=timedelta(seconds=10),
             )
 
-            self.assertEqual(str(ical_event["summary"]), self.activity.title)
-            self.assertEqual(ical_event["url"], self.model.get_absolute_url())
-            self.assertEqual(
-                ical_event["organizer"], "MAILTO:{}".format(self.activity.owner.email)
-            )
+            self.assertEqual(str(ical_event['summary']), self.activity.title)
+            self.assertEqual(ical_event['url'], self.model.get_absolute_url())
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
 
     def test_export_download_anonymous(self):
         settings = InitiativePlatformSettings.load()
@@ -368,13 +351,9 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         url = reverse('slot-participant-export', args=(self.model.pk,))
 
-        self.assertTrue(
-            url in self.response.json()['data']['attributes']['participants-export-url']['url']
-        )
+        self.assertTrue(url in self.response.json()['data']['attributes']['participants-export-url']['url'])
 
-        export_response = self.client.get(
-            self.response.json()['data']['attributes']['participants-export-url']['url']
-        )
+        export_response = self.client.get(self.response.json()['data']['attributes']['participants-export-url']['url'])
         workbook = load_workbook(filename=BytesIO(export_response.content))
         self.assertEqual(len(workbook.worksheets), 1)
 
@@ -382,7 +361,12 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status',)
+            (
+                'Email',
+                'Name',
+                'Registration Date',
+                'Status',
+            ),
         )
 
 
@@ -392,9 +376,7 @@ class DateSlotListAPITestCase(APITestCase):
     factory = DateActivitySlotFactory
 
     fields = ['activity', 'duration', 'is_online']
-    attributes = [
-        'start', 'duration', 'is_online'
-    ]
+    attributes = ['start', 'duration', 'is_online']
     included = ['activity']
 
     def setUp(self):
@@ -412,10 +394,7 @@ class DateSlotListAPITestCase(APITestCase):
 
         self.url = reverse(self.url_name)
 
-        self.defaults = {
-            'is_online': False,
-            'activity': self.activity
-        }
+        self.defaults = {'is_online': False, 'activity': self.activity}
 
     def test_get(self):
         self.perform_get(user=self.manager)
@@ -457,9 +436,7 @@ class DateSlotRelatedListAPITestCase(APITestCase):
     serializer = DateActivitySlotSerializer
     factory = DateActivitySlotFactory
 
-    attributes = [
-        'start', 'duration', 'is_online'
-    ]
+    attributes = ['start', 'duration', 'is_online']
     included = ['activity']
 
     def setUp(self):
@@ -473,7 +450,7 @@ class DateSlotRelatedListAPITestCase(APITestCase):
             status='open',
             review=False,
             owner=self.manager,
-            slots=[]
+            slots=[],
         )
 
         self.factory.create_batch(3, activity=self.activity, start=now() + timedelta(days=5))
@@ -544,7 +521,7 @@ class DateSlotRelatedParticipantsListAPITestCase(APITestCase):
             status='open',
             review=False,
             owner=self.manager,
-            slots=[]
+            slots=[],
         )
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.factory.create_batch(2, slot=self.slot, status='accepted')
@@ -578,9 +555,7 @@ class DateSlotRelatedParticipantsListAPITestCase(APITestCase):
         self.assertTotal(4)
 
         for resource in self.response.json()['data']:
-            self.assertTrue(
-                resource['meta']['current-status']['value'] in ['accepted', 'succeeded']
-            )
+            self.assertTrue(resource['meta']['current-status']['value'] in ['accepted', 'succeeded'])
 
     def test_failed_participant(self):
         participant = self.slot.participants.filter(status='withdrawn').first()
@@ -591,9 +566,7 @@ class DateSlotRelatedParticipantsListAPITestCase(APITestCase):
         self.assertTotal(5)
 
         for resource in self.response.json()['data']:
-            self.assertTrue(
-                resource['meta']['current-status']['value'] in ['accepted', 'succeeded', 'withdrawn']
-            )
+            self.assertTrue(resource['meta']['current-status']['value'] in ['accepted', 'succeeded', 'withdrawn'])
 
     def test_anonymous(self):
         self.perform_get()
@@ -602,9 +575,7 @@ class DateSlotRelatedParticipantsListAPITestCase(APITestCase):
         self.assertTotal(4)
 
         for resource in self.response.json()['data']:
-            self.assertTrue(
-                resource['meta']['current-status']['value'] in ['accepted', 'succeeded']
-            )
+            self.assertTrue(resource['meta']['current-status']['value'] in ['accepted', 'succeeded'])
 
     def test_get_user_only_firstname(self):
         MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
@@ -646,32 +617,20 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_with_upcoming_slot_with_capacity(self):
         """Test spots_left calculation with one upcoming slot with capacity set"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create an upcoming slot with capacity
         slot = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=10,
-            start=now() + timedelta(days=7),
-            status='open'
+            activity=activity, capacity=10, start=now() + timedelta(days=7), status='open'
         )
 
         # Add 3 accepted participants
         for _ in range(3):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot,
-                registration=registration,
-                status='accepted'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='accepted')
 
         url = reverse('date-detail', args=(activity.pk,))
         response = self.client.get(url, user=self.owner)
@@ -684,32 +643,20 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_with_upcoming_slot_without_capacity(self):
         """Test spots_left is None when upcoming slot has no capacity"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create an upcoming slot without capacity
         slot = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=None,
-            start=now() + timedelta(days=7),
-            status='open'
+            activity=activity, capacity=None, start=now() + timedelta(days=7), status='open'
         )
 
         # Add participants
         for _ in range(2):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot,
-                registration=registration,
-                status='accepted'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='accepted')
 
         url = reverse('date-detail', args=(activity.pk,))
         response = self.client.get(url, user=self.owner)
@@ -722,31 +669,21 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_with_past_slot_with_capacity(self):
         """Test spots_left calculation ignores past slots"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create a past slot with capacity and participants
         past_slot = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=10,
-            start=now() - timedelta(days=7),
-            status='succeeded'
+            activity=activity, capacity=10, start=now() - timedelta(days=7), status='succeeded'
         )
 
         # Add 5 participants to past slot
         for _ in range(5):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
             DateParticipantFactory.create(
-                activity=activity,
-                slot=past_slot,
-                registration=registration,
-                status='succeeded'
+                activity=activity, slot=past_slot, registration=registration, status='succeeded'
             )
 
         url = reverse('date-detail', args=(activity.pk,))
@@ -762,48 +699,28 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_with_multiple_upcoming_slots_all_with_capacity(self):
         """Test spots_left calculation with multiple upcoming slots all with capacity"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create multiple upcoming slots with capacity
         slot1 = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=10,
-            start=now() + timedelta(days=7),
-            status='open'
+            activity=activity, capacity=10, start=now() + timedelta(days=7), status='open'
         )
         slot2 = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=15,
-            start=now() + timedelta(days=14),
-            status='open'
+            activity=activity, capacity=15, start=now() + timedelta(days=14), status='open'
         )
 
         # Add participants to slot1
         for _ in range(3):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot1,
-                registration=registration,
-                status='accepted'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot1, registration=registration, status='accepted')
 
         # Add participants to slot2
         for _ in range(5):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot2,
-                registration=registration,
-                status='accepted'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot2, registration=registration, status='accepted')
 
         url = reverse('date-detail', args=(activity.pk,))
         response = self.client.get(url, user=self.owner)
@@ -816,38 +733,26 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_with_multiple_slots_mixed_capacity(self):
         """Test spots_left is None when at least one upcoming slot has no capacity"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create slots with mixed capacity
         slot1 = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=10,
-            start=now() + timedelta(days=7),
-            status='open'
+            activity=activity, capacity=10, start=now() + timedelta(days=7), status='open'
         )
         DateActivitySlotFactory.create(
             activity=activity,
             capacity=None,  # No capacity
             start=now() + timedelta(days=14),
-            status='open'
+            status='open',
         )
 
         # Add participants
         for _ in range(3):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot1,
-                registration=registration,
-                status='accepted'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot1, registration=registration, status='accepted')
 
         url = reverse('date-detail', args=(activity.pk,))
         response = self.client.get(url, user=self.owner)
@@ -861,42 +766,25 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_with_pending_participants(self):
         """Test that pending participants (status='new') are not counted in spots_left"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create an upcoming slot with capacity
         slot = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=10,
-            start=now() + timedelta(days=7),
-            status='open'
+            activity=activity, capacity=10, start=now() + timedelta(days=7), status='open'
         )
 
         # Add 2 accepted participants
         for _ in range(2):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot,
-                registration=registration,
-                status='accepted'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='accepted')
 
         # Add 3 pending participants (should not count)
         for _ in range(3):
             registration = DateRegistrationFactory.create(activity=activity, status='new')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot,
-                registration=registration,
-                status='new'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='new')
 
         url = reverse('date-detail', args=(activity.pk,))
         response = self.client.get(url, user=self.owner)
@@ -910,51 +798,29 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_with_rejected_and_withdrawn_participants(self):
         """Test that rejected and withdrawn participants are not counted"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create an upcoming slot with capacity
         slot = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=10,
-            start=now() + timedelta(days=7),
-            status='open'
+            activity=activity, capacity=10, start=now() + timedelta(days=7), status='open'
         )
 
         # Add 3 accepted participants
         for _ in range(3):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot,
-                registration=registration,
-                status='accepted'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='accepted')
 
         # Add rejected participants (should not count)
         for _ in range(2):
             registration = DateRegistrationFactory.create(activity=activity, status='rejected')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot,
-                registration=registration,
-                status='rejected'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='rejected')
 
         # Add withdrawn participant (should not count)
         registration = DateRegistrationFactory.create(activity=activity, status='withdrawn')
-        DateParticipantFactory.create(
-            activity=activity,
-            slot=slot,
-            registration=registration,
-            status='withdrawn'
-        )
+        DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='withdrawn')
 
         url = reverse('date-detail', args=(activity.pk,))
         response = self.client.get(url, user=self.owner)
@@ -968,42 +834,25 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_with_succeeded_participants(self):
         """Test that succeeded participants are counted in spots_left"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create an upcoming slot with capacity
         slot = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=10,
-            start=now() + timedelta(days=7),
-            status='open'
+            activity=activity, capacity=10, start=now() + timedelta(days=7), status='open'
         )
 
         # Add 2 accepted participants
         for _ in range(2):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot,
-                registration=registration,
-                status='accepted'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='accepted')
 
         # Add 3 succeeded participants
         for _ in range(3):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
-            DateParticipantFactory.create(
-                activity=activity,
-                slot=slot,
-                registration=registration,
-                status='succeeded'
-            )
+            DateParticipantFactory.create(activity=activity, slot=slot, registration=registration, status='succeeded')
 
         url = reverse('date-detail', args=(activity.pk,))
         response = self.client.get(url, user=self.owner)
@@ -1017,77 +866,52 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
 
     def test_spots_left_complex_scenario(self):
         """Test complex scenario with past and upcoming slots, mixed capacities and participant statuses"""
-        activity = DateActivityFactory.create(
-            owner=self.owner,
-            initiative=self.initiative,
-            status='open'
-        )
+        activity = DateActivityFactory.create(owner=self.owner, initiative=self.initiative, status='open')
 
         # Delete default slot
         activity.slots.all().delete()
 
         # Create a past slot with capacity (should be ignored)
         past_slot = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=20,
-            start=now() - timedelta(days=7),
-            status='succeeded'
+            activity=activity, capacity=20, start=now() - timedelta(days=7), status='succeeded'
         )
 
         # Add participants to past slot (should be ignored)
         for _ in range(10):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
             DateParticipantFactory.create(
-                activity=activity,
-                slot=past_slot,
-                registration=registration,
-                status='succeeded'
+                activity=activity, slot=past_slot, registration=registration, status='succeeded'
             )
 
         # Create upcoming slot 1 with capacity
         upcoming_slot1 = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=15,
-            start=now() + timedelta(days=7),
-            status='open'
+            activity=activity, capacity=15, start=now() + timedelta(days=7), status='open'
         )
 
         # Create upcoming slot 2 with capacity
         upcoming_slot2 = DateActivitySlotFactory.create(
-            activity=activity,
-            capacity=10,
-            start=now() + timedelta(days=14),
-            status='open'
+            activity=activity, capacity=10, start=now() + timedelta(days=14), status='open'
         )
 
         # Add 5 accepted participants to upcoming_slot1
         for _ in range(5):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
             DateParticipantFactory.create(
-                activity=activity,
-                slot=upcoming_slot1,
-                registration=registration,
-                status='accepted'
+                activity=activity, slot=upcoming_slot1, registration=registration, status='accepted'
             )
 
         # Add 3 succeeded participants to upcoming_slot2
         for _ in range(3):
             registration = DateRegistrationFactory.create(activity=activity, status='accepted')
             DateParticipantFactory.create(
-                activity=activity,
-                slot=upcoming_slot2,
-                registration=registration,
-                status='succeeded'
+                activity=activity, slot=upcoming_slot2, registration=registration, status='succeeded'
             )
 
         # Add 2 pending participants to upcoming_slot1 (should not count)
         for _ in range(2):
             registration = DateRegistrationFactory.create(activity=activity, status='new')
             DateParticipantFactory.create(
-                activity=activity,
-                slot=upcoming_slot1,
-                registration=registration,
-                status='new'
+                activity=activity, slot=upcoming_slot1, registration=registration, status='new'
             )
 
         url = reverse('date-detail', args=(activity.pk,))

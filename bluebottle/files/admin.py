@@ -5,7 +5,7 @@ from bluebottle.files.models import Image, Document, PrivateDocument
 
 
 class FileAdmin(admin.ModelAdmin):
-    raw_id_fields = ('owner', )
+    raw_id_fields = ('owner',)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(FileAdmin, self).get_form(request, obj, **kwargs)
@@ -18,7 +18,7 @@ class FileAdmin(admin.ModelAdmin):
 @admin.register(Image)
 class ImageAdmin(FileAdmin):
     model = Image
-    readonly_fields = ('image', )
+    readonly_fields = ('image',)
     fields = ('file', 'image', 'owner')
 
     def image(self, obj):

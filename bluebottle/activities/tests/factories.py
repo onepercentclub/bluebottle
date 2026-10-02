@@ -4,7 +4,6 @@ from bluebottle.activities.models import TextQuestion, TextAnswer
 
 
 class TextQuestionFactory(factory.DjangoModelFactory):
-
     class Meta:
         model = TextQuestion
 

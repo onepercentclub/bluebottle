@@ -9,15 +9,9 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class NotificationEffectsTestCase(BluebottleTestCase):
-
     def test_notification_effect(self):
-        user = BlueBottleUserFactory.create(
-            email='faal@haas.nl'
-        )
-        activity = DateActivityFactory.create(
-            title='Bound to fail',
-            owner=user
-        )
+        user = BlueBottleUserFactory.create(email='faal@haas.nl')
+        activity = DateActivityFactory.create(title='Bound to fail', owner=user)
         subject = 'Your activity "Bound to fail" has been rejected'
         effect = NotificationEffect(ActivityRejectedNotification)(activity)
 

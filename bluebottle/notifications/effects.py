@@ -16,11 +16,7 @@ class BaseNotificationEffect(Effect):
 
     def post_save(self, **kwargs):
         if self.options.get('send_messages', True) and self.is_valid:
-            message = self.message(
-                self.instance,
-                custom_message=self.options.get('message'),
-                **self.options
-            )
+            message = self.message(self.instance, custom_message=self.options.get('message'), **self.options)
             if self.message.delay and self.message.task_id:
                 message.send_delayed()
             else:
@@ -34,13 +30,10 @@ class BaseNotificationEffect(Effect):
 
         try:
             recipients = message.get_recipients()
-            recipients_text = (u', ').join(
-                recipient.email for recipient in recipients[:2])
+            recipients_text = (', ').join(recipient.email for recipient in recipients[:2])
 
             if len(recipients) > 2:
-                recipients_text += u' ' + \
-                    _('(and {number} more)').format(
-                        number=(len(recipients) - 2))
+                recipients_text += ' ' + _('(and {number} more)').format(number=(len(recipients) - 2))
         except Exception:
             if message.get_recipients.__doc__:
                 recipients_text = message.get_recipients.__doc__
@@ -54,8 +47,8 @@ class BaseNotificationEffect(Effect):
     @property
     def is_valid(self):
         return (
-            all([condition(self) for condition in self.conditions]) and
-            len(self.message(self.instance, **self.options).get_recipients()) > 0
+            all([condition(self) for condition in self.conditions])
+            and len(self.message(self.instance, **self.options).get_recipients()) > 0
         )
 
     def to_html(self):
@@ -69,15 +62,14 @@ class BaseNotificationEffect(Effect):
     def render(cls, effects):
         message = effects[0].message(effects[0].instance)
         recipients = [
-            recipient.email for effect in effects
-            for recipient in effect.message(effect.instance).get_recipients()
+            recipient.email for effect in effects for recipient in effect.message(effect.instance).get_recipients()
         ]
 
         context = {
             'opts': effects[0].instance.__class__._meta,
             'effects': effects,
             'subject': message.generic_subject,
-            'recipients': recipients
+            'recipients': recipients,
         }
         return render_to_string(cls.template, context)
 
@@ -85,11 +77,10 @@ class BaseNotificationEffect(Effect):
     def help(self):
         message = self.message(self.instance)
         recipients = message.get_recipients()
-        recipients_text = u', '.join(
-            recipient.email for recipient in recipients[:2])
+        recipients_text = ', '.join(recipient.email for recipient in recipients[:2])
 
         if len(recipients) > 2:
-            recipients_text += u' (and {} more)'.format(len(recipients) - 2)
+            recipients_text += ' (and {} more)'.format(len(recipients) - 2)
 
         return _('to {}').format(recipients_text)
 
@@ -118,10 +109,7 @@ class BaseLogErrorEffect(Effect):
     template = 'admin/notification_effect.html'
 
     def get_args(self):
-        return {
-            'title': self.instance.title,
-            'status': self.instance.status
-        }
+        return {'title': self.instance.title, 'status': self.instance.status}
 
     def post_save(self, **kwargs):
         if self.is_valid:
@@ -136,10 +124,7 @@ class BaseLogErrorEffect(Effect):
 
     @property
     def is_valid(self):
-        return (
-            all([condition(self) for condition in self.conditions]) and
-            self.message
-        )
+        return all([condition(self) for condition in self.conditions]) and self.message
 
     def to_html(self):
         return 'Raise error "{}"'.format(self.message)

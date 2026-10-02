@@ -1,4 +1,3 @@
-
 import datetime
 from builtins import str
 
@@ -10,13 +9,13 @@ from rest_framework import status
 
 from bluebottle.activities.models import Contribution, Contributor, Activity
 from bluebottle.funding.tests.factories import DonorFactory
-from bluebottle.impact.tests.factories import (
-    ImpactTypeFactory, ImpactGoalFactory
-)
+from bluebottle.impact.tests.factories import ImpactTypeFactory, ImpactGoalFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.statistics.tests.factories import (
-    DatabaseStatisticFactory, ManualStatisticFactory, ImpactStatisticFactory
+    DatabaseStatisticFactory,
+    ManualStatisticFactory,
+    ImpactStatisticFactory,
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
@@ -35,7 +34,6 @@ from bluebottle.time_based.tests.factories import (
     }
 )
 class StatisticListListAPITestCase(BluebottleTestCase):
-
     def setUp(self):
         super(StatisticListListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
@@ -58,19 +56,11 @@ class StatisticListListAPITestCase(BluebottleTestCase):
 
         registrations = DateRegistrationFactory.create_batch(5, activity=activity)
         for registration in registrations:
-            DateParticipantFactory.create(
-                registration=registration,
-                activity=activity,
-                slot=slot
-            )
+            DateParticipantFactory.create(registration=registration, activity=activity, slot=slot)
 
         self.impact_type = ImpactTypeFactory.create()
 
-        self.impact_goal = ImpactGoalFactory.create(
-            type=self.impact_type,
-            target=100,
-            realized=50
-        )
+        self.impact_goal = ImpactGoalFactory.create(type=self.impact_type, target=100, realized=50)
 
         self.manual = ManualStatisticFactory.create()
         self.impact = ImpactStatisticFactory(impact_type=self.impact_type)
@@ -108,9 +98,7 @@ class StatisticListListAPITestCase(BluebottleTestCase):
 
     def test_get_anonymous_office_subregion(self):
         """Anonymous requests with office filters must not crash on AnonymousUser."""
-        response = self.client.get(
-            self.url + '?filter[type]=office_subregion'
-        )
+        response = self.client.get(self.url + '?filter[type]=office_subregion')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Non-all type filters exclude ManualStatistic
@@ -162,7 +150,6 @@ class StatisticListListAPITestCase(BluebottleTestCase):
     }
 )
 class StatisticYearFilterListAPITestCase(BluebottleTestCase):
-
     def setUp(self):
         super(StatisticYearFilterListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
@@ -188,32 +175,16 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
 
         registrations = DateRegistrationFactory.create_batch(3, activity=activity1)
         for registration in registrations:
-            DateParticipantFactory.create(
-                activity=activity1,
-                registration=registration,
-                slot=slot1
-            )
+            DateParticipantFactory.create(activity=activity1, registration=registration, slot=slot1)
 
         registrations = DateRegistrationFactory.create_batch(2, activity=activity1)
         for registration in registrations:
-            DateParticipantFactory.create(
-                activity=activity1,
-                registration=registration,
-                slot=slot2
-            )
+            DateParticipantFactory.create(activity=activity1, registration=registration, slot=slot2)
 
         self.impact_type = ImpactTypeFactory.create()
 
-        ImpactGoalFactory.create(
-            activity=activity1,
-            type=self.impact_type,
-            realized=50
-        )
-        ImpactGoalFactory.create(
-            activity=activity2,
-            type=self.impact_type,
-            realized=100
-        )
+        ImpactGoalFactory.create(activity=activity1, type=self.impact_type, realized=50)
+        ImpactGoalFactory.create(activity=activity2, type=self.impact_type, realized=100)
 
         donations = DonorFactory.create_batch(2)
         for don in donations:
@@ -307,7 +278,6 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
     }
 )
 class UserStatisticListListAPITestCase(BluebottleTestCase):
-
     def setUp(self):
         super(UserStatisticListListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
@@ -326,12 +296,7 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         slot = activity.slots.get()
 
         registration = DateRegistrationFactory.create(activity=activity, user=self.user)
-        DateParticipantFactory.create(
-            registration=registration,
-            activity=activity,
-            slot=slot,
-            user=self.user
-        )
+        DateParticipantFactory.create(registration=registration, activity=activity, slot=slot, user=self.user)
         slot.start = timezone.now() - datetime.timedelta(days=8)
         slot.duration = datetime.timedelta(hours=6)
         slot.save()

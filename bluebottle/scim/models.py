@@ -15,10 +15,7 @@ class SCIMPlatformSettings(BasePlatformSettings):
 
     @property
     def segments(self):
-        return (
-            (SCIMPath(setting.path), setting.segment_type)
-            for setting in self.segment_settings.all()
-        )
+        return ((SCIMPath(setting.path), setting.segment_type) for setting in self.segment_settings.all())
 
     def save(self, *args, **kwargs):
         if not self.bearer_token:

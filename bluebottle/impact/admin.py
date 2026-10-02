@@ -17,6 +17,7 @@ class ImpactGoalInline(admin.TabularInline):
 
     def unit(self, obj):
         return obj.type.unit
+
     unit.short_description = _('Unit')
 
 
@@ -26,13 +27,10 @@ class ImpactTypeAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixi
 
     def get_prepopulated_fields(self, request, obj=None):
         return {'slug': ('name',)}
+
     readonly_fields = ('activities',)
 
-    fields = (
-        'name', 'slug', 'unit', 'active',
-        'icon', 'text', 'text_with_target',
-        'text_passed', 'activities'
-    )
+    fields = ('name', 'slug', 'unit', 'active', 'icon', 'text', 'text_with_target', 'text_passed', 'activities')
 
     def activities(self, obj):
         url = reverse('admin:activities_activity_changelist')

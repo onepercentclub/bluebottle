@@ -60,9 +60,7 @@ class BaseTransitionEffect(Effect):
 
     @property
     def description(self):
-        return 'Change status of {} to {}'.format(
-            str(self.instance), self.transition.target.name
-        )
+        return 'Change status of {} to {}'.format(str(self.instance), self.transition.target.name)
 
     @property
     def machine(self):
@@ -70,10 +68,7 @@ class BaseTransitionEffect(Effect):
 
     @property
     def is_valid(self):
-        return (
-            super().is_valid and
-            self.transition in self.machine.possible_transitions()
-        )
+        return super().is_valid and self.transition in self.machine.possible_transitions()
 
     def pre_save(self, **kwargs):
         try:
@@ -83,9 +78,9 @@ class BaseTransitionEffect(Effect):
 
     def __eq__(self, other):
         return (
-            isinstance(other, BaseTransitionEffect) and
-            self.transition == other.transition and
-            self.instance == other.instance
+            isinstance(other, BaseTransitionEffect)
+            and self.transition == other.transition
+            and self.instance == other.instance
         )
 
     def __repr__(self):
@@ -93,10 +88,7 @@ class BaseTransitionEffect(Effect):
 
     def __str__(self):
         if self.instance:
-            return _('{transition} {object}').format(
-                transition=self.transition.name,
-                object=str(self.instance)
-            )
+            return _('{transition} {object}').format(transition=self.transition.name, object=str(self.instance))
         return str(self.transition.target)
 
     @property
@@ -109,18 +101,15 @@ class BaseTransitionEffect(Effect):
                 return _('{transition} {object} if {conditions}').format(
                     transition=self.transition.name,
                     object=str(self.instance),
-                    conditions=" and ".join([c.__doc__ for c in self.conditions])
+                    conditions=' and '.join([c.__doc__ for c in self.conditions]),
                 )
             except TypeError:
                 return _('{transition} {object} if {conditions}').format(
                     transition=self.transition.name,
                     object=str(self.instance),
-                    conditions=" and ".join([str(c) for c in self.conditions])
+                    conditions=' and '.join([str(c) for c in self.conditions]),
                 )
-        return _('{transition} {object}').format(
-            transition=self.transition.name,
-            object=str(self.instance)
-        )
+        return _('{transition} {object}').format(transition=self.transition.name, object=str(self.instance))
 
 
 def TransitionEffect(transition, field='states', conditions=None, post_save=False, display=True):
@@ -163,9 +152,7 @@ class BaseRelatedTransitionEffect(Effect):
     def pre_save(self, effects):
         for instance in self.instances:
             if instance:
-                effect = self.transition_effect_class(
-                    instance, parent=self.instance, **self.options
-                )
+                effect = self.transition_effect_class(instance, parent=self.instance, **self.options)
 
                 if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
                     self.executed = True
@@ -183,8 +170,7 @@ class BaseRelatedTransitionEffect(Effect):
         if self.description:
             return self.description
         return _('{transition} related {object}').format(
-            transition=self.transition_effect_class.transition.name,
-            object=self.relation
+            transition=self.transition_effect_class.transition.name, object=self.relation
         )
 
     def __repr__(self):
@@ -201,7 +187,7 @@ class BaseRelatedTransitionEffect(Effect):
             return _('{transition} related {object} if {conditions}').format(
                 transition=self.transition_effect_class.transition.name,
                 object=str(self.relation),
-                conditions=" and ".join(conditions)
+                conditions=' and '.join(conditions),
             )
         return _('{transition} related {object}').format(
             transition=self.transition_effect_class.transition.name,
@@ -209,9 +195,7 @@ class BaseRelatedTransitionEffect(Effect):
         )
 
 
-def RelatedTransitionEffect(
-        _relation, transition, field='states', conditions=None, description=None, display=True
-):
+def RelatedTransitionEffect(_relation, transition, field='states', conditions=None, description=None, display=True):
     _transition = transition
     _conditions = conditions or []
     _transition_effect_class = TransitionEffect(transition, field, display=display)

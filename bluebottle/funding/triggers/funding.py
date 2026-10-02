@@ -5,26 +5,46 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 from bluebottle.activities.triggers import ContributorTriggers
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CreateEffect, UpdateEventEffect, CancelEffect, FinishEffect, StartEffect
+    PublishAdoptionEffect,
+    CreateEffect,
+    UpdateEventEffect,
+    CancelEffect,
+    FinishEffect,
+    StartEffect,
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
-    ModelDeletedTrigger, ModelChangedTrigger, TransitionTrigger, register, TriggerManager
+    ModelDeletedTrigger,
+    ModelChangedTrigger,
+    TransitionTrigger,
+    register,
+    TriggerManager,
 )
 from bluebottle.funding.effects import (
-    GeneratePayoutsEffect, GenerateDonorWallpostEffect,
-    RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
+    GeneratePayoutsEffect,
+    GenerateDonorWallpostEffect,
+    RemoveDonorWallpostEffect,
+    UpdateFundingAmountsEffect,
+    RefundPaymentAtPSPEffect,
+    SetDeadlineEffect,
     DeletePayoutsEffect,
-    SetDateEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect,
+    SetDateEffect,
+    RemoveDonorFromPayoutEffect,
+    CreateDonationEffect,
     UpdateDonationValueEffect,
-    RemoveAnonymousRewardEffect
+    RemoveAnonymousRewardEffect,
 )
 from bluebottle.funding.messages.funding.activity_manager import (
     DonationSuccessActivityManagerMessage,
-    FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
-    FundingRejectedMessage, FundingRefundedMessage, FundingExtendedMessage,
-    FundingCancelledMessage, FundingApprovedMessage
+    FundingPartiallyFundedMessage,
+    FundingExpiredMessage,
+    FundingRealisedOwnerMessage,
+    FundingRejectedMessage,
+    FundingRefundedMessage,
+    FundingExtendedMessage,
+    FundingCancelledMessage,
+    FundingApprovedMessage,
 )
 from bluebottle.funding.messages.funding.activity_manager import FundingSubmittedMessage, FundingNeedsWorkMessage
 from bluebottle.funding.messages.funding.contributor import (
@@ -34,9 +54,16 @@ from bluebottle.funding.messages.funding.contributor import (
 )
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import (
-    Funding, Donor, Payment, MoneyContribution, FundingPlatformSettings, )
+    Funding,
+    Donor,
+    Payment,
+    MoneyContribution,
+    FundingPlatformSettings,
+)
 from bluebottle.funding.states import (
-    FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
+    FundingStateMachine,
+    DonorStateMachine,
+    BasePaymentStateMachine,
     DonationStateMachine,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -102,7 +129,7 @@ def fixed_target(effect):
 
 
 def campaign_target_reached(effect):
-    """ the campaign target amount has been reached (100% or more)"""
+    """the campaign target amount has been reached (100% or more)"""
     activity = effect.instance.activity
     if not activity.target:
         return False
@@ -112,203 +139,120 @@ def campaign_target_reached(effect):
 @register(Funding)
 class FundingTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
-
         TransitionTrigger(
             FundingStateMachine.submit,
             effects=[
-                NotificationEffect(
-                    FundingSubmittedReviewerMessage,
-                    conditions=[should_review]
-                ),
-                NotificationEffect(
-                    FundingSubmittedMessage,
-                    conditions=[should_review]
-                )
-            ]
+                NotificationEffect(FundingSubmittedReviewerMessage, conditions=[should_review]),
+                NotificationEffect(FundingSubmittedMessage, conditions=[should_review]),
+            ],
         ),
-
         TransitionTrigger(
             FundingStateMachine.approve,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
                 SetDateEffect('started'),
                 SetDeadlineEffect,
-                TransitionEffect(
-                    FundingStateMachine.expire,
-                    conditions=[should_finish]
-                ),
+                TransitionEffect(FundingStateMachine.expire, conditions=[should_finish]),
                 NotificationEffect(FundingApprovedMessage),
                 CreateEffect,
-                PublishAdoptionEffect
-            ]
+                PublishAdoptionEffect,
+            ],
         ),
-
         TransitionTrigger(
             FundingStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(FundingCancelledMessage),
                 CancelEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             FundingStateMachine.reject,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(FundingRejectedMessage),
-                CancelEffect
-            ]
+                CancelEffect,
+            ],
         ),
-
-        TransitionTrigger(
-            FundingStateMachine.request_changes,
-            effects=[
-                NotificationEffect(FundingNeedsWorkMessage)
-            ]
-        ),
-
+        TransitionTrigger(FundingStateMachine.request_changes, effects=[NotificationEffect(FundingNeedsWorkMessage)]),
         TransitionTrigger(
             FundingStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(FundingExpiredMessage),
-                CancelEffect
-            ]
+                CancelEffect,
+            ],
         ),
-
         TransitionTrigger(
             FundingStateMachine.extend,
             effects=[
                 DeletePayoutsEffect,
                 NotificationEffect(FundingExtendedMessage),
                 StartEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             FundingStateMachine.succeed,
-            effects=[
-                GeneratePayoutsEffect,
-                NotificationEffect(FundingRealisedOwnerMessage),
-                FinishEffect
-            ]
+            effects=[GeneratePayoutsEffect, NotificationEffect(FundingRealisedOwnerMessage), FinishEffect],
         ),
-
         TransitionTrigger(
             FundingStateMachine.recalculate,
             effects=[
                 GeneratePayoutsEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             FundingStateMachine.partial,
-            effects=[
-                GeneratePayoutsEffect,
-                NotificationEffect(FundingPartiallyFundedMessage),
-                FinishEffect
-            ]
+            effects=[GeneratePayoutsEffect, NotificationEffect(FundingPartiallyFundedMessage), FinishEffect],
         ),
-
         TransitionTrigger(
             FundingStateMachine.refund,
             effects=[
                 RelatedTransitionEffect('donations', DonorStateMachine.activity_refund),
                 DeletePayoutsEffect,
-                NotificationEffect(FundingRefundedMessage)
-            ]
+                NotificationEffect(FundingRefundedMessage),
+            ],
         ),
-
         ModelChangedTrigger(
             'deadline',
             effects=[
                 TransitionEffect(
                     FundingStateMachine.extend,
-                    conditions=[
-                        is_complete,
-                        is_valid,
-                        deadline_in_future,
-                        without_approved_payouts
-                    ]
+                    conditions=[is_complete, is_valid, deadline_in_future, without_approved_payouts],
                 ),
-                TransitionEffect(
-                    FundingStateMachine.succeed,
-                    conditions=[
-                        should_finish,
-                        target_reached
-                    ]
-                ),
-                TransitionEffect(
-                    FundingStateMachine.partial,
-                    conditions=[
-                        should_finish,
-                        target_not_reached
-                    ]
-                ),
-                TransitionEffect(
-                    FundingStateMachine.cancel,
-                    conditions=[
-                        should_finish,
-                        no_donations
-                    ]
-                ),
-            ]
+                TransitionEffect(FundingStateMachine.succeed, conditions=[should_finish, target_reached]),
+                TransitionEffect(FundingStateMachine.partial, conditions=[should_finish, target_not_reached]),
+                TransitionEffect(FundingStateMachine.cancel, conditions=[should_finish, no_donations]),
+            ],
         ),
-
         ModelChangedTrigger(
             'target',
             effects=[
-                TransitionEffect(
-                    FundingStateMachine.succeed,
-                    conditions=[should_finish, target_reached]
-                ),
-                TransitionEffect(
-                    FundingStateMachine.partial,
-                    conditions=[should_finish, target_not_reached]
-                ),
-                TransitionEffect(
-                    FundingStateMachine.cancel,
-                    conditions=[should_finish, no_donations]
-                ),
-            ]
+                TransitionEffect(FundingStateMachine.succeed, conditions=[should_finish, target_reached]),
+                TransitionEffect(FundingStateMachine.partial, conditions=[should_finish, target_not_reached]),
+                TransitionEffect(FundingStateMachine.cancel, conditions=[should_finish, no_donations]),
+            ],
         ),
-
         ModelChangedTrigger(
             'amount_matching',
             effects=[
-                TransitionEffect(
-                    FundingStateMachine.succeed,
-                    conditions=[should_finish, target_reached]
-                ),
-                TransitionEffect(
-                    FundingStateMachine.succeed,
-                    conditions=[fixed_target, target_reached]
-                ),
-                TransitionEffect(
-                    FundingStateMachine.partial,
-                    conditions=[should_finish, target_not_reached]
-                ),
-            ]
+                TransitionEffect(FundingStateMachine.succeed, conditions=[should_finish, target_reached]),
+                TransitionEffect(FundingStateMachine.succeed, conditions=[fixed_target, target_reached]),
+                TransitionEffect(FundingStateMachine.partial, conditions=[should_finish, target_not_reached]),
+            ],
         ),
         ModelChangedTrigger(
             'amount_donated',
             effects=[
-                TransitionEffect(
-                    FundingStateMachine.succeed,
-                    conditions=[fixed_target, target_reached]
-                ),
-            ]
+                TransitionEffect(FundingStateMachine.succeed, conditions=[fixed_target, target_reached]),
+            ],
         ),
         ModelChangedTrigger(
-            [
-                'target', 'amount_donated', 'amount_matching', 'amount_pledged',
-                'deadline', 'impact_location'
-            ],
+            ['target', 'amount_donated', 'amount_matching', 'amount_pledged', 'deadline', 'impact_location'],
             effects=[
                 UpdateEventEffect,
-            ]
-        )
+            ],
+        ),
     ]
 
 
@@ -320,13 +264,7 @@ def is_successful(effect):
 @register(Donor)
 class DonorTriggers(ContributorTriggers):
     triggers = [
-        TransitionTrigger(
-            DonorStateMachine.initiate,
-            effects=[
-                CreateDonationEffect
-            ]
-        ),
-
+        TransitionTrigger(DonorStateMachine.initiate, effects=[CreateDonationEffect]),
         TransitionTrigger(
             DonorStateMachine.succeed,
             effects=[
@@ -337,26 +275,23 @@ class DonorTriggers(ContributorTriggers):
                 FollowActivityEffect,
                 UpdateFundingAmountsEffect,
                 RemoveAnonymousRewardEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             DonorStateMachine.fail,
             effects=[
                 RelatedTransitionEffect('contributions', DonationStateMachine.fail),
                 RemoveDonorWallpostEffect,
                 UpdateFundingAmountsEffect,
-                RemoveDonorFromPayoutEffect
-            ]
+                RemoveDonorFromPayoutEffect,
+            ],
         ),
-
         TransitionTrigger(
             DonorStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('contributions', DonationStateMachine.fail),
-            ]
+            ],
         ),
-
         TransitionTrigger(
             DonorStateMachine.refund,
             effects=[
@@ -366,33 +301,23 @@ class DonorTriggers(ContributorTriggers):
                 UpdateFundingAmountsEffect,
                 RemoveDonorFromPayoutEffect,
                 RelatedTransitionEffect('payment', BasePaymentStateMachine.request_refund),
-                NotificationEffect(DonationRefundedDonorMessage)
-            ]
+                NotificationEffect(DonationRefundedDonorMessage),
+            ],
         ),
-
         TransitionTrigger(
             DonorStateMachine.activity_refund,
             effects=[
                 RelatedTransitionEffect('contributions', DonationStateMachine.fail),
                 RelatedTransitionEffect('payment', BasePaymentStateMachine.request_refund),
-                NotificationEffect(DonationActivityRefundedDonorMessage)
-            ]
+                NotificationEffect(DonationActivityRefundedDonorMessage),
+            ],
         ),
-
-        ModelChangedTrigger(
-            'payout_amount',
-            effects=[
-                UpdateFundingAmountsEffect,
-                UpdateDonationValueEffect
-            ]
-        ),
-
+        ModelChangedTrigger('payout_amount', effects=[UpdateFundingAmountsEffect, UpdateDonationValueEffect]),
         ModelDeletedTrigger(
             effects=[
                 UpdateFundingAmountsEffect,
             ]
-        )
-
+        ),
     ]
 
 
@@ -416,50 +341,23 @@ def donation_not_refunded(effect):
 class BasePaymentTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            BasePaymentStateMachine.authorize,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
-            ]
+            BasePaymentStateMachine.authorize, effects=[RelatedTransitionEffect('donation', DonorStateMachine.succeed)]
         ),
-
         TransitionTrigger(
-            BasePaymentStateMachine.succeed,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
-            ]
+            BasePaymentStateMachine.succeed, effects=[RelatedTransitionEffect('donation', DonorStateMachine.succeed)]
         ),
-
         TransitionTrigger(
             BasePaymentStateMachine.require_action,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.set_pending)
-            ]
+            effects=[RelatedTransitionEffect('donation', DonorStateMachine.set_pending)],
         ),
-
         TransitionTrigger(
-            BasePaymentStateMachine.fail,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.fail)
-            ]
+            BasePaymentStateMachine.fail, effects=[RelatedTransitionEffect('donation', DonorStateMachine.fail)]
         ),
-
-        TransitionTrigger(
-            BasePaymentStateMachine.request_refund,
-            effects=[
-                RefundPaymentAtPSPEffect
-            ]
-        ),
-
+        TransitionTrigger(BasePaymentStateMachine.request_refund, effects=[RefundPaymentAtPSPEffect]),
         TransitionTrigger(
             BasePaymentStateMachine.refund,
             effects=[
-                RelatedTransitionEffect(
-                    'donation',
-                    DonorStateMachine.refund,
-                    conditions=[
-                        donation_not_refunded
-                    ]
-                ),
-            ]
+                RelatedTransitionEffect('donation', DonorStateMachine.refund, conditions=[donation_not_refunded]),
+            ],
         ),
     ]

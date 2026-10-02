@@ -6,8 +6,11 @@ from bluebottle.utils.permissions import IsOwner
 class DonorOwnerOrSucceededPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
         settings = MemberPlatformSettings.load()
-        if (not settings.closed or request.user.is_authenticated) \
-                and obj.status == 'succeeded' and request.method == 'GET':
+        if (
+            (not settings.closed or request.user.is_authenticated)
+            and obj.status == 'succeeded'
+            and request.method == 'GET'
+        ):
             return True
 
         if not request.user.is_authenticated and request.auth and obj.client_secret:
@@ -18,11 +21,7 @@ class DonorOwnerOrSucceededPermission(IsOwner):
 
 class PaymentPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
-        if (
-            not request.user.is_authenticated and
-            request.auth and
-            obj.donation.client_secret
-        ):
+        if not request.user.is_authenticated and request.auth and obj.donation.client_secret:
             return obj.donation.client_secret == request.auth
 
         return super().has_object_permission(request, view, obj.donation)
@@ -30,24 +29,19 @@ class PaymentPermission(IsOwner):
 
 class IntentPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
-        if (
-            not request.user.is_authenticated and
-            request.auth and
-            obj.donation.client_secret
-        ):
+        if not request.user.is_authenticated and request.auth and obj.donation.client_secret:
             return obj.client_secret == request.auth
 
         return super().has_object_permission(request, view, obj.donation)
 
 
 class CanExportSupportersPermission(IsOwner):
-    """ Allows access only to obj owner. """
+    """Allows access only to obj owner."""
 
     def has_object_action_permission(self, action, user, obj):
         return (
-            (user in obj.owners or user.is_staff or user.is_superuser)
-            and InitiativePlatformSettings.load().enable_participant_exports
-        )
+            user in obj.owners or user.is_staff or user.is_superuser
+        ) and InitiativePlatformSettings.load().enable_participant_exports
 
     def has_action_permission(self, action, user, model_cls):
         return True

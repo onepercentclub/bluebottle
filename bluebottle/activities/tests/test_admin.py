@@ -7,7 +7,6 @@ from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
 class DateActivityAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True

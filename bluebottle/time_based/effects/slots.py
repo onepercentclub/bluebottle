@@ -39,10 +39,9 @@ class LockActivityEffect(Effect):
         return True
 
     def post_save(self, **kwargs):
-        if (
-            all(slot.status == 'full' for slot in self.instance.activity.slots.all()) and
-            self.instance.activity.status not in ('full', 'registration_closed')
-        ):
+        if all(
+            slot.status == 'full' for slot in self.instance.activity.slots.all()
+        ) and self.instance.activity.status not in ('full', 'registration_closed'):
             self.instance.activity.states.lock(save=True)
 
 
@@ -54,6 +53,7 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
     Slot lock triggers can mark the activity full while sibling slots are still
     registration_closed, so capacity is recalculated after those slots are saved.
     """
+
     display = False
 
     def __init__(self, *args, **kwargs):
@@ -70,9 +70,7 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
         for slot in self.slots:
             if slot.status != 'registration_closed':
                 continue
-            effect = TransitionEffect(DateActivitySlotStateMachine.reopen)(
-                slot, parent=self.instance, **self.options
-            )
+            effect = TransitionEffect(DateActivitySlotStateMachine.reopen)(slot, parent=self.instance, **self.options)
             if effect.is_valid and effect not in effects:
                 effect.pre_save(effects=effects)
                 effects.append(effect)
@@ -95,13 +93,6 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
             activity.states.unlock(save=True)
             return
 
-        joinable = [
-            slot for slot in self.slots
-            if slot.status not in ('cancelled', 'deleted', 'draft', 'finished')
-        ]
-        if (
-            activity.status == 'open' and
-            joinable and
-            all(slot.status == 'full' for slot in joinable)
-        ):
+        joinable = [slot for slot in self.slots if slot.status not in ('cancelled', 'deleted', 'draft', 'finished')]
+        if activity.status == 'open' and joinable and all(slot.status == 'full' for slot in joinable):
             activity.states.lock(save=True)

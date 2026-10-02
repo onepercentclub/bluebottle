@@ -86,9 +86,7 @@ def activity_geolocation_display(geolocations, language=None):
     country = geolocations[0].country
     return {
         'locality': geofeature_translated_field(geofeature, 'name', language=language),
-        'formattedAddress': geofeature_translated_field(
-            geofeature, 'place_name', language=language
-        ),
+        'formattedAddress': geofeature_translated_field(geofeature, 'place_name', language=language),
         'country': {
             'code': country.alpha2_code if country else None,
         },
@@ -99,13 +97,15 @@ def activity_geolocation_display(geolocations, language=None):
 # Activity card location formatting (geofeatures + card_location_display)
 # ---------------------------------------------------------------------------
 
-CARD_LOCATION_MODES = frozenset({
-    'neighbourhood',
-    'neighbourhood_city',
-    'city',
-    'city_region',
-    'city_country',
-})
+CARD_LOCATION_MODES = frozenset(
+    {
+        'neighbourhood',
+        'neighbourhood_city',
+        'city',
+        'city_region',
+        'city_country',
+    }
+)
 
 CARD_LOCATION_COMMON_LEVEL_CHECKS = {
     'neighbourhood': (
@@ -152,26 +152,17 @@ def _card_entries_for_language(entries, language):
     if not isinstance(language, str):
         language = 'en'
 
-    matched = [
-        entry for entry in entries
-        if _card_attr(entry, 'language') == language
-    ]
+    matched = [entry for entry in entries if _card_attr(entry, 'language') == language]
     if matched:
         return matched
 
     prefix = language.split('-')[0]
-    return [
-        entry for entry in entries
-        if _card_attr(entry, 'language', '').startswith(prefix)
-    ]
+    return [entry for entry in entries if _card_attr(entry, 'language', '').startswith(prefix)]
 
 
 def _feature_name(geofeatures, feature_type):
     feature = next(
-        (
-            item for item in geofeatures
-            if _card_attr(item, 'feature_type') == feature_type
-        ),
+        (item for item in geofeatures if _card_attr(item, 'feature_type') == feature_type),
         None,
     )
     return _card_attr(feature, 'name') if feature else None
@@ -183,21 +174,14 @@ def _card_location_parts(activity, language_geofeatures, language):
     city = place or locality
 
     country_feature = next(
-        (
-            item for item in language_geofeatures
-            if _card_attr(item, 'feature_type') == 'country'
-        ),
+        (item for item in language_geofeatures if _card_attr(item, 'feature_type') == 'country'),
         None,
     )
     country = (
         _card_attr(country_feature, 'name')
         or _card_attr(country_feature, 'place_name')
         or next(
-            (
-                _card_attr(item, 'country')
-                for item in language_geofeatures
-                if _card_attr(item, 'country')
-            ),
+            (_card_attr(item, 'country') for item in language_geofeatures if _card_attr(item, 'country')),
             None,
         )
     )
@@ -209,16 +193,9 @@ def _card_location_parts(activity, language_geofeatures, language):
         if countries:
             country = _card_attr(countries[0], 'name')
 
-    country_code = (
-        _card_attr(country_feature, 'country_code')
-        or next(
-            (
-                _card_attr(item, 'country_code')
-                for item in language_geofeatures
-                if _card_attr(item, 'country_code')
-            ),
-            None,
-        )
+    country_code = _card_attr(country_feature, 'country_code') or next(
+        (_card_attr(item, 'country_code') for item in language_geofeatures if _card_attr(item, 'country_code')),
+        None,
     )
 
     return {
@@ -241,13 +218,7 @@ def format_card_location_from_parts(mode, parts):
     country_abbrev = country_code or country
 
     if mode == 'neighbourhood':
-        return (
-            parts.get('neighborhood')
-            or parts.get('city')
-            or parts.get('region')
-            or country
-            or country_code
-        )
+        return parts.get('neighborhood') or parts.get('city') or parts.get('region') or country or country_code
 
     if mode == 'neighbourhood_city':
         neighborhood = parts.get('neighborhood')
@@ -352,10 +323,7 @@ def _common_parts_for_keys(all_parts, keys):
 
     for key in keys:
         if key == 'country':
-            country_keys = [
-                part.get('country_code') or part.get('country')
-                for part in all_parts
-            ]
+            country_keys = [part.get('country_code') or part.get('country') for part in all_parts]
             if any(not value for value in country_keys) or len(set(country_keys)) != 1:
                 return None
             merged['country'] = all_parts[0].get('country')
@@ -384,12 +352,8 @@ def format_common_card_location(activity, card_location_display, language, locat
 
 
 class PointSerializer(serializers.CharField):
-
     def to_representation(self, instance):
-        return {
-            'longitude': instance.coords[0],
-            'latitude': instance.coords[1]
-        }
+        return {'longitude': instance.coords[0], 'latitude': instance.coords[1]}
 
     def to_internal_value(self, data):
         if not data:
@@ -397,7 +361,7 @@ class PointSerializer(serializers.CharField):
         try:
             point = Point(float(data['longitude']), float(data['latitude']))
         except ValueError as e:
-            raise serializers.ValidationError("Invalid point. {}".format(e))
+            raise serializers.ValidationError('Invalid point. {}'.format(e))
         return point
 
 
@@ -434,21 +398,17 @@ class CountrySerializer(serializers.ModelSerializer):
 
 
 class OfficeListSerializer(ModelSerializer):
-
     class Meta(object):
         model = Location
         fields = ('id', 'name', 'description', 'subregion')
 
     class JSONAPIMeta(object):
         resource_name = 'locations'
-        included_resources = [
-            'subregion',
-            'subregion.region'
-        ]
+        included_resources = ['subregion', 'subregion.region']
 
     included_serializers = {
         'subregion': 'bluebottle.offices.serializers.SubregionSerializer',
-        'subregion.region': 'bluebottle.offices.serializers.RegionSerializer'
+        'subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
     }
 
 
@@ -461,22 +421,15 @@ class OfficeSerializer(ModelSerializer):
 
     class Meta(object):
         model = Location
-        fields = (
-            'id', 'name', 'description', 'image',
-            'latitude', 'longitude', 'static_map_url',
-            'subregion'
-        )
+        fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude', 'static_map_url', 'subregion')
 
     class JSONAPIMeta(object):
         resource_name = 'locations'
-        included_resources = [
-            'subregion',
-            'subregion.region'
-        ]
+        included_resources = ['subregion', 'subregion.region']
 
     included_serializers = {
         'subregion': 'bluebottle.offices.serializers.SubregionSerializer',
-        'subregion.region': 'bluebottle.offices.serializers.RegionSerializer'
+        'subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
     }
 
 
@@ -486,9 +439,16 @@ class PlaceSerializer(ModelSerializer):
     class Meta(object):
         model = Place
         fields = (
-            'id', 'street', 'street_number', 'postal_code',
-            'locality', 'province', 'country', 'position', 'formatted_address',
-            'mapbox_id'
+            'id',
+            'street',
+            'street_number',
+            'postal_code',
+            'locality',
+            'province',
+            'country',
+            'position',
+            'formatted_address',
+            'mapbox_id',
         )
 
     class JSONAPIMeta(object):
@@ -503,12 +463,8 @@ class PlaceSerializer(ModelSerializer):
 
 
 class SimplePointSerializer(serializers.CharField):
-
     def to_representation(self, instance):
-        return [
-            instance.coords[1],
-            instance.coords[0]
-        ]
+        return [instance.coords[1], instance.coords[0]]
 
     def to_internal_value(self, data):
         if not data:
@@ -516,7 +472,7 @@ class SimplePointSerializer(serializers.CharField):
         try:
             point = Point(float(data[1]), float(data[0]))
         except ValueError as e:
-            raise serializers.ValidationError("Invalid point. {}".format(e))
+            raise serializers.ValidationError('Invalid point. {}'.format(e))
         return point
 
 
@@ -526,8 +482,15 @@ class OldPlaceSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = Place
         fields = (
-            'id', 'street', 'postal_code', 'street_number', 'locality', 'province', 'country',
-            'position', 'formatted_address',
+            'id',
+            'street',
+            'postal_code',
+            'street_number',
+            'locality',
+            'province',
+            'country',
+            'position',
+            'formatted_address',
         )
 
 
@@ -544,7 +507,6 @@ class InitiativeCountrySerializer(ModelSerializer):
 
 
 class TinyPointSerializer(serializers.CharField):
-
     def to_representation(self, instance):
         if not hasattr(instance, 'coords'):
             return (instance.latitude, instance.longitude)
@@ -579,9 +541,7 @@ class GeolocationSerializer(ModelSerializer):
             return value
         return obj.locality
 
-    included_serializers = {
-        'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'
-    }
+    included_serializers = {'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'}
 
     class Meta(object):
         model = Geolocation
@@ -596,12 +556,9 @@ class GeolocationSerializer(ModelSerializer):
             'static_map_url',
             'formatted_address',
             'timezone',
-            'mapbox_id'
+            'mapbox_id',
         )
 
     class JSONAPIMeta(object):
-        included_resources = [
-            'country',
-            'position'
-        ]
+        included_resources = ['country', 'position']
         resource_name = 'geolocations'

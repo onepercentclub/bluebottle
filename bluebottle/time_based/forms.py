@@ -9,6 +9,7 @@ class RegistrationRejectForm(TransitionConfirmationForm):
     @classmethod
     def message_class(cls):
         from bluebottle.time_based.messages.registrations import UserRegistrationRejectedNotification
+
         return UserRegistrationRejectedNotification
 
 
@@ -18,4 +19,5 @@ class RegistrationAcceptForm(TransitionConfirmationForm):
     @classmethod
     def message_class(cls):
         from bluebottle.time_based.messages.registrations import UserRegistrationAcceptedNotification
+
         return UserRegistrationAcceptedNotification

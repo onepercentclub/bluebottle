@@ -26,9 +26,9 @@ class FileListAPITestCase(TestCase):
             response = self.client.post(
                 self.document_url,
                 test_file.read(),
-                content_type="text/rtf",
+                content_type='text/rtf',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="test.rtf"',
-                user=self.owner
+                user=self.owner,
             )
 
         self.assertEqual(response.status_code, 201)
@@ -44,9 +44,9 @@ class FileListAPITestCase(TestCase):
             response = self.client.post(
                 self.document_url,
                 test_file.read(),
-                content_type="text/html",
+                content_type='text/html',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="test.html"',
-                user=self.owner
+                user=self.owner,
             )
 
         self.assertEqual(response.status_code, 400)
@@ -56,9 +56,9 @@ class FileListAPITestCase(TestCase):
             response = self.client.post(
                 self.image_url,
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="filename.png"',
-                user=self.owner
+                user=self.owner,
             )
 
         self.assertEqual(response.status_code, 201)
@@ -68,17 +68,17 @@ class FileListAPITestCase(TestCase):
 
         self.assertEqual(data['data']['type'], 'images')
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], str(self.owner.pk))
-        self.assertTrue(file_field.file.name.startswith("files/filename"))
+        self.assertTrue(file_field.file.name.startswith('files/filename'))
 
     def test_create_image_long_file_name(self):
         with open(self.image_path, 'rb') as test_file:
-            filename = "some-really-long-file-name-with-over-50-characters-so-that-it-does-not-fit.png"
+            filename = 'some-really-long-file-name-with-over-50-characters-so-that-it-does-not-fit.png'
             response = self.client.post(
                 self.image_url,
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION=f'attachment; filename="{filename}"',
-                user=self.owner
+                user=self.owner,
             )
 
         self.assertEqual(response.status_code, 201)
@@ -95,7 +95,7 @@ class FileListAPITestCase(TestCase):
             response = self.client.post(
                 self.image_url,
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="filename.png"',
             )
 
@@ -106,9 +106,9 @@ class FileListAPITestCase(TestCase):
             response = self.client.post(
                 self.image_url,
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="filename.png"',
-                user=self.owner
+                user=self.owner,
             )
 
         self.assertEqual(response.status_code, 400)
@@ -117,9 +117,9 @@ class FileListAPITestCase(TestCase):
         response = self.client.post(
             self.image_url,
             '<html><body></body></html>',
-            content_type="text/html",
+            content_type='text/html',
             HTTP_CONTENT_DISPOSITION='attachment; filename="base.html"',
-            user=self.owner
+            user=self.owner,
         )
 
         self.assertEqual(response.status_code, 400)

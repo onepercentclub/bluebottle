@@ -29,17 +29,24 @@ class SlideAdmin(admin.ModelAdmin):
         return fields
 
     fieldsets = (
-        (None, {
-            'fields': ('language', 'sequence', 'tab_text'),
-        }),
-        (_('Contents'), {
-            'fields': (
-                'title', 'body', 'background_image', 'video',
-                'video_url', 'link_text', 'link_url'),
-        }),
-        (_('Publication settings'), {
-            'fields': ('status', 'publication_date', 'publication_end_date'),
-        }),
+        (
+            None,
+            {
+                'fields': ('language', 'sequence', 'tab_text'),
+            },
+        ),
+        (
+            _('Contents'),
+            {
+                'fields': ('title', 'body', 'background_image', 'video', 'video_url', 'link_text', 'link_url'),
+            },
+        ),
+        (
+            _('Publication settings'),
+            {
+                'fields': ('status', 'publication_date', 'publication_end_date'),
+            },
+        ),
     )
 
     radio_fields = {
@@ -103,10 +110,9 @@ class SlideAdmin(admin.ModelAdmin):
         rows_updated = queryset.update(status=Slide.PostStatus.published)
 
         if rows_updated == 1:
-            message = "1 entry was marked as published."
+            message = '1 entry was marked as published.'
         else:
-            message = "{0} entries were marked as published.".format(
-                rows_updated)
+            message = '{0} entries were marked as published.'.format(rows_updated)
         self.message_user(request, message)
 
-    make_published.short_description = _("Mark selected entries as published")
+    make_published.short_description = _('Mark selected entries as published')

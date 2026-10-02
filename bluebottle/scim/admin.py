@@ -17,7 +17,7 @@ class SCIMSegmentSettingInline(admin.TabularInline):
 
 @admin.register(SCIMPlatformSettings)
 class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    readonly_fields = ('bearer_token', )
+    readonly_fields = ('bearer_token',)
     inlines = [SCIMSegmentSettingInline]
 
     def get_urls(self):
@@ -31,11 +31,7 @@ class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
         ]
         return custom_urls + urls
 
-    @confirmation_form(
-        ResetTokenConfirmationForm,
-        SCIMPlatformSettings,
-        'admin/reset_token_confirmation.html'
-    )
+    @confirmation_form(ResetTokenConfirmationForm, SCIMPlatformSettings, 'admin/reset_token_confirmation.html')
     def reset_token(self, request, scim_settings):
         if not request.user.has_perm('scim.change_scimplatformsettings'):
             return HttpResponseForbidden('Missing permission: scim.change_scimplatformsettings')

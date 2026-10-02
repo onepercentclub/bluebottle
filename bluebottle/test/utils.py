@@ -51,9 +51,7 @@ def css_dict(style):
         return {}
 
     try:
-        return dict([(k.strip(), v.strip()) for k, v in
-                     [prop.split(':') for prop in
-                      style.rstrip(';').split(';')]])
+        return dict([(k.strip(), v.strip()) for k, v in [prop.split(':') for prop in style.rstrip(';').split(';')]])
     except ValueError as e:
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
@@ -65,16 +63,15 @@ class InitProjectDataMixin(object):
         """
         Set up some basic models needed for project creation.
         """
-        management.call_command("loaddata", "themes.json", verbosity=0)
-        management.call_command("loaddata", "skills.json", verbosity=0)
+        management.call_command('loaddata', 'themes.json', verbosity=0)
+        management.call_command('loaddata', 'skills.json', verbosity=0)
 
         Language.objects.all().delete()
 
-        language_data = [{'code': 'en', 'language_name': 'English',
-                          'default': True,
-                          'native_name': 'English'},
-                         {'code': 'nl', 'language_name': 'Dutch',
-                          'native_name': 'Nederlands'}]
+        language_data = [
+            {'code': 'en', 'language_name': 'English', 'default': True, 'native_name': 'English'},
+            {'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'},
+        ]
 
         self.project_status = {}
 
@@ -118,9 +115,7 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).post(
-            path, data=data, format=format, content_type=content_type, **extra
-        )
+        return super(ApiClient, self).post(path, data=data, format=format, content_type=content_type, **extra)
 
     def put(self, path, data=None, format='json', content_type=None, **extra):
         if 'token' in extra:
@@ -130,9 +125,7 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).put(
-            path, data=data, format=format, content_type=content_type, **extra
-        )
+        return super(ApiClient, self).put(path, data=data, format=format, content_type=content_type, **extra)
 
     def patch(self, path, data=None, format='json', content_type=None, **extra):
         if 'token' in extra:
@@ -142,12 +135,9 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).patch(
-            path, data=data, format=format, content_type=content_type, **extra
-        )
+        return super(ApiClient, self).patch(path, data=data, format=format, content_type=content_type, **extra)
 
-    def delete(self, path, data=None, format='json', content_type=None,
-               **extra):
+    def delete(self, path, data=None, format='json', content_type=None, **extra):
         if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
@@ -155,9 +145,7 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).delete(
-            path, data=data, format=format, content_type=content_type, **extra
-        )
+        return super(ApiClient, self).delete(path, data=data, format=format, content_type=content_type, **extra)
 
 
 @override_settings(DEBUG=True)
@@ -230,18 +218,19 @@ class APITestCase(BluebottleTestCase):
             current_query.update(query)
 
             url = ParseResult(
-                parsed_url.scheme, parsed_url.netloc, parsed_url.path,
-                parsed_url.params, urlencode(query, doseq=True), parsed_url.fragment
+                parsed_url.scheme,
+                parsed_url.netloc,
+                parsed_url.path,
+                parsed_url.params,
+                urlencode(query, doseq=True),
+                parsed_url.fragment,
             ).geturl()
         else:
             url = self.url
 
         self.user = user
         if user:
-            self.response = self.client.get(
-                url,
-                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
-            )
+            self.response = self.client.get(url, HTTP_AUTHORIZATION='JWT {0}'.format(user.get_jwt_token()))
         else:
             self.response = self.client.get(url)
 
@@ -257,24 +246,16 @@ class APITestCase(BluebottleTestCase):
             'type': self.serializer.JSONAPIMeta.resource_name,
             'id': str(self.model.pk),
             'attributes': {},
-            'relationships': {}
+            'relationships': {},
         }
 
-        for (field, value) in to_change.items():
+        for field, value in to_change.items():
             if isinstance(self.serializer().get_fields()[field], RelatedField):
-                data['relationships'][field] = {
-                    'data': {
-                        'id': str(value.pk),
-                        'type': value.JSONAPIMeta.resource_name
-                    }
-                }
+                data['relationships'][field] = {'data': {'id': str(value.pk), 'type': value.JSONAPIMeta.resource_name}}
             elif isinstance(self.serializer().get_fields()[field], ManyRelatedField):
-                data['relationships'][field] = {'data': [
-                    {
-                        'id': str(item.pk),
-                        'type': item.JSONAPIMeta.resource_name
-                    } for item in value
-                ]}
+                data['relationships'][field] = {
+                    'data': [{'id': str(item.pk), 'type': item.JSONAPIMeta.resource_name} for item in value]
+                }
             else:
                 data['attributes'][field] = value
 
@@ -282,13 +263,10 @@ class APITestCase(BluebottleTestCase):
             self.response = self.client.patch(
                 self.url,
                 json.dumps({'data': data}, cls=DjangoJSONEncoder),
-                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+                HTTP_AUTHORIZATION='JWT {0}'.format(user.get_jwt_token()),
             )
         else:
-            self.response = self.client.patch(
-                self.url,
-                json.dumps({'data': data}, cls=DjangoJSONEncoder)
-            )
+            self.response = self.client.patch(self.url, json.dumps({'data': data}, cls=DjangoJSONEncoder))
 
         if self.response.status_code == status.HTTP_200_OK:
             self.model.refresh_from_db()
@@ -309,7 +287,7 @@ class APITestCase(BluebottleTestCase):
             self.response = self.client.post(
                 self.url,
                 json.dumps(data, cls=DjangoJSONEncoder),
-                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+                HTTP_AUTHORIZATION='JWT {0}'.format(user.get_jwt_token()),
             )
         else:
             self.response = self.client.post(
@@ -317,10 +295,7 @@ class APITestCase(BluebottleTestCase):
                 json.dumps(data, cls=DjangoJSONEncoder),
             )
 
-        if (
-            self.response.status_code == status.HTTP_201_CREATED and
-            hasattr(self.serializer.Meta, 'model')
-        ):
+        if self.response.status_code == status.HTTP_201_CREATED and hasattr(self.serializer.Meta, 'model'):
             self.model = self.serializer.Meta.model.objects.get(pk=self.response.json()['data']['id'])
 
     def perform_delete(self, user=None):
@@ -330,10 +305,7 @@ class APITestCase(BluebottleTestCase):
         If `user` is None, perform an anoymous request
         """
         if user:
-            self.response = self.client.delete(
-                self.url,
-                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
-            )
+            self.response = self.client.delete(self.url, HTTP_AUTHORIZATION='JWT {0}'.format(user.get_jwt_token()))
         else:
             self.response = self.client.delete(self.url)
 
@@ -343,10 +315,7 @@ class APITestCase(BluebottleTestCase):
         """
         user = user or self.user
         url = self.response.json()['data']['relationships'][relationship]['links']['related']
-        response = self.client.get(
-            url,
-            user=user
-        )
+        response = self.client.get(url, user=user)
         return response.json()['data']
 
     @contextmanager
@@ -367,9 +336,7 @@ class APITestCase(BluebottleTestCase):
             group = Group.objects.get(name='Anonymous')
             try:
                 for permission in Permission.objects.filter(codename='api_read_{}'.format(model_name)):
-                    group.permissions.remove(
-                        permission
-                    )
+                    group.permissions.remove(permission)
             except Permission.DoesNotExist:
                 pass
 
@@ -429,10 +396,7 @@ class APITestCase(BluebottleTestCase):
         """
         Assert that a resource with type `included` is included in the response
         """
-        included_resources = [
-            {'type': inc['type'], 'id': inc['id']}
-            for inc in self.response.json()['included']
-        ]
+        included_resources = [{'type': inc['type'], 'id': inc['id']} for inc in self.response.json()['included']]
         parts = included.split('.')
 
         if not isinstance(self.response.json()['data'], (tuple, list)):
@@ -446,7 +410,8 @@ class APITestCase(BluebottleTestCase):
             try:
                 for part in parts[1:]:
                     included = [
-                        resource for resource in self.response.json()['included']
+                        resource
+                        for resource in self.response.json()['included']
                         if resource['id'] == relationship['id'] and resource['type'] == relationship['type']
                     ][0]
                     relationship = included['relationships'][part]['data']
@@ -456,8 +421,7 @@ class APITestCase(BluebottleTestCase):
             if isinstance(relationship, (list, tuple)):
                 for rel in relationship:
                     self.assertTrue(
-                        {'type': rel['type'], 'id': str(model.pk) if model else rel['id']}
-                        in included_resources
+                        {'type': rel['type'], 'id': str(model.pk) if model else rel['id']} in included_resources
                     )
             else:
                 self.assertTrue(
@@ -472,13 +436,9 @@ class APITestCase(BluebottleTestCase):
         if 'included' not in self.response.json():
             return
 
-        included_types = [
-            inc['type'] for inc in self.response.json()['included']
-        ]
+        included_types = [inc['type'] for inc in self.response.json()['included']]
 
-        self.assertTrue(
-            included not in included_types
-        )
+        self.assertTrue(included not in included_types)
 
     def get_included(self, relationship):
         relations = []
@@ -486,7 +446,8 @@ class APITestCase(BluebottleTestCase):
             relations.append(resource['relationships'][relationship]['data'])
 
         return [
-            included for included in self.response.json()['included']
+            included
+            for included in self.response.json()['included']
             if {'type': included['type'], 'id': included['id']} in relations
         ]
 
@@ -511,13 +472,11 @@ class APITestCase(BluebottleTestCase):
             if models:
                 relation_data = data['relationships'][relation]['data']
                 if not isinstance(relation_data, (tuple, list)):
-                    relation_data = (relation_data, )
+                    relation_data = (relation_data,)
 
                 ids = [resource['id'] for resource in relation_data]
                 for model in models:
-                    self.assertTrue(
-                        str(model.pk) in ids
-                    )
+                    self.assertTrue(str(model.pk) in ids)
 
     def assertNoRelationship(self, relation):
         self.assertFalse(relation in self.response.json()['data']['relationships'])
@@ -567,19 +526,13 @@ class APITestCase(BluebottleTestCase):
         """
         Assert that it is possible to perform the transition with the name `transition`
         """
-        self.assertIn(
-            transition,
-            [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
-        )
+        self.assertIn(transition, [trans['name'] for trans in self.response.json()['data']['meta']['transitions']])
 
     def assertNotTransition(self, transition):
         """
         Assert that it is possible to perform the transition with the name `transition`
         """
-        self.assertNotIn(
-            transition,
-            [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
-        )
+        self.assertNotIn(transition, [trans['name'] for trans in self.response.json()['data']['meta']['transitions']])
 
     def assertMeta(self, attr, expected=None, data=None):
         """
@@ -593,10 +546,7 @@ class APITestCase(BluebottleTestCase):
                 self.assertMeta(attr, expected, resource)
         else:
             if expected:
-                self.assertEqual(
-                    data['meta'][attr],
-                    expected
-                )
+                self.assertEqual(data['meta'][attr], expected)
             else:
                 self.assertTrue(attr in data['meta'])
 
@@ -610,16 +560,8 @@ class APITestCase(BluebottleTestCase):
                 if error['title'] == message:
                     return
                 else:
-                    self.fail(
-                        '"{}" does not match the error message "{}"'.format(
-                            error['title'], message
-                        )
-                    )
-        self.fail(
-            '{} does not contain an error for "{}"'.format(
-                self.response.json()['data']['meta']['errors'], field
-            )
-        )
+                    self.fail('"{}" does not match the error message "{}"'.format(error['title'], message))
+        self.fail('{} does not contain an error for "{}"'.format(self.response.json()['data']['meta']['errors'], field))
 
     def assertRequired(self, field):
         """
@@ -627,8 +569,7 @@ class APITestCase(BluebottleTestCase):
 
         """
         error_fields = [
-            error['source']['pointer'].split('/')[-1]
-            for error in self.response.json()['data']['meta']['required']
+            error['source']['pointer'].split('/')[-1] for error in self.response.json()['data']['meta']['required']
         ]
         self.assertIn(field, error_fields)
 
@@ -637,11 +578,7 @@ class APITestCase(BluebottleTestCase):
         """
         randomly generated data that can be used to perform creates
         """
-        data = {
-            'type': self.serializer.JSONAPIMeta.resource_name,
-            'attributes': {},
-            'relationships': {}
-        }
+        data = {'type': self.serializer.JSONAPIMeta.resource_name, 'attributes': {}, 'relationships': {}}
 
         for field in self.fields:
             if field in self.defaults:
@@ -663,12 +600,7 @@ class APITestCase(BluebottleTestCase):
                 except (KeyError, AttributeError):
                     resource_name = value.JSONAPIMeta.resource_name
 
-                data['relationships'][field] = {
-                    'data': {
-                        'id': value.pk,
-                        'type': resource_name
-                    } if value else None
-                }
+                data['relationships'][field] = {'data': {'id': value.pk, 'type': resource_name} if value else None}
             else:
                 data['attributes'][field] = value
 
@@ -690,17 +622,13 @@ class StateMachineTestCase(BluebottleTestCase):
         try:
             transition = getattr(self.model.states, name)
         except AttributeError:
-            error = '{} has no transition "{}'.format(
-                self.model.states, name
-            )
+            error = '{} has no transition "{}'.format(self.model.states, name)
 
         if transition:
             try:
                 transition(user=user)
             except TransitionNotPossible as e:
-                error = 'Transition "{}" not available for user {}: {}'.format(
-                    name, user, e
-                )
+                error = 'Transition "{}" not available for user {}: {}'.format(name, user, e)
 
         self.model.status = status
 
@@ -715,16 +643,12 @@ class StateMachineTestCase(BluebottleTestCase):
         try:
             transition = getattr(self.model.states, name)
         except AttributeError:
-            error = '{} has no transition "{}'.format(
-                self.model.states, name
-            )
+            error = '{} has no transition "{}'.format(self.model.states, name)
         if transition:
             try:
                 transition(user=user)
 
-                error = 'Transition "{}" is available for user {}, but should not be'.format(
-                    name, user
-                )
+                error = 'Transition "{}" is available for user {}, but should not be'.format(name, user)
             except TransitionNotPossible:
                 pass
 
@@ -791,9 +715,7 @@ class TriggerTestCase(BluebottleTestCase):
         for effect in self.effects:
             if hasattr(effect, 'message') and effect.message == message_cls:
                 if recipients:
-                    self.assertEqual(
-                        set(recipients), set(effect.message(effect.instance).get_recipients())
-                    )
+                    self.assertEqual(set(recipients), set(effect.message(effect.instance).get_recipients()))
 
                 return effect.message
 
@@ -802,38 +724,27 @@ class TriggerTestCase(BluebottleTestCase):
     def assertNoNotificationEffect(self, message_cls, model=None):
         for effect in self.effects:
             if hasattr(effect, 'message') and effect.message == message_cls:
-                self.fail(
-                    'Notification effect "{}" triggered but is should not be triggered'.format(
-                        message_cls
-                    )
-                )
+                self.fail('Notification effect "{}" triggered but is should not be triggered'.format(message_cls))
 
 
 class NotificationTestCase(BluebottleTestCase):
-
     def create(self, **kwargs):
         self.message = self.message_class(self.obj, **kwargs)
 
     @property
     def _html(self):
-        return BeautifulSoup(self.message.get_content_html(
-            self.message.get_recipients()[0]), 'html.parser'
-        )
+        return BeautifulSoup(self.message.get_content_html(self.message.get_recipients()[0]), 'html.parser')
 
     def assertRecipients(self, recipients):
         actual = set(self.message.get_recipients())
         expected = set(recipients)
 
         if actual != expected:
-            self.fail("Recipients did not match: '{}' != '{}'".format(
-                actual, expected)
-            )
+            self.fail("Recipients did not match: '{}' != '{}'".format(actual, expected))
 
     def assertSubject(self, subject):
         if subject != self.message.generic_subject:
-            self.fail("Subject did not match: '{}' != '{}'".format(
-                subject, self.message.generic_subject)
-            )
+            self.fail("Subject did not match: '{}' != '{}'".format(subject, self.message.generic_subject))
 
     def assertBodyContains(self, text):
         self.assertHtmlBodyContains(text)
@@ -870,13 +781,11 @@ class NotificationTestCase(BluebottleTestCase):
         return self.message.get_content_html(self.message.get_recipients()[0])
 
     def assertActionLink(self, url):
-        link = self._html.find_all("a", {"class": "action-email"})[0]
-        parsed = urlparse(link["href"])
+        link = self._html.find_all('a', {'class': 'action-email'})[0]
+        parsed = urlparse(link['href'])
 
         qs = dict(parse_qsl(parsed.query))
-        qs_without_utm_tags = urlencode(
-            dict((key, value) for key, value in qs.items() if not key.startswith("utm"))
-        )
+        qs_without_utm_tags = urlencode(dict((key, value) for key, value in qs.items() if not key.startswith('utm')))
         found_url = ParseResult(
             parsed.scheme,
             parsed.netloc,
@@ -892,9 +801,7 @@ class NotificationTestCase(BluebottleTestCase):
     def assertActionTitle(self, title):
         link = self._html.find_all('a', {'class': 'action-email'})[0]
         if title != link.string:
-            self.fail("Action title did not match: '{}' != '{}'".format(
-                title, link.string)
-            )
+            self.fail("Action title did not match: '{}' != '{}'".format(title, link.string))
 
 
 class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
@@ -932,10 +839,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
                 form.field_order.append((name, new))
 
 
-@override_settings(
-    CELERY_ALWAYS_EAGER=True,
-    CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
-)
+@override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 class CeleryTestCase(SimpleTestCase):
     databases = '__all__'
 
@@ -980,15 +884,15 @@ class FsmTestMixin(object):
     def pass_method(self, transaction):
         pass
 
-    def create_status_response(self, status='AUTHORIZED', payments=None,
-                               totals=None):
+    def create_status_response(self, status='AUTHORIZED', payments=None, totals=None):
         if payments is None:
-            payments = [{
-                'id': 123456789,
-                'paymentMethod': 'MASTERCARD',
-                'authorization': {'status': status,
-                                  'amount': {'value': 1000, '_currency': 'EUR'}}
-            }]
+            payments = [
+                {
+                    'id': 123456789,
+                    'paymentMethod': 'MASTERCARD',
+                    'authorization': {'status': status, 'amount': {'value': 1000, '_currency': 'EUR'}},
+                }
+            ]
 
         default_totals = {
             'totalRegistered': 1000,
@@ -997,16 +901,13 @@ class FsmTestMixin(object):
             'totalAcquirerApproved': 0,
             'totalCaptured': 0,
             'totalRefunded': 0,
-            'totalChargedback': 0
+            'totalChargedback': 0,
         }
 
         if totals is not None:
             default_totals.update(totals)
 
-        return munchify({
-            'payment': munchify(payments),
-            'approximateTotals': munchify(default_totals)
-        })
+        return munchify({'payment': munchify(payments), 'approximateTotals': munchify(default_totals)})
 
     def assert_status(self, instance, new_status):
         try:
@@ -1014,10 +915,11 @@ class FsmTestMixin(object):
         except AttributeError:
             pass
 
-        self.assertEqual(instance.status, new_status,
-                         '{0} should change to {1} not {2}'.format(
-                             instance.__class__.__name__, new_status,
-                             instance.status))
+        self.assertEqual(
+            instance.status,
+            new_status,
+            '{0} should change to {1} not {2}'.format(instance.__class__.__name__, new_status, instance.status),
+        )
 
 
 class override_properties(object):
@@ -1033,30 +935,21 @@ class override_properties(object):
 
 
 class JSONAPITestClient(Client):
-
     def get(self, path, data='', follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).get(path, data, follow, secure, **extra)
 
-    def patch(self, path, data='',
-              content_type='application/vnd.api+json',
-              follow=False, secure=False, **extra):
+    def patch(self, path, data='', content_type='application/vnd.api+json', follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).patch(path, data, content_type, follow, secure, **extra)
 
-    def put(self, path, data='',
-            content_type='application/vnd.api+json',
-            follow=False, secure=False, **extra):
+    def put(self, path, data='', content_type='application/vnd.api+json', follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).put(path, data, content_type, follow, secure, **extra)
 
-    def post(self, path, data='',
-             content_type='application/vnd.api+json',
-             follow=False, secure=False, **extra):
+    def post(self, path, data='', content_type='application/vnd.api+json', follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).post(path, data, content_type, follow, secure, **extra)
 
-    def generic(self, method, path, data='',
-                content_type='application/vnd.api+json',
-                secure=False, user=None, **extra):
+    def generic(self, method, path, data='', content_type='application/vnd.api+json', secure=False, user=None, **extra):
         if user:
-            extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
+            extra['HTTP_AUTHORIZATION'] = 'JWT {0}'.format(user.get_jwt_token())
         return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
 
     def _base_environ(self, **request):

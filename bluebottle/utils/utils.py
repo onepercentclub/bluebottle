@@ -33,22 +33,48 @@ to_text.ignore_images = True
 to_text.body_width = 0
 to_text.ignore_emphasis = True
 
-TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
-        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img']
+TAGS = [
+    'p',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'strong',
+    'em',
+    'b',
+    'i',
+    'ul',
+    'li',
+    'ol',
+    'a',
+    'br',
+    'pre',
+    'blockquote',
+    'img',
+    'hr',
+    'span',
+    'em',
+    'u',
+    'img',
+]
 ATTRIBUTES = {
     'a': ['target', 'href', 'rel'],
     'img': ['src', 'alt', 'width', 'height', 'align'],
-    'li': ['data-list', 'class']
+    'li': ['data-list', 'class'],
 }
 EMPTY = ['hr', 'a', 'br', 'img']
 
-sanitizer = Sanitizer({
-    'tags': TAGS,
-    'attributes': ATTRIBUTES,
-    'empty': EMPTY,
-    'element_preprocessors': [],
-    'keep_typographic_whitespace': True
-})
+sanitizer = Sanitizer(
+    {
+        'tags': TAGS,
+        'attributes': ATTRIBUTES,
+        'empty': EMPTY,
+        'element_preprocessors': [],
+        'keep_typographic_whitespace': True,
+    }
+)
 
 
 def clean_html(content):
@@ -108,14 +134,15 @@ def clean_for_hashtag(text):
     for bit in bits:
         # keep the alphanumeric bits and capitalize the first letter
         _bits = [_bit.title() for _bit in bit.split() if _bit.isalnum()]
-        tag = "".join(_bits)
+        tag = ''.join(_bits)
         tags.append(tag)
 
-    return " #".join(tags)
+    return ' #'.join(tags)
 
 
 class GetClassError(Exception):
-    """ Custom exception for an GetClass """
+    """Custom exception for an GetClass"""
+
     pass
 
 
@@ -210,7 +237,7 @@ def is_api_request():
 
 
 class InvalidIpError(Exception):
-    """ Custom exception for an invalid IP address """
+    """Custom exception for an invalid IP address"""
 
     def __init__(self, value):
         self.value = value
@@ -230,7 +257,7 @@ def get_country_by_ip(ip_address=None):
     try:
         socket.inet_aton(ip_address)
     except socket.error:
-        raise InvalidIpError("Invalid IP address")
+        raise InvalidIpError('Invalid IP address')
 
     gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
     return gip.country_name_by_addr(ip_address)
@@ -248,7 +275,7 @@ def get_country_code_by_ip(ip_address=None):
     try:
         socket.inet_aton(ip_address)
     except socket.error:
-        raise InvalidIpError("Invalid IP address")
+        raise InvalidIpError('Invalid IP address')
 
     gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
     return gip.country_code_by_name(ip_address)
@@ -268,16 +295,12 @@ def update_group_permissions(label, group_perms, apps):
                 permissions = permissions.filter(content_type__app_label=label)
                 permission = permissions.last()
                 if not permission:
-                    raise Exception(
-                        'Could not add permission: {}: Not found'.format(perm_codename)
-                    )
+                    raise Exception('Could not add permission: {}: Not found'.format(perm_codename))
                 else:
                     group.permissions.add(permission)
             except Permission.DoesNotExist as err:
                 logging.debug(err)
-                raise Exception(
-                    'Could not add permission: {}: {}'.format(perm_codename, err)
-                )
+                raise Exception('Could not add permission: {}: {}'.format(perm_codename, err))
         group.save()
 
 

@@ -35,7 +35,7 @@ class ActivityPubListSerializer(serializers.ListSerializer):
 
     def update(self, instances, validated_data):
         result = []
-        for (instance, item) in zip(instances, validated_data):
+        for instance, item in zip(instances, validated_data):
             if instance:
                 result.append(self.child.update(instance, item))
             else:
@@ -47,16 +47,10 @@ class ActivityPubListSerializer(serializers.ListSerializer):
 class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
     def __new__(cls, name, bases, attrs):
         for attr_name, attr in attrs.items():
-            if (
-                isinstance(attr, serializers.Serializer) and
-                not isinstance(
-                    attr,
-                    (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-                )
+            if isinstance(attr, serializers.Serializer) and not isinstance(
+                attr, (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
             ):
-                raise TypeError(
-                    f'Attribute {attr_name} should be a subclass of ActivityPubSerializer'
-                )
+                raise TypeError(f'Attribute {attr_name} should be a subclass of ActivityPubSerializer')
 
         if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
             if 'id' not in attrs or not isinstance(attrs['id'], ActivityPubIdField):
@@ -69,14 +63,12 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
                 raise TypeError(f'{attrs["type"].type} is not a correct ActivityPub type')
 
             for [attr, field] in attrs.items():
-                if (
-                    isinstance(field, (ActivityPubSerializer, serializers.Field)) and
-                    attr not in ('id', 'type', )
+                if isinstance(field, (ActivityPubSerializer, serializers.Field)) and attr not in (
+                    'id',
+                    'type',
                 ):
                     if expand_iri(inflection.camelize(attr, False)).startswith('_:'):
-                        raise TypeError(
-                            f'{attr} is not a correct ActivityPub type'
-                        )
+                        raise TypeError(f'{attr} is not a correct ActivityPub type')
 
         return super().__new__(cls, name, bases, attrs)
 
@@ -153,9 +145,8 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
                 return self.update(instance, validated_data)
 
         for name, field in self.fields.items():
-            if (
-                isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)) and
-                not getattr(field, 'many', False)
+            if isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)) and not getattr(
+                field, 'many', False
             ):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data.get(name, None)
@@ -172,19 +163,11 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         auth_iri = getattr(request_auth, 'iri', None)
 
         # Do not allow remote request to update local instances
-        if (
-            is_local(id) and
-            request_auth and
-            auth_iri and
-            not is_local(auth_iri)
-        ):
+        if is_local(id) and request_auth and auth_iri and not is_local(auth_iri):
             return instance
 
         for name, field in self.fields.items():
-            if isinstance(
-                field,
-                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-            ):
+            if isinstance(field, (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data[name]
                     field.is_valid()
@@ -213,16 +196,12 @@ class PolymorphicActivityPubSerializerMetaclass(serializers.SerializerMetaclass)
         return result
 
 
-class PolymorphicActivityPubSerializer(
-    serializers.Serializer, metaclass=PolymorphicActivityPubSerializerMetaclass
-):
+class PolymorphicActivityPubSerializer(serializers.Serializer, metaclass=PolymorphicActivityPubSerializerMetaclass):
     def __init__(self, *args, full=False, **kwargs):
         full = full
         super().__init__(*args, **kwargs)
 
-        self._serializers = [
-            serializer(*args, full=full, **kwargs) for serializer in self.polymorphic_serializers
-        ]
+        self._serializers = [serializer(*args, full=full, **kwargs) for serializer in self.polymorphic_serializers]
 
     def get_serializer_from_model(self, model):
         for serializer in self._serializers:
@@ -267,7 +246,7 @@ class PolymorphicActivityPubSerializer(
             if isinstance(data, str):
                 data = {'id': data}
 
-            if tuple(data.keys()) == ('id', ):
+            if tuple(data.keys()) == ('id',):
                 iri = data['id']
                 instance = self.Meta.model.objects.from_iri(iri)
                 if instance:
@@ -334,15 +313,8 @@ class FederatedObjectListSerializer(serializers.ListSerializer):
 class FederatedObjectSerializerMetaclass(serializers.SerializerMetaclass):
     def __new__(cls, name, bases, attrs):
         for attr_name, attr in attrs.items():
-            if (
-                isinstance(attr, serializers.Serializer) and
-                not isinstance(
-                    attr, (FederatedObjectSerializer, )
-                )
-            ):
-                raise TypeError(
-                    f'Attribute {attr_name} should be a subclass of FederatedObjectSerializer'
-                )
+            if isinstance(attr, serializers.Serializer) and not isinstance(attr, (FederatedObjectSerializer,)):
+                raise TypeError(f'Attribute {attr_name} should be a subclass of FederatedObjectSerializer')
 
         if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
             if 'id' not in attrs or not isinstance(attrs['id'], FederatedIdField):
@@ -353,7 +325,7 @@ class FederatedObjectSerializerMetaclass(serializers.SerializerMetaclass):
 
 class FederatedObjectSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', )
+        fields = ('id',)
         list_serializer_class = FederatedObjectListSerializer
 
     def to_representation(self, instance):
@@ -372,12 +344,8 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
         validated_data['origin'] = ActivityPubModel.objects.from_iri(iri)
 
         for field in self.fields.values():
-            if isinstance(field, (FederatedObjectSerializer, )):
-                if (
-                    field.source != '*' and
-                    field.source in validated_data and
-                    validated_data[field.source]
-                ):
+            if isinstance(field, (FederatedObjectSerializer,)):
+                if field.source != '*' and field.source in validated_data and validated_data[field.source]:
                     field.initial_data = validated_data[field.source]
 
                     validated_data[field.source] = field.create(validated_data[field.source])
@@ -388,7 +356,7 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
         validated_data.pop('id', None)
 
         for name, field in self.fields.items():
-            if isinstance(field, (FederatedObjectSerializer, )):
+            if isinstance(field, (FederatedObjectSerializer,)):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data[name]
                     field.is_valid()

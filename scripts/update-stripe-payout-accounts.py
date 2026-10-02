@@ -12,9 +12,7 @@ def run(*args):
             accounts = StripePayoutAccount.objects.all().order_by('-created')
 
             if 'live' in args:
-                accounts = accounts.filter(
-                    external_accounts__funding__status="open"
-                )
+                accounts = accounts.filter(external_accounts__funding__status='open')
 
             print(tenant.client_name, len(accounts))
 
@@ -26,7 +24,7 @@ def run(*args):
                     account.requirements = stripe_account.requirements.eventually_due
 
                     try:
-                        account.verified = stripe_account.individual.verification.status == "verified"
+                        account.verified = stripe_account.individual.verification.status == 'verified'
                     except AttributeError:
                         pass
 
@@ -34,10 +32,10 @@ def run(*args):
                     account.payouts_enabled = stripe_account.payouts_enabled
 
                     if account.status == 'verified' and (
-                        not account.verified or
-                        account.requirements != [] or
-                        not stripe_account.charges_enabled or
-                        not stripe_account.payouts_enabled
+                        not account.verified
+                        or account.requirements != []
+                        or not stripe_account.charges_enabled
+                        or not stripe_account.payouts_enabled
                     ):
                         account.states.set_incomplete()
 

@@ -71,7 +71,7 @@ class ActivityExportSetUpMixin:
 
         response = self.client.get(
             reverse(self.url_name, args=(self.activity.pk,)),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.activity.owner.get_jwt_token())
+            HTTP_AUTHORIZATION='JWT {0}'.format(self.activity.owner.get_jwt_token()),
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.url = response.json()['data']['attributes']['participants-export-url']['url']
@@ -116,9 +116,7 @@ class InterestExportAssertionsMixin:
             self.assertEqual(row[2], interest.created.strftime('%d-%m-%y %H:%M'))
 
 
-class DeadlineInterestExportTestCase(
-    ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase
-):
+class DeadlineInterestExportTestCase(ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase):
     factory = DeadlineActivityFactory
     participant_factory = DeadlineParticipantFactory
     url_name = 'deadline-detail'
@@ -184,9 +182,7 @@ class DeadlineInterestExportTestCase(
         self.assert_interest_sheet(workbook, [included])
 
 
-class InterestExportPermissionTestCase(
-    ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase
-):
+class InterestExportPermissionTestCase(ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase):
     factory = DeadlineActivityFactory
     participant_factory = DeadlineParticipantFactory
     url_name = 'deadline-detail'
@@ -212,13 +208,11 @@ class InterestExportPermissionTestCase(
 
         response = self.client.get(
             reverse(self.url_name, args=(self.activity.pk,)),
-            HTTP_AUTHORIZATION="JWT {0}".format(other_user.get_jwt_token())
+            HTTP_AUTHORIZATION='JWT {0}'.format(other_user.get_jwt_token()),
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNone(
-            response.json()['data']['attributes']['participants-export-url']
-        )
+        self.assertIsNone(response.json()['data']['attributes']['participants-export-url'])
 
     def test_export_url_disabled_when_setting_off(self):
         initiative_settings = InitiativePlatformSettings.load()
@@ -227,18 +221,14 @@ class InterestExportPermissionTestCase(
 
         response = self.client.get(
             reverse(self.url_name, args=(self.activity.pk,)),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.activity.owner.get_jwt_token())
+            HTTP_AUTHORIZATION='JWT {0}'.format(self.activity.owner.get_jwt_token()),
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNone(
-            response.json()['data']['attributes']['participants-export-url']
-        )
+        self.assertIsNone(response.json()['data']['attributes']['participants-export-url'])
 
 
-class ScheduleInterestExportTestCase(
-    ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase
-):
+class ScheduleInterestExportTestCase(ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase):
     factory = ScheduleActivityFactory
     participant_factory = ScheduleParticipantFactory
     url_name = 'schedule-detail'
@@ -261,9 +251,7 @@ class ScheduleInterestExportTestCase(
         self.assert_interest_sheet(workbook, [interest])
 
 
-class PeriodicInterestExportTestCase(
-    ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase
-):
+class PeriodicInterestExportTestCase(ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase):
     factory = PeriodicActivityFactory
     participant_factory = PeriodicParticipantFactory
     url_name = 'periodic-detail'
@@ -287,9 +275,7 @@ class PeriodicInterestExportTestCase(
         self.assert_interest_sheet(workbook, [interest])
 
 
-class TeamScheduleInterestExportTestCase(
-    ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase
-):
+class TeamScheduleInterestExportTestCase(ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase):
     factory = ScheduleActivityFactory
     participant_factory = TeamFactory
     url_name = 'schedule-detail'
@@ -314,9 +300,7 @@ class TeamScheduleInterestExportTestCase(
         self.assert_interest_sheet(workbook, [interest])
 
 
-class DateActivityInterestExportTestCase(
-    ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase
-):
+class DateActivityInterestExportTestCase(ActivityExportSetUpMixin, InterestExportAssertionsMixin, APITestCase):
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
     url_name = 'date-detail'
@@ -420,10 +404,12 @@ class DateActivityInterestExportTestCase(
 
         self.assertIsNone(get_interest_sheet_for_slot(workbook, past_slot))
         self.assert_interest_sheet_for_slot(workbook, future_slot, [future_interest])
-        self.assertIsNone(get_sheet_by_title(
-            workbook,
-            format_slot_worksheet_title(past_slot),
-        ))
+        self.assertIsNone(
+            get_sheet_by_title(
+                workbook,
+                format_slot_worksheet_title(past_slot),
+            )
+        )
 
     def test_export_includes_interests_on_past_slots_when_succeeded(self):
         self.activity.status = 'succeeded'
@@ -475,7 +461,7 @@ class SlotInterestExportTestCase(InterestExportAssertionsMixin, APITestCase):
 
         response = self.client.get(
             reverse('date-slot-detail', args=(self.slot.pk,)),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.manager.get_jwt_token())
+            HTTP_AUTHORIZATION='JWT {0}'.format(self.manager.get_jwt_token()),
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.url = response.json()['data']['attributes']['participants-export-url']['url']

@@ -14,8 +14,8 @@ class TermsFactory(factory.DjangoModelFactory):
 
     author = factory.SubFactory(BlueBottleUserFactory)
     date = now() - timedelta(weeks=4)
-    contents = u"Apply yourself!"
-    version = "1.0"
+    contents = 'Apply yourself!'
+    version = '1.0'
 
 
 class TermsAgreementFactory(factory.DjangoModelFactory):

@@ -3,13 +3,10 @@ import factory.fuzzy
 
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.funding.tests.factories import DonorFactory, PlainPayoutAccountFactory
-from bluebottle.funding_pledge.models import (
-    PledgePayment, PledgePaymentProvider, PledgeBankAccount
-)
+from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
 
 
 class PledgePaymentFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = PledgePayment
 
@@ -23,7 +20,6 @@ class PledgePaymentFactory(factory.DjangoModelFactory):
 
 
 class PledgePaymentProviderFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = PledgePaymentProvider
 

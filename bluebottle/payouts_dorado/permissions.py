@@ -5,6 +5,7 @@ class IsFinancialMember(permissions.BasePermission):
     """
     Allows access only to financial members
     """
+
     def has_permission(self, request, view):
         return request.user.groups.filter(name='Financial').exists()
 

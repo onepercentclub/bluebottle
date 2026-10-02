@@ -20,7 +20,6 @@ class NonNestedSerializer(serializers.Serializer):
 
 
 class NameSerializer(NonNestedSerializer):
-
     givenName = serializers.CharField(source='first_name')
     familyName = serializers.CharField(source='last_name')
 
@@ -30,17 +29,12 @@ class EmailsField(serializers.CharField):
         'invalid': _('Not a valid email value.'),
         'blank': _('This field may not be blank.'),
         'max_length': _('Ensure this field has no more than {max_length} characters.'),
-        'min_length': _('Ensure this field has at least {min_length} characters.')
+        'min_length': _('Ensure this field has at least {min_length} characters.'),
     }
 
     def to_representation(self, value):
         value = super(EmailsField, self).to_representation(value)
-        return [{
-            'primary': True,
-            'type': 'work',
-            'value': value
-
-        }]
+        return [{'primary': True, 'type': 'work', 'value': value}]
 
     def to_internal_value(self, value):
         return super(EmailsField, self).to_internal_value(value[0]['value'])
@@ -70,11 +64,7 @@ class AddressesField(serializers.RelatedField):
         if not value:
             return []
 
-        return [{
-            'type': 'work',
-            'locality': value.name
-
-        }]
+        return [{'type': 'work', 'locality': value.name}]
 
     def to_internal_value(self, value):
         if value and 'locality' in value[0] and value[0]['locality']:
@@ -98,7 +88,7 @@ class SchemaSerializer(NonNestedSerializer):
 
 class LocationField(serializers.CharField):
     def to_representation(self, obj):
-        return reverse(self.parent.parent.detail_view_name, args=(obj, ))
+        return reverse(self.parent.parent.detail_view_name, args=(obj,))
 
 
 class SCIMIdField(serializers.CharField):
@@ -130,22 +120,22 @@ class UserGroupSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Group
-        fields = ('id', 'name',)
+        fields = (
+            'id',
+            'name',
+        )
 
 
 class SCIMMemberSerializer(serializers.ModelSerializer):
     id = SCIMIdField('user', read_only=True)
-    resource_schemas = ["urn:ietf:params:scim:schemas:core:2.0:User"]
+    resource_schemas = ['urn:ietf:params:scim:schemas:core:2.0:User']
     resource_type = 'User'
     detail_view_name = 'scim-user-detail'
 
     userName = serializers.CharField(
-        source='remote_id', required=False,
-        validators=[
-            validators.UniqueValidator(
-                queryset=Member.objects.filter(scim_external_id__isnull=False)
-            )
-        ]
+        source='remote_id',
+        required=False,
+        validators=[validators.UniqueValidator(queryset=Member.objects.filter(scim_external_id__isnull=False))],
     )
     externalId = serializers.CharField(source='scim_external_id')
 
@@ -154,14 +144,10 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
         source='email',
         allow_blank=False,
         validators=[
-            validators.UniqueValidator(
-                queryset=Member.objects.filter(scim_external_id__isnull=False), lookup='iexact'
-            )
-        ]
+            validators.UniqueValidator(queryset=Member.objects.filter(scim_external_id__isnull=False), lookup='iexact')
+        ],
     )
-    addresses = AddressesField(
-        source='location', required=False
-    )
+    addresses = AddressesField(source='location', required=False)
 
     active = serializers.BooleanField(source='is_active')
     groups = serializers.SerializerMethodField(read_only=True)
@@ -175,13 +161,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
         return instance
 
     def get_groups(self, obj):
-        return UserGroupSerializer(
-            obj.groups.exclude(
-                name='Authenticated'
-            ),
-            many=True,
-            read_only=True
-        ).data
+        return UserGroupSerializer(obj.groups.exclude(name='Authenticated'), many=True, read_only=True).data
 
     def save(self, *args, **kwargs):
         result = super().save(*args, **kwargs)
@@ -192,11 +172,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
             segment_name = path.get(self.initial_data)
             if segment_name:
                 (segment, _created) = Segment.objects.get_or_create(
-                    segment_type=segment_type,
-                    slug=slugify(segment_name),
-                    defaults={
-                        'name': segment_name
-                    }
+                    segment_type=segment_type, slug=slugify(segment_name), defaults={'name': segment_name}
                 )
 
                 self.instance.segments.remove(*self.instance.segments.filter(segment_type=segment_type))
@@ -221,7 +197,15 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = Member
         fields = (
-            'id', 'externalId', 'userName', 'name', 'emails', 'active', 'groups', 'schemas', 'meta',
+            'id',
+            'externalId',
+            'userName',
+            'name',
+            'emails',
+            'active',
+            'groups',
+            'schemas',
+            'meta',
             'addresses',
         )
 
@@ -229,9 +213,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
 class GroupMemberListSerializer(serializers.ListSerializer):
     def to_representation(self, data):
         return super(GroupMemberListSerializer, self).to_representation(
-            data.filter(
-                is_superuser=False, is_anonymized=False
-            ).exclude(email='devteam+accounting@onepercentclub.com')
+            data.filter(is_superuser=False, is_anonymized=False).exclude(email='devteam+accounting@onepercentclub.com')
         )
 
 
@@ -241,7 +223,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
 
     def get_ref(self, obj):
-        return reverse('scim-user-detail', args=(obj.pk, ))
+        return reverse('scim-user-detail', args=(obj.pk,))
 
     def get_type(self, obj):
         return 'User'
@@ -259,7 +241,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
 
 class SCIMGroupSerializer(serializers.ModelSerializer):
-    resource_schemas = ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+    resource_schemas = ['urn:ietf:params:scim:schemas:core:2.0:Group']
     resource_type = 'Group'
     detail_view_name = 'scim-group-detail'
 
@@ -271,7 +253,13 @@ class SCIMGroupSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Group
-        fields = ('id', 'displayName', 'schemas', 'meta', 'members', )
+        fields = (
+            'id',
+            'displayName',
+            'schemas',
+            'meta',
+            'members',
+        )
 
     def update(self, obj, data):
         members = data.pop('user_set')

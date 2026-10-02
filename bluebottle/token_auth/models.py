@@ -11,6 +11,7 @@ class CheckedToken(models.Model):
     """
     Stores the used tokens for safety-checking purposes.
     """
+
     token = models.CharField(max_length=300)
     timestamp = models.DateTimeField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -19,8 +20,7 @@ class CheckedToken(models.Model):
         ordering = ('-timestamp', 'user__username')
 
     def __str__(self):
-        return '{0} - {1}, {2}'.format(
-            self.token, self.timestamp, self.user.username)
+        return '{0} - {1}, {2}'.format(self.token, self.timestamp, self.user.username)
 
 
 class SAMLLog(models.Model):

@@ -1,22 +1,22 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    ActivitySegmentPermission
+    ActivityOwnerPermission,
+    ActivityTypePermission,
+    ActivityStatusPermission,
+    ActivitySegmentPermission,
 )
 from bluebottle.activities.views import ActivityDetailView
 from bluebottle.funding.views import PayoutDetails
-from bluebottle.grant_management.models import (
-    GrantApplication, GrantPayout
-)
+from bluebottle.grant_management.models import GrantApplication, GrantPayout
 from bluebottle.grant_management.serializers import (
-    GrantApplicationSerializer, GrantApplicationTransitionSerializer, GrantPayoutSerializer
+    GrantApplicationSerializer,
+    GrantApplicationTransitionSerializer,
+    GrantPayoutSerializer,
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import OneOf, ResourcePermission
-from bluebottle.utils.views import (
-    ListCreateAPIView, JsonApiViewMixin
-)
+from bluebottle.utils.views import ListCreateAPIView, JsonApiViewMixin
 
 
 class GrantApplicationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

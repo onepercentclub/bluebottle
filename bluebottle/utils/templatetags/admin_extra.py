@@ -33,8 +33,7 @@ def labeled_date_hierarchy(cl):
 
         if not (year_lookup or month_lookup or day_lookup):
             # select appropriate start level
-            date_range = cl.queryset.aggregate(first=models.Min(field_name),
-                                               last=models.Max(field_name))
+            date_range = cl.queryset.aggregate(first=models.Min(field_name), last=models.Max(field_name))
             if date_range['first'] and date_range['last']:
                 if date_range['first'].year == date_range['last'].year:
                     year_lookup = date_range['first'].year
@@ -48,9 +47,9 @@ def labeled_date_hierarchy(cl):
                 'show': True,
                 'back': {
                     'link': link({year_field: year_lookup, month_field: month_lookup}),
-                    'title': capfirst(formats.date_format(day, 'YEAR_MONTH_FORMAT'))
+                    'title': capfirst(formats.date_format(day, 'YEAR_MONTH_FORMAT')),
                 },
-                'choices': [{'title': capfirst(formats.date_format(day, 'MONTH_DAY_FORMAT'))}]
+                'choices': [{'title': capfirst(formats.date_format(day, 'MONTH_DAY_FORMAT'))}],
             }
         elif year_lookup and month_lookup:
             days = cl.queryset.filter(**{year_field: year_lookup, month_field: month_lookup})
@@ -58,14 +57,14 @@ def labeled_date_hierarchy(cl):
             return {
                 'label': label,
                 'show': True,
-                'back': {
-                    'link': link({year_field: year_lookup}),
-                    'title': str(year_lookup)
-                },
-                'choices': [{
-                    'link': link({year_field: year_lookup, month_field: month_lookup, day_field: day.day}),
-                    'title': capfirst(formats.date_format(day, 'MONTH_DAY_FORMAT'))
-                } for day in days]
+                'back': {'link': link({year_field: year_lookup}), 'title': str(year_lookup)},
+                'choices': [
+                    {
+                        'link': link({year_field: year_lookup, month_field: month_lookup, day_field: day.day}),
+                        'title': capfirst(formats.date_format(day, 'MONTH_DAY_FORMAT')),
+                    }
+                    for day in days
+                ],
             }
         elif year_lookup:
             months = cl.queryset.filter(**{year_field: year_lookup})
@@ -73,14 +72,14 @@ def labeled_date_hierarchy(cl):
             return {
                 'label': label,
                 'show': True,
-                'back': {
-                    'link': link({}),
-                    'title': _('All dates')
-                },
-                'choices': [{
-                    'link': link({year_field: year_lookup, month_field: month.month}),
-                    'title': capfirst(formats.date_format(month, 'YEAR_MONTH_FORMAT'))
-                } for month in months]
+                'back': {'link': link({}), 'title': _('All dates')},
+                'choices': [
+                    {
+                        'link': link({year_field: year_lookup, month_field: month.month}),
+                        'title': capfirst(formats.date_format(month, 'YEAR_MONTH_FORMAT')),
+                    }
+                    for month in months
+                ],
             }
         else:
             years = getattr(cl.queryset, dates_or_datetimes)(field_name, 'year')
@@ -88,8 +87,11 @@ def labeled_date_hierarchy(cl):
                 'label': label,
                 'field': field,
                 'show': True,
-                'choices': [{
-                    'link': link({year_field: str(year.year)}),
-                    'title': str(year.year),
-                } for year in years]
+                'choices': [
+                    {
+                        'link': link({year_field: str(year.year)}),
+                        'title': str(year.year),
+                    }
+                    for year in years
+                ],
             }

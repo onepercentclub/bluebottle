@@ -35,10 +35,7 @@ jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
 class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
     def validate(self, attrs):
-        credentials = {
-            self.username_field: attrs.get(self.username_field),
-            'password': attrs.get('password')
-        }
+        credentials = {self.username_field: attrs.get(self.username_field), 'password': attrs.get('password')}
 
         if all(credentials.values()):
             request = self.context['request']
@@ -46,9 +43,7 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
             user = authenticate(request, **credentials)
 
             if getattr(request, 'axes_locked_out', False):
-                raise exceptions.Throttled(
-                    600, 'Too many failed password attempts.'
-                )
+                raise exceptions.Throttled(600, 'Too many failed password attempts.')
 
             if user:
                 if not user.is_active:
@@ -57,14 +52,9 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
 
                 payload = jwt_payload_handler(user)
 
-                return {
-                    'token': jwt_encode_handler(payload),
-                    'user': user
-                }
+                return {'token': jwt_encode_handler(payload), 'user': user}
             else:
-                msg = _(
-                    'We are unable to log you in with the provided email address and password combination.'
-                )
+                msg = _('We are unable to log you in with the provided email address and password combination.')
                 raise serializers.ValidationError(msg)
         else:
             msg = _('Must include "{username_field}" and "password".')
@@ -88,7 +78,8 @@ class PasswordValidator(object):
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
 class PasswordField(serializers.CharField):
-    """ Special field to update a password field. """
+    """Special field to update a password field."""
+
     widget = forms.widgets.PasswordInput
     hidden_password_string = '********'
 
@@ -99,7 +90,7 @@ class PasswordField(serializers.CharField):
             self.validators.append(validator)
 
     def to_representation(self, value):
-        """ Hide hashed-password in API display. """
+        """Hide hashed-password in API display."""
         return self.hidden_password_string
 
 
@@ -107,9 +98,7 @@ class AuthTokenSerializer(Serializer, AxesJSONWebTokenSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields['email'] = serializers.CharField(
-            required=True
-        )
+        self.fields['email'] = serializers.CharField(required=True)
 
     email = serializers.CharField(required=True)
     password = PasswordField(required=True, validate=False)
@@ -124,16 +113,25 @@ class AuthTokenSerializer(Serializer, AxesJSONWebTokenSerializer):
 
 class PrivateProfileMixin(object):
     private_fields = (
-        'url', 'full_name', 'picture', 'about_me', 'location', 'last_name',
-        'phone_number', 'avatar', 'website', 'twitter', 'facebook', 'skypename'
+        'url',
+        'full_name',
+        'picture',
+        'about_me',
+        'location',
+        'last_name',
+        'phone_number',
+        'avatar',
+        'website',
+        'twitter',
+        'facebook',
+        'skypename',
     )
 
     def to_representation(self, obj):
         data = super(PrivateProfileMixin, self).to_representation(obj)
 
         user = self.context['request'].user
-        can_read_full_profile = self.context['request'].user.has_perm(
-            'members.api_read_full_member')
+        can_read_full_profile = self.context['request'].user.has_perm('members.api_read_full_member')
 
         if obj != user and not can_read_full_profile:
             for field in self.private_fields:
@@ -158,10 +156,8 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
 
     # TODO: Remove first/last name and only use these
-    full_name = serializers.ReadOnlyField(
-        source='get_full_name', read_only=True)
-    short_name = serializers.ReadOnlyField(
-        source='get_short_name', read_only=True)
+    full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
+    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
     is_anonymous = serializers.SerializerMethodField()
 
@@ -171,10 +167,18 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
     class Meta(object):
         model = BB_USER_MODEL
         fields = (
-            'id', 'first_name', 'last_name', 'initials', 'about_me',
-            'avatar', 'full_name', 'short_name',
-            'is_active', 'is_anonymous',
-            'can_pledge', 'can_do_bank_transfer'
+            'id',
+            'first_name',
+            'last_name',
+            'initials',
+            'about_me',
+            'avatar',
+            'full_name',
+            'short_name',
+            'is_active',
+            'is_anonymous',
+            'can_pledge',
+            'can_do_bank_transfer',
         )
 
 
@@ -183,6 +187,7 @@ class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSeri
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
     """
+
     is_anonymous = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
@@ -200,7 +205,6 @@ class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSeri
 
 
 class UserPreviewSerializer(serializers.ModelSerializer):
-
     def __init__(self, *args, **kwargs):
         self.hide_last_name = kwargs.pop('hide_last_name', None)
 
@@ -212,21 +216,17 @@ class UserPreviewSerializer(serializers.ModelSerializer):
             # For some reason self.parent.instance doesn't work on ReactionSerializer
             if self.parent.instance:
                 if self.parent.instance.anonymized:
-                    return {"id": 0, "is_anonymous": True}
+                    return {'id': 0, 'is_anonymous': True}
             else:
                 wallpost = self.parent.parent.parent.instance
                 if wallpost.anonymized:
-                    return {"id": 0, "is_anonymous": True}
+                    return {'id': 0, 'is_anonymous': True}
         if self.parent and self.parent.instance and getattr(self.parent.instance, 'anonymized', False):
-            return {"id": 0, "is_anonymous": True}
+            return {'id': 0, 'is_anonymous': True}
 
         representation = BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
-        if not (
-            user.is_staff or
-            user.is_superuser
-        ) and (
-            self.hide_last_name and
-            MemberPlatformSettings.load().display_member_names == 'first_name'
+        if not (user.is_staff or user.is_superuser) and (
+            self.hide_last_name and MemberPlatformSettings.load().display_member_names == 'first_name'
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']
@@ -244,7 +244,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
             'avatar',
             'full_name',
             'short_name',
-            'is_active'
+            'is_active',
         )
 
 
@@ -258,12 +258,7 @@ class UserPermissionsSerializer(serializers.Serializer):
     review_activities = UserPermissionField('activities.api_review_activity')
 
     class Meta(object):
-        fields = [
-            'project_list',
-            'project_manage_list',
-            'homepage',
-            'review_activities'
-        ]
+        fields = ['project_list', 'project_manage_list', 'homepage', 'review_activities']
 
 
 class CurrentUserSerializer(BaseUserPreviewSerializer):
@@ -272,6 +267,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     serializer for the member preview with the
     addition of id_for_ember.
     """
+
     # This is a hack to work around an issue with Ember-Data keeping the id as
     # 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
@@ -279,12 +275,8 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     can_pledge = serializers.BooleanField(read_only=True)
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
     permissions = UserPermissionsSerializer(read_only=True)
-    organization = OrganizationSerializer(
-        read_only=True, source='partner_organization'
-    )
-    segments = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Segment.objects
-    )
+    organization = OrganizationSerializer(read_only=True, source='partner_organization')
+    segments = serializers.PrimaryKeyRelatedField(many=True, queryset=Segment.objects)
     has_initiatives = serializers.SerializerMethodField()
 
     def get_has_initiatives(self, obj):
@@ -293,13 +285,25 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + (
-            'id_for_ember', 'primary_language',
-            'email', 'full_name', 'phone_number',
-            'last_login', 'date_joined', 'location',
-            'verified', 'permissions', 'matching_options_set',
-            'organization', 'segments', 'required', 'has_initiatives',
-            'hours_spent', 'hours_planned',
-            'can_pledge', 'can_do_bank_transfer'
+            'id_for_ember',
+            'primary_language',
+            'email',
+            'full_name',
+            'phone_number',
+            'last_login',
+            'date_joined',
+            'location',
+            'verified',
+            'permissions',
+            'matching_options_set',
+            'organization',
+            'segments',
+            'required',
+            'has_initiatives',
+            'hours_spent',
+            'hours_planned',
+            'can_pledge',
+            'can_do_bank_transfer',
         )
 
 
@@ -308,18 +312,16 @@ class OldSegmentSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Segment
-        fields = (
-            'id', 'name', 'type'
-        )
+        fields = ('id', 'name', 'type')
 
 
 class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
+
     email = serializers.CharField(read_only=True)
-    url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail',
-                                               lookup_field='pk')
+    url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail', lookup_field='pk')
     date_joined = serializers.DateTimeField(read_only=True)
 
     full_name = serializers.CharField(source='get_full_name', read_only=True)
@@ -327,23 +329,16 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     can_pledge = serializers.BooleanField(read_only=True)
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
 
-    primary_language = serializers.CharField(required=False,
-                                             default=properties.LANGUAGE_CODE)
-    location = serializers.PrimaryKeyRelatedField(required=False, allow_null=True,
-                                                  queryset=Location.objects)
-    avatar = SorlImageField('133x133', source='picture', crop='center',
-                            required=False)
+    primary_language = serializers.CharField(required=False, default=properties.LANGUAGE_CODE)
+    location = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=Location.objects)
+    avatar = SorlImageField('133x133', source='picture', crop='center', required=False)
 
-    skill_ids = serializers.PrimaryKeyRelatedField(many=True,
-                                                   source='skills',
-                                                   required=False,
-                                                   queryset=Skill.objects)
+    skill_ids = serializers.PrimaryKeyRelatedField(many=True, source='skills', required=False, queryset=Skill.objects)
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
-        many=True, source='favourite_themes', queryset=Theme.objects)
-
-    segments = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Segment.objects
+        many=True, source='favourite_themes', queryset=Theme.objects
     )
+
+    segments = serializers.PrimaryKeyRelatedField(many=True, queryset=Segment.objects)
 
     is_active = serializers.BooleanField(read_only=True)
 
@@ -365,11 +360,28 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = (
-            'id', 'email', 'url', 'full_name', 'short_name', 'initials',
-            'primary_language', 'about_me', 'location', 'avatar', 'date_joined',
-            'is_active', 'website', 'twitter', 'facebook',
-            'skypename', 'skill_ids', 'favourite_theme_ids',
-            'subscribed', 'segments', 'can_pledge', 'can_do_bank_transfer',
+            'id',
+            'email',
+            'url',
+            'full_name',
+            'short_name',
+            'initials',
+            'primary_language',
+            'about_me',
+            'location',
+            'avatar',
+            'date_joined',
+            'is_active',
+            'website',
+            'twitter',
+            'facebook',
+            'skypename',
+            'skill_ids',
+            'favourite_theme_ids',
+            'subscribed',
+            'segments',
+            'can_pledge',
+            'can_do_bank_transfer',
             'translate_user_content',
         )
 
@@ -378,6 +390,7 @@ class OldUserActivitySerializer(serializers.ModelSerializer):
     """
     Serializer for user activity (log paths)
     """
+
     path = TruncatedCharField(length=200, required=False)
 
     class Meta(object):
@@ -392,6 +405,7 @@ class UserActivitySerializer(ModelSerializer):
     """
     Serializer for user activity (log paths)
     """
+
     path = TruncatedCharField(length=200, required=False)
 
     class Meta(object):
@@ -409,6 +423,7 @@ class ManageProfileSerializer(UserProfileSerializer):
     """
     Serializer for the member's private profile.
     """
+
     partial = True
     from_facebook = serializers.SerializerMethodField()
     place = OldPlaceSerializer(required=False, allow_null=True)
@@ -423,10 +438,19 @@ class ManageProfileSerializer(UserProfileSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
-            'email', 'newsletter', 'campaign_notifications', 'receive_reminder_emails',
-            'matching_options_set', 'location',
-            'birthdate', 'gender', 'first_name', 'last_name', 'phone_number',
-            'from_facebook', 'place',
+            'email',
+            'newsletter',
+            'campaign_notifications',
+            'receive_reminder_emails',
+            'matching_options_set',
+            'location',
+            'birthdate',
+            'gender',
+            'first_name',
+            'last_name',
+            'phone_number',
+            'from_facebook',
+            'place',
         )
 
     def update(self, instance, validated_data):
@@ -454,12 +478,29 @@ class UserDataExportSerializer(UserProfileSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = (
-            'id', 'email', 'location', 'birthdate',
-            'url', 'full_name', 'short_name', 'initials',
-            'gender', 'first_name', 'last_name', 'phone_number',
-            'primary_language', 'about_me', 'location', 'avatar',
-            'date_joined', 'website', 'twitter', 'facebook',
-            'skypename', 'skills', 'favourite_themes'
+            'id',
+            'email',
+            'location',
+            'birthdate',
+            'url',
+            'full_name',
+            'short_name',
+            'initials',
+            'gender',
+            'first_name',
+            'last_name',
+            'phone_number',
+            'primary_language',
+            'about_me',
+            'location',
+            'avatar',
+            'date_joined',
+            'website',
+            'twitter',
+            'facebook',
+            'skypename',
+            'skills',
+            'favourite_themes',
         )
 
 
@@ -469,6 +510,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     users (POST) and should not be used for listing,
     editing or viewing users.
     """
+
     email = serializers.EmailField(max_length=254)
     url = serializers.CharField(required=False, allow_blank=True)
     segment_id = serializers.CharField(required=False, allow_blank=True)
@@ -480,18 +522,11 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
         email = validated_data.get('email', '')
         email_domain = email.split('@')[-1]
         accepted = True
-        if (
-            member_settings.account_creation_rules == 'whitelist'
-            and email_domain not in member_settings.email_domains
-        ):
+        if member_settings.account_creation_rules == 'whitelist' and email_domain not in member_settings.email_domains:
             accepted = False
         (instance, _) = BB_USER_MODEL.objects.get_or_create(
             email__iexact=validated_data['email'],
-            defaults={
-                'is_active': False,
-                'accepted': accepted,
-                'email': validated_data['email']
-            }
+            defaults={'is_active': False, 'accepted': accepted, 'email': validated_data['email']},
         )
         return instance
 
@@ -525,19 +560,20 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
                 if access_code:
                     if settings.request_access_code != access_code:
                         raise serializers.ValidationError(
-                            _('The access link you supplied is invalid. '
-                              'Please contact us to request a new access link.'),
-                            code='invalid_access_code'
+                            _(
+                                'The access link you supplied is invalid. '
+                                'Please contact us to request a new access link.'
+                            ),
+                            code='invalid_access_code',
                         )
                 else:
                     raise serializers.ValidationError(
-                        _('This email is not whitelisted, please contact us to request access.'),
-                        code='request_access'
+                        _('This email is not whitelisted, please contact us to request access.'), code='request_access'
                     )
             else:
                 raise serializers.ValidationError(
                     _('Only emails for specified domains are allowed. Please use your work e-mail address.'),
-                    code='non_whitelisted_domain'
+                    code='non_whitelisted_domain',
                 )
 
         return attrs
@@ -552,6 +588,7 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
     users (POST) and should not be used for listing,
     editing or viewing users.
     """
+
     password = PasswordField(required=True, max_length=128)
     token = serializers.CharField(required=True, max_length=128)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
@@ -561,7 +598,14 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'password', 'token', 'jwt_token', 'first_name', 'last_name',)
+        fields = (
+            'id',
+            'password',
+            'token',
+            'jwt_token',
+            'first_name',
+            'last_name',
+        )
 
     def validate_password(self, password):
         return make_password(password)
@@ -614,13 +658,9 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
     users (POST) and should not be used for listing,
     editing or viewing users.
     """
+
     email = serializers.EmailField(
-        max_length=254,
-        validators=[
-            UniqueEmailValidator(
-                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
-            )
-        ]
+        max_length=254, validators=[UniqueEmailValidator(queryset=BB_USER_MODEL.objects.all(), lookup='iexact')]
     )
     password = PasswordField(required=True, max_length=128)
     token = serializers.CharField(source='get_jwt_token', read_only=True)
@@ -632,14 +672,10 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
     def validate(self, data):
         settings = MemberPlatformSettings.load()
         if settings.confirm_signup:
-            raise serializers.ValidationError(
-                {'email': _('Signup requires a confirmation token.')}
-            )
+            raise serializers.ValidationError({'email': _('Signup requires a confirmation token.')})
 
         if settings.closed:
-            raise serializers.ValidationError(
-                {'email': _('The platform is closed.')}
-            )
+            raise serializers.ValidationError({'email': _('The platform is closed.')})
 
         passwordmeter.test(data['password'])
         data['password'] = make_password(data['password'])
@@ -647,7 +683,14 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'token',)
+        fields = (
+            'id',
+            'first_name',
+            'last_name',
+            'email',
+            'password',
+            'token',
+        )
 
     class JSONAPIMeta:
         resource_name = 'auth/signup'
@@ -659,16 +702,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
     users (POST) and should not be used for listing,
     editing or viewing users.
     """
+
     email = serializers.EmailField(
-        max_length=254,
-        validators=[
-            validators.UniqueValidator(
-                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
-            )
-        ]
+        max_length=254, validators=[validators.UniqueValidator(queryset=BB_USER_MODEL.objects.all(), lookup='iexact')]
     )
-    email_confirmation = serializers.EmailField(
-        label=_('email_confirmation'), max_length=254, required=False)
+    email_confirmation = serializers.EmailField(label=_('email_confirmation'), max_length=254, required=False)
     password = PasswordField(required=True, max_length=128)
     token = serializers.CharField(required=False, max_length=128)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
@@ -681,10 +719,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if 'email' in errors and 'email' in self.data and errors['email'][0].code == 'unique':
             user = self.Meta.model.objects.get(email__iexact=self.data['email'])
 
-            conflict = {
-                'email': user.email,
-                'id': user.id
-            }
+            conflict = {'email': user.email, 'id': user.id}
 
             # We assume if they have a social auth associated then they use it
             if user.social_auth.count() > 0:
@@ -694,17 +729,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
             else:
                 conflict['type'] = 'email'
 
-            errors[
-                settings.REST_FRAMEWORK.get(
-                    'NON_FIELD_ERRORS_KEY', 'non_field_errors')
-            ] = [conflict]
+            errors[settings.REST_FRAMEWORK.get('NON_FIELD_ERRORS_KEY', 'non_field_errors')] = [conflict]
 
             request = self.context['request']
             AxesProxyHandler.user_login_failed(self, {}, request)
             if getattr(request, 'axes_locked_out', False):
-                raise exceptions.Throttled(
-                    600, 'Too many failed registration attempts.'
-                )
+                raise exceptions.Throttled(600, 'Too many failed registration attempts.')
             del errors['email']
 
         return errors
@@ -718,15 +748,23 @@ class UserCreateSerializer(serializers.ModelSerializer):
         settings = MemberPlatformSettings.load()
 
         if settings.confirm_signup:
-            raise serializers.ValidationError(
-                {'token': _('Signup requires a confirmation token')})
+            raise serializers.ValidationError({'token': _('Signup requires a confirmation token')})
         data['password'] = make_password(data['password'])
         return data
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'email_confirmation',
-                  'email', 'password', 'token', 'jwt_token', 'primary_language')
+        fields = (
+            'id',
+            'first_name',
+            'last_name',
+            'email_confirmation',
+            'email',
+            'password',
+            'token',
+            'jwt_token',
+            'primary_language',
+        )
 
 
 class PasswordResetSerializer(serializers.Serializer):
@@ -734,10 +772,14 @@ class PasswordResetSerializer(serializers.Serializer):
     Password reset request serializer that uses the email validation from the
     Django PasswordResetForm.
     """
+
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta(object):
-        fields = ('id', 'email',)
+        fields = (
+            'id',
+            'email',
+        )
 
     class JSONAPIMeta(object):
         resource_name = 'reset-tokens'
@@ -749,11 +791,7 @@ class MemberProfileSerializer(ModelSerializer):
         many=True,
         queryset=Segment.objects.all(),
     )
-    themes = ResourceRelatedField(
-        many=True,
-        queryset=Theme.objects.all(),
-        source='favourite_themes'
-    )
+    themes = ResourceRelatedField(many=True, queryset=Theme.objects.all(), source='favourite_themes')
 
     skills = ResourceRelatedField(
         many=True,
@@ -763,24 +801,49 @@ class MemberProfileSerializer(ModelSerializer):
     avatar = ImageField(required=False, allow_null=True)
     has_usable_password = serializers.BooleanField(read_only=True)
 
-    class Meta():
+    class Meta:
         model = Member
         fields = (
-            'id', 'first_name', 'last_name', 'about_me', 'full_name', 'required',
-            'birthdate', 'segments', 'phone_number',
-            'location', 'place', 'themes', 'skills', 'email',
-            'search_distance', 'any_search_distance', 'exclude_online',
-            'matching_options_set', 'remote_id', 'avatar',
-            'subscribed', 'receive_reminder_emails', 'campaign_notifications',
-            'has_usable_password', 'avatar', 'gender', 'translate_user_content',
-            'terms_accepted'
+            'id',
+            'first_name',
+            'last_name',
+            'about_me',
+            'full_name',
+            'required',
+            'birthdate',
+            'segments',
+            'phone_number',
+            'location',
+            'place',
+            'themes',
+            'skills',
+            'email',
+            'search_distance',
+            'any_search_distance',
+            'exclude_online',
+            'matching_options_set',
+            'remote_id',
+            'avatar',
+            'subscribed',
+            'receive_reminder_emails',
+            'campaign_notifications',
+            'has_usable_password',
+            'avatar',
+            'gender',
+            'translate_user_content',
+            'terms_accepted',
         )
 
-    class JSONAPIMeta():
+    class JSONAPIMeta:
         resource_name = 'member/profile'
         included_resources = [
-            'location', 'location.subregion', 'location.subregion.region',
-            'place.country', 'place', 'segments', 'avatar'
+            'location',
+            'location.subregion',
+            'location.subregion.region',
+            'place.country',
+            'place',
+            'segments',
+            'avatar',
         ]
 
     included_serializers = {
@@ -789,7 +852,6 @@ class MemberProfileSerializer(ModelSerializer):
         'location': 'bluebottle.geo.serializers.OfficeSerializer',
         'location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
         'location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
-
         'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
         'avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
@@ -830,9 +892,7 @@ class ValidatePassword:
 
 
 class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        write_only=True, required=True, max_length=128, validators=[ValidatePassword()]
-    )
+    password = serializers.CharField(write_only=True, required=True, max_length=128, validators=[ValidatePassword()])
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
     class Meta(object):
@@ -842,12 +902,7 @@ class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
 
 class EmailSetSerializer(PasswordProtectedMemberSerializer):
     email = serializers.EmailField(
-        max_length=254,
-        validators=[
-            UniqueEmailValidator(
-                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
-            )
-        ]
+        max_length=254, validators=[UniqueEmailValidator(queryset=BB_USER_MODEL.objects.all(), lookup='iexact')]
     )
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
@@ -863,8 +918,7 @@ class EmailSetSerializer(PasswordProtectedMemberSerializer):
 
 
 class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
-    new_password = PasswordField(
-        write_only=True, required=True, max_length=128)
+    new_password = PasswordField(write_only=True, required=True, max_length=128)
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -891,13 +945,13 @@ class PasswordSetSerializer(serializers.Serializer):
     a salt which means we can't compare the
     two passwords to see if they are the same.
     """
+
     new_password1 = PasswordField(required=True, max_length=128)
     new_password2 = serializers.CharField(required=True, max_length=128)
 
     def validate(self, data):
         if data['new_password1'] != data['new_password2']:
-            raise serializers.ValidationError(
-                _('The two password fields didn\'t match.'))
+            raise serializers.ValidationError(_("The two password fields didn't match."))
 
         return data
 
@@ -926,10 +980,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             return []
 
     def get_social_login_methods(self, obj):
-        return [
-            {'key': method.client_id, 'backend': method.backend}
-            for method in obj.social_login_methods.all()
-        ]
+        return [{'key': method.client_id, 'backend': method.backend} for method in obj.social_login_methods.all()]
 
     def get_reminder_emails_enabled(self, obj):
         return any([obj.reminder_q1, obj.reminder_q2, obj.reminder_q3, obj.reminder_q4])
@@ -971,7 +1022,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'read_only_fields',
             'translate_user_content',
             'social_login_methods',
-            'explicit_terms'
+            'explicit_terms',
         )
 
 

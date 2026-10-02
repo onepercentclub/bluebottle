@@ -54,25 +54,17 @@ INACTIVE_GRANT_APPLICATION_STATUSES = [
     ]
 )
 class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
-
     def setUp(self):
         self.owner = BlueBottleUserFactory.create()
         self.staff_user = BlueBottleUserFactory.create(
-            is_staff=True,
-            email='staff@example.com',
-            submitted_initiative_notifications=True
+            is_staff=True, email='staff@example.com', submitted_initiative_notifications=True
         )
         self.staff_user.groups.add(Group.objects.get(name='Staff'))
         self.support_user = BlueBottleUserFactory.create(email='support@example.com')
         super().setUp()
-        self.model = StripePayoutAccountFactory.create(
-            status="verified", account_id="test-account-id"
-        )
+        self.model = StripePayoutAccountFactory.create(status='verified', account_id='test-account-id')
         self.bank_account = ExternalAccountFactory.create(connect_account=self.model)
-        self.funding = FundingFactory.create(
-            status='draft',
-            bank_account=self.bank_account
-        )
+        self.funding = FundingFactory.create(status='draft', bank_account=self.bank_account)
 
     def trigger_set_incomplete(self):
         self.model.status = 'verified'
@@ -98,10 +90,7 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
                 self.trigger_set_incomplete()
                 with self.execute():
                     self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
-                    self.assertNotificationEffect(
-                        LivePayoutAccountMarkedIncomplete,
-                        recipients=[self.staff_user]
-                    )
+                    self.assertNotificationEffect(LivePayoutAccountMarkedIncomplete, recipients=[self.staff_user])
 
     def test_set_incomplete_draft_vs_open_send_different_notifications(self):
         self.trigger_set_incomplete()
@@ -114,10 +103,7 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
         self.trigger_set_incomplete()
         with self.execute():
             self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
-            self.assertNotificationEffect(
-                LivePayoutAccountMarkedIncomplete,
-                recipients=[self.staff_user]
-            )
+            self.assertNotificationEffect(LivePayoutAccountMarkedIncomplete, recipients=[self.staff_user])
 
     def test_set_incomplete_inactive_funding_statuses_send_no_notification(self):
         for status in INACTIVE_FUNDING_STATUSES:
@@ -160,10 +146,7 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
 
         with self.execute():
             self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
-            self.assertNotificationEffect(
-                LivePayoutAccountMarkedIncomplete,
-                recipients=[self.staff_user]
-            )
+            self.assertNotificationEffect(LivePayoutAccountMarkedIncomplete, recipients=[self.staff_user])
 
 
 @override_settings(
@@ -172,18 +155,12 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
     ]
 )
 class GrantApplicationPayoutAccountIncompleteTriggersTestCase(FundingStripeMixin, TriggerTestCase):
-
     def setUp(self):
         self.owner = BlueBottleUserFactory.create()
         super().setUp()
-        self.model = StripePayoutAccountFactory.create(
-            status="pending", account_id="test-account-id"
-        )
+        self.model = StripePayoutAccountFactory.create(status='pending', account_id='test-account-id')
         self.bank_account = ExternalAccountFactory.create(connect_account=self.model)
-        self.grant_application = GrantApplicationFactory.create(
-            status='draft',
-            bank_account=self.bank_account
-        )
+        self.grant_application = GrantApplicationFactory.create(status='draft', bank_account=self.bank_account)
 
     def _trigger_set_incomplete(self):
         self.model.status = 'verified'

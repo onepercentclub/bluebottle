@@ -8,7 +8,7 @@ from bluebottle.test.factory_models.terms import TermsFactory
 
 
 class TermsAPITest(BluebottleTestCase):
-    """ Integration tests for the Terms API. """
+    """Integration tests for the Terms API."""
 
     def setUp(self):
         super(TermsAPITest, self).setUp()
@@ -27,8 +27,7 @@ class TermsAPITest(BluebottleTestCase):
         self.assertEqual(response.data['contents'], self.terms.contents)
 
     def test_agree_terms(self):
-        response = self.client.post(reverse('terms-agreement-list'),
-                                    token=self.user_2_token)
+        response = self.client.post(reverse('terms-agreement-list'), token=self.user_2_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['user'], self.user_2.id)

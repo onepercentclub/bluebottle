@@ -2,27 +2,32 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from polymorphic.admin import PolymorphicParentModelAdmin
 
-from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedDateActivity, LinkedActivity, \
-    LinkedDateSlot, LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity, \
-    LinkedGrantApplication
+from bluebottle.activity_links.models import (
+    LinkedDeed,
+    LinkedFunding,
+    LinkedDateActivity,
+    LinkedActivity,
+    LinkedDateSlot,
+    LinkedCollectCampaign,
+    LinkedDeadlineActivity,
+    LinkedPeriodicActivity,
+    LinkedScheduleActivity,
+    LinkedGrantApplication,
+)
 from bluebottle.fsm.admin import StateMachineAdminMixin
 from bluebottle.fsm.forms import StateMachineModelForm
 
 
 class LinkedBaseAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     form = StateMachineModelForm
-    readonly_fields = ["title", "link", "status", "host_organization"]
+    readonly_fields = ['title', 'link', 'status', 'host_organization']
     fields = readonly_fields + ['archived']
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj):
-        fieldsets = (
-            (_('Details'), {'fields': self.get_fields(request, obj)}),
-        )
+        fieldsets = ((_('Details'), {'fields': self.get_fields(request, obj)}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': self.superadmin_fields}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': self.superadmin_fields}),)
         return fieldsets
 
 
@@ -70,17 +75,13 @@ class UsedHostOrganizationListFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         queryset = model_admin.get_queryset(request)
-        organization_ids = queryset.exclude(
-            host_organization__isnull=True
-        ).values_list('host_organization_id', flat=True).distinct()
+        organization_ids = (
+            queryset.exclude(host_organization__isnull=True).values_list('host_organization_id', flat=True).distinct()
+        )
 
-        organization_model = model_admin.model._meta.get_field(
-            'host_organization'
-        ).remote_field.model
+        organization_model = model_admin.model._meta.get_field('host_organization').remote_field.model
 
-        organizations = organization_model.objects.filter(
-            pk__in=organization_ids
-        ).order_by('name')
+        organizations = organization_model.objects.filter(pk__in=organization_ids).order_by('name')
 
         return [(str(organization.pk), str(organization)) for organization in organizations]
 
@@ -128,12 +129,10 @@ class LinkedActivityAdmin(PolymorphicParentModelAdmin):
         LinkedPeriodicActivity,
         LinkedDeadlineActivity,
         LinkedCollectCampaign,
-        LinkedScheduleActivity
+        LinkedScheduleActivity,
     )
 
-    list_display = [
-        'title', 'activity_type', 'status'
-    ]
+    list_display = ['title', 'activity_type', 'status']
 
     def activity_type(self, obj):
         return obj.get_real_instance_class().activity_type

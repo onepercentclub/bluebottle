@@ -14,7 +14,6 @@ MEDIA_JS = [
 ]
 MEDIA_CSS = [
     # syntax-highlight
-
     static('django_quill/quill.snow.css'),
     static('django_quill/darcula.min.css'),
     static('django_quill/resize.min.css'),

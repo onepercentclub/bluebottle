@@ -27,43 +27,27 @@ def no_donations(effect):
 
 
 class FundingFinishedTask(ModelPeriodicTask):
-
     def get_queryset(self):
-        return self.model.objects.filter(
-            deadline__lte=timezone.now(),
-            status='open'
-        )
+        return self.model.objects.filter(deadline__lte=timezone.now(), status='open')
 
     effects = [
-        TransitionEffect(FundingStateMachine.succeed, conditions=[
-            target_reached
-        ]),
-        TransitionEffect(FundingStateMachine.partial, conditions=[
-            target_not_reached
-        ]),
-        TransitionEffect(FundingStateMachine.expire, conditions=[
-            no_donations
-        ]),
+        TransitionEffect(FundingStateMachine.succeed, conditions=[target_reached]),
+        TransitionEffect(FundingStateMachine.partial, conditions=[target_not_reached]),
+        TransitionEffect(FundingStateMachine.expire, conditions=[no_donations]),
     ]
 
     def __str__(self):
-        return str(_("Campaign deadline has passed."))
+        return str(_('Campaign deadline has passed.'))
 
 
 class DonorExpiredTask(ModelPeriodicTask):
-
     def get_queryset(self):
-        return self.model.objects.filter(
-            created__lte=timezone.now() - timedelta(days=14),
-            status='new'
-        )
+        return self.model.objects.filter(created__lte=timezone.now() - timedelta(days=14), status='new')
 
-    effects = [
-        TransitionEffect(DonorStateMachine.expire)
-    ]
+    effects = [TransitionEffect(DonorStateMachine.expire)]
 
     def __str__(self):
-        return str(_("Campaign deadline has passed."))
+        return str(_('Campaign deadline has passed.'))
 
 
 Funding.periodic_tasks = [FundingFinishedTask]

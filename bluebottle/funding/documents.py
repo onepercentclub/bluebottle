@@ -25,18 +25,22 @@ SCORE_MAP = {
 @registry.register_document
 @activity.doc_type
 class FundingDocument(ActivityDocument):
-    target = fields.NestedField(properties={
-        'currency': fields.KeywordField(),
-        'amount': fields.FloatField(),
-    })
-    amount_raised = fields.NestedField(properties={
-        'currency': fields.KeywordField(),
-        'amount': fields.FloatField(),
-    })
+    target = fields.NestedField(
+        properties={
+            'currency': fields.KeywordField(),
+            'amount': fields.FloatField(),
+        }
+    )
+    amount_raised = fields.NestedField(
+        properties={
+            'currency': fields.KeywordField(),
+            'amount': fields.FloatField(),
+        }
+    )
 
     class Django:
         model = Funding
-        related_models = ActivityDocument.Django.related_models + (Donor, )
+        related_models = ActivityDocument.Django.related_models + (Donor,)
 
     def get_instances_from_related(self, related_instance):
         result = super().get_instances_from_related(related_instance)
@@ -53,30 +57,30 @@ class FundingDocument(ActivityDocument):
             impact_location = instance.impact_location
             country = impact_location.country
             geofeature = impact_location.geofeature
-            locations.append({
-                'id': impact_location.id,
-                'name': (
-                    geofeature.place_name if geofeature else impact_location.formatted_address
-                ),
-                'locality': locality_from_geolocation(impact_location),
-                'country_code': country.alpha2_code if country else None,
-                'country': country.name if country else None,
-                'type': 'location'
-            })
+            locations.append(
+                {
+                    'id': impact_location.id,
+                    'name': (geofeature.place_name if geofeature else impact_location.formatted_address),
+                    'locality': locality_from_geolocation(impact_location),
+                    'country_code': country.alpha2_code if country else None,
+                    'country': country.name if country else None,
+                    'type': 'location',
+                }
+            )
         elif instance.initiative and instance.initiative.place:
             place = instance.initiative.place
             country = place.country
             geofeature = place.geofeature
-            locations.append({
-                'id': place.id,
-                'name': (
-                    geofeature.place_name if geofeature else place.formatted_address
-                ),
-                'locality': locality_from_geolocation(place),
-                'country_code': country.alpha2_code if country else None,
-                'country': country.name if country else None,
-                'type': 'impact_location',
-            })
+            locations.append(
+                {
+                    'id': place.id,
+                    'name': (geofeature.place_name if geofeature else place.formatted_address),
+                    'locality': locality_from_geolocation(place),
+                    'country_code': country.alpha2_code if country else None,
+                    'country': country.name if country else None,
+                    'type': 'impact_location',
+                }
+            )
         return locations
 
     def prepare_geofeature(self, instance):
@@ -87,13 +91,9 @@ class FundingDocument(ActivityDocument):
     def prepare_position(self, instance):
         positions = []
         if hasattr(instance, 'impact_location') and instance.impact_location and instance.impact_location.position:
-            positions.append(
-                {'lat': instance.impact_location.position.y, 'lon': instance.impact_location.position.x}
-            )
+            positions.append({'lat': instance.impact_location.position.y, 'lon': instance.impact_location.position.x})
         if instance.initiative and instance.initiative.place:
-            positions.append(
-                {'lat': instance.initiative.place.position.y, 'lon': instance.initiative.place.position.x}
-            )
+            positions.append({'lat': instance.initiative.place.position.y, 'lon': instance.initiative.place.position.x})
         return positions
 
     def prepare_country(self, instance):
@@ -110,10 +110,7 @@ class FundingDocument(ActivityDocument):
         return [instance.deadline]
 
     def prepare_dates(self, instance):
-        return [{
-            'start': datetime.min,
-            'end': instance.deadline
-        }]
+        return [{'start': datetime.min, 'end': instance.deadline}]
 
     def prepare_duration(self, instance):
         if instance.started and instance.deadline and instance.started > instance.deadline:

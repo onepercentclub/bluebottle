@@ -19,7 +19,5 @@ class NoBreakNode(Node):
         self.nodelist = nodelist
 
     def render(self, context):
-        strip_line_breaks = keep_lazy_text(
-            lambda x: re.sub(r'[\n]+', '\n', x)
-        )
+        strip_line_breaks = keep_lazy_text(lambda x: re.sub(r'[\n]+', '\n', x))
         return strip_line_breaks(self.nodelist.render(context).strip())

@@ -1,34 +1,39 @@
 from django.http import HttpResponse
 from django.utils.timezone import now
 
-from bluebottle.activities.permissions import (
-    ContributionPermission
-)
+from bluebottle.activities.permissions import ContributionPermission
 from bluebottle.activities.ical import ActivityIcal
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
     TimeContribution,
-    DateActivitySlot, Skill, DateRegistration
+    DateActivitySlot,
+    Skill,
+    DateRegistration,
 )
 from bluebottle.time_based.serializers import (
     DateTransitionSerializer,
     TimeContributionSerializer,
     DateParticipantSerializer,
-    SkillSerializer, DateSlotTransitionSerializer, DateRegistrationSerializer,
+    SkillSerializer,
+    DateSlotTransitionSerializer,
+    DateRegistrationSerializer,
 )
 from bluebottle.time_based.views import RelatedRegistrationListView
 from bluebottle.time_based.views.mixins import BaseSlotIcalView
 from bluebottle.time_based.views.exports import InterestExportMixin
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
-)
+from bluebottle.utils.permissions import OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView,
-    ListAPIView, JsonApiViewMixin,
+    ListAPIView,
+    JsonApiViewMixin,
     RelatedPermissionMixin,
-    PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
+    PrivateFileView,
+    ExportView,
+    TranslatedApiViewMixin,
+    RetrieveAPIView,
+    JsonApiPagination,
 )
 
 
@@ -39,22 +44,21 @@ class OldRelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin
         OneOf(ResourcePermission, ResourceOwnerPermission),
     ]
 
-    queryset = DateParticipant.objects.prefetch_related(
-        'slot', 'participant', 'participant__user'
-    )
+    queryset = DateParticipant.objects.prefetch_related('slot', 'participant', 'participant__user')
 
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
         show_past = self.request.GET.get('past', None)
 
         participant = DateParticipant.objects.select_related(
-            'activity', 'activity__initiative',
+            'activity',
+            'activity__initiative',
         ).get(pk=self.kwargs['participant_id'])
 
         if not self.request.user.is_authenticated or (
-            self.request.user != participant.user and
-            self.request.user != participant.activity.owner and
-            self.request.user != participant.activity.initiative.owner
+            self.request.user != participant.user
+            and self.request.user != participant.activity.owner
+            and self.request.user != participant.activity.initiative.owner
         ):
             queryset = queryset.filter(participant__status='accepted')
             queryset = queryset.filter(status='registered')
@@ -68,17 +72,13 @@ class OldRelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin
         else:
             queryset = queryset.order_by('slot__start')
 
-        return queryset.filter(
-            participant=participant
-        )
+        return queryset.filter(participant=participant)
 
     serializer_class = DateParticipantSerializer
 
 
 class DateActivityRelatedRegistrationList(RelatedRegistrationListView):
-    queryset = DateRegistration.objects.prefetch_related(
-        'user', 'participants', 'participants__slot'
-    )
+    queryset = DateRegistration.objects.prefetch_related('user', 'participants', 'participants__slot')
     serializer_class = DateRegistrationSerializer
 
 
@@ -99,9 +99,7 @@ class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
 
 
 class DateActivityIcalView(PrivateFileView):
-    queryset = DateActivity.objects.exclude(
-        status__in=['cancelled', 'deleted', 'rejected']
-    )
+    queryset = DateActivity.objects.exclude(status__in=['cancelled', 'deleted', 'rejected'])
 
     max_age = 30 * 60  # half an hour
 
@@ -116,9 +114,7 @@ class DateActivityIcalView(PrivateFileView):
         ical = ActivityIcal(slots)
 
         response = HttpResponse(ical.to_file(), content_type='text/calendar')
-        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
-            instance.slug
-        )
+        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (instance.slug)
         return response
 
 
@@ -130,7 +126,7 @@ class ActivitySlotIcalView(BaseSlotIcalView):
 
 
 class SlotParticipantExportView(InterestExportMixin, ExportView):
-    filename = "participants"
+    filename = 'participants'
 
     model = DateActivitySlot
 
@@ -146,17 +142,11 @@ class SlotParticipantExportView(InterestExportMixin, ExportView):
             ('status', 'Status'),
         )
         if question:
-            fields += (
-                ('participant__motivation', question),
-            )
+            fields += (('participant__motivation', question),)
         return fields
 
     def get_interest_queryset(self):
-        return (
-            self.get_object()
-            .interests.select_related('user')
-            .order_by('created', 'pk')
-        )
+        return self.get_object().interests.select_related('user').order_by('created', 'pk')
 
     def write_data(self, workbook):
         super().write_data(workbook)
@@ -170,11 +160,15 @@ class SkillPagination(JsonApiPagination):
 class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     serializer_class = SkillSerializer
     queryset = Skill.objects.filter(disabled=False)
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
     pagination_class = SkillPagination
 
 
 class SkillDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
     serializer_class = SkillSerializer
     queryset = Skill.objects.filter(disabled=False)
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]

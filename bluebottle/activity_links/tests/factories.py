@@ -25,15 +25,9 @@ class LinkedDeedFactory(factory.DjangoModelFactory):
     description = factory.LazyFunction(generate_rich_text)
     status = 'open'
 
-    start = factory.fuzzy.FuzzyDateTime(
-        now(),
-        now() + timedelta(days=2)
-    )
+    start = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(days=2))
 
-    end = factory.fuzzy.FuzzyDateTime(
-        now() + timedelta(days=3),
-        now() + timedelta(days=20)
-    )
+    end = factory.fuzzy.FuzzyDateTime(now() + timedelta(days=3), now() + timedelta(days=20))
 
 
 class LinkedFundingFactory(factory.DjangoModelFactory):

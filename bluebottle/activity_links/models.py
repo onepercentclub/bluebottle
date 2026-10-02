@@ -4,9 +4,7 @@ from django_quill.fields import QuillField
 from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
-from bluebottle.activity_pub.models import (
-    Follow, Create, Start, Finish, Cancel
-)
+from bluebottle.activity_pub.models import Follow, Create, Start, Finish, Cancel
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.triggers import TriggerMixin
@@ -25,9 +23,7 @@ class LinkedActivityManager(PolymorphicManager):
             instance = None
 
         data = EventSerializer(instance=event).data
-        serializer = LinkedActivitySerializer(
-            data=data, instance=instance
-        )
+        serializer = LinkedActivitySerializer(data=data, instance=instance)
         serializer.is_valid(raise_exception=True)
 
         follow = Follow.objects.get(object=event.create_set.first().actor)
@@ -39,36 +35,26 @@ class LinkedActivityManager(PolymorphicManager):
         if activity_type == 'gooddeed':
             activity_type = 'deed'
 
-        if (
-            activity_type in follow.automatic_adoption_activity_types or
-            serializer.instance
-        ):
+        if activity_type in follow.automatic_adoption_activity_types or serializer.instance:
             organization = Create.objects.filter(object=event).first().actor.organization
 
-            return serializer.save(
-                event=event, host_organization=organization
-            )
+            return serializer.save(event=event, host_organization=organization)
 
 
 class LinkedActivity(TriggerMixin, PolymorphicModel):
     title = models.CharField(max_length=255)
     link = models.URLField()
     status = models.CharField(max_length=40)
-    description = QuillField(_("Description"), blank=True)
+    description = QuillField(_('Description'), blank=True)
 
     archived = models.BooleanField(
-        _('Archive'),
-        help_text=_('Archive this link. It will no longer appear in search results.'),
-        default=False
+        _('Archive'), help_text=_('Archive this link. It will no longer appear in search results.'), default=False
     )
 
     image = ImageField(blank=True, null=True)
 
     event = models.ForeignKey(
-        'activity_pub.Event',
-        related_name='linked_activities',
-        null=True,
-        on_delete=models.SET_NULL
+        'activity_pub.Event', related_name='linked_activities', null=True, on_delete=models.SET_NULL
     )
     host_organization = models.ForeignKey(
         Organization,

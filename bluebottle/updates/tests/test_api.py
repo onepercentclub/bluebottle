@@ -169,9 +169,9 @@ class UpdateListTestCase(APITestCase):
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
-                user=self.user
+                user=self.user,
             )
 
             file_data = response.json()['data']
@@ -181,9 +181,9 @@ class UpdateListTestCase(APITestCase):
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="test-image2.png"',
-                user=self.user
+                user=self.user,
             )
 
             file_data2 = response.json()['data']
@@ -204,9 +204,9 @@ class UpdateListTestCase(APITestCase):
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
-                user=self.user
+                user=self.user,
             )
 
             file_data = response.json()['data']
@@ -240,11 +240,7 @@ class UpdateDetailView(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.defaults = {
-            'activity': DeedFactory.create(),
-            'author': self.user,
-            'message': 'some message'
-        }
+        self.defaults = {'activity': DeedFactory.create(), 'author': self.user, 'message': 'some message'}
         self.model = self.factory.create(**self.defaults)
         self.url = reverse('update-detail', args=(self.model.pk,))
 
@@ -316,15 +312,15 @@ class UpdateDetailView(APITestCase):
     def test_put_change_author(self):
         self.perform_update({'author': BlueBottleUserFactory.create()}, user=self.user)
         self.assertEqual(
-            self.response.json()["data"]["relationships"]["author"]["data"]["id"],
+            self.response.json()['data']['relationships']['author']['data']['id'],
             str(self.user.pk),
         )
 
     def test_put_change_activity(self):
         self.perform_update({'author': DeedFactory.create()}, user=self.user)
         self.assertEqual(
-            self.response.json()["data"]["relationships"]["activity"]["data"]["id"],
-            str(self.defaults["activity"].pk),
+            self.response.json()['data']['relationships']['activity']['data']['id'],
+            str(self.defaults['activity'].pk),
         )
 
     def test_delete(self):
@@ -494,7 +490,7 @@ class ActivityUpdateListTestCase(APITestCase):
                     'count': 1,
                     'active': False,
                 },
-            ]
+            ],
         )
 
     def test_get_audience_facets_active_filter(self):
@@ -524,7 +520,7 @@ class ActivityUpdateListTestCase(APITestCase):
                     'count': 1,
                     'active': True,
                 },
-            ]
+            ],
         )
 
 
@@ -544,32 +540,17 @@ class UpdateDocumentListTestCase(APITestCase):
                 'data': {
                     'type': 'updates/documents',
                     'relationships': {
-                        'update': {
-                            'data': {
-                                'type': 'updates',
-                                'id': str(self.update.pk)
-                            }
-                        },
-                        'document': {
-                            'data': {
-                                'type': 'documents',
-                                'id': str(self.document.pk)
-                            }
-                        }
-                    }
+                        'update': {'data': {'type': 'updates', 'id': str(self.update.pk)}},
+                        'document': {'data': {'type': 'documents', 'id': str(self.document.pk)}},
+                    },
                 }
-            }
+            },
         )
 
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertRelationship('update', [self.update])
         self.assertRelationship('document', [self.document])
-        self.assertTrue(
-            UpdateDocument.objects.filter(
-                update=self.update,
-                document=self.document
-            ).exists()
-        )
+        self.assertTrue(UpdateDocument.objects.filter(update=self.update, document=self.document).exists())
 
     def test_create_anonymous(self):
         self.perform_create(
@@ -577,19 +558,9 @@ class UpdateDocumentListTestCase(APITestCase):
                 'data': {
                     'type': 'updates/documents',
                     'relationships': {
-                        'update': {
-                            'data': {
-                                'type': 'updates',
-                                'id': str(self.update.pk)
-                            }
-                        },
-                        'document': {
-                            'data': {
-                                'type': 'documents',
-                                'id': str(self.document.pk)
-                            }
-                        }
-                    }
+                        'update': {'data': {'type': 'updates', 'id': str(self.update.pk)}},
+                        'document': {'data': {'type': 'documents', 'id': str(self.document.pk)}},
+                    },
                 }
             }
         )
@@ -612,10 +583,7 @@ class ActivityUpdateListDocumentsTestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertIncluded('documents', self.update.documents.first())
-        document_data = [
-            item for item in self.response.json()['included']
-            if item['type'] == 'updates/documents'
-        ][0]
+        document_data = [item for item in self.response.json()['included'] if item['type'] == 'updates/documents'][0]
         self.assertIn('link', document_data['attributes'])
         self.assertIn('filename', document_data['meta'])
 
@@ -632,15 +600,9 @@ class UpdateDocumentContentTestCase(APITestCase):
             update=self.update,
             document=self.document,
         )
-        self.url = reverse(
-            'update-document',
-            args=(self.update_document.pk,)
-        )
+        self.url = reverse('update-document', args=(self.update_document.pk,))
 
     def test_download_uses_original_filename(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        self.assertEqual(
-            self.response['Content-Disposition'],
-            'attachment; filename="quarterly-report.docx"'
-        )
+        self.assertEqual(self.response['Content-Disposition'], 'attachment; filename="quarterly-report.docx"')

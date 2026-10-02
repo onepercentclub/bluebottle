@@ -12,19 +12,23 @@ from bluebottle.funding_stripe.tests.factories import (
     ExternalAccountFactory,
     StripePayoutAccountFactory,
 )
-from bluebottle.initiatives.messages.initiator import InitiativeSubmittedInitiatorMessage, \
-    InitiativePublishedInitiatorMessage, InitiativeRejectedInitiatorMessage, InitiativeApprovedInitiatorMessage, \
-    InitiativeCancelledInitiatorMessage
-from bluebottle.initiatives.messages.reviewer import InitiativeSubmittedReviewerMessage, \
-    InitiativePublishedReviewerMessage
+from bluebottle.initiatives.messages.initiator import (
+    InitiativeSubmittedInitiatorMessage,
+    InitiativePublishedInitiatorMessage,
+    InitiativeRejectedInitiatorMessage,
+    InitiativeApprovedInitiatorMessage,
+    InitiativeCancelledInitiatorMessage,
+)
+from bluebottle.initiatives.messages.reviewer import (
+    InitiativeSubmittedReviewerMessage,
+    InitiativePublishedReviewerMessage,
+)
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, TriggerTestCase
 from bluebottle.time_based.models import TimeContribution
-from bluebottle.time_based.states import (
-    DateActivitySlotStateMachine
-)
+from bluebottle.time_based.states import DateActivitySlotStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -33,15 +37,10 @@ from bluebottle.time_based.tests.factories import (
 
 
 class InitiativeOldTriggerTests(BluebottleTestCase):
-
     def setUp(self):
         super(InitiativeOldTriggerTests, self).setUp()
         self.user = BlueBottleUserFactory.create(first_name='Bart', last_name='Lacroix')
-        self.initiative = InitiativeFactory.create(
-            has_organization=False,
-            owner=self.user,
-            organization=None
-        )
+        self.initiative = InitiativeFactory.create(has_organization=False, owner=self.user, organization=None)
 
     def test_set_reviewer(self):
         mail.outbox = []
@@ -57,10 +56,7 @@ class InitiativeTriggerTestCase(TriggerTestCase):
 
     def setUp(self):
         self.owner = BlueBottleUserFactory.create()
-        self.staff_user = BlueBottleUserFactory.create(
-            is_staff=True,
-            submitted_initiative_notifications=True
-        )
+        self.staff_user = BlueBottleUserFactory.create(is_staff=True, submitted_initiative_notifications=True)
         self.defaults = {
             'owner': self.owner,
         }
@@ -123,10 +119,8 @@ class InitiativeTriggerTestCase(TriggerTestCase):
         activity = FundingFactory.create(
             initiative=self.model,
             bank_account=ExternalAccountFactory.create(
-                status="verified",
-                connect_account=StripePayoutAccountFactory.create(
-                    status="verified", account_id='test-account-id'
-                ),
+                status='verified',
+                connect_account=StripePayoutAccountFactory.create(status='verified', account_id='test-account-id'),
             ),
         )
 
@@ -142,22 +136,10 @@ class InitiativeTriggerTestCase(TriggerTestCase):
 
         # Create a DateActivity with slots
         date_activity = DateActivityFactory.create(
-            initiative=self.model,
-            status='open',
-            registration_deadline=None,
-            review=False,
-            slots=[]
+            initiative=self.model, status='open', registration_deadline=None, review=False, slots=[]
         )
-        DateActivitySlotFactory.create(
-            activity=date_activity,
-            start=now() + timedelta(days=2),
-            status='open'
-        )
-        DateActivitySlotFactory.create(
-            activity=date_activity,
-            start=now() + timedelta(days=3),
-            status='open'
-        )
+        DateActivitySlotFactory.create(activity=date_activity, start=now() + timedelta(days=2), status='open')
+        DateActivitySlotFactory.create(activity=date_activity, start=now() + timedelta(days=3), status='open')
 
         self.model.states.cancel()
         with self.execute(user=self.staff_user):
@@ -176,22 +158,10 @@ class InitiativeTriggerTestCase(TriggerTestCase):
 
         # Create a DateActivity with slots
         date_activity = DateActivityFactory.create(
-            initiative=self.model,
-            status='open',
-            registration_deadline=None,
-            review=False,
-            slots=[]
+            initiative=self.model, status='open', registration_deadline=None, review=False, slots=[]
         )
-        slot1 = DateActivitySlotFactory.create(
-            activity=date_activity,
-            start=now() + timedelta(days=2),
-            status='open'
-        )
-        slot2 = DateActivitySlotFactory.create(
-            activity=date_activity,
-            start=now() + timedelta(days=3),
-            status='full'
-        )
+        slot1 = DateActivitySlotFactory.create(activity=date_activity, start=now() + timedelta(days=2), status='open')
+        slot2 = DateActivitySlotFactory.create(activity=date_activity, start=now() + timedelta(days=3), status='full')
 
         self.model.states.cancel()
         with self.execute():
@@ -212,46 +182,21 @@ class InitiativeTriggerTestCase(TriggerTestCase):
 
         # Create a DateActivity with slots and participants
         date_activity = DateActivityFactory.create(
-            initiative=self.model,
-            status='open',
-            registration_deadline=None,
-            review=False,
-            slots=[]
+            initiative=self.model, status='open', registration_deadline=None, review=False, slots=[]
         )
-        slot1 = DateActivitySlotFactory.create(
-            activity=date_activity,
-            start=now() + timedelta(days=2),
-            status='open'
-        )
+        slot1 = DateActivitySlotFactory.create(activity=date_activity, start=now() + timedelta(days=2), status='open')
 
-        participant1 = DateParticipantFactory.create(
-            activity=date_activity,
-            slot=slot1,
-            status='accepted'
-        )
-        participant2 = DateParticipantFactory.create(
-            activity=date_activity,
-            slot=slot1,
-            status='accepted'
-        )
+        participant1 = DateParticipantFactory.create(activity=date_activity, slot=slot1, status='accepted')
+        participant2 = DateParticipantFactory.create(activity=date_activity, slot=slot1, status='accepted')
 
         contribution1 = TimeContribution.objects.create(
-            contributor=participant1,
-            value=timedelta(hours=2),
-            status='succeeded',
-            start=now() + timedelta(days=1)
+            contributor=participant1, value=timedelta(hours=2), status='succeeded', start=now() + timedelta(days=1)
         )
         contribution2 = TimeContribution.objects.create(
-            contributor=participant2,
-            value=timedelta(hours=3),
-            status='succeeded',
-            start=now() + timedelta(days=1)
+            contributor=participant2, value=timedelta(hours=3), status='succeeded', start=now() + timedelta(days=1)
         )
         contribution3 = TimeContribution.objects.create(
-            contributor=participant1,
-            value=timedelta(hours=1),
-            status='new',
-            start=now() + timedelta(days=1)
+            contributor=participant1, value=timedelta(hours=1), status='new', start=now() + timedelta(days=1)
         )
 
         self.model.states.cancel()
@@ -276,29 +221,14 @@ class InitiativeTriggerTestCase(TriggerTestCase):
         # Create multiple activities
         deed = DeedFactory.create(initiative=self.model, status='open')
         date_activity = DateActivityFactory.create(
-            initiative=self.model,
-            status='open',
-            registration_deadline=None,
-            review=False,
-            slots=[]
+            initiative=self.model, status='open', registration_deadline=None, review=False, slots=[]
         )
-        slot = DateActivitySlotFactory.create(
-            activity=date_activity,
-            start=now() + timedelta(days=2),
-            status='open'
-        )
+        slot = DateActivitySlotFactory.create(activity=date_activity, start=now() + timedelta(days=2), status='open')
 
-        participant = DateParticipantFactory.create(
-            activity=date_activity,
-            slot=slot,
-            status='accepted'
-        )
+        participant = DateParticipantFactory.create(activity=date_activity, slot=slot, status='accepted')
 
         contribution = TimeContribution.objects.create(
-            contributor=participant,
-            value=timedelta(hours=2),
-            status='succeeded',
-            start=now() + timedelta(days=1)
+            contributor=participant, value=timedelta(hours=2), status='succeeded', start=now() + timedelta(days=1)
         )
 
         # Cancel the initiative

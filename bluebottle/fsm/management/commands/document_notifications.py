@@ -7,20 +7,16 @@ from bluebottle.fsm.utils import document_notifications
 def get_doc(element):
     if element.__doc__:
         return element.__doc__
-    return "{} (documentation missing)".format(str(element)).replace('<', '').replace('>', '')
+    return '{} (documentation missing)'.format(str(element)).replace('<', '').replace('>', '')
 
 
 class Command(BaseCommand):
-    help = "Prints notifications for a model"
+    help = 'Prints notifications for a model'
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "model",
-            type=str,
-            help="Dotted path to the model"
-        )
+        parser.add_argument('model', type=str, help='Dotted path to the model')
 
     def handle(self, *args, **options):
-        model = import_string(options["model"])
+        model = import_string(options['model'])
         documentation = document_notifications(model)
         print(documentation)

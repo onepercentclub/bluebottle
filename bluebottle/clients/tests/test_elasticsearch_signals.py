@@ -32,24 +32,24 @@ class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
         processor = self._processor()
         activity = DateActivityFactory.create()
 
-        with patch("bluebottle.clients.signals.registry_update_task.delay_on_commit") as delay_mock:
+        with patch('bluebottle.clients.signals.registry_update_task.delay_on_commit') as delay_mock:
             processor.handle_save(Activity, activity)
 
         self.assertTrue(
             delay_mock.called,
-            "save from parent sender should not skip ES update task.",
+            'save from parent sender should not skip ES update task.',
         )
 
     def test_delete_is_not_skipped_for_parent_sender(self):
         processor = self._processor()
         activity = DateActivityFactory.create()
 
-        with patch("bluebottle.clients.signals.registry.delete") as delete_mock:
+        with patch('bluebottle.clients.signals.registry.delete') as delete_mock:
             processor.handle_delete(Activity, activity)
 
         self.assertTrue(
             delete_mock.called,
-            "delete from parent sender should not skip ES delete.",
+            'delete from parent sender should not skip ES delete.',
         )
 
 
@@ -64,14 +64,13 @@ class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
     """
 
     def _assert_update_is_delete_action(self, update_mock):
-        self.assertTrue(update_mock.called, "expected an ES update call")
+        self.assertTrue(update_mock.called, 'expected an ES update call')
         for call in update_mock.call_args_list:
             _args, kwargs = call
             self.assertEqual(
-                kwargs.get("action"),
-                "delete",
-                "related delete task must not re-index a parent that no longer exists "
-                f"(got kwargs={kwargs!r})",
+                kwargs.get('action'),
+                'delete',
+                f'related delete task must not re-index a parent that no longer exists (got kwargs={kwargs!r})',
             )
 
     def test_related_delete_task_does_not_reindex_deleted_parent(self):
@@ -98,9 +97,9 @@ class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
         self.assertTrue(doc_instance.update.called)
         _args, kwargs = doc_instance.update.call_args
         self.assertNotEqual(
-            kwargs.get("action"),
-            "delete",
-            "existing parents should keep being re-indexed after related deletes",
+            kwargs.get('action'),
+            'delete',
+            'existing parents should keep being re-indexed after related deletes',
         )
         self.assertEqual(_args[0], activity)
 
@@ -122,12 +121,12 @@ class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
             scheduled.append((doc_instance, related, tenant))
 
         with patch(
-            "bluebottle.clients.signals.registry_delete_related_task.delay_on_commit",
+            'bluebottle.clients.signals.registry_delete_related_task.delay_on_commit',
             side_effect=capture_delay,
         ):
             processor.handle_pre_delete(slot.__class__, slot)
 
-        self.assertTrue(scheduled, "slot pre_delete should schedule a related ES task")
+        self.assertTrue(scheduled, 'slot pre_delete should schedule a related ES task')
 
         # Simulate activity cascade delete completing before on_commit tasks run.
         activity_id = activity.pk

@@ -4,7 +4,6 @@ from bluebottle.test.utils import TriggerTestCase
 
 
 class LipishaAccountTriggerTests(TriggerTestCase):
-
     factory = LipishaBankAccountFactory
     defaults = {}
 

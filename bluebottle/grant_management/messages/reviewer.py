@@ -4,31 +4,26 @@ from bluebottle.activities.messages.reviewer import ReviewerActivityNotification
 
 
 class GrantApplicationSubmittedReviewerMessage(ReviewerActivityNotification):
-    subject = pgettext(
-        "platform-email",
-        "A new grant application is ready to be reviewed on {site_name}"
-    )
+    subject = pgettext('platform-email', 'A new grant application is ready to be reviewed on {site_name}')
     template = 'messages/grant_application/reviewer/application_submitted'
 
-    action_title = pgettext("platform-email", "View application")
+    action_title = pgettext('platform-email', 'View application')
 
 
 class PayoutReadyForApprovalMessage(ReviewerActivityNotification):
     """
     Notify reviewers when a payout is ready for approval
     """
-    subject = pgettext(
-        "platform-email",
-        "You have grant payout to approve on {site_name}"
-    )
+
+    subject = pgettext('platform-email', 'You have grant payout to approve on {site_name}')
     template = 'messages/grant_application/reviewer/payout_ready_for_approval'
 
-    action_title = pgettext("platform-email", "Complete payout")
+    action_title = pgettext('platform-email', 'Complete payout')
 
     # Override context to map to activity attributes since obj is GrantPayout
     context = {
-        "title": "activity.title",
-        "initiator_name": "activity.owner.full_name",
+        'title': 'activity.title',
+        'initiator_name': 'activity.owner.full_name',
     }
 
     def get_context(self, recipient):

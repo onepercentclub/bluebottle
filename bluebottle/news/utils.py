@@ -2,11 +2,8 @@
 """
 Utilities for exporting and importing news items.
 """
-from bluebottle.utils.content_import_export import (
-    dump_content,
-    export_image_field,
-    import_content_items_from_data
-)
+
+from bluebottle.utils.content_import_export import dump_content, export_image_field, import_content_items_from_data
 
 
 def export_news_item_to_dict(news_item, request=None):
@@ -22,14 +19,11 @@ def export_news_item_to_dict(news_item, request=None):
             'language': news_item.language,
             'main_image': main_image_data,
         },
-        'data': dump_content(news_item.contents)
+        'data': dump_content(news_item.contents),
     }
 
 
 def import_news_items_from_data(data):
     return import_content_items_from_data(
-        data,
-        model_name='NewsItem',
-        lookup_fields=['language', 'slug'],
-        slot='blog_contents'
+        data, model_name='NewsItem', lookup_fields=['language', 'slug'], slot='blog_contents'
     )

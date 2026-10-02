@@ -22,9 +22,7 @@ def prefetch_my_interests(queryset, user, *, activity_level=False):
     if activity_level:
         interest_qs = interest_qs.filter(slot__isnull=True)
 
-    return queryset.prefetch_related(
-        Prefetch('interests', queryset=interest_qs, to_attr='_my_interests')
-    )
+    return queryset.prefetch_related(Prefetch('interests', queryset=interest_qs, to_attr='_my_interests'))
 
 
 class AnonymizeMembersMixin:
@@ -46,9 +44,10 @@ class AnonymizeMembersMixin:
         context['owners'] = self.owners
         context['display_member_names'] = MemberPlatformSettings.load().display_member_names
 
-        if self.request.user and self.request.user.is_authenticated and (
-            self.request.user.is_staff or
-            self.request.user.is_superuser
+        if (
+            self.request.user
+            and self.request.user.is_authenticated
+            and (self.request.user.is_staff or self.request.user.is_superuser)
         ):
             context['display_member_names'] = 'full_name'
 
@@ -82,14 +81,22 @@ class FilterRelatedUserMixin:
                 queryset = self.queryset
             else:
                 queryset = self.queryset.filter(
-                    Q(user=self.request.user) |
-                    Q(activity__owner=self.request.user) |
-                    Q(activity__initiative__activity_manager=self.request.user) |
-                    Q(status__in=('accepted', 'succeeded',))
+                    Q(user=self.request.user)
+                    | Q(activity__owner=self.request.user)
+                    | Q(activity__initiative__activity_manager=self.request.user)
+                    | Q(
+                        status__in=(
+                            'accepted',
+                            'succeeded',
+                        )
+                    )
                 ).order_by('-id')
         else:
             queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded',)
+                status__in=(
+                    'accepted',
+                    'succeeded',
+                )
             ).order_by('-id')
 
         return queryset
@@ -98,23 +105,20 @@ class FilterRelatedUserMixin:
 class RequiredQuestionsMixin:
     def perform_create(self, serializer):
         if self.request.user.required:
-            raise ValidationError('Required fields', code="required")
+            raise ValidationError('Required fields', code='required')
 
         serializer.validated_data['user'] = self.request.user
         super().perform_create(serializer)
 
 
 class BaseSlotIcalView(PrivateFileView):
-
     max_age = 30 * 60  # half an hour
 
     def get(self, *args, **kwargs):
         instance = self.get_object()
         ical = ActivityIcal(instance)
 
-        response = HttpResponse(ical.to_file(), content_type="text/calendar")
-        response["Content-Disposition"] = 'attachment; filename="%s.ics"' % (
-            instance.activity.slug
-        )
+        response = HttpResponse(ical.to_file(), content_type='text/calendar')
+        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (instance.activity.slug)
 
         return response

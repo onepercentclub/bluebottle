@@ -17,22 +17,14 @@ class CreateCollectContribution(Effect):
         tz = get_current_timezone()
         if self.instance.activity.start and self.instance.activity.start > contribution_date.date():
             contribution_date = make_aware(
-                datetime.combine(
-                    self.instance.activity.start, datetime.min.replace(hour=12).time()
-                ),
-                tz
+                datetime.combine(self.instance.activity.start, datetime.min.replace(hour=12).time()), tz
             )
         elif self.instance.activity.end and self.instance.activity.end < contribution_date.date():
             contribution_date = make_aware(
-                datetime.combine(
-                    self.instance.activity.end, datetime.min.replace(hour=12).time()
-                ),
-                tz
+                datetime.combine(self.instance.activity.end, datetime.min.replace(hour=12).time()), tz
             )
         self.contribution = CollectContribution(
-            contributor=self.instance,
-            start=contribution_date,
-            type=self.instance.activity.collect_type
+            contributor=self.instance, start=contribution_date, type=self.instance.activity.collect_type
         )
         effects.extend(self.contribution.execute_triggers())
 

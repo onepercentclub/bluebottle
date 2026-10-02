@@ -17,10 +17,7 @@ FEATURE_TYPE_HIERARCHY = (
     'country',
 )
 
-GEOFEATURE_TYPE_RANK = {
-    feature_type: rank
-    for rank, feature_type in enumerate(FEATURE_TYPE_HIERARCHY)
-}
+GEOFEATURE_TYPE_RANK = {feature_type: rank for rank, feature_type in enumerate(FEATURE_TYPE_HIERARCHY)}
 
 
 def is_v6_mapbox_id(value):
@@ -66,17 +63,18 @@ def first_feature(response):
 def platform_language_param():
     from bluebottle.utils.models import Language
 
-    return ','.join(
-        language.full_code for language in Language.objects.all()
-    ) or 'en'
+    return ','.join(language.full_code for language in Language.objects.all()) or 'en'
 
 
 def lookup_by_mapbox_id(mapbox_id, language=None):
-    return geocode_request('/forward', {
-        'q': mapbox_id,
-        'limit': 1,
-        'language': platform_language_param(),
-    })
+    return geocode_request(
+        '/forward',
+        {
+            'q': mapbox_id,
+            'limit': 1,
+            'language': platform_language_param(),
+        },
+    )
 
 
 def _language_keys(language):
@@ -134,10 +132,7 @@ def geofeature_place_name(feature_type, name, context=None, full_address=None, l
         if not name:
             return ''
         postcode = _context_name(context, 'postcode', language)
-        city = (
-            _context_name(context, 'place', language)
-            or _context_name(context, 'locality', language)
-        )
+        city = _context_name(context, 'place', language) or _context_name(context, 'locality', language)
         country = _context_name(context, 'country', language)
         locality = ' '.join(part for part in (postcode, city) if part)
         return ', '.join(part for part in (name, locality, country) if part)
@@ -151,10 +146,7 @@ def geofeature_place_name(feature_type, name, context=None, full_address=None, l
     if feature_type in ('region', 'place', 'locality'):
         return ', '.join(part for part in (name, country) if part)
 
-    city = (
-        _context_name(context, 'place', language)
-        or _context_name(context, 'locality', language)
-    )
+    city = _context_name(context, 'place', language) or _context_name(context, 'locality', language)
     return ', '.join(part for part in (name, city, country) if part)
 
 
@@ -166,19 +158,14 @@ def iter_geofeature_data(feature, language=None):
 
     primary_type = properties.get('feature_type', '')
     primary_fallback = properties.get('name_preferred') or properties.get('name', '')
-    primary_name = _feature_name_for_language(
-        properties, language, fallback_name=primary_fallback
-    ) or primary_fallback
+    primary_name = _feature_name_for_language(properties, language, fallback_name=primary_fallback) or primary_fallback
 
-    translated_address = (
-        _translated_field(properties, 'place_name', language)
-        or _translated_field(properties, 'full_address', language)
+    translated_address = _translated_field(properties, 'place_name', language) or _translated_field(
+        properties, 'full_address', language
     )
     # Only reuse the default full_address when no language was requested;
     # otherwise rebuild from context translations.
-    address_full = translated_address or (
-        None if language else properties.get('full_address')
-    )
+    address_full = translated_address or (None if language else properties.get('full_address'))
 
     yield {
         'mapbox_id': feature_mapbox_id(feature),
@@ -204,15 +191,13 @@ def iter_geofeature_data(feature, language=None):
             continue
 
         context_fallback = context_data.get('name', '')
-        context_name = _feature_name_for_language(
-            context_data, language, fallback_name=context_fallback
-        ) or context_fallback
+        context_name = (
+            _feature_name_for_language(context_data, language, fallback_name=context_fallback) or context_fallback
+        )
         yield {
             'mapbox_id': context_data['mapbox_id'],
             'feature_type': feature_type,
-            'place_name': geofeature_place_name(
-                feature_type, context_name, context, language=language
-            ),
+            'place_name': geofeature_place_name(feature_type, context_name, context, language=language),
             'name': context_name,
             'translations': context_data.get('translations', {}),
             'context': context,
@@ -251,13 +236,10 @@ def _apply_geofeature_translations(geofeature, data, primary_language):
 
     for lang_code in _platform_language_codes(primary_language):
         name_from_translation = _translated_field(data, 'name', lang_code)
-        address_from_translation = (
-            _translated_field(data, 'place_name', lang_code)
-            or _translated_field(data, 'full_address', lang_code)
+        address_from_translation = _translated_field(data, 'place_name', lang_code) or _translated_field(
+            data, 'full_address', lang_code
         )
-        is_primary = lang_code in primary_keys or any(
-            key in primary_keys for key in _language_keys(lang_code)
-        )
+        is_primary = lang_code in primary_keys or any(key in primary_keys for key in _language_keys(lang_code))
 
         if (
             not name_from_translation
@@ -287,9 +269,7 @@ def _apply_geofeature_translations(geofeature, data, primary_language):
             language=lang_code,
         )[:5000]
 
-        _set_geofeature_translation(
-            geofeature, lang_code, translated_name, translated_place_name
-        )
+        _set_geofeature_translation(geofeature, lang_code, translated_name, translated_place_name)
 
 
 def select_primary_geofeature(geolocation, feature=None, geofeature_ids=None):
@@ -320,7 +300,7 @@ def country_code_from_feature(feature):
     if not isinstance(context, dict):
         return ''
     country = context.get('country') or {}
-    code = (country.get('country_code') or properties.get('country_code') or '')
+    code = country.get('country_code') or properties.get('country_code') or ''
     return code.upper() if code else ''
 
 
@@ -378,9 +358,7 @@ def sync_geofeatures(geolocation, feature, language=None):
 
     if geolocation.pk:
         geolocation.geofeatures.set(geofeature_ids)
-        primary = select_primary_geofeature(
-            geolocation, feature=feature, geofeature_ids=geofeature_ids
-        )
+        primary = select_primary_geofeature(geolocation, feature=feature, geofeature_ids=geofeature_ids)
         apply_country_from_feature(geolocation, feature)
         updates = {'geofeature': primary}
         if primary and primary.mapbox_id and primary.mapbox_id != geolocation.mapbox_id:
@@ -401,9 +379,7 @@ def sync_geolocation(geolocation, language=None, feature=None):
 
     try:
         if feature is None:
-            feature = first_feature(
-                lookup_by_mapbox_id(geolocation.mapbox_id, language=language)
-            )
+            feature = first_feature(lookup_by_mapbox_id(geolocation.mapbox_id, language=language))
         if feature:
             sync_geofeatures(geolocation, feature, language=language)
     except requests.RequestException:

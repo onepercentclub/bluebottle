@@ -18,7 +18,4 @@ def poll_tasks():
                 task.execute()
 
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    poll_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), poll_tasks.s())

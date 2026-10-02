@@ -5,7 +5,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class UserDashboardModuleFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = UserDashboardModule
 

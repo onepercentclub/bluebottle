@@ -6,16 +6,36 @@ from fluent_contents.extensions import plugin_pool, ContentPlugin
 from fluent_contents.forms import ContentItemForm
 
 from bluebottle.cms.admin import (
-    QuoteInline, PersonInline, StatInline, StepInline, LogoInline, ContentLinkInline,
-    GreetingInline
+    QuoteInline,
+    PersonInline,
+    StatInline,
+    StepInline,
+    LogoInline,
+    ContentLinkInline,
+    GreetingInline,
 )
 from bluebottle.cms.models import (
-    QuotesContent, PeopleContent, StatsContent, ShareResultsContent, SupporterTotalContent,
-    StepsContent, SlidesContent,
-    CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
-    LinksContent, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, NewsContent,
-    PollContent
+    QuotesContent,
+    PeopleContent,
+    StatsContent,
+    ShareResultsContent,
+    SupporterTotalContent,
+    StepsContent,
+    SlidesContent,
+    CategoriesContent,
+    LocationsContent,
+    LogosContent,
+    ProjectsMapContent,
+    LinksContent,
+    WelcomeContent,
+    HomepageStatisticsContent,
+    ActivitiesContent,
+    PlainTextItem,
+    ImagePlainTextItem,
+    ImageItem,
+    DonateButtonContent,
+    NewsContent,
+    PollContent,
 )
 
 
@@ -31,13 +51,9 @@ class CMSContentPlugin(ContentPlugin):
     admin_form_template = 'admin/cms/content_item.html'
 
     class Media(object):
-        css = {
-            "all": (
-                "nested_admin/dist/nested_admin.min.css",
-            )
-        }
+        css = {'all': ('nested_admin/dist/nested_admin.min.css',)}
         js = (
-            "nested_admin/dist/nested_admin.min.js",
+            'nested_admin/dist/nested_admin.min.js',
             'js/csrf.js',
             'adminsortable/js/jquery-ui-django-admin.min.js',
         )
@@ -136,7 +152,7 @@ class CategoriesBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class LocationsBlockPlugin(CMSContentPlugin):
     model = LocationsContent
-    raw_id_fields = ('locations', )
+    raw_id_fields = ('locations',)
     category = _('Homepage')
 
 

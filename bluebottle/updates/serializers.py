@@ -6,9 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField, ResourceRelatedField
-)
+from rest_framework_json_api.relations import PolymorphicResourceRelatedField, ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
@@ -29,33 +27,15 @@ def no_nested_replies_validator(value):
 
 class UpdateSerializer(ModelSerializer):
     message = RichTextField(allow_blank=True, required=False)
-    activity = PolymorphicResourceRelatedField(
-        ActivitySerializer,
-        queryset=Activity.objects.all(),
-        required=False
-    )
-    images = ResourceRelatedField(
-        many=True,
-        read_only=True
-    )
-    documents = ResourceRelatedField(
-        many=True,
-        read_only=True
-    )
+    activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all(), required=False)
+    images = ResourceRelatedField(many=True, read_only=True)
+    documents = ResourceRelatedField(many=True, read_only=True)
     parent = ResourceRelatedField(
-        queryset=Update.objects.all(),
-        validators=[no_nested_replies_validator],
-        required=False,
-        allow_null=True
+        queryset=Update.objects.all(), validators=[no_nested_replies_validator], required=False, allow_null=True
     )
     replies = ResourceRelatedField(many=True, read_only=True)
-    author = ResourceRelatedField(
-        read_only=True
-    )
-    contribution = PolymorphicResourceRelatedField(
-        read_only=True,
-        polymorphic_serializer=ContributorSerializer
-    )
+    author = ResourceRelatedField(read_only=True)
+    contribution = PolymorphicResourceRelatedField(read_only=True, polymorphic_serializer=ContributorSerializer)
 
     translations = TranslationsSerializer(fields=['message'])
 
@@ -79,9 +59,7 @@ class UpdateSerializer(ModelSerializer):
             return value
         image_count = self.context['request'].data.get('images', [])
         if not (value.get('message') or value.get('video_url') or image_count):
-            raise ValidationError(
-                _("At least one of 'message', 'images', or 'video_url' must be set.")
-            )
+            raise ValidationError(_("At least one of 'message', 'images', or 'video_url' must be set."))
         return value
 
     class Meta(object):
@@ -105,12 +83,9 @@ class UpdateSerializer(ModelSerializer):
             'contribution',
             'fake_name',
             'translations',
-            'update_type'
+            'update_type',
         )
-        meta_fields = (
-            'permissions',
-            'translations'
-        )
+        meta_fields = ('permissions', 'translations')
 
     class JSONAPIMeta(object):
         resource_name = 'updates'
@@ -123,7 +98,7 @@ class UpdateSerializer(ModelSerializer):
             'images',
             'documents',
             'contribution',
-            'activity'
+            'activity',
         ]
 
     included_serializers = {
@@ -141,9 +116,7 @@ class UpdateSerializer(ModelSerializer):
         view = self.context.get('view')
         if many and hasattr(view, 'get_visible_queryset'):
             visible = view.get_visible_queryset()
-            audience_filter = self.context['request'].query_params.get(
-                'filter[audience]'
-            )
+            audience_filter = self.context['request'].query_params.get('filter[audience]')
 
             def audience_facet(facet_id):
                 if facet_id == 'all':
@@ -152,7 +125,8 @@ class UpdateSerializer(ModelSerializer):
                     count = visible.filter(audience=facet_id).count()
                 active = (
                     facet_id == audience_filter
-                    if audience_filter in (
+                    if audience_filter
+                    in (
                         AudienceChoices.everyone,
                         AudienceChoices.contributors,
                     )
@@ -259,8 +233,16 @@ class UpdateImageSerializer(ImageSerializer):
                 return dict(
                     (
                         key,
-                        reverse(self.content_view_name, args=(obj.pk, size,)) + '?_={}'.format(hash)
-                    ) for key, size in list(self.sizes.items())
+                        reverse(
+                            self.content_view_name,
+                            args=(
+                                obj.pk,
+                                size,
+                            ),
+                        )
+                        + '?_={}'.format(hash),
+                    )
+                    for key, size in list(self.sizes.items())
                 )
 
     def get_filename(self, instance):

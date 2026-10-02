@@ -4,9 +4,7 @@ from random import randrange
 
 import magic
 from django.conf import settings
-from django.http import (
-    HttpResponse, HttpResponseRedirect, HttpResponseNotFound
-)
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveDestroyAPIView
@@ -23,15 +21,10 @@ from bluebottle.files.serializers import (
     PrivateDocumentSerializer,
     PrivateFileSerializer,
     ImageSerializer,
-    ORIGINAL_SIZE
+    ORIGINAL_SIZE,
 )
 from bluebottle.utils.permissions import IsOwner
-from bluebottle.utils.views import (
-    CreateAPIView,
-    RetrieveAPIView,
-    JsonApiViewMixin,
-    RetrieveUpdateDestroyAPIView
-)
+from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView
 
 mime = magic.Magic(mime=True)
 
@@ -44,10 +37,7 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
     parser_classes = (FileUploadParser,)
     permission_classes = (IsAuthenticated,)
 
-    authentication_classes = (
-        JSONWebTokenAuthentication,
-        SessionAuthentication
-    )
+    authentication_classes = (JSONWebTokenAuthentication, SessionAuthentication)
 
     prefetch_for_includes = {
         'owner': ['owner'],
@@ -60,20 +50,12 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
         mime_type = mime.from_buffer(uploaded_file.read())
         if not mime_type == uploaded_file.content_type:
             raise ValidationError(
-                [
-                    {
-                        "title": f"Mime-type does not match Content-Type: {mime_type} / {uploaded_file.content_type}"
-                    }
-                ]
+                [{'title': f'Mime-type does not match Content-Type: {mime_type} / {uploaded_file.content_type}'}]
             )
 
         if mime_type not in self.allowed_mime_types:
             raise ValidationError(
-                [
-                    {
-                        "title": f"Files with the mime-type {mime_type} is not allowed to be uploaded here"
-                    }
-                ]
+                [{'title': f'Files with the mime-type {mime_type} is not allowed to be uploaded here'}]
             )
 
         serializer.validated_data['owner'] = self.request.user
@@ -112,7 +94,6 @@ class FileContentView(RetrieveAPIView):
 
 
 class ImageContentView(FileContentView):
-
     def get_random_image_url(self):
         if 'x' in self.kwargs['size']:
             width, height = self.kwargs['size'].split('x')

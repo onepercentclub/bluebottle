@@ -35,120 +35,111 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 @python_2_unicode_compatible
 class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     status = models.CharField(max_length=40)
-    title = models.CharField(_("title"), blank=True, max_length=255)
+    title = models.CharField(_('title'), blank=True, max_length=255)
 
     owner = models.ForeignKey(
-        "members.Member",
-        verbose_name=_("owner"),
-        related_name="own_%(class)ss",
+        'members.Member',
+        verbose_name=_('owner'),
+        related_name='own_%(class)ss',
         on_delete=models.CASCADE,
     )
 
     reviewer = models.ForeignKey(
-        "members.Member",
+        'members.Member',
         null=True,
         blank=True,
-        verbose_name=_("reviewer"),
-        related_name="review_%(class)ss",
+        verbose_name=_('reviewer'),
+        related_name='review_%(class)ss',
         on_delete=models.SET_NULL,
     )
 
     activity_manager = models.ForeignKey(
-        "members.Member",
+        'members.Member',
         null=True,
         blank=True,
-        verbose_name=_("co-initiator"),
+        verbose_name=_('co-initiator'),
         help_text=_(
-            "The co-initiator can create and edit activities for "
-            "this initiative, but cannot edit the initiative itself."
+            'The co-initiator can create and edit activities for '
+            'this initiative, but cannot edit the initiative itself.'
         ),
-        related_name="activity_manager_%(class)ss",
+        related_name='activity_manager_%(class)ss',
         on_delete=models.SET_NULL,
     )
 
     activity_managers = models.ManyToManyField(
-        "members.Member",
+        'members.Member',
         blank=True,
-        verbose_name=_("co-initiators"),
+        verbose_name=_('co-initiators'),
         help_text=_(
-            "Co-initiators can create and edit activities for "
-            "this initiative, and can edit the initiative itself."
+            'Co-initiators can create and edit activities for this initiative, and can edit the initiative itself.'
         ),
-        related_name="activity_managers_%(class)ss",
+        related_name='activity_managers_%(class)ss',
     )
     promoter = models.ForeignKey(
-        "members.Member",
-        verbose_name=_("promoter"),
+        'members.Member',
+        verbose_name=_('promoter'),
         blank=True,
         null=True,
-        related_name="promoter_%(class)ss",
+        related_name='promoter_%(class)ss',
         on_delete=models.SET_NULL,
     )
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     published = models.DateTimeField(
-        _('Published date'),
-        help_text=_('Date that the initiative went online.'),
-        null=True, blank=True
+        _('Published date'), help_text=_('Date that the initiative went online.'), null=True, blank=True
     )
 
     has_deleted_data = models.BooleanField(default=False)
 
-    slug = models.SlugField(_("slug"), max_length=100, default="new")
+    slug = models.SlugField(_('slug'), max_length=100, default='new')
 
     pitch = models.TextField(
-        _("pitch"),
-        help_text=_(
-            "Pitch your smart idea in one sentence. Max: %(chars)s characters."
-        )
-        % {"chars": 350},
+        _('pitch'),
+        help_text=_('Pitch your smart idea in one sentence. Max: %(chars)s characters.') % {'chars': 350},
         blank=True,
         max_length=350,
     )
-    story = QuillField(_("story"), blank=True)
+    story = QuillField(_('story'), blank=True)
 
-    theme = models.ForeignKey(
-        "initiatives.Theme", null=True, blank=True, on_delete=SET_NULL
-    )
-    categories = models.ManyToManyField("categories.Category", blank=True)
+    theme = models.ForeignKey('initiatives.Theme', null=True, blank=True, on_delete=SET_NULL)
+    categories = models.ManyToManyField('categories.Category', blank=True)
 
     image = ImageField(blank=True, null=True)
 
     video_url = models.URLField(
-        _("video"),
+        _('video'),
         max_length=100,
         blank=True,
         null=True,
-        default="",
+        default='',
         help_text=_(
-            "Do you have a video pitch or a short movie that "
+            'Do you have a video pitch or a short movie that '
             "explains your initiative? Cool! We can't wait to see it! "
-            "You can paste the link to YouTube or Vimeo video here"
+            'You can paste the link to YouTube or Vimeo video here'
         ),
     )
 
     place = models.ForeignKey(
         Geolocation,
-        verbose_name=_("Impact location"),
+        verbose_name=_('Impact location'),
         null=True,
         blank=True,
         on_delete=SET_NULL,
     )
 
     location = models.ForeignKey(
-        "geo.Location",
-        verbose_name=_("Work location"),
+        'geo.Location',
+        verbose_name=_('Work location'),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
 
     is_global = models.BooleanField(
-        verbose_name=_("is global"),
+        verbose_name=_('is global'),
         help_text=_(
-            "Global initiatives do not have a location. "
-            "Instead the location is stored on the respective activities."
+            'Global initiatives do not have a location. Instead the location is stored on the respective activities.'
         ),
         default=False,
     )
@@ -160,44 +151,40 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         null=True,
         blank=True,
         on_delete=SET_NULL,
-        related_name="initiatives",
+        related_name='initiatives',
     )
-    organization_contact = models.ForeignKey(
-        OrganizationContact, null=True, blank=True, on_delete=SET_NULL
-    )
+    organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
     is_open = models.BooleanField(
-        verbose_name=_("Is open"),
-        help_text=_(
-            "Any authenticated users can start an activity under this initiative."
-        ),
+        verbose_name=_('Is open'),
+        help_text=_('Any authenticated users can start an activity under this initiative.'),
         default=False,
     )
 
-    follows = GenericRelation(Follow, object_id_field="instance_id")
+    follows = GenericRelation(Follow, object_id_field='instance_id')
 
     class Meta(object):
-        verbose_name = _("Initiative")
-        verbose_name_plural = _("Initiatives")
+        verbose_name = _('Initiative')
+        verbose_name_plural = _('Initiatives')
         permissions = (
-            ("api_read_initiative", "Can view initiative through the API"),
-            ("api_add_initiative", "Can add initiative through the API"),
-            ("api_change_initiative", "Can change initiative through the API"),
-            ("api_delete_initiative", "Can delete initiative through the API"),
-            ("api_read_own_initiative", "Can view own initiative through the API"),
-            ("api_add_own_initiative", "Can add own initiative through the API"),
-            ("api_change_own_initiative", "Can change own initiative through the API"),
+            ('api_read_initiative', 'Can view initiative through the API'),
+            ('api_add_initiative', 'Can add initiative through the API'),
+            ('api_change_initiative', 'Can change initiative through the API'),
+            ('api_delete_initiative', 'Can delete initiative through the API'),
+            ('api_read_own_initiative', 'Can view own initiative through the API'),
+            ('api_add_own_initiative', 'Can add own initiative through the API'),
+            ('api_change_own_initiative', 'Can change own initiative through the API'),
             (
-                "api_change_own_running_initiative",
-                "Can change own initiative through the API",
+                'api_change_own_running_initiative',
+                'Can change own initiative through the API',
             ),
-            ("api_delete_own_initiative", "Can delete own initiative through the API"),
+            ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
     class JSONAPIMeta(object):
-        resource_name = "initiatives"
+        resource_name = 'initiatives'
 
     def __str__(self):
-        return self.title or str(_("-empty-"))
+        return self.title or str(_('-empty-'))
 
     @property
     def position(self):
@@ -209,13 +196,13 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     @property
     def required_fields(self):
         fields = [
-            "title",
-            "pitch",
-            "owner",
-            "has_organization",
-            "story.html",
-            "image",
-            "theme",
+            'title',
+            'pitch',
+            'owner',
+            'has_organization',
+            'story.html',
+            'image',
+            'theme',
         ]
 
         return fields
@@ -225,29 +212,24 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = "{}/{}/initiatives/details/{}/{}".format(
-            domain, language, self.id, self.slug
-        )
+        link = '{}/{}/initiatives/details/{}/{}'.format(domain, language, self.id, self.slug)
         return link
 
     def get_admin_url(self):
         domain = get_current_host()
-        url = reverse("admin:initiatives_initiative_change", args=(self.id,))
-        link = "{}{}".format(domain, url)
+        url = reverse('admin:initiatives_initiative_change', args=(self.id,))
+        link = '{}{}'.format(domain, url)
         return link
 
     def save(self, **kwargs):
-        if self.slug in ["", "new"]:
+        if self.slug in ['', 'new']:
             if self.title and slugify(self.title):
                 self.slug = slugify(self.title)
                 if not self.slug:
                     # If someone uses only special chars as title then construct a slug
-                    self.slug = "in-{}".format(
-                        self.__class__.objects.all().aggregate(Max("id"))["id__max"]
-                        or 0 + 1
-                    )
+                    self.slug = 'in-{}'.format(self.__class__.objects.all().aggregate(Max('id'))['id__max'] or 0 + 1)
             else:
-                self.slug = "new"
+                self.slug = 'new'
 
         try:
             if InitiativePlatformSettings.load().require_organization:
@@ -264,9 +246,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
             self.has_organization = True
             self.organization = self.owner.partner_organization
 
-        if self.has_organization is None and (
-            self.organization or self.organization_contact
-        ):
+        if self.has_organization is None and (self.organization or self.organization_contact):
             self.has_organization = True
 
         if self.has_organization is False:
@@ -277,45 +257,59 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
 
 
 SEARCH_FILTERS = {
-    "country": (_("Country"), _("Select country")),
-    "date": (_("Date"), _('Select a date')),
-    "distance": (_("Distance"), _("Select distance")),
-    "is_online": (_("Online / In-person"), _("Make a choice")),
-    "skill": (_("Skill"), _("Select a skill")),
-    "team_activity": (_("Individual / Team"), _("Make a choice")),
-    "theme": (_("Theme"), _("Select a theme")),
-    "category": (_("Category"), _("Select a category")),
-    "office": (_("Work location"), _("Select work location")),
-    "office_subregion": (_("Work location group"), _("Select a group")),
-    "office_region": (_("Work location region"), _("Select a region")),
-    'open': (_('Open initiatives'), _("Make a choice")),
-    "is_local": (_("Local / From partner"), _("Make a choice")),
-
+    'country': (_('Country'), _('Select country')),
+    'date': (_('Date'), _('Select a date')),
+    'distance': (_('Distance'), _('Select distance')),
+    'is_online': (_('Online / In-person'), _('Make a choice')),
+    'skill': (_('Skill'), _('Select a skill')),
+    'team_activity': (_('Individual / Team'), _('Make a choice')),
+    'theme': (_('Theme'), _('Select a theme')),
+    'category': (_('Category'), _('Select a category')),
+    'office': (_('Work location'), _('Select work location')),
+    'office_subregion': (_('Work location group'), _('Select a group')),
+    'office_region': (_('Work location region'), _('Select a region')),
+    'open': (_('Open initiatives'), _('Make a choice')),
+    'is_local': (_('Local / From partner'), _('Make a choice')),
 }
 
 ACTIVITY_SEARCH_FILTERS = [
-    (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
-        "country", "date", "distance", "is_online", "is_local", "skill",
-        "team_activity", "theme", "category", "office", "office_subregion", "office_region"
+    (k, v[0])
+    for k, v in SEARCH_FILTERS.items()
+    if k
+    in [
+        'country',
+        'date',
+        'distance',
+        'is_online',
+        'is_local',
+        'skill',
+        'team_activity',
+        'theme',
+        'category',
+        'office',
+        'office_subregion',
+        'office_region',
     ]
 ]
 
 INITIATIVE_SEARCH_FILTERS = [
-    (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
-        "office", "country", "theme", "category", "open", "office_subregion", "office_region"
-    ]
+    (k, v[0])
+    for k, v in SEARCH_FILTERS.items()
+    if k in ['office', 'country', 'theme', 'category', 'open', 'office_subregion', 'office_region']
 ]
 
 
 def get_search_filters(filters):
     try:
-        if connection.tenant.schema_name != "public":
+        if connection.tenant.schema_name != 'public':
             for segment in SegmentType.objects.all():
                 try:
                     segment_name = segment.name
                 except (ValueError, AttributeError):
                     segment_name = segment.slug
-                filters = filters + [(f"segment.{segment.slug}", segment_name), ]
+                filters = filters + [
+                    (f'segment.{segment.slug}', segment_name),
+                ]
         return filters
     except ProgrammingError:
         return []
@@ -335,141 +329,118 @@ class ActivityCardLocationChoices(models.TextChoices):
 
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
-        ("funding", _("Funding")),
-        ("grantapplication", _("Grant Application")),
-        ("periodactivity", _("Activity during a period")),
-        ("dateactivity", _("Activity on a specific date")),
-        ("deadlineactivity", _("Activity within a deadline")),
-        ("scheduleactivity", _("Scheduled activity")),
-        ("periodicactivity", _("Periodic Activity")),
-        ("registereddateactivity", _("Past date activity")),
-        ("deed", _("Deed")),
-        ("collect", _("Collect activity")),
+        ('funding', _('Funding')),
+        ('grantapplication', _('Grant Application')),
+        ('periodactivity', _('Activity during a period')),
+        ('dateactivity', _('Activity on a specific date')),
+        ('deadlineactivity', _('Activity within a deadline')),
+        ('scheduleactivity', _('Scheduled activity')),
+        ('periodicactivity', _('Periodic Activity')),
+        ('registereddateactivity', _('Past date activity')),
+        ('deed', _('Deed')),
+        ('collect', _('Collect activity')),
     )
     CONTACT_OPTIONS = (
-        ("mail", _("E-mail")),
-        ("phone", _("Phone")),
+        ('mail', _('E-mail')),
+        ('phone', _('Phone')),
     )
 
     HOUR_REGISTRATION_OPTIONS = (
-        ("disabled", _("Disable")),
-        ("per_activity", _("Enable")),
+        ('disabled', _('Disable')),
+        ('per_activity', _('Enable')),
     )
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
-        help_text=_(
-            "Enable team activities where teams sign-up instead of individuals."
-        ),
+        help_text=_('Enable team activities where teams sign-up instead of individuals.'),
     )
     require_organization = models.BooleanField(
         default=False,
-        help_text=_(
-            "Require initiators to specify a partner organisation when creating an initiative."
-        ),
+        help_text=_('Require initiators to specify a partner organisation when creating an initiative.'),
     )
 
     vet_organizations = models.BooleanField(
         _('Enable due diligence'),
         default=False,
-        help_text=_((
-            "Allow admins to indicate if due diligence has been completed "
-            "when approving a grant application."
-        )),
+        help_text=_(
+            ('Allow admins to indicate if due diligence has been completed when approving a grant application.')
+        ),
     )
 
     contact_activity_manager = models.BooleanField(
         verbose_name=_('Contact activity manager'),
         help_text=_('Allow users to send messages to activity managers.'),
-        default=True
+        default=True,
     )
 
     terms_of_service = models.TextField(
-        _("Terms of Service"),
+        _('Terms of Service'),
         blank=True,
-        help_text=_(
-            "Terms of service that is shown to users when they are on the create form."
-        ),
+        help_text=_('Terms of service that is shown to users when they are on the create form.'),
     )
 
     mail_terms_of_service = models.BooleanField(
-        _("Email terms of service"),
+        _('Email terms of service'),
         default=False,
-        help_text=_(
-            "Send an email with the terms of service when an application is accepted."
-        ),
+        help_text=_('Send an email with the terms of service when an application is accepted.'),
     )
 
     terms_of_service_mail_text = models.TextField(
-        _("Custom terms of Service for email"),
+        _('Custom terms of Service for email'),
         blank=True,
-        help_text=_(
-            "Leave emtpy if the Terms of Service sent by email is the same as the one above."
-        ),
+        help_text=_('Leave emtpy if the Terms of Service sent by email is the same as the one above.'),
     )
 
     bcc_terms_of_service = models.EmailField(
-        _("Bcc email with terms of service"),
+        _('Bcc email with terms of service'),
         blank=True,
-        help_text=_(
-            "Enter the email address that should receive a Bcc (blind carbon copy) of the terms of service."
-        ),
+        help_text=_('Enter the email address that should receive a Bcc (blind carbon copy) of the terms of service.'),
     )
 
     restrict_updates = models.BooleanField(
-        _("Restrict posting updates"),
+        _('Restrict posting updates'),
         default=False,
-        help_text=_(
-            "Restrict posting of updates on the activity wall to only activity managers and staff users"
-        ),
+        help_text=_('Restrict posting of updates on the activity wall to only activity managers and staff users'),
     )
 
-    initiative_search_filters = MultiSelectField(
-        max_length=1000, choices=INITIATIVE_SEARCH_FILTERS
-    )
+    initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
     activity_search_filters = MultiSelectField(
-        _("Activity search: more filters"),
+        _('Activity search: more filters'),
         max_length=1000,
         default=[],
         choices=ACTIVITY_SEARCH_FILTERS,
     )
-    contact_method = models.CharField(
-        max_length=100, choices=CONTACT_OPTIONS, default="mail"
-    )
+    contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
     include_full_activities = models.BooleanField(
-        default=True, help_text=_("Include full activities in upcoming activities list")
+        default=True, help_text=_('Include full activities in upcoming activities list')
     )
 
     enable_impact = models.BooleanField(
         default=False,
-        help_text=_("Allow activity managers to indicate the impact they make."),
+        help_text=_('Allow activity managers to indicate the impact they make.'),
     )
 
     enable_office_regions = models.BooleanField(
         _('Enable work location regions'),
-        default=False, help_text=_("Allow admins to add (sub)regions to their work location.")
+        default=False,
+        help_text=_('Allow admins to add (sub)regions to their work location.'),
     )
 
     enable_office_restrictions = models.BooleanField(
         _('Enable work location restrictions'),
         default=False,
-        help_text=_(
-            "Allow activity managers to specify work location restrictions on activities."
-        ),
+        help_text=_('Allow activity managers to specify work location restrictions on activities.'),
     )
 
     available_office_restrictions = ArrayField(
-        models.CharField(
-            max_length=200,
-            choices=OfficeRestrictionChoices.choices
-        ),
+        models.CharField(max_length=200, choices=OfficeRestrictionChoices.choices),
         verbose_name=_('Available work location restrictions'),
-        default=get_office_restriction_values
+        default=get_office_restriction_values,
     )
 
     default_office_restriction = models.CharField(
-        _("Default work location restriction"),
+        _('Default work location restriction'),
         default=OfficeRestrictionChoices.all,
         choices=OfficeRestrictionChoices.choices,
         blank=True,
@@ -478,63 +449,58 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     allow_disable_office_filter = models.BooleanField(
-        _("Allow members to see all activities"),
+        _('Allow members to see all activities'),
         default=True,
-        help_text=_(
-            "Members can choose to view activities outside their work location"
-        ),
+        help_text=_('Members can choose to view activities outside their work location'),
     )
 
     enable_multiple_dates = models.BooleanField(
-        default=False, help_text=_("Enable date activities to have multiple slots.")
+        default=False, help_text=_('Enable date activities to have multiple slots.')
     )
     enable_open_initiatives = models.BooleanField(
         default=False,
-        help_text=_(
-            "Allow admins to open up initiatives for any user to add activities."
-        ),
+        help_text=_('Allow admins to open up initiatives for any user to add activities.'),
     )
     enable_participant_exports = models.BooleanField(
         default=False,
-        help_text=_(
-            "Add a link to activities so managers can download a contributor list."
-        ),
+        help_text=_('Add a link to activities so managers can download a contributor list.'),
     )
     enable_matching_emails = models.BooleanField(
-        _("Enable matching"),
+        _('Enable matching'),
         default=False,
         help_text=_(
             (
-                "Users will be able to set their preferences for a personalised activity overview "
-                "and receive monthly emails with activities that best suit them."
+                'Users will be able to set their preferences for a personalised activity overview '
+                'and receive monthly emails with activities that best suit them.'
             )
         ),
     )
 
     hour_registration = models.CharField(
-        _("Hour registration"),
+        _('Hour registration'),
         max_length=100,
         choices=HOUR_REGISTRATION_OPTIONS,
         default='disabled',
-        help_text=_("Hour registration only applies to time-based activity types.")
+        help_text=_('Hour registration only applies to time-based activity types.'),
     )
 
     hour_registration_data = models.CharField(
-        _("Code / URL"),
+        _('Code / URL'),
         max_length=400,
-        blank=True, null=True,
+        blank=True,
+        null=True,
         help_text=_(
-            "Enter a default code or URL for hour registration. "
-            "This will be used as the default for all activities, but can be changed per activity."
-        )
+            'Enter a default code or URL for hour registration. '
+            'This will be used as the default for all activities, but can be changed per activity.'
+        ),
     )
 
     enable_reviewing = models.BooleanField(
-        _("Enable reviewing"),
+        _('Enable reviewing'),
         default=True,
         help_text=_(
-            "Review initiatives and activities. Activities created within an initiative will not "
-            "need to be reviewed. Crowdfunding activities will always need to be reviewed"
+            'Review initiatives and activities. Activities created within an initiative will not '
+            'need to be reviewed. Crowdfunding activities will always need to be reviewed'
         ),
     )
 
@@ -544,36 +510,35 @@ class InitiativePlatformSettings(BasePlatformSettings):
         choices=ActivityCardLocationChoices.choices,
         default=ActivityCardLocationChoices.CITY_COUNTRY,
         help_text=_(
-            'Choose how locations appear on activity cards. '
-            'Activity detail pages always show the full location.'
+            'Choose how locations appear on activity cards. Activity detail pages always show the full location.'
         ),
     )
 
     @property
     def deeds_enabled(self):
-        return "deed" in self.activity_types
+        return 'deed' in self.activity_types
 
     @property
     def collect_enabled(self):
-        return "collect" in self.activity_types
+        return 'collect' in self.activity_types
 
     @property
     def funding_enabled(self):
-        return "funding" in self.activity_types
+        return 'funding' in self.activity_types
 
     @property
     def grant_application_enabled(self):
-        return "grantapplication" in self.activity_types
+        return 'grantapplication' in self.activity_types
 
     class Meta(object):
-        verbose_name_plural = _("Activity & initiative settings")
-        verbose_name = _("Activity & initiative settings")
+        verbose_name_plural = _('Activity & initiative settings')
+        verbose_name = _('Activity & initiative settings')
 
 
 class SearchFilter(SortableMixin, models.Model):
     settings = models.ForeignKey(
         InitiativePlatformSettings,
-        related_name="search_filters",
+        related_name='search_filters',
         on_delete=models.deletion.CASCADE,
     )
     highlight = models.BooleanField(default=False)
@@ -583,32 +548,26 @@ class SearchFilter(SortableMixin, models.Model):
     def placeholder(self):
         if self.type in SEARCH_FILTERS.keys():
             return SEARCH_FILTERS[self.type][1]
-        return _("Select {filter_name}").format(filter_name=self.name)
+        return _('Select {filter_name}').format(filter_name=self.name)
 
     class Meta:
         abstract = True
-        ordering = ["order"]
+        ordering = ['order']
 
 
 class ActivitySearchFilter(SearchFilter):
-    type = models.CharField(
-        max_length=100, choices=lazy(get_search_filters, tuple)(ACTIVITY_SEARCH_FILTERS)
-    )
+    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)(ACTIVITY_SEARCH_FILTERS))
 
     @property
     def name(self):
-        filters = [
-            filter[1]
-            for filter in get_search_filters(ACTIVITY_SEARCH_FILTERS)
-            if filter[0] == self.type
-        ]
+        filters = [filter[1] for filter in get_search_filters(ACTIVITY_SEARCH_FILTERS) if filter[0] == self.type]
         if len(filters):
             return filters[0]
-        return "--------"
+        return '--------'
 
     settings = models.ForeignKey(
         InitiativePlatformSettings,
-        related_name="search_filters_activities",
+        related_name='search_filters_activities',
         on_delete=models.deletion.CASCADE,
     )
 
@@ -621,18 +580,14 @@ class InitiativeSearchFilter(SearchFilter):
 
     @property
     def name(self):
-        filters = [
-            filter[1]
-            for filter in get_search_filters(INITIATIVE_SEARCH_FILTERS)
-            if filter[0] == self.type
-        ]
+        filters = [filter[1] for filter in get_search_filters(INITIATIVE_SEARCH_FILTERS) if filter[0] == self.type]
         if len(filters):
             return filters[0]
-        return "--------"
+        return '--------'
 
     settings = models.ForeignKey(
         InitiativePlatformSettings,
-        related_name="search_filters_initiatives",
+        related_name='search_filters_initiatives',
         on_delete=models.deletion.CASCADE,
     )
 
@@ -640,12 +595,12 @@ class InitiativeSearchFilter(SearchFilter):
 class Theme(SortableTranslatableModel):
     """Themes for initiatives."""
 
-    slug = models.SlugField(_("slug"), max_length=100, unique=True)
-    disabled = models.BooleanField(_("disabled"), default=False)
+    slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    disabled = models.BooleanField(_('disabled'), default=False)
 
     translations = TranslatedFields(
-        name=models.CharField(_("name"), max_length=100),
-        description=models.TextField(_("description"), blank=True),
+        name=models.CharField(_('name'), max_length=100),
+        description=models.TextField(_('description'), blank=True),
     )
 
     def __str__(self):
@@ -658,10 +613,10 @@ class Theme(SortableTranslatableModel):
         super(Theme, self).save(**kwargs)
 
     class Meta(object):
-        verbose_name = _("theme")
-        verbose_name_plural = _("themes")
+        verbose_name = _('theme')
+        verbose_name_plural = _('themes')
         ordering = ['pk']
-        permissions = (("api_read_theme", "Can view theme through API"),)
+        permissions = (('api_read_theme', 'Can view theme through API'),)
 
     class JSONAPIMeta(object):
-        resource_name = "themes"
+        resource_name = 'themes'

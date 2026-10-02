@@ -54,6 +54,7 @@ class TestPageTranslationUtils(BluebottleAdminTestCase):
         }
 
         with mock.patch('bluebottle.pages.utils.translate_text_cached') as mock_translate:
+
             def translation_side_effect(text, lang):
                 if text == '<p>Hello <strong>World</strong></p>':
                     return {'value': '<p>Hallo <strong>Wereld</strong></p>', 'source_language': 'en'}
@@ -110,38 +111,25 @@ class TestPageTranslationUtils(BluebottleAdminTestCase):
 
         # Create placeholder and add content items
         source_placeholder = Placeholder.objects.create_for_object(source_page, 'blog_contents')
-        ActionItem.objects.create_for_placeholder(
-            source_placeholder,
-            title='Click here',
-            link='/test'
-        )
-        ColumnsItem.objects.create_for_placeholder(
-            source_placeholder,
-            text1='Left column',
-            text2='Right column'
-        )
+        ActionItem.objects.create_for_placeholder(source_placeholder, title='Click here', link='/test')
+        ColumnsItem.objects.create_for_placeholder(source_placeholder, text1='Left column', text2='Right column')
 
         with mock.patch('bluebottle.pages.utils.translate_text_cached') as mock_translate:
+
             def translation_side_effect(text, lang):
                 translations = {
                     'Click here': 'Klik hier',
                     'Left column': 'Linker kolom',
                     'Right column': 'Rechter kolom',
                 }
-                return {
-                    'value': translations.get(text, text),
-                    'source_language': 'en'
-                }
+                return {'value': translations.get(text, text), 'source_language': 'en'}
 
             mock_translate.side_effect = translation_side_effect
 
             copy_and_translate_blocks(source_page, target_page, 'nl')
 
         # Check that blocks were copied
-        target_placeholder = Placeholder.objects.get(
-            parent_id=target_page.pk,
-            slot='blog_contents'
-        )
+        target_placeholder = Placeholder.objects.get(parent_id=target_page.pk, slot='blog_contents')
         target_items = list(target_placeholder.contentitems.all())
 
         self.assertEqual(len(target_items), 2)
@@ -166,10 +154,7 @@ class TestPageTranslationUtils(BluebottleAdminTestCase):
         copy_and_translate_blocks(source_page, target_page, 'nl')
 
         # Target placeholder should be created but empty
-        target_placeholder = Placeholder.objects.get(
-            parent_id=target_page.pk,
-            slot='blog_contents'
-        )
+        target_placeholder = Placeholder.objects.get(parent_id=target_page.pk, slot='blog_contents')
         self.assertEqual(target_placeholder.contentitems.count(), 0)
 
     def test_copy_and_translate_blocks_empty_source(self):
@@ -183,10 +168,7 @@ class TestPageTranslationUtils(BluebottleAdminTestCase):
         copy_and_translate_blocks(source_page, target_page, 'nl')
 
         # Target should have placeholder but no items
-        target_placeholder = Placeholder.objects.get(
-            parent_id=target_page.pk,
-            slot='blog_contents'
-        )
+        target_placeholder = Placeholder.objects.get(parent_id=target_page.pk, slot='blog_contents')
         self.assertEqual(target_placeholder.contentitems.count(), 0)
 
 
@@ -235,20 +217,13 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
         page = PageFactory.create(language='en', title='Test Page', slug='test-page')
         # Create placeholder with content
         placeholder = Placeholder.objects.create_for_object(page, 'blog_contents')
-        ActionItem.objects.create_for_placeholder(
-            placeholder,
-            title='Click here',
-            link='/test'
-        )
+        ActionItem.objects.create_for_placeholder(placeholder, title='Click here', link='/test')
 
         with mock.patch('bluebottle.pages.utils.translate_text_cached') as mock_translate:
             mock_translate.return_value = {'value': 'Translated', 'source_language': 'en'}
 
             url = reverse('admin:pages_page_translate', args=(page.pk,))
-            response = self.app.post(url, {
-                'target_language': 'nl',
-                'confirm': 'Translate page'
-            })
+            response = self.app.post(url, {'target_language': 'nl', 'confirm': 'Translate page'})
 
             # Should redirect to new page
             self.assertEqual(response.status_code, 302)
@@ -269,10 +244,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
             mock_translate.return_value = {'value': 'Translated', 'source_language': 'en'}
 
             url = reverse('admin:pages_page_translate', args=(page.pk,))
-            response = self.app.post(url, {
-                'target_language': 'nl',
-                'confirm': 'Translate page'
-            })
+            response = self.app.post(url, {'target_language': 'nl', 'confirm': 'Translate page'})
 
             # Should redirect back to original page with error
             self.assertEqual(response.status_code, 302)
@@ -286,9 +258,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
         """Test translation with invalid form data."""
         page = PageFactory.create(language='en')
         url = reverse('admin:pages_page_translate', args=(page.pk,))
-        response = self.app.post(url, {
-            'target_language': 'invalid'
-        })
+        response = self.app.post(url, {'target_language': 'invalid'})
 
         # Should show form with errors
         self.assertEqual(response.status_code, 200)
@@ -302,10 +272,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
             mock_translate.return_value = {'value': 'Hallo Wereld', 'source_language': 'en'}
 
             url = reverse('admin:pages_page_translate', args=(page.pk,))
-            self.app.post(url, {
-                'target_language': 'nl',
-                'confirm': 'Translate page'
-            })
+            self.app.post(url, {'target_language': 'nl', 'confirm': 'Translate page'})
 
             # Check that title was translated
             mock_translate.assert_any_call('Hello World', 'nl')
@@ -315,6 +282,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
     def test_translate_page_copies_page_properties(self):
         """Test that page properties are copied correctly."""
         from django.utils.timezone import now, timedelta
+
         page = PageFactory.create(
             language='en',
             status=Page.PageStatus.draft,
@@ -328,10 +296,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
             mock_translate.return_value = {'value': 'Translated', 'source_language': 'en'}
 
             url = reverse('admin:pages_page_translate', args=(page.pk,))
-            self.app.post(url, {
-                'target_language': 'nl',
-                'confirm': 'Translate page'
-            })
+            self.app.post(url, {'target_language': 'nl', 'confirm': 'Translate page'})
 
             new_page = Page.objects.get(slug=page.slug, language='nl')
             self.assertEqual(new_page.status, Page.PageStatus.draft)
@@ -344,13 +309,10 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
         """Test that blocks are copied and translated."""
         source_page = PageFactory.create(language='en', title='Test Page')
         placeholder = Placeholder.objects.create_for_object(source_page, 'blog_contents')
-        ActionItem.objects.create_for_placeholder(
-            placeholder,
-            title='Original Title',
-            link='/original'
-        )
+        ActionItem.objects.create_for_placeholder(placeholder, title='Original Title', link='/original')
 
         with mock.patch('bluebottle.pages.utils.translate_text_cached') as mock_translate:
+
             def translation_side_effect(text, lang):
                 translations = {
                     'Original Title': 'Translated Title',
@@ -362,17 +324,11 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
             mock_translate.side_effect = translation_side_effect
 
             url = reverse('admin:pages_page_translate', args=(source_page.pk,))
-            response = self.app.post(url, {
-                'target_language': 'nl',
-                'confirm': 'Translate page'
-            })
+            response = self.app.post(url, {'target_language': 'nl', 'confirm': 'Translate page'})
             self.assertEqual(response.status_code, 302)
 
             new_page = Page.objects.get(slug=source_page.slug, language='nl')
-            new_placeholder = Placeholder.objects.get(
-                parent_id=new_page.pk,
-                slot='blog_contents'
-            )
+            new_placeholder = Placeholder.objects.get(parent_id=new_page.pk, slot='blog_contents')
             new_items = list(new_placeholder.contentitems.all())
             self.assertEqual(len(new_items), 1)
             self.assertIsInstance(new_items[0], ActionItem)
@@ -382,6 +338,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
     def test_translate_page_requires_superuser(self):
         """Test that only superusers can access translate view."""
         from django.contrib.auth.models import Group
+
         staff_user = BlueBottleUserFactory.create(is_staff=True, is_superuser=False)
         staff_group = Group.objects.get(name='Staff')
         staff_group.user_set.add(staff_user)

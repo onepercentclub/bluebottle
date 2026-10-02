@@ -30,6 +30,7 @@ class ManagerParticipantRemovedNotification(ManagerParticipantNotification):
     """
     A participant removed notify owner
     """
+
     subject = pgettext('platform-email', 'A participant has been removed from your activity "{title}"')
     template = 'messages/participants/manager_participant_removed'
 
@@ -38,6 +39,7 @@ class ManagerParticipantWithdrewNotification(ManagerParticipantNotification):
     """
     A participant withdrew from your activity
     """
+
     subject = pgettext('platform-email', 'A participant has withdrawn from your activity "{title}"')
     template = 'messages/participants/manager_participant_withdrew'
 
@@ -53,8 +55,7 @@ class UserParticipantNotification(BaseParticipantNotification):
         context = super(UserParticipantNotification, self).get_context(recipient)
         settings = InitiativePlatformSettings.load()
         context['hour_registration'] = (
-            settings.hour_registration != 'disabled'
-            and self.obj.activity.hour_registration_data
+            settings.hour_registration != 'disabled' and self.obj.activity.hour_registration_data
         )
         return context
 
@@ -66,6 +67,7 @@ class UserParticipantRemovedNotification(UserParticipantNotification):
     """
     The participant was removed from the activity
     """
+
     subject = pgettext('platform-email', 'You have been removed as participant for the activity "{title}"')
     template = 'messages/participants/user_participant_removed'
     link_to_overview = True
@@ -75,6 +77,7 @@ class UserParticipantWithdrewNotification(UserParticipantNotification):
     """
     The participant withdrew from the activity
     """
+
     subject = pgettext('platform-email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participants/user_participant_withdrew'
 
@@ -83,6 +86,7 @@ class UserDateParticipantWithdrewNotification(UserParticipantNotification):
     """
     The participant withdrew from the activity
     """
+
     subject = pgettext('platform-email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participants/user_date_participant_withdrew'
 
@@ -97,6 +101,7 @@ class UserScheduledNotification(UserParticipantNotification):
     """
     The participant was scheduled from the activity
     """
+
     subject = pgettext('platform-email', 'You have been scheduled for the activity "{title}"')
     template = 'messages/participants/user_participant_scheduled'
 
@@ -111,6 +116,7 @@ class RegisteredActivityParticipantAddedNotification(TransitionMessage):
     """
     A participant was added
     """
+
     subject = pgettext('platform-email', 'You have been added to the activity "{title}"')
     template = 'messages/participants/registered_date_participant_added'
     context = {

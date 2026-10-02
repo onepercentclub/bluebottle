@@ -1,7 +1,4 @@
-
-from bluebottle.fsm.triggers import (
-    TriggerManager, register, ModelCreatedTrigger
-)
+from bluebottle.fsm.triggers import TriggerManager, register, ModelCreatedTrigger
 from bluebottle.notifications.effects import NotificationEffect
 
 from bluebottle.updates.models import Update
@@ -29,18 +26,12 @@ class UpdateTriggers(TriggerManager):
     triggers = [
         ModelCreatedTrigger(
             effects=[
-                NotificationEffect(
-                    FollowersNotification,
-                    conditions=[should_notify]
-                ),
+                NotificationEffect(FollowersNotification, conditions=[should_notify]),
                 NotificationEffect(
                     OwnerNotification,
                     conditions=[author_is_not_owner, has_no_contribution],
                 ),
-                NotificationEffect(
-                    ParentNotification,
-                    conditions=[has_parent]
-                )
+                NotificationEffect(ParentNotification, conditions=[has_parent]),
             ]
         )
     ]

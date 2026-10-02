@@ -25,10 +25,8 @@ class OfficeSubRegion(models.Model):
     name = models.CharField(_('name'), max_length=255)
     description = models.TextField(_('description'), blank=True)
     region = models.ForeignKey(
-        'offices.OfficeRegion',
-        verbose_name=_('Work location region'),
-        null=True, blank=True,
-        on_delete=models.CASCADE)
+        'offices.OfficeRegion', verbose_name=_('Work location region'), null=True, blank=True, on_delete=models.CASCADE
+    )
 
     class Meta(object):
         ordering = ['name']
@@ -43,19 +41,9 @@ class OfficeSubRegion(models.Model):
 
 
 class OfficeRestrictionChoices(DjangoChoices):
-    office = ChoiceItem(
-        'office',
-        label=_("Open to people from the same work location")
-    )
+    office = ChoiceItem('office', label=_('Open to people from the same work location'))
     office_subregion = ChoiceItem(
-        'office_subregion',
-        label=_("Open to people from work locations within the same group")
+        'office_subregion', label=_('Open to people from work locations within the same group')
     )
-    office_region = ChoiceItem(
-        'office_region',
-        label=_("Open to people from work locations within the same region")
-    )
-    all = ChoiceItem(
-        'all',
-        label=_("Open to people from any work location")
-    )
+    office_region = ChoiceItem('office_region', label=_('Open to people from work locations within the same region'))
+    all = ChoiceItem('all', label=_('Open to people from any work location'))

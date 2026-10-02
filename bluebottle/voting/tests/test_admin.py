@@ -9,7 +9,6 @@ from bluebottle.voting.tests.factories import PollFactory
 
 
 class PollAdminTestCase(BluebottleAdminTestCase):
-
     def setUp(self):
         super().setUp()
         self.init_projects()
@@ -42,8 +41,5 @@ class PollAdminTestCase(BluebottleAdminTestCase):
         url = reverse('admin:voting_poll_change', args=(self.poll.pk,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response,
-            reverse('admin:cms_homepage_change', args=(homepage.pk,))
-        )
+        self.assertContains(response, reverse('admin:cms_homepage_change', args=(homepage.pk,)))
         self.assertContains(response, str(homepage))

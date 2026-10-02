@@ -41,27 +41,24 @@ class SortableTranslatableQuerySet(TranslatableQuerySet):
         for field_name in field_names:
             if field_name.startswith('translations__'):
                 (_, field) = field_name.split('__')
-                sub_query = self.model.translations.field.model.objects.filter(
-                    master=OuterRef('pk')
-                ).annotate(
-                    is_current_language=Case(
-                        When(language_code=self._language, then=True),
-                        default=False,
-                        output_field=fields.BooleanField()
+                sub_query = (
+                    self.model.translations.field.model.objects.filter(master=OuterRef('pk'))
+                    .annotate(
+                        is_current_language=Case(
+                            When(language_code=self._language, then=True),
+                            default=False,
+                            output_field=fields.BooleanField(),
+                        )
                     )
-                ).order_by(
-                    '-is_current_language'
-                ).values(
-                    field
-                )[:1]
+                    .order_by('-is_current_language')
+                    .values(field)[:1]
+                )
 
-                obj = obj.annotate(
-                    **{'translated_{}'.format(field): Subquery(sub_query)}
-                ).order_by('translated_{}'.format(field))
+                obj = obj.annotate(**{'translated_{}'.format(field): Subquery(sub_query)}).order_by(
+                    'translated_{}'.format(field)
+                )
 
-        field_names = [
-            field_name.replace('translations__', 'translated_') for field_name in field_names
-        ]
+        field_names = [field_name.replace('translations__', 'translated_') for field_name in field_names]
 
         obj.query.add_ordering(*field_names)
 
@@ -89,21 +86,14 @@ class SortableTranslatablePolymorphicManager(PolymorphicManager, TranslatableMan
 
 
 class PublishedQuerySet(QuerySet):
-
     def published(self):
         """
         Return only published entries
         """
         qs = self
         qs = qs.filter(status='published')
-        qs = qs.filter(
-            Q(publication_date__isnull=True) |
-            Q(publication_date__lte=now())
-        )
-        qs = qs.filter(
-            Q(publication_end_date__isnull=True) |
-            Q(publication_end_date__gte=now())
-        )
+        qs = qs.filter(Q(publication_date__isnull=True) | Q(publication_date__lte=now()))
+        qs = qs.filter(Q(publication_end_date__isnull=True) | Q(publication_end_date__gte=now()))
         return qs
 
 

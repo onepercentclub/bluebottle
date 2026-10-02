@@ -7,9 +7,5 @@ def tenant(request):
     """
     if connection.tenant:
         tenant = connection.tenant
-        return {
-            'TENANT': connection,
-            'TENANT_LANGUAGE': '{0}{1}'.format(tenant.client_name,
-                                               request.LANGUAGE_CODE)
-        }
+        return {'TENANT': connection, 'TENANT_LANGUAGE': '{0}{1}'.format(tenant.client_name, request.LANGUAGE_CODE)}
     return {}

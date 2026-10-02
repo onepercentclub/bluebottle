@@ -16,7 +16,6 @@ from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
 class TestSegmentAdmin(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -34,14 +33,14 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         activity_url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
         response = self.client.get(activity_url)
         self.assertNotContains(response, 'Department:')
-        segment_type = SegmentTypeFactory.create(name="Department")
+        segment_type = SegmentTypeFactory.create(name='Department')
         SegmentFactory.create_batch(5, segment_type=segment_type)
         response = self.client.get(activity_url)
         self.assertContains(response, 'Segments')
         self.assertContains(response, 'Department:')
 
     def test_activity_segment_admin_uses_autocomplete(self):
-        segment_type = SegmentTypeFactory.create(name="Department")
+        segment_type = SegmentTypeFactory.create(name='Department')
         segments = SegmentFactory.create_batch(30, segment_type=segment_type)
         activity = DateActivityFactory.create()
         activity.segments.add(segments[0])
@@ -72,13 +71,16 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         segment_b = SegmentFactory.create(name='SharedName B', segment_type=type_b)
 
         url = reverse('admin:autocomplete')
-        response = self.client.get(url, {
-            'app_label': 'activities',
-            'model_name': 'activity',
-            'field_name': 'segments',
-            'term': 'SharedName',
-            'segment_type': type_a.id,
-        })
+        response = self.client.get(
+            url,
+            {
+                'app_label': 'activities',
+                'model_name': 'activity',
+                'field_name': 'segments',
+                'term': 'SharedName',
+                'segment_type': type_a.id,
+            },
+        )
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
@@ -98,17 +100,14 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         response = self.client.get(list_url)
         self.assertContains(response, 'Number of segments')
         self.assertContains(response, 'Job title')
-        self.assertContains(
-            response,
-            reverse('admin:segments_segmenttype_change', args=(segment_type.id,))
-        )
+        self.assertContains(response, reverse('admin:segments_segmenttype_change', args=(segment_type.id,)))
 
     def test_segment_email_domain(self):
         segment_type = SegmentTypeFactory.create()
         segment = SegmentFactory.create(segment_type=segment_type)
         self.assertEqual(segment.email_domains, ['example.com'])
 
-        segment_url = reverse('admin:segments_segment_change', args=(segment.id, ))
+        segment_url = reverse('admin:segments_segment_change', args=(segment.id,))
         page = self.app.get(segment_url)
 
         form = page.forms['segment_form']
@@ -128,12 +127,12 @@ class ActivityAdminSegmentQueryTest(BluebottleAdminTestCase):
 
     def test_change_view_does_not_query_all_segments(self):
         self.client.force_login(self.superuser)
-        segment_type = SegmentTypeFactory.create(name="Department")
+        segment_type = SegmentTypeFactory.create(name='Department')
         segments = SegmentFactory.create_batch(100, segment_type=segment_type)
         activity = DateActivityFactory.create()
         activity.segments.add(segments[0])
 
-        url = reverse("admin:time_based_dateactivity_change", args=(activity.id,))
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
         self.client.get(url)
 
         reset_queries()
@@ -141,20 +140,20 @@ class ActivityAdminSegmentQueryTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
 
         segment_queries = [
-            q for q in connection.queries
-            if "segments_segment" in q["sql"].lower()
-            and "segmenttype" not in q["sql"].lower()
-            and "segment_manager" not in q["sql"].lower()
+            q
+            for q in connection.queries
+            if 'segments_segment' in q['sql'].lower()
+            and 'segmenttype' not in q['sql'].lower()
+            and 'segment_manager' not in q['sql'].lower()
         ]
         self.assertLess(len(segment_queries), 10, segment_queries)
 
         content = response.content.decode()
-        self.assertIn("admin-autocomplete", content)
+        self.assertIn('admin-autocomplete', content)
         self.assertNotIn(f'value="{segments[1].id}"', content)
 
 
 class TestSegmentTypeAdmin(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -178,12 +177,12 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
         page = self.app.get(reverse('admin:segments_segmenttype_change', args=(department.id,)))
         form = page.forms[1]
         form['required'].checked = True
-        form['name'] = "My segment type"
+        form['name'] = 'My segment type'
         page = form.submit().follow()
         page = self.app.get(reverse('admin:segments_segmenttype_change', args=(hobbies.id,)))
         form = page.forms[1]
         form['required'].checked = True
-        form['name'] = "Another segment type"
+        form['name'] = 'Another segment type'
         page = form.submit().follow()
         self.assertTrue(page.forms[1]['form-0-required'].checked)
         self.assertTrue(page.forms[1]['form-1-required'].checked)
@@ -295,7 +294,6 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
 
 
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -327,7 +325,7 @@ class TestMemberSegmentAdmin(BluebottleAdminTestCase):
         segment_type = SegmentTypeFactory.create()
         segment = SegmentFactory.create(segment_type=segment_type)
 
-        segment_url = reverse('admin:segments_segment_change', args=(segment.id, ))
+        segment_url = reverse('admin:segments_segment_change', args=(segment.id,))
         page = self.app.get(segment_url)
 
         form = page.forms['segment_form']

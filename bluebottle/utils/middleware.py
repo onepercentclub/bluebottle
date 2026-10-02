@@ -51,9 +51,7 @@ class TenantLocaleMiddleware(LocaleMiddleware):
         # Get language from path
         urlconf = getattr(request, 'urlconf', settings.ROOT_URLCONF)
         if is_language_prefix_patterns_used(urlconf):
-            language_from_path = translation.get_language_from_path(
-                request.path_info
-            )
+            language_from_path = translation.get_language_from_path(request.path_info)
             # If ignore paths or language set, then just pass the response
             if language_from_path or (ignore_paths and request.path.startswith(ignore_paths)):
                 return response

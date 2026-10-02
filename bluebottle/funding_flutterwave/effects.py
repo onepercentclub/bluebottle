@@ -21,7 +21,7 @@ class MigrateToLipishaEffect(Effect):
             branch_name='',
             branch_code='',
             address='',
-            swift=''
+            swift='',
         )
         Funding.objects.filter(bank_account=account).update(bank_account=lipisha)
 

@@ -46,15 +46,13 @@ class ManagerRegistrationCreatedNotification(ManagerRegistrationNotification):
 
 
 class ManagerRegistrationStoppedNotification(ManagerRegistrationNotification):
-    subject = pgettext("platform-email", 'A participant for your activity "{title}" has stopped')
-    template = "messages/registrations/manager_registration_stopped"
+    subject = pgettext('platform-email', 'A participant for your activity "{title}" has stopped')
+    template = 'messages/registrations/manager_registration_stopped'
 
 
 class ManagerRegistrationRestartedNotification(ManagerRegistrationNotification):
-    subject = pgettext(
-        "platform-email", 'A participant for your activity "{title}" has restarted'
-    )
-    template = "messages/registrations/manager_registration_restarted"
+    subject = pgettext('platform-email', 'A participant for your activity "{title}" has restarted')
+    template = 'messages/registrations/manager_registration_restarted'
 
 
 class UserRegistrationNotification(BaseParticipantNotification):
@@ -83,8 +81,7 @@ class UserRegistrationNotification(BaseParticipantNotification):
 
         settings = InitiativePlatformSettings.load()
         context['hour_registration'] = (
-            settings.hour_registration != 'disabled'
-            and self.obj.activity.hour_registration_data
+            settings.hour_registration != 'disabled' and self.obj.activity.hour_registration_data
         )
 
         return context
@@ -99,10 +96,8 @@ class UserRegistrationAcceptedNotification(UserRegistrationNotification):
 
 
 class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
-    subject = pgettext(
-        "platform-email", 'Your team has been selected for the activity "{title}"'
-    )
-    template = "messages/registrations/team_accepted"
+    subject = pgettext('platform-email', 'Your team has been selected for the activity "{title}"')
+    template = 'messages/registrations/team_accepted'
 
 
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
@@ -118,25 +113,19 @@ class UserRegistrationRemovedNotification(UserRegistrationNotification):
 
 
 class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
-    subject = pgettext(
-        "platform-email", 'Your team has not been selected for the activity "{title}"'
-    )
-    template = "messages/registrations/team_rejected"
+    subject = pgettext('platform-email', 'Your team has not been selected for the activity "{title}"')
+    template = 'messages/registrations/team_rejected'
     link_to_overview = True
 
 
 class UserRegistrationStoppedNotification(UserRegistrationNotification):
-    subject = pgettext(
-        "platform-email", 'Your contribution to the activity "{title}" has been stopped'
-    )
-    template = "messages/registrations/user_stopped"
+    subject = pgettext('platform-email', 'Your contribution to the activity "{title}" has been stopped')
+    template = 'messages/registrations/user_stopped'
 
 
 class UserRegistrationRestartedNotification(UserRegistrationNotification):
-    subject = pgettext(
-        "platform-email", 'Your contribution to the activity "{title}" has been restarted'
-    )
-    template = "messages/registrations/user_restarted"
+    subject = pgettext('platform-email', 'Your contribution to the activity "{title}" has been restarted')
+    template = 'messages/registrations/user_restarted'
 
     def get_context(self, recipient):
         context = super(UserRegistrationNotification, self).get_context(recipient)
@@ -189,12 +178,14 @@ class DateUserBaseNotification(UserRegistrationNotification):
     def get_context(self, recipient):
         context = super(DateUserBaseNotification, self).get_context(recipient)
         context['slots'] = [
-            get_slot_info(p.slot) for p in self.obj.participants.filter(
+            get_slot_info(p.slot)
+            for p in self.obj.participants.filter(
                 status__in=['new', 'accepted', 'succeeded'],
                 slot__start__gte=now(),
             ).all()
         ]
         return context
+
     delay = 60
 
     class Meta:
@@ -217,20 +208,20 @@ class PeriodicUserJoinedNotification(UserRegistrationNotification):
 
 
 class ManagerTeamRegistrationCreatedReviewNotification(ManagerRegistrationNotification):
-    subject = pgettext("platform-email", 'A new team has applied to your activity "{title}" 🎉')
-    template = "messages/registrations/manager_team_registration_created_review"
+    subject = pgettext('platform-email', 'A new team has applied to your activity "{title}" 🎉')
+    template = 'messages/registrations/manager_team_registration_created_review'
 
 
 class ManagerTeamRegistrationCreatedNotification(ManagerRegistrationNotification):
-    subject = pgettext("platform-email", 'You have a new team for your activity "{title}" 🎉')
-    template = "messages/registrations/manager_team_registration_created"
+    subject = pgettext('platform-email', 'You have a new team for your activity "{title}" 🎉')
+    template = 'messages/registrations/manager_team_registration_created'
 
 
 class TeamAppliedNotification(UserRegistrationNotification):
-    subject = pgettext("platform-email", 'You have registered your team on "{site_name}"')
-    template = "messages/registrations/schedule/team_applied"
+    subject = pgettext('platform-email', 'You have registered your team on "{site_name}"')
+    template = 'messages/registrations/schedule/team_applied'
 
 
 class TeamJoinedNotification(UserRegistrationNotification):
-    subject = pgettext("platform-email", 'You have registered your team on "{site_name}"')
-    template = "messages/registrations/schedule/team_joined"
+    subject = pgettext('platform-email', 'You have registered your team on "{site_name}"')
+    template = 'messages/registrations/schedule/team_joined'

@@ -9,8 +9,13 @@ from bluebottle.activities.messages.reviewer import get_reviewers_for_activity
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
 from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
-from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
-    StripePaymentFactory, ExternalAccountFactory, StripePaymentProviderFactory
+from bluebottle.funding_stripe.tests.factories import (
+    StripePayoutAccountFactory,
+    StripeSourcePaymentFactory,
+    StripePaymentFactory,
+    ExternalAccountFactory,
+    StripePaymentProviderFactory,
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -21,14 +26,10 @@ class BaseStripePaymentStateMachineTests(FundingStripeTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        self.funding = FundingFactory.create(
-            initiative=self.initiative, target=Money(1000, "EUR")
-        )
+        self.funding = FundingFactory.create(initiative=self.initiative, target=Money(1000, 'EUR'))
 
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(
-            account_id="test-account-id", status="verified"
-        )
+        payout_account = StripePayoutAccountFactory.create(account_id='test-account-id', status='verified')
         self.bank_account = ExternalAccountFactory.create(status='verified', connect_account=payout_account)
         self.funding.bank_account = self.bank_account
         self.funding.save()
@@ -37,21 +38,17 @@ class BaseStripePaymentStateMachineTests(FundingStripeTestCase):
 
 
 class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
-
     @patch('stripe.Source.modify')
     def setUp(self, mock_modify):
         super(StripeSourcePaymentStateMachineTests, self).setUp()
         self.donation = DonorFactory.create(activity=self.funding)
-        self.payment = StripeSourcePaymentFactory.create(
-            charge_token='some_token',
-            donation=self.donation
-        )
+        self.payment = StripeSourcePaymentFactory.create(charge_token='some_token', donation=self.donation)
 
     def test_request_refund(self):
         self.payment.states.succeed(save=True)
         self.assertEqual(self.payment.status, 'succeeded')
 
-        with patch("stripe.Refund.create") as refund_mock:
+        with patch('stripe.Refund.create') as refund_mock:
             self.payment.states.request_refund(save=True)
             refund_mock.assert_called_once()
 
@@ -106,7 +103,6 @@ class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
 
 
 class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
-
     @patch('stripe.PaymentIntent.retrieve')
     def test_request_refund(self, mock_retrieve):
         donation = DonorFactory.create(activity=self.funding)
@@ -114,97 +110,85 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
         payment.states.succeed(save=True)
         self.assertEqual(payment.status, 'succeeded')
 
-        with patch("stripe.Refund.create"):
+        with patch('stripe.Refund.create'):
             payment.states.request_refund(save=True)
-            self.assertEqual(payment.status, "refund_requested")
+            self.assertEqual(payment.status, 'refund_requested')
 
 
 class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
-
-    ACTIVITY_INCOMPLETE_SUBJECT = (
-        "Action required for your crowdfunding campaign on Test"
-    )
-    LIVE_INCOMPLETE_SUBJECT = (
-        "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
-    )
+    ACTIVITY_INCOMPLETE_SUBJECT = 'Action required for your crowdfunding campaign on Test'
+    LIVE_INCOMPLETE_SUBJECT = 'Failed identity verification for a running crowdfunding campaign on Test ⚠️'
 
     def setUp(self):
         super(StripePayoutAccountStateMachineTests, self).setUp()
         account_id = 'some-connect-id'
         self.user = BlueBottleUserFactory.create()
-        self.account = StripePayoutAccountFactory.create(
-            owner=self.user,
-            country='NL',
-            account_id=account_id
-        )
+        self.account = StripePayoutAccountFactory.create(owner=self.user, country='NL', account_id=account_id)
         self.stripe_account = stripe.Account(account_id)
         self.stripe_account.update(
             {
-                "country": "NL",
-                "charges_enabled": True,
-                "business_type": "individual",
-                "individual": munch.munchify(
+                'country': 'NL',
+                'charges_enabled': True,
+                'business_type': 'individual',
+                'individual': munch.munchify(
                     {
-                        "email": "jhon@example.com",
-                        "verification": {
-                            "status": "unverified",
+                        'email': 'jhon@example.com',
+                        'verification': {
+                            'status': 'unverified',
                         },
-                        "requirements": munch.munchify(
+                        'requirements': munch.munchify(
                             {
-                                "eventually_due": [
-                                    "first_name",
-                                    "last_name",
-                                    "dob.year",
-                                    "dob.month",
-                                    "dob.day",
+                                'eventually_due': [
+                                    'first_name',
+                                    'last_name',
+                                    'dob.year',
+                                    'dob.month',
+                                    'dob.day',
                                 ]
                             }
                         ),
                     }
                 ),
-                "requirements": munch.munchify(
+                'requirements': munch.munchify(
                     {
-                        "eventually_due": [
-                            "individual.first_name",
-                            "individual.last_name",
-                            "individual.dob.year",
-                            "individual.dob.month",
-                            "individual.dob.day",
-                            "external_accounts",
+                        'eventually_due': [
+                            'individual.first_name',
+                            'individual.last_name',
+                            'individual.dob.year',
+                            'individual.dob.month',
+                            'individual.dob.day',
+                            'external_accounts',
                         ],
-                        "disabled": False,
+                        'disabled': False,
                     }
                 ),
-                "payouts_enabled": True,
-                "external_accounts": munch.munchify({"total_count": 0, "data": []}),
+                'payouts_enabled': True,
+                'external_accounts': munch.munchify({'total_count': 0, 'data': []}),
             }
         )
-        self.stripe_account.email = "jhon@example.com"
-        self.stripe_account.business_profile = munch.munchify({
-            "mcc": "8398",
-            "product_description": "Not applicable - test state machine.",
-            "url": "https://goodup.com",
-        })
+        self.stripe_account.email = 'jhon@example.com'
+        self.stripe_account.business_profile = munch.munchify(
+            {
+                'mcc': '8398',
+                'product_description': 'Not applicable - test state machine.',
+                'url': 'https://goodup.com',
+            }
+        )
 
         self._save_local_payout_from_stripe_state()
         self.bank_account = ExternalAccountFactory.create(
-            connect_account=self.account,
-            status='verified',
-            account_id='test-bank-account-id'
+            connect_account=self.account, status='verified', account_id='test-bank-account-id'
         )
-        self.funding = FundingFactory.create(
-            bank_account=self.bank_account,
-            target=Money(1000, "EUR")
-        )
+        self.funding = FundingFactory.create(bank_account=self.bank_account, target=Money(1000, 'EUR'))
         self.reviewer = BlueBottleUserFactory.create(
             submitted_initiative_notifications=True,
         )
         self.reviewer.groups.add(Group.objects.get(name='Staff'))
 
     def open_funding(self):
-        self.funding.initiative.status = "approved"
+        self.funding.initiative.status = 'approved'
         self.funding.initiative.save()
-        self.funding.status = "open"
+        self.funding.status = 'open'
         self.funding.save()
 
     def assert_activity_incomplete_notifications(self):
@@ -218,8 +202,10 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
             self.assertEqual(message.subject, self.LIVE_INCOMPLETE_SUBJECT)
 
     def _save_local_payout_from_stripe_state(self):
-        with patch("stripe.Account.retrieve", return_value=self.stripe_account), \
-                patch("stripe.Account.modify", return_value=self.stripe_account):
+        with (
+            patch('stripe.Account.retrieve', return_value=self.stripe_account),
+            patch('stripe.Account.modify', return_value=self.stripe_account),
+        ):
             self.account.update(self.stripe_account)
 
     def simulate_webhook(
@@ -230,9 +216,9 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         enable_payouts=None,
     ):
         self.stripe_account.individual.requirements.eventually_due = [
-            requirement.replace("individual.", "")
+            requirement.replace('individual.', '')
             for requirement in requirements
-            if requirement.startswith("individual.")
+            if requirement.startswith('individual.')
         ]
         self.stripe_account.requirements.eventually_due = requirements
 
@@ -253,13 +239,13 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
     def test_pending(self):
         self.simulate_webhook([])
 
-        self.assertEqual(self.account.status, "pending")
+        self.assertEqual(self.account.status, 'pending')
 
     def test_needs_verification(self):
         self.test_pending()
 
-        self.simulate_webhook(["individual.verification.document"])
-        self.assertEqual(self.account.status, "incomplete")
+        self.simulate_webhook(['individual.verification.document'])
+        self.assertEqual(self.account.status, 'incomplete')
 
         self.assert_activity_incomplete_notifications()
 
@@ -267,21 +253,21 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         self.test_pending()
         self.open_funding()
 
-        self.simulate_webhook(["individual.verification.document"])
-        self.assertEqual(self.account.status, "incomplete")
+        self.simulate_webhook(['individual.verification.document'])
+        self.assertEqual(self.account.status, 'incomplete')
 
         self.assert_live_incomplete_notifications()
 
     def test_verify(self):
-        self.simulate_webhook([], verification_status="verified")
+        self.simulate_webhook([], verification_status='verified')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, "Your identity has been verified on Test")
+        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified on Test')
 
     def test_needs_verification_pending(self):
         self.test_needs_verification_open()
         mail.outbox = []
 
-        self.simulate_webhook([], verification_status="verified")
+        self.simulate_webhook([], verification_status='verified')
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified on Test')
@@ -291,11 +277,9 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         mail.outbox = []
         self.open_funding()
 
-        self.simulate_webhook(
-            ["individual.verification.document"], verification_status="rejected"
-        )
+        self.simulate_webhook(['individual.verification.document'], verification_status='rejected')
 
-        self.assertEqual(self.account.status, "incomplete")
+        self.assertEqual(self.account.status, 'incomplete')
         self.assert_live_incomplete_notifications()
 
     def test_reject_disable_payments(self):
@@ -304,59 +288,57 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         self.open_funding()
 
         self.simulate_webhook(
-            ["individual.verification.document"],
-            verification_status="rejected",
-            enable_payments=False
+            ['individual.verification.document'], verification_status='rejected', enable_payments=False
         )
 
-        self.assertEqual(self.account.status, "disabled")
+        self.assertEqual(self.account.status, 'disabled')
         self.assert_live_incomplete_notifications()
 
 
 class StripeBankAccountStateMachineTests(FundingStripeTestCase):
-
     def setUp(self):
         super(StripeBankAccountStateMachineTests, self).setUp()
         account_id = 'some-connect-id'
         if not StripePaymentProvider.objects.exists():
             StripePaymentProviderFactory.create()
         self.user = BlueBottleUserFactory.create()
-        self.account = StripePayoutAccount(
-            owner=self.user,
-            country='NL',
-            account_id=account_id
-        )
+        self.account = StripePayoutAccount(owner=self.user, country='NL', account_id=account_id)
         self.stripe_account = stripe.Account(account_id)
-        self.stripe_account.update({
-            'country': 'NL',
-            'individual': munch.munchify({
-                'first_name': 'Jhon',
-                'last_name': 'Example',
-                'email': 'jhon@example.com',
-                'verification': {
-                    'status': 'verified',
-                },
-                'requirements': munch.munchify({
-                    'eventually_due': [
-                        'external_accounts',
-                        'individual.verification.document',
-                        'document_type',
-                    ]
-                }),
-            }),
-            'requirements': munch.munchify({
-                'eventually_due': [
-                    'external_accounts',
-                    'individual.verification.document.front',
-                    'document_type',
-                ],
-                'disabled': False
-            }),
-            'external_accounts': munch.munchify({
-                'total_count': 0,
-                'data': []
-            })
-        })
+        self.stripe_account.update(
+            {
+                'country': 'NL',
+                'individual': munch.munchify(
+                    {
+                        'first_name': 'Jhon',
+                        'last_name': 'Example',
+                        'email': 'jhon@example.com',
+                        'verification': {
+                            'status': 'verified',
+                        },
+                        'requirements': munch.munchify(
+                            {
+                                'eventually_due': [
+                                    'external_accounts',
+                                    'individual.verification.document',
+                                    'document_type',
+                                ]
+                            }
+                        ),
+                    }
+                ),
+                'requirements': munch.munchify(
+                    {
+                        'eventually_due': [
+                            'external_accounts',
+                            'individual.verification.document.front',
+                            'document_type',
+                        ],
+                        'disabled': False,
+                    }
+                ),
+                'external_accounts': munch.munchify({'total_count': 0, 'data': []}),
+            }
+        )
         with patch('stripe.Account.retrieve', return_value=self.stripe_account):
             self.account.save()
 

@@ -24,8 +24,9 @@ def _wait_for_es_indices():
     """Wait for Elasticsearch indices to be ready for search (refresh)."""
     try:
         from elasticsearch_dsl import connections
+
         conn = connections.get_connection()
-        conn.indices.refresh(index="*")
+        conn.indices.refresh(index='*')
     except Exception:
         pass
 
@@ -43,6 +44,7 @@ def _wipe_stale_pid_test_elasticsearch_indices():
         return
     try:
         from elasticsearch_dsl import connections
+
         es = connections.get_connection()
         pattern = f'{prefix}-pid*'
         es.indices.delete(
@@ -64,8 +66,8 @@ def _setup_es_indices():
     Tenant = get_tenant_model()
     for tenant in Tenant.objects.exclude(schema_name='public'):
         with LocalTenant(tenant):
-            call_command("search_index", "--delete", "-f", verbosity=0)
-            call_command("search_index", "--create", verbosity=0)
+            call_command('search_index', '--delete', '-f', verbosity=0)
+            call_command('search_index', '--create', verbosity=0)
             _wait_for_es_indices()
 
 
@@ -76,14 +78,14 @@ def _init_worker_with_es(
     process_setup=None,
     process_setup_args=None,
     debug_mode=None,
-    used_aliases=None
+    used_aliases=None,
 ):
     with counter.get_lock():
         counter.value += 1
         worker_id = counter.value
 
     try:
-        max_workers = int(os.environ.get("DJANGO_TEST_WORKERS", "0") or 0)
+        max_workers = int(os.environ.get('DJANGO_TEST_WORKERS', '0') or 0)
     except ValueError:
         max_workers = 0
 
@@ -93,7 +95,7 @@ def _init_worker_with_es(
     django_test_runner._worker_id = worker_id
 
     start_method = django_test_runner.multiprocessing.get_start_method()
-    if start_method == "spawn":
+    if start_method == 'spawn':
         if process_setup and callable(process_setup):
             if process_setup_args is None:
                 process_setup_args = ()
@@ -104,14 +106,14 @@ def _init_worker_with_es(
     db_aliases = used_aliases or django_test_runner.connections
     for alias in db_aliases:
         connection = django_test_runner.connections[alias]
-        if start_method == "spawn":
+        if start_method == 'spawn':
             connection.settings_dict.update(initial_settings[alias])
             if serialized_contents and serialized_contents.get(alias):
                 connection._test_serialized_contents = serialized_contents[alias]
         connection.creation.setup_worker_connection(worker_id)
 
     if worker_id:
-        os.environ["DJANGO_TEST_PROCESS_NUMBER"] = str(worker_id)
+        os.environ['DJANGO_TEST_PROCESS_NUMBER'] = str(worker_id)
     # Complete ES index setup before this worker is used; Django does not
     # assign tests to a worker until its initializer returns.
     _setup_es_indices()
@@ -119,6 +121,7 @@ def _init_worker_with_es(
 
 class ParallelTestSuiteWithES(ParallelTestSuite):
     """Parallel suite that sets up Elasticsearch indices in each worker before any tests run."""
+
     init_worker = _init_worker_with_es
 
 
@@ -129,7 +132,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)
         parallel = self.parallel
         if parallel:
-            os.environ["DJANGO_TEST_WORKERS"] = str(parallel)
+            os.environ['DJANGO_TEST_WORKERS'] = str(parallel)
         self.parallel = 0
         result = super(MultiTenantRunner, self).setup_databases(**kwargs)
         self.parallel = parallel
@@ -139,10 +142,10 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         connection.set_schema_to_public()
 
         tenant2, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test2.localhost",
-            name="Test Too",
-            schema_name="test2",
-            client_name="test2",
+            domain_url='test2.localhost',
+            name='Test Too',
+            schema_name='test2',
+            client_name='test2',
         )
 
         connection.set_tenant(tenant2)
@@ -151,20 +154,17 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         connection.set_schema_to_public()
 
         tenant, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test.localhost",
-            name="Test",
-            schema_name="test",
-            client_name="test",
+            domain_url='test.localhost',
+            name='Test',
+            schema_name='test',
+            client_name='test',
         )
 
         connection.set_tenant(tenant)
         self.init_projects()
 
         try:
-            backend, _created = ExchangeBackend.objects.get_or_create(
-                base_currency='USD',
-                name='openexchangerates.org'
-            )
+            backend, _created = ExchangeBackend.objects.get_or_create(base_currency='USD', name='openexchangerates.org')
             Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
             Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
             Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})

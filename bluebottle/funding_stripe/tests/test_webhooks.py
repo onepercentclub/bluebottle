@@ -13,19 +13,11 @@ from rest_framework import status
 
 from bluebottle.activities.messages.reviewer import get_reviewers_for_activity
 from bluebottle.funding.models import Donor
-from bluebottle.funding.tests.factories import (
-    FundingFactory, DonorFactory, BudgetLineFactory
-)
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, BudgetLineFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.base import FundingStripeTestCase, patch_stripe_connect_account_api
-from bluebottle.funding_stripe.tests.factories import (
-    StripePaymentIntentFactory,
-    ExternalAccountFactory
-)
-from bluebottle.funding_stripe.tests.factories import (
-    StripePaymentProviderFactory,
-    StripePayoutAccountFactory
-)
+from bluebottle.funding_stripe.tests.factories import StripePaymentIntentFactory, ExternalAccountFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, StripePayoutAccountFactory
 from bluebottle.grant_management.models import GrantPayment
 from bluebottle.grant_management.tests.factories import GrantPaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -39,7 +31,6 @@ class MockEvent(object):
 
 
 class IntentWebhookTestCase(FundingStripeTestCase):
-
     def setUp(self):
         super(IntentWebhookTestCase, self).setUp()
         StripePaymentProvider.objects.all().delete()
@@ -48,16 +39,11 @@ class IntentWebhookTestCase(FundingStripeTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.bank_account = ExternalAccountFactory.create(
-            connect_account=StripePayoutAccountFactory.create(
-                status="verified", account_id="test-account-id"
-            )
+            connect_account=StripePayoutAccountFactory.create(status='verified', account_id='test-account-id')
         )
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonorFactory.create(activity=self.funding)
-        self.intent = StripePaymentIntentFactory.create(
-            intent_id='some-intent-id',
-            donation=self.donation
-        )
+        self.intent = StripePaymentIntentFactory.create(intent_id='some-intent-id', donation=self.donation)
         self.webhook = reverse('stripe-intent-webhook')
 
     def test_success(self):
@@ -66,50 +52,21 @@ class IntentWebhookTestCase(FundingStripeTestCase):
             data['object']['id'] = self.intent.intent_id
 
         transfer = stripe.Transfer(data['object']['latest_charge']['transfer'])
-        transfer.update({
-            'id': data['object']['latest_charge']['transfer'],
-            'amount': 2500,
-            'currency': 'eur'
-        })
+        transfer.update({'id': data['object']['latest_charge']['transfer'], 'amount': 2500, 'currency': 'eur'})
 
         charge = stripe.Charge('some charge id')
-        charge.update({
-            'status': 'succeeded',
-            'transfer': transfer.id,
-            'refunded': False
-        })
+        charge.update({'status': 'succeeded', 'transfer': transfer.id, 'refunded': False})
 
         payment_intent = stripe.PaymentIntent('some intent id')
-        payment_intent.update({
-            'status': 'succeeded',
-            'latest_charge': charge.id
-        })
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent('payment_intent.succeeded', data)
-        ):
-            with mock.patch(
-                'stripe.Transfer.retrieve',
-                return_value=transfer
-            ):
-                with mock.patch(
-                    'stripe.Charge.retrieve',
-                    return_value=charge
-                ):
-                    with mock.patch(
-                        'stripe.PaymentIntent.retrieve',
-                        return_value=payment_intent
-                    ):
-                        response = self.client.post(
-                            self.webhook,
-                            HTTP_STRIPE_SIGNATURE='some signature'
-                        )
+        payment_intent.update({'status': 'succeeded', 'latest_charge': charge.id})
+        with mock.patch('stripe.Webhook.construct_event', return_value=MockEvent('payment_intent.succeeded', data)):
+            with mock.patch('stripe.Transfer.retrieve', return_value=transfer):
+                with mock.patch('stripe.Charge.retrieve', return_value=charge):
+                    with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
+                        response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
                         self.assertEqual(response.status_code, status.HTTP_200_OK)
                         # Stripe might send double success webhooks
-                        response = self.client.post(
-                            self.webhook,
-                            HTTP_STRIPE_SIGNATURE='some signature'
-                        )
+                        response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
                         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.refresh_from_db()
@@ -129,20 +86,12 @@ class IntentWebhookTestCase(FundingStripeTestCase):
 
         with mock.patch(
             'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'charge.pending', {'object': {'payment_intent': self.intent.intent_id}}
-            )
+            return_value=MockEvent('charge.pending', {'object': {'payment_intent': self.intent.intent_id}}),
         ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
+            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             # Stripe might send double failed webhooks
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
+            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.refresh_from_db()
@@ -158,20 +107,12 @@ class IntentWebhookTestCase(FundingStripeTestCase):
     def test_failed(self):
         with mock.patch(
             'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'payment_intent.payment_failed', {'object': {'id': self.intent.intent_id}}
-            )
+            return_value=MockEvent('payment_intent.payment_failed', {'object': {'id': self.intent.intent_id}}),
         ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
+            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             # Stripe might send double failed webhooks
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
+            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.refresh_from_db()
@@ -198,44 +139,18 @@ class IntentWebhookTestCase(FundingStripeTestCase):
             data['object']['id'] = second_intent.intent_id
 
         transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
-        transfer.update({
-            'id': data['object']['charges']['data'][0]['transfer'],
-            'amount': 2500,
-            'currency': 'eur'
-        })
+        transfer.update({'id': data['object']['charges']['data'][0]['transfer'], 'amount': 2500, 'currency': 'eur'})
 
         charge = stripe.Charge('some charge id')
-        charge.update({
-            'status': 'succeeded',
-            'transfer': transfer.id,
-            'refunded': False
-        })
+        charge.update({'status': 'succeeded', 'transfer': transfer.id, 'refunded': False})
 
         payment_intent = stripe.PaymentIntent('some intent id')
-        payment_intent.update({
-            'status': 'succeeded',
-            'latest_charge': charge.id
-        })
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent('payment_intent.succeeded', data)
-        ):
-            with mock.patch(
-                'stripe.Transfer.retrieve',
-                return_value=transfer
-            ):
-                with mock.patch(
-                    'stripe.Charge.retrieve',
-                    return_value=charge
-                ):
-                    with mock.patch(
-                        'stripe.PaymentIntent.retrieve',
-                        return_value=payment_intent
-                    ):
-                        response = self.client.post(
-                            self.webhook,
-                            HTTP_STRIPE_SIGNATURE='some signature'
-                        )
+        payment_intent.update({'status': 'succeeded', 'latest_charge': charge.id})
+        with mock.patch('stripe.Webhook.construct_event', return_value=MockEvent('payment_intent.succeeded', data)):
+            with mock.patch('stripe.Transfer.retrieve', return_value=transfer):
+                with mock.patch('stripe.Charge.retrieve', return_value=charge):
+                    with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
+                        response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
                         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         second_intent.refresh_from_db()
@@ -255,16 +170,8 @@ class IntentWebhookTestCase(FundingStripeTestCase):
             data = json.load(hook_file)
             data['object']['payment_intent'] = self.intent.intent_id
 
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'charge.refunded', data
-            )
-        ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
+        with mock.patch('stripe.Webhook.construct_event', return_value=MockEvent('charge.refunded', data)):
+            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.refresh_from_db()
@@ -281,16 +188,8 @@ class IntentWebhookTestCase(FundingStripeTestCase):
             data = json.load(hook_file)
             data['object']['payment_intent'] = None
 
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'charge.refunded', data
-            )
-        ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
+        with mock.patch('stripe.Webhook.construct_event', return_value=MockEvent('charge.refunded', data)):
+            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
             self.assertEqual(response.content, b'Not an intent payment')
@@ -307,16 +206,8 @@ class IntentWebhookTestCase(FundingStripeTestCase):
             data = json.load(hook_file)
             data['object']['payment_intent'] = self.intent.intent_id
 
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'charge.refunded', data
-            )
-        ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
+        with mock.patch('stripe.Webhook.construct_event', return_value=MockEvent('charge.refunded', data)):
+            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.payment.refresh_from_db()
@@ -339,66 +230,34 @@ class IntentWebhookTestCase(FundingStripeTestCase):
             data['object']['id'] = intent_id
 
         transfer = stripe.Transfer(data['object']['latest_charge']['transfer'])
-        transfer.update({
-            'id': data['object']['latest_charge']['transfer'],
-            'amount': 2500,
-            'currency': 'eur'
-        })
+        transfer.update({'id': data['object']['latest_charge']['transfer'], 'amount': 2500, 'currency': 'eur'})
 
         charge = stripe.Charge('some charge id')
-        charge.update({
-            'status': 'succeeded',
-            'transfer': transfer.id,
-            'refunded': False,
-            "balance_transaction": munchify({
-                "id": "txn_123456789",
-                "object": "balance_transaction",
-                "available_on": 1734606300
-            })
-        })
+        charge.update(
+            {
+                'status': 'succeeded',
+                'transfer': transfer.id,
+                'refunded': False,
+                'balance_transaction': munchify(
+                    {'id': 'txn_123456789', 'object': 'balance_transaction', 'available_on': 1734606300}
+                ),
+            }
+        )
 
         payment_intent = stripe.PaymentIntent(intent_id)
-        payment_intent.update({
-            'status': 'succeeded',
-            'latest_charge': charge
-        })
-        checkout = stripe.checkout.Session(
-            checkout_id
-        )
-        checkout.update({
-            'payment_intent': intent_id
-        })
+        payment_intent.update({'status': 'succeeded', 'latest_charge': charge})
+        checkout = stripe.checkout.Session(checkout_id)
+        checkout.update({'payment_intent': intent_id})
 
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent('payment_intent.succeeded', data)
-        ):
-            with mock.patch(
-                'stripe.Transfer.retrieve',
-                return_value=transfer
-            ):
-                with mock.patch(
-                    'stripe.Charge.retrieve',
-                    return_value=charge
-                ):
-                    with mock.patch(
-                        'stripe.PaymentIntent.retrieve',
-                        return_value=payment_intent
-                    ):
-                        with mock.patch(
-                            'stripe.checkout.Session.retrieve',
-                            return_value=checkout
-                        ):
-                            response = self.client.post(
-                                self.webhook,
-                                HTTP_STRIPE_SIGNATURE='some signature'
-                            )
+        with mock.patch('stripe.Webhook.construct_event', return_value=MockEvent('payment_intent.succeeded', data)):
+            with mock.patch('stripe.Transfer.retrieve', return_value=transfer):
+                with mock.patch('stripe.Charge.retrieve', return_value=charge):
+                    with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
+                        with mock.patch('stripe.checkout.Session.retrieve', return_value=checkout):
+                            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
                             self.assertEqual(response.status_code, status.HTTP_200_OK)
                             # Stripe might send double success webhooks
-                            response = self.client.post(
-                                self.webhook,
-                                HTTP_STRIPE_SIGNATURE='some signature'
-                            )
+                            response = self.client.post(self.webhook, HTTP_STRIPE_SIGNATURE='some signature')
                             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         grant_payment = GrantPayment.objects.get(intent_id=intent_id)
@@ -406,111 +265,113 @@ class IntentWebhookTestCase(FundingStripeTestCase):
 
 
 class StripeConnectWebhookTestCase(FundingStripeTestCase):
-
     def setUp(self):
         super(StripeConnectWebhookTestCase, self).setUp()
         self.user = BlueBottleUserFactory.create()
 
         self.payout_account = StripePayoutAccountFactory.create(
             owner=self.user,
-            account_id="test-account-id",
+            account_id='test-account-id',
             payouts_enabled=False,
             payments_enabled=False,
             verified=False,
         )
 
         external_account = ExternalAccountFactory.create(
-            connect_account=self.payout_account,
-            account_id='some-bank-token'
+            connect_account=self.payout_account, account_id='some-bank-token'
         )
         self.external_account = external_account
         self.funding = FundingFactory.create(bank_account=external_account)
         self.funding.initiative.states.submit(save=True)
         BudgetLineFactory.create(activity=self.funding)
-        self.webhook = reverse("stripe-connect-webhook")
+        self.webhook = reverse('stripe-connect-webhook')
 
         external_account = stripe.BankAccount(external_account.account_id)
-        external_account.update(munch.munchify({
-            'object': 'bank_account',
-            'account_holder_name': 'Jane Austen',
-            'account_holder_type': 'individual',
-            'bank_name': 'STRIPE TEST BANK',
-            'country': 'NL',
-            'currency': 'usd',
-            'fingerprint': '1JWtPxqbdX5Gamtc',
-            'last4': '6789',
-            'metadata': {
-                'order_id': '6735'
-            },
-            'routing_number': '110000000',
-            'status': 'new',
-            'account': 'acct_1032D82eZvKYlo2C',
-            "requirements": {
-                "eventually_due": [],
-                "currently_due": [],
-                "past_due": [],
-                "pending_verification": [],
-            },
-            "future_requirements": {
-                "eventually_due": [],
-                "currently_due": [],
-                "past_due": [],
-                "pending_verification": [],
-            },
-        }))
+        external_account.update(
+            munch.munchify(
+                {
+                    'object': 'bank_account',
+                    'account_holder_name': 'Jane Austen',
+                    'account_holder_type': 'individual',
+                    'bank_name': 'STRIPE TEST BANK',
+                    'country': 'NL',
+                    'currency': 'usd',
+                    'fingerprint': '1JWtPxqbdX5Gamtc',
+                    'last4': '6789',
+                    'metadata': {'order_id': '6735'},
+                    'routing_number': '110000000',
+                    'status': 'new',
+                    'account': 'acct_1032D82eZvKYlo2C',
+                    'requirements': {
+                        'eventually_due': [],
+                        'currently_due': [],
+                        'past_due': [],
+                        'pending_verification': [],
+                    },
+                    'future_requirements': {
+                        'eventually_due': [],
+                        'currently_due': [],
+                        'past_due': [],
+                        'pending_verification': [],
+                    },
+                }
+            )
+        )
 
         external_accounts = stripe.ListObject()
         external_accounts.data = [external_account]
-        external_accounts.update({
-            'total_count': 1,
-        })
+        external_accounts.update(
+            {
+                'total_count': 1,
+            }
+        )
 
         self.connect_account = stripe.Account(self.payout_account.account_id)
         self.connect_account.update(
             munch.munchify(
                 {
-                    "country": "NL",
-                    "email": "connect-webhook-test@example.com",
-                    "business_profile": {
-                        "mcc": "8398",
-                        "product_description": "Not applicable - connect webhook test.",
-                        "url": "https://goodup.com",
+                    'country': 'NL',
+                    'email': 'connect-webhook-test@example.com',
+                    'business_profile': {
+                        'mcc': '8398',
+                        'product_description': 'Not applicable - connect webhook test.',
+                        'url': 'https://goodup.com',
                     },
-                    "charges_enabled": True,
-                    "payouts_enabled": True,
-                    "business_type": "individual",
-                    "requirements": {
-                        "disabled": False,
-                        "eventually_due": [],
-                        "currently_due": [],
-                        "past_due": [],
-                        "pending_verification": [],
-                        "disabled_reason": "",
+                    'charges_enabled': True,
+                    'payouts_enabled': True,
+                    'business_type': 'individual',
+                    'requirements': {
+                        'disabled': False,
+                        'eventually_due': [],
+                        'currently_due': [],
+                        'past_due': [],
+                        'pending_verification': [],
+                        'disabled_reason': '',
                     },
-                    "future_requirements": {
-                        "eventually_due": [],
-                        "currently_due": [],
-                        "past_due": [],
-                        "pending_verification": [],
+                    'future_requirements': {
+                        'eventually_due': [],
+                        'currently_due': [],
+                        'past_due': [],
+                        'pending_verification': [],
                     },
-                    "individual": {
-                        "verification": {
-                            "status": "verified",
-                            "document": {
-                                "back": None,
-                                "details": None,
-                                "details_code": None,
-                                "front": "file_12345",
+                    'individual': {
+                        'verification': {
+                            'status': 'verified',
+                            'document': {
+                                'back': None,
+                                'details': None,
+                                'details_code': None,
+                                'front': 'file_12345',
                             },
                         },
-                        "requirements": {
-                            "eventually_due": [],
-                            "currently_due": [],
-                            "past_due": [],
-                            "pending_verification": [],
+                        'requirements': {
+                            'eventually_due': [],
+                            'currently_due': [],
+                            'past_due': [],
+                            'pending_verification': [],
                         },
                     },
-                    "external_accounts": external_accounts,
+                    'external_accounts': external_accounts,
                 }
             )
         )
@@ -525,12 +386,11 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
         self.assertEqual(len(mail.outbox), len(recipients))
         for message in mail.outbox:
             self.assertEqual(
-                message.subject,
-                "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
+                message.subject, 'Failed identity verification for a running crowdfunding campaign on Test ⚠️'
             )
 
     def load_connect_account_fixture(self, filename):
-        fixture_path = f"bluebottle/funding_stripe/tests/files/{filename}"
+        fixture_path = f'bluebottle/funding_stripe/tests/files/{filename}'
         with open(fixture_path) as hook_file:
             data = munch.munchify(json.load(hook_file))
 
@@ -545,16 +405,14 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
     def execute_hook(self):
         mail.outbox = []
 
-        data = {"object": self.connect_account}
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'account.updated', data
-            )
-        ), patch_stripe_connect_account_api(self.connect_account):
+        data = {'object': self.connect_account}
+        with (
+            mock.patch('stripe.Webhook.construct_event', return_value=MockEvent('account.updated', data)),
+            patch_stripe_connect_account_api(self.connect_account),
+        ):
             response = self.client.post(
-                reverse("stripe-connect-webhook"),
-                HTTP_STRIPE_SIGNATURE="some signature",
+                reverse('stripe-connect-webhook'),
+                HTTP_STRIPE_SIGNATURE='some signature',
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -562,9 +420,9 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
         self.funding.refresh_from_db()
 
     def approve(self):
-        self.funding.initiative.status = "approved"
+        self.funding.initiative.status = 'approved'
         self.funding.initiative.save()
-        self.funding.status = "open"
+        self.funding.status = 'open'
         self.funding.save()
 
     def verify(self):
@@ -580,39 +438,29 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
 
         self.assertEqual(self.payout_account.status, 'verified')
         message = mail.outbox[0]
-        self.assertEqual(
-            message.subject, u'Your identity has been verified on Test'
-        )
-        self.assertTrue(
-            self.funding.get_absolute_url() in message.body
-        )
+        self.assertEqual(message.subject, 'Your identity has been verified on Test')
+        self.assertTrue(self.funding.get_absolute_url() in message.body)
 
     def test_incomplete(self):
         self.verify()
         # Missing fields
         self.connect_account.payouts_enabled = False
-        self.connect_account.requirements = {
-            "eventually_due": ["individual.document.front"]
-        }
+        self.connect_account.requirements = {'eventually_due': ['individual.document.front']}
 
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "incomplete")
+        self.assertEqual(self.payout_account.status, 'incomplete')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
-        )
+        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign on Test')
 
     def test_incomplete_open(self):
         self.verify()
         self.approve()
 
-        self.connect_account.requirements = {
-            "eventually_due": ["individual.document.front"]
-        }
+        self.connect_account.requirements = {'eventually_due': ['individual.document.front']}
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "incomplete")
+        self.assertEqual(self.payout_account.status, 'incomplete')
 
         self.assert_live_incomplete_notifications()
 
@@ -621,81 +469,67 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
         self.approve()
 
         self.connect_account.charges_enabled = False
-        self.connect_account.requirements = {
-            "eventually_due": ["individual.document.front"]
-        }
+        self.connect_account.requirements = {'eventually_due': ['individual.document.front']}
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "disabled")
-        self.assertEqual(self.funding.status, "on_hold")
+        self.assertEqual(self.payout_account.status, 'disabled')
+        self.assertEqual(self.funding.status, 'on_hold')
 
         self.connect_account.charges_enabled = True
-        self.connect_account.requirements = {
-            "eventually_due": []
-        }
+        self.connect_account.requirements = {'eventually_due': []}
         self.execute_hook()
 
         self.payout_account.refresh_from_db()
-        self.assertEqual(self.payout_account.status, "verified")
+        self.assertEqual(self.payout_account.status, 'verified')
         self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, "open")
+        self.assertEqual(self.funding.status, 'open')
 
     def test_document_rejected(self):
         self.verify()
-        self.connect_account.individual.verification.details = (
-            "this passport smells fishy"
-        )
-        self.connect_account.individual.verification.status = "unverified"
-        self.connect_account.requirements = {
-            "eventually_due": ["individual.document.front"]
-        }
+        self.connect_account.individual.verification.details = 'this passport smells fishy'
+        self.connect_account.individual.verification.status = 'unverified'
+        self.connect_account.requirements = {'eventually_due': ['individual.document.front']}
 
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "incomplete")
+        self.assertEqual(self.payout_account.status, 'incomplete')
 
         message = mail.outbox[0]
-        self.assertEqual(
-            message.subject, "Action required for your crowdfunding campaign on Test"
-        )
-        self.assertTrue("/activities/stripe/kyc" in message.body)
+        self.assertEqual(message.subject, 'Action required for your crowdfunding campaign on Test')
+        self.assertTrue('/activities/stripe/kyc' in message.body)
 
     def test_document_rejected_open(self):
         self.verify()
         self.approve()
-        self.connect_account.individual.verification.details = (
-            "this passport smells fishy"
-        )
-        self.connect_account.individual.verification.status = "unverified"
-        self.connect_account.requirements = {
-            "eventually_due": ["individual.document.front"]
-        }
+        self.connect_account.individual.verification.details = 'this passport smells fishy'
+        self.connect_account.individual.verification.status = 'unverified'
+        self.connect_account.requirements = {'eventually_due': ['individual.document.front']}
 
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "incomplete")
+        self.assertEqual(self.payout_account.status, 'incomplete')
 
         self.assert_live_incomplete_notifications()
-        self.assertTrue("/admin/funding/payoutaccount/" in mail.outbox[0].body)
+        self.assertTrue('/admin/funding/payoutaccount/' in mail.outbox[0].body)
 
     def test_payouts_disabled(self):
         self.connect_account.payouts_enabled = False
         self.execute_hook()
-        self.assertEqual(self.payout_account.status, "incomplete")
+        self.assertEqual(self.payout_account.status, 'incomplete')
 
     def test_tos_reaccept(self):
         self.payout_account.tos_accepted = True
         with patch_stripe_connect_account_api(self.connect_account):
             self.payout_account.save(run_triggers=False)
 
-        self.connect_account.requirements = munch.munchify({
-            'eventually_due': ['tos_acceptance.date', 'tos_acceptance.ip']
-        })
+        self.connect_account.requirements = munch.munchify(
+            {'eventually_due': ['tos_acceptance.date', 'tos_acceptance.ip']}
+        )
         self.execute_hook()
         self.assertFalse(self.payout_account.tos_accepted)
 
     def test_company_non_profit_verified(self):
-        self.load_connect_account_fixture("connect_webhook_company_verified.json")
+        self.load_connect_account_fixture('connect_webhook_company_verified.json')
 
         self.execute_hook()
 
@@ -704,7 +538,7 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
         self.assertEqual(self.payout_account.business_type, 'non_profit')
 
     def test_individual_fixture_verified(self):
-        self.load_connect_account_fixture("connect_webhook_indinvidual_verified.json")
+        self.load_connect_account_fixture('connect_webhook_indinvidual_verified.json')
 
         self.execute_hook()
 

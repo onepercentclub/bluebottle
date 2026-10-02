@@ -1,14 +1,9 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from rest_framework_json_api.relations import (
-    ResourceRelatedField,
-    SerializerMethodResourceRelatedField
-)
+from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
 
 from bluebottle.activities.models import Organizer
-from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
-)
+from bluebottle.activities.utils import BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -28,19 +23,17 @@ class CollectActivitySerializer(BaseActivitySerializer):
     )
 
     my_contributor = SerializerMethodResourceRelatedField(
-        model=CollectContributor,
-        read_only=True,
-        source='get_my_contributor'
+        model=CollectContributor, read_only=True, source='get_my_contributor'
     )
 
     contributors = RelatedLinkFieldByStatus(
         source='participants',
         read_only=True,
-        related_link_view_name="related-collect-contributors",
-        related_link_url_kwarg="activity_id",
+        related_link_view_name='related-collect-contributors',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "active": ["succeeded", "accepted"],
-            "failed": ["rejected", "withdrawn", "removed"],
+            'active': ['succeeded', 'accepted'],
+            'failed': ['rejected', 'withdrawn', 'removed'],
         },
     )
 
@@ -49,7 +42,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
         url_args=('pk',),
         filename='contributors.csv',
         permission=CanExportParticipantsPermission,
-        read_only=True
+        read_only=True,
     )
 
     def get_links(self, instance):
@@ -67,10 +60,11 @@ class CollectActivitySerializer(BaseActivitySerializer):
             return instance.contributors.filter(user=user).instance_of(CollectContributor).first()
 
     def get_contributor_count(self, instance):
-        return instance.contributors.not_instance_of(Organizer).filter(
-            status__in=['accepted', 'succeeded', 'activity_refunded'],
-            user__isnull=False
-        ).count()
+        return (
+            instance.contributors.not_instance_of(Organizer)
+            .filter(status__in=['accepted', 'succeeded', 'activity_refunded'], user__isnull=False)
+            .count()
+        )
 
     target = serializers.FloatField(allow_null=True, required=False)
     realized = serializers.FloatField(allow_null=True, required=False)
@@ -90,7 +84,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'target',
             'realized',
             'links',
-            'collect_type'
+            'collect_type',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -109,7 +103,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'my_contributor': 'bluebottle.collect.serializers.CollectContributorSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
-        }
+        },
     )
 
 
@@ -149,7 +143,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
-        }
+        },
     )
 
 
@@ -160,14 +154,14 @@ class CollectActivityTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        included_resources = ['resource', ]
+        included_resources = [
+            'resource',
+        ]
         resource_name = 'activities/collect-transitions'
 
 
 class CollectContributorSerializer(BaseContributorSerializer):
-    activity = ResourceRelatedField(
-        queryset=CollectActivity.objects.all()
-    )
+    activity = ResourceRelatedField(queryset=CollectActivity.objects.all())
     permissions = ResourcePermissionField('collect-contributor-detail', view_args=('pk',))
 
     class Meta(BaseContributorSerializer.Meta):
@@ -204,9 +198,7 @@ class CollectContributorTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/collect/contributor-transitions'
-        included_resources = [
-            'resource', 'resource.activity', 'resource.activity.goals'
-        ]
+        included_resources = ['resource', 'resource.activity', 'resource.activity.goals']
 
 
 class CollectTypeSerializer(ModelSerializer):

@@ -7,7 +7,9 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
     ScheduleRegistration,
-    TeamScheduleRegistration, DateRegistration, Registration,
+    TeamScheduleRegistration,
+    DateRegistration,
+    Registration,
 )
 from bluebottle.time_based.serializers import (
     DeadlineRegistrationSerializer,
@@ -17,64 +19,49 @@ from bluebottle.time_based.serializers import (
     ScheduleRegistrationSerializer,
     ScheduleRegistrationTransitionSerializer,
     TeamScheduleRegistrationSerializer,
-    TeamScheduleRegistrationTransitionSerializer, DateRegistrationSerializer, DateRegistrationTransitionSerializer,
-    RegistrationDocumentSerializer
+    TeamScheduleRegistrationTransitionSerializer,
+    DateRegistrationSerializer,
+    DateRegistrationTransitionSerializer,
+    RegistrationDocumentSerializer,
 )
-from bluebottle.time_based.views.mixins import (
-    AnonymizeMembersMixin, FilterRelatedUserMixin,
-    RequiredQuestionsMixin
-)
+from bluebottle.time_based.views.mixins import AnonymizeMembersMixin, FilterRelatedUserMixin, RequiredQuestionsMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
     ResourceOwnerPermission,
-    ResourcePermission, IsAuthenticated, IsOwnerOrReadOnly,
+    ResourcePermission,
+    IsAuthenticated,
+    IsOwnerOrReadOnly,
 )
-from bluebottle.utils.views import (
-    JsonApiViewMixin, ListAPIView, CreateAPIView, PrivateFileView,
-    RetrieveUpdateAPIView
-)
+from bluebottle.utils.views import JsonApiViewMixin, ListAPIView, CreateAPIView, PrivateFileView, RetrieveUpdateAPIView
 
 
 class RegistrationList(JsonApiViewMixin, RequiredQuestionsMixin, CreateAPIView):
-
-    permission_classes = (
-        OneOf(ResourcePermission, IsAuthenticated),
-    )
+    permission_classes = (OneOf(ResourcePermission, IsAuthenticated),)
 
 
 class DateRegistrationList(RegistrationList):
-    queryset = DateRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = DateRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = DateRegistrationSerializer
 
 
 class DeadlineRegistrationList(RegistrationList):
-    queryset = DeadlineRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = DeadlineRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = DeadlineRegistrationSerializer
 
 
 class ScheduleRegistrationList(RegistrationList):
-    queryset = ScheduleRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = ScheduleRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = ScheduleRegistrationSerializer
 
 
 class TeamScheduleRegistrationList(RegistrationList):
-    queryset = TeamScheduleRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = TeamScheduleRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = TeamScheduleRegistrationSerializer
 
 
 class PeriodicRegistrationList(RegistrationList):
-    queryset = PeriodicRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = PeriodicRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = PeriodicRegistrationSerializer
 
 
@@ -90,9 +77,7 @@ class RelatedRegistrationListView(
     search_fields = ['user__first_name', 'user__last_name']
     filter_backends = [filters.SearchFilter]
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -105,58 +90,42 @@ class RelatedRegistrationListView(
             else:
                 queryset = queryset.none()
 
-        status_filter = self.request.query_params.get("filter[status]")
+        status_filter = self.request.query_params.get('filter[status]')
         if status_filter:
-            statuses = status_filter.split(",")
+            statuses = status_filter.split(',')
             queryset = queryset.filter(status__in=statuses)
 
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
+        return queryset.filter(activity_id=self.kwargs['activity_id'])
 
 
 class DateRelatedRegistrationList(RelatedRegistrationListView):
-    queryset = DateRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = DateRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = DateRegistrationSerializer
 
 
 class DeadlineRelatedRegistrationList(RelatedRegistrationListView):
-    queryset = DeadlineRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = DeadlineRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = DeadlineRegistrationSerializer
 
 
 class ScheduleRelatedRegistrationList(RelatedRegistrationListView):
-    queryset = ScheduleRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = ScheduleRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = ScheduleRegistrationSerializer
 
 
 class TeamScheduleRelatedRegistrationList(RelatedRegistrationListView):
-    queryset = TeamScheduleRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = TeamScheduleRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = TeamScheduleRegistrationSerializer
-    permission_classes = (
-        IsAuthenticated, IsOwnerOrReadOnly
-    )
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
 
 class PeriodicRelatedRegistrationList(RelatedRegistrationListView):
-    queryset = PeriodicRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
+    queryset = PeriodicRegistration.objects.prefetch_related('user', 'activity')
     serializer_class = PeriodicRegistrationSerializer
 
 
 class RegistrationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),)
 
 
 class DateRegistrationDetail(RegistrationDetail):
@@ -177,9 +146,7 @@ class ScheduleRegistrationDetail(RegistrationDetail):
 class TeamScheduleRegistrationDetail(RegistrationDetail):
     queryset = TeamScheduleRegistration.objects.all()
     serializer_class = TeamScheduleRegistrationSerializer
-    permission_classes = (
-        IsAuthenticated, IsOwnerOrReadOnly
-    )
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
 
 class PeriodicRegistrationDetail(RegistrationDetail):

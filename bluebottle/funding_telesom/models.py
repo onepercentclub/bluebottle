@@ -6,7 +6,6 @@ from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, B
 
 
 class TelesomPaymentProvider(PaymentProvider):
-
     title = 'Telesom / Zaad'
 
     merchant_uid = models.CharField(max_length=100)
@@ -17,14 +16,7 @@ class TelesomPaymentProvider(PaymentProvider):
 
     @property
     def payment_methods(self):
-        return [
-            PaymentMethod(
-                provider='telesom',
-                name='Zaad',
-                currencies=['USD'],
-                code='zaad'
-            )
-        ]
+        return [PaymentMethod(provider='telesom', name='Zaad', currencies=['USD'], code='zaad')]
 
     @property
     def private_settings(self):
@@ -32,7 +24,7 @@ class TelesomPaymentProvider(PaymentProvider):
             'merchant_uid': self.merchant_uid,
             'api_user_id': self.api_user_id,
             'api_key': self.api_key,
-            'api_url': self.api_url
+            'api_url': self.api_url,
         }
 
     class Meta(object):
@@ -58,7 +50,7 @@ class TelesomPayment(Payment):
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = TelesomPaymentProvider.objects.get()
-            self.unique_id = "{}-{}".format(provider.prefix, self.donation.id)
+            self.unique_id = '{}-{}'.format(provider.prefix, self.donation.id)
         super(TelesomPayment, self).save(*args, **kwargs)
 
 

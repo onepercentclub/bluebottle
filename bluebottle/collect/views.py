@@ -1,21 +1,33 @@
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
+    ActivityOwnerPermission,
+    ActivityTypePermission,
+    ActivityStatusPermission,
+    DeleteActivityPermission,
+    ContributorPermission,
+    ActivitySegmentPermission,
+    ActivityManagerPermission,
 )
 from bluebottle.activities.views import RelatedContributorListView, ActivityDetailView
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
-    CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
-    CollectContributorTransitionSerializer, CollectTypeSerializer
+    CollectActivitySerializer,
+    CollectActivityTransitionSerializer,
+    CollectContributorSerializer,
+    CollectContributorTransitionSerializer,
+    CollectTypeSerializer,
 )
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
-)
+from bluebottle.utils.permissions import OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 from bluebottle.utils.views import (
-    ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin, ExportView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
-    IcalView
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateAPIView,
+    JsonApiViewMixin,
+    ExportView,
+    TranslatedApiViewMixin,
+    RetrieveAPIView,
+    NoPagination,
+    IcalView,
 )
 
 
@@ -34,7 +46,7 @@ class CollectActivityDetailView(ActivityDetailView):
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
         DeleteActivityPermission,
-        ActivitySegmentPermission
+        ActivitySegmentPermission,
     )
 
     queryset = CollectActivity.objects.all()
@@ -47,26 +59,20 @@ class CollectActivityTransitionList(TransitionList):
 
 
 class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
 
     queryset = CollectContributor.objects.prefetch_related('user')
     serializer_class = CollectContributorSerializer
 
 
 class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),)
     queryset = CollectContributor.objects.all()
     serializer_class = CollectContributorSerializer
 
 
 class CollectContributorDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),)
     queryset = CollectContributor.objects.all()
     serializer_class = CollectContributorSerializer
 
@@ -87,15 +93,15 @@ class CollectContributorExportView(ExportView):
     model = CollectActivity
 
     def get_instances(self):
-        return self.get_object().contributors.instance_of(
-            CollectContributor
-        )
+        return self.get_object().contributors.instance_of(CollectContributor)
 
 
 class CollectTypeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     serializer_class = CollectTypeSerializer
     queryset = CollectType.objects.filter(disabled=False)
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
     pagination_class = NoPagination
 
     def get_queryset(self):
@@ -105,7 +111,9 @@ class CollectTypeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
 class CollectTypeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
     serializer_class = CollectTypeSerializer
     queryset = CollectType.objects.filter(disabled=False)
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
 
 
 class CollectIcalView(IcalView):

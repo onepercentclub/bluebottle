@@ -12,27 +12,32 @@ from bluebottle.funding.messages.funding.activity_manager import (
 )
 from bluebottle.funding.messages.funding.platform_manager import (
     LivePayoutAccountMarkedIncomplete,
-    LivePublicPayoutAccountMarkedIncomplete
+    LivePublicPayoutAccountMarkedIncomplete,
 )
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
 from bluebottle.funding_stripe.effects import (
-    PutActivitiesOnHoldEffect, AcceptTosEffect, UpdateBusinessTypeEffect, OpenActivitiesOnHoldEffect,
+    PutActivitiesOnHoldEffect,
+    AcceptTosEffect,
+    UpdateBusinessTypeEffect,
+    OpenActivitiesOnHoldEffect,
 )
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,
-    ExternalAccount, StripePayment,
+    ExternalAccount,
+    StripePayment,
 )
 from bluebottle.funding_stripe.states import (
     StripePayoutAccountStateMachine,
     StripeSourcePaymentStateMachine,
-    StripeBankAccountStateMachine, StripePaymentStateMachine,
+    StripeBankAccountStateMachine,
+    StripePaymentStateMachine,
 )
 from bluebottle.grant_management.effects import PrepareGrantApplicationPayoutsEffect
 from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationPayoutAccountVerified,
-    GrantApplicationPayoutAccountMarkedIncomplete
+    GrantApplicationPayoutAccountMarkedIncomplete,
 )
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -42,30 +47,19 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
     triggers = BasePaymentTriggers.triggers + [
         TransitionTrigger(
             StripeSourcePaymentStateMachine.authorize,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
-            ]
+            effects=[RelatedTransitionEffect('donation', DonorStateMachine.succeed)],
         ),
-
         TransitionTrigger(
             StripeSourcePaymentStateMachine.succeed,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
-            ]
+            effects=[RelatedTransitionEffect('donation', DonorStateMachine.succeed)],
         ),
-
         TransitionTrigger(
             StripeSourcePaymentStateMachine.cancel,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.fail)
-            ]
+            effects=[RelatedTransitionEffect('donation', DonorStateMachine.fail)],
         ),
-
         TransitionTrigger(
             StripeSourcePaymentStateMachine.dispute,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.refund)
-            ]
+            effects=[RelatedTransitionEffect('donation', DonorStateMachine.refund)],
         ),
     ]
 
@@ -75,29 +69,16 @@ class StripePaymentTriggers(BasePaymentTriggers):
     triggers = BasePaymentTriggers.triggers + [
         TransitionTrigger(
             StripePaymentStateMachine.authorize,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
-            ]
-        ),
-
-        TransitionTrigger(
-            StripePaymentStateMachine.succeed,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
-            ]
+            effects=[RelatedTransitionEffect('donation', DonorStateMachine.succeed)],
         ),
         TransitionTrigger(
-            StripePaymentStateMachine.cancel,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.fail)
-            ]
+            StripePaymentStateMachine.succeed, effects=[RelatedTransitionEffect('donation', DonorStateMachine.succeed)]
         ),
-
         TransitionTrigger(
-            StripePaymentStateMachine.dispute,
-            effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.refund)
-            ]
+            StripePaymentStateMachine.cancel, effects=[RelatedTransitionEffect('donation', DonorStateMachine.fail)]
+        ),
+        TransitionTrigger(
+            StripePaymentStateMachine.dispute, effects=[RelatedTransitionEffect('donation', DonorStateMachine.refund)]
         ),
     ]
 
@@ -110,19 +91,13 @@ class StripePayoutAccountTriggers(TriggerManager):
 
     def has_active_funding_campaign(effect):
         """has a funding campaign that is open or on hold"""
-        live_statuses = ["open", "on_hold"]
-        return (
-            effect.instance.pk and
-            effect.instance.funding.filter(status__in=live_statuses).exists()
-        )
+        live_statuses = ['open', 'on_hold']
+        return effect.instance.pk and effect.instance.funding.filter(status__in=live_statuses).exists()
 
     def has_draft_funding_campaign(effect):
         """has a funding campaign that is in draft, submitted or needs_work"""
-        draft_statuses = ["draft", "needs_work", "submitted"]
-        return (
-            effect.instance.pk and
-            effect.instance.funding.filter(status__in=draft_statuses).exists()
-        )
+        draft_statuses = ['draft', 'needs_work', 'submitted']
+        return effect.instance.pk and effect.instance.funding.filter(status__in=draft_statuses).exists()
 
     def has_grant_application(effect):
         """has a grant application"""
@@ -130,18 +105,11 @@ class StripePayoutAccountTriggers(TriggerManager):
 
     def has_granted_grant_application(effect):
         """has a grant application that is granted"""
-        return (
-            effect.instance.pk and
-            effect.instance.grant_application.filter(status='granted').exists()
-        )
+        return effect.instance.pk and effect.instance.grant_application.filter(status='granted').exists()
 
     def account_verified(self):
         """the connect account is verified"""
-        return (
-            self.instance.verified
-            and self.instance.payments_enabled
-            and self.instance.payouts_enabled
-        )
+        return self.instance.verified and self.instance.payments_enabled and self.instance.payouts_enabled
 
     def account_not_verified(self):
         """the connect account is not verified"""
@@ -154,7 +122,7 @@ class StripePayoutAccountTriggers(TriggerManager):
 
     def is_not_complete(self):
         """The connect account is verified"""
-        return (not self.instance.requirements == [])
+        return not self.instance.requirements == []
 
     def is_public(self):
         """The connect account is public"""
@@ -170,14 +138,10 @@ class StripePayoutAccountTriggers(TriggerManager):
 
     def has_new_requirements(self):
         """The connect account is verified"""
-        initial_requirements = self.instance._initial_values["requirements"]
+        initial_requirements = self.instance._initial_values['requirements']
 
         return len(
-            [
-                requirement
-                for requirement in self.instance.requirements
-                if requirement not in initial_requirements
-            ]
+            [requirement for requirement in self.instance.requirements if requirement not in initial_requirements]
         )
 
     triggers = [
@@ -187,29 +151,18 @@ class StripePayoutAccountTriggers(TriggerManager):
                 OpenActivitiesOnHoldEffect,
                 PrepareGrantApplicationPayoutsEffect,
                 NotificationEffect(
-                    GrantApplicationPayoutAccountVerified,
-                    conditions=[has_grant_application, has_grant_application]
+                    GrantApplicationPayoutAccountVerified, conditions=[has_grant_application, has_grant_application]
                 ),
-                NotificationEffect(
-                    FundingPayoutAccountVerified,
-                    conditions=[is_not_public, has_funding_campaign]
-                ),
-                NotificationEffect(
-                    FundingPayoutAccountVerified,
-                    conditions=[is_public, has_funding_campaign]
-                ),
-                RelatedTransitionEffect(
-                    'external_accounts',
-                    StripeBankAccountStateMachine.verify
-                )
-            ]
+                NotificationEffect(FundingPayoutAccountVerified, conditions=[is_not_public, has_funding_campaign]),
+                NotificationEffect(FundingPayoutAccountVerified, conditions=[is_public, has_funding_campaign]),
+                RelatedTransitionEffect('external_accounts', StripeBankAccountStateMachine.verify),
+            ],
         ),
         TransitionTrigger(
             StripePayoutAccountStateMachine.set_incomplete,
             effects=[
                 NotificationEffect(
-                    GrantApplicationPayoutAccountMarkedIncomplete,
-                    conditions=[has_granted_grant_application]
+                    GrantApplicationPayoutAccountMarkedIncomplete, conditions=[has_granted_grant_application]
                 ),
                 NotificationEffect(
                     FundingPayoutAccountMarkedIncomplete,
@@ -235,12 +188,10 @@ class StripePayoutAccountTriggers(TriggerManager):
         ),
         TransitionTrigger(
             StripePayoutAccountStateMachine.disable,
-            effects=[
-                PutActivitiesOnHoldEffect
-            ],
+            effects=[PutActivitiesOnHoldEffect],
         ),
         ModelChangedTrigger(
-            ["verified", "requirements"],
+            ['verified', 'requirements'],
             effects=[
                 TransitionEffect(
                     StripePayoutAccountStateMachine.verify,
@@ -253,7 +204,7 @@ class StripePayoutAccountTriggers(TriggerManager):
             ],
         ),
         ModelChangedTrigger(
-            ["requirements"],
+            ['requirements'],
             effects=[
                 TransitionEffect(
                     StripePayoutAccountStateMachine.set_incomplete,
@@ -266,17 +217,14 @@ class StripePayoutAccountTriggers(TriggerManager):
             ],
         ),
         ModelChangedTrigger(
-            ["tos_accepted"],
+            ['tos_accepted'],
             effects=[
                 AcceptTosEffect,
             ],
         ),
-
         ModelChangedTrigger(
-            ["business_type"],
-            effects=[
-                UpdateBusinessTypeEffect
-            ],
+            ['business_type'],
+            effects=[UpdateBusinessTypeEffect],
         ),
     ]
 
@@ -287,20 +235,12 @@ class StripeBankAccountTriggers(TriggerManager):
         """connected payout account is verified"""
         return (
             effect.instance.connect_account
-            and effect.instance.connect_account.status
-            == PayoutAccountStateMachine.verified.value
+            and effect.instance.connect_account.status == PayoutAccountStateMachine.verified.value
         )
 
     triggers = [
         TransitionTrigger(
             StripeBankAccountStateMachine.initiate,
-            effects=[
-                TransitionEffect(
-                    StripeBankAccountStateMachine.verify,
-                    conditions=[
-                        account_verified
-                    ]
-                )
-            ]
+            effects=[TransitionEffect(StripeBankAccountStateMachine.verify, conditions=[account_verified])],
         )
     ]

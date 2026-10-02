@@ -26,7 +26,7 @@ class CollectTypeFactory(factory.DjangoModelFactory):
         obj = super(CollectTypeFactory, cls)._create(model_class, *args, **kwargs)
         for language in Language.objects.all():
             obj.set_current_language(language.full_code)
-            obj.name = "Name {} {}".format(language.code, obj.id)
+            obj.name = 'Name {} {}'.format(language.code, obj.id)
         obj.save()
         return obj
 
@@ -46,8 +46,8 @@ class CollectActivityFactory(factory.DjangoModelFactory):
     initiative = factory.SubFactory(InitiativeFactory)
     collect_type = factory.SubFactory(CollectTypeFactory)
     location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
-    start = factory.Faker('future_date', end_date="+20d", tzinfo=UTC)
-    end = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
+    start = factory.Faker('future_date', end_date='+20d', tzinfo=UTC)
+    end = factory.Faker('future_date', end_date='+2d', tzinfo=UTC)
     theme = factory.SubFactory(ThemeFactory)
 
 

@@ -6,9 +6,7 @@ from django.db import connection
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.collect.tasks import collect_tasks
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
-from bluebottle.initiatives.tests.factories import (
-    InitiativeFactory
-)
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 

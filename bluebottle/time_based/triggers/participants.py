@@ -2,19 +2,22 @@ from django.utils.timezone import now
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activities.states import ContributionStateMachine
-from bluebottle.activities.triggers import (
-    ContributorTriggers
-)
+from bluebottle.activities.triggers import ContributorTriggers
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     TransitionTrigger,
     register,
-    ModelChangedTrigger, ModelDeletedTrigger,
+    ModelChangedTrigger,
+    ModelDeletedTrigger,
 )
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect, CreateSlotTimeContributionEffect, \
-    CheckPreparationTimeContributionEffect, SlotParticipantUnFollowActivityEffect
+from bluebottle.time_based.effects import (
+    CreatePreparationTimeContributionEffect,
+    CreateSlotTimeContributionEffect,
+    CheckPreparationTimeContributionEffect,
+    SlotParticipantUnFollowActivityEffect,
+)
 from bluebottle.time_based.effects.effects import (
     CreateSchedulePreparationTimeContributionEffect,
 )
@@ -24,24 +27,34 @@ from bluebottle.time_based.effects.participants import (
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
     LockScheduleActivityIfFullEffect,
-    CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, CreateDateRegistrationEffect,
+    CreatePeriodicPreparationTimeContributionEffect,
+    CreateScheduleSlotEffect,
+    CreateDateRegistrationEffect,
     CreateRegisteredTimeContributionEffect,
 )
 from bluebottle.time_based.effects.registrations import DeleteRegistrationEffect
 from bluebottle.time_based.messages import (
-    ParticipantAddedNotification, ManagerSlotParticipantRegisteredNotification,
-    ParticipantSlotParticipantRegisteredNotification, ParticipantChangedNotification,
+    ParticipantAddedNotification,
+    ManagerSlotParticipantRegisteredNotification,
+    ParticipantSlotParticipantRegisteredNotification,
+    ParticipantChangedNotification,
     ManagerSlotParticipantWithdrewNotification,
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
+    PeriodicParticipant,
+    ScheduleParticipant,
+    TeamScheduleParticipant,
+    DateParticipant,
+    RegisteredDateParticipant,
 )
 from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
     UserParticipantWithdrewNotification,
-    ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
+    ManagerParticipantWithdrewNotification,
+    UserScheduledNotification,
+    RegisteredActivityParticipantAddedNotification,
     UserDateParticipantWithdrewNotification,
 )
 from bluebottle.time_based.triggers.triggers import spots_taken_after_release
@@ -53,25 +66,28 @@ from bluebottle.time_based.states import (
     PeriodicParticipantStateMachine,
     ScheduleParticipantStateMachine,
     ScheduleActivityStateMachine,
-    TeamScheduleParticipantStateMachine, TeamMemberStateMachine, RegistrationParticipantStateMachine,
-    DateParticipantStateMachine, TimeContributionStateMachine, DateActivitySlotStateMachine,
-    RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
-    RegistrationStateMachine
+    TeamScheduleParticipantStateMachine,
+    TeamMemberStateMachine,
+    RegistrationParticipantStateMachine,
+    DateParticipantStateMachine,
+    TimeContributionStateMachine,
+    DateActivitySlotStateMachine,
+    RegisteredDateParticipantStateMachine,
+    RegisteredDateActivityStateMachine,
+    DateStateMachine,
+    RegistrationStateMachine,
 )
 
 
 def activity_is_expired(effect):
     """Activity is expired"""
-    return effect.instance.activity.status == "expired"
+    return effect.instance.activity.status == 'expired'
 
 
 def activity_will_be_expired(effect):
     """Activity is expired"""
 
-    return (
-        effect.instance.activity.status == "succeeded"
-        and effect.instance.activity.active_participants.count() == 1
-    )
+    return effect.instance.activity.status == 'succeeded' and effect.instance.activity.active_participants.count() == 1
 
 
 def participant_is_active(effect):
@@ -86,18 +102,17 @@ def participant_is_inactive(effect):
 
 
 class RegistrationParticipantTriggers(ContributorTriggers):
-
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             RegistrationParticipantStateMachine.succeed,
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.succeed,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     RegistrationActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
@@ -108,7 +123,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     RegistrationActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
@@ -119,11 +134,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     RegistrationActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -134,7 +149,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
             ],
@@ -146,11 +161,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 NotificationEffect(ManagerParticipantWithdrewNotification),
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     DeadlineActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -161,7 +176,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     DeadlineActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
@@ -174,11 +189,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 NotificationEffect(ManagerParticipantRemovedNotification),
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     DeadlineActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -188,7 +203,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
             RegistrationParticipantStateMachine.auto_remove,
             effects=[
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
             ],
@@ -202,7 +217,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                     ContributionStateMachine.reset,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     DeadlineActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
@@ -215,29 +230,26 @@ class RegistrationParticipantTriggers(ContributorTriggers):
 class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
     def registration_is_accepted(effect):
         """Review needed"""
-        return (
-            effect.instance.registration and
-            effect.instance.registration.status == "accepted"
-        )
+        return effect.instance.registration and effect.instance.registration.status == 'accepted'
 
     def is_admin(effect):
-        """ Is admin """
+        """Is admin"""
         user = effect.options.get('user', None)
         return user and (user.is_staff or user.is_superuser) and effect.instance.user != user
 
     def is_user(effect):
-        """ Is user """
+        """Is user"""
         user = effect.options.get('user', None)
         return user == effect.instance.user
 
     def activity_no_spots_left(effect):
-        """ Activity has spots available after this effect """
+        """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return False
         return effect.instance.activity.capacity <= effect.instance.activity.accepted_participants.count() + 1
 
     def activity_spots_left(effect):
-        """ Activity has spots available after this effect """
+        """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return True
         return effect.instance.activity.capacity > spots_taken_after_release(
@@ -245,7 +257,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         )
 
     def activity_has_started(effect):
-        """ Activity has started """
+        """Activity has started"""
         if effect.instance.activity.start:
             return effect.instance.activity.start < now().date()
         return True
@@ -280,49 +292,30 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 FollowActivityEffect,
                 TransitionEffect(DeadlineParticipantStateMachine.succeed),
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.succeed,
                 ),
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.lock,
-                    conditions=[
-                        activity_no_spots_left
-                    ]
-                )
-            ]
+                    'activity', DeadlineActivityStateMachine.lock, conditions=[activity_no_spots_left]
+                ),
+            ],
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                NotificationEffect(
-                    ParticipantAddedNotification,
-                    conditions=[participant_is_active]
-                ),
-                NotificationEffect(
-                    InactiveParticipantAddedNotification,
-                    conditions=[participant_is_inactive]
-                ),
-                TransitionEffect(
-                    DeadlineParticipantStateMachine.succeed,
-                    conditions=[
-                        activity_has_started
-                    ]
+                NotificationEffect(ParticipantAddedNotification, conditions=[participant_is_active]),
+                NotificationEffect(InactiveParticipantAddedNotification, conditions=[participant_is_inactive]),
+                TransitionEffect(DeadlineParticipantStateMachine.succeed, conditions=[activity_has_started]),
+                RelatedTransitionEffect(
+                    'activity', DeadlineActivityStateMachine.lock, conditions=[activity_no_spots_left]
                 ),
                 RelatedTransitionEffect(
                     'activity',
-                    DeadlineActivityStateMachine.lock,
-                    conditions=[
-                        activity_no_spots_left
-                    ]
-                ),
-                RelatedTransitionEffect(
-                    "activity",
                     RegistrationActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
-            ]
+            ],
         ),
         TransitionTrigger(
             RegistrationParticipantStateMachine.readd,
@@ -334,37 +327,25 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     ],
                 ),
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.lock,
-                    conditions=[
-                        activity_no_spots_left
-                    ]
+                    'activity', DeadlineActivityStateMachine.lock, conditions=[activity_no_spots_left]
                 ),
-            ]
+            ],
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.lock,
-                    conditions=[
-                        activity_no_spots_left
-                    ]
+                    'activity', DeadlineActivityStateMachine.lock, conditions=[activity_no_spots_left]
                 )
-            ]
+            ],
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.withdraw,
             effects=[
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.unlock,
-                    conditions=[
-                        activity_spots_left
-                    ]
+                    'activity', DeadlineActivityStateMachine.unlock, conditions=[activity_spots_left]
                 )
-            ]
+            ],
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.restore,
@@ -376,7 +357,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     ],
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     DeadlineActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -389,16 +370,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
                         registration_is_accepted,
-                    ]
+                    ],
                 ),
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.lock,
-                    conditions=[
-                        activity_no_spots_left
-                    ]
-                )
-            ]
+                    'activity', DeadlineActivityStateMachine.lock, conditions=[activity_no_spots_left]
+                ),
+            ],
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.restore,
@@ -411,7 +388,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     ],
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     DeadlineActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -421,11 +398,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.unlock,
-                    conditions=[
-                        activity_spots_left
-                    ]
+                    'activity', DeadlineActivityStateMachine.unlock, conditions=[activity_spots_left]
                 )
             ],
         ),
@@ -438,13 +411,9 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.unlock,
-                    conditions=[
-                        activity_spots_left
-                    ]
-                )
-            ]
+                    'activity', DeadlineActivityStateMachine.unlock, conditions=[activity_spots_left]
+                ),
+            ],
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.reject,
@@ -455,25 +424,17 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.unlock,
-                    conditions=[
-                        activity_spots_left
-                    ]
-                )
-            ]
+                    'activity', DeadlineActivityStateMachine.unlock, conditions=[activity_spots_left]
+                ),
+            ],
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.cancelled,
             effects=[
                 RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.unlock,
-                    conditions=[
-                        activity_spots_left
-                    ]
+                    'activity', DeadlineActivityStateMachine.unlock, conditions=[activity_spots_left]
                 )
-            ]
+            ],
         ),
     ]
 
@@ -482,14 +443,11 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
 class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
     def slot_is_finished(effect):
         """Slot has status finished"""
-        return effect.instance.slot and effect.instance.slot.status == "finished"
+        return effect.instance.slot and effect.instance.slot.status == 'finished'
 
     def registration_is_accepted(effect):
         """Review needed"""
-        return (
-            effect.instance.registration
-            and effect.instance.registration.status == "accepted"
-        )
+        return effect.instance.registration and effect.instance.registration.status == 'accepted'
 
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -508,7 +466,7 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
                 TransitionEffect(
@@ -522,7 +480,7 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
             ],
@@ -541,26 +499,26 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
-                )
+                ),
             ],
         ),
         TransitionTrigger(
             PeriodicParticipantStateMachine.reapply,
             effects=[
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
-                )
+                ),
             ],
         ),
     ]
@@ -568,39 +526,27 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
 
 @register(ScheduleParticipant)
 class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
-
     def is_accepted(effect):
         """Review needed"""
-        return (
-            effect.instance.registration
-            and effect.instance.registration.status == "accepted"
-        ) or (
-            effect.instance.team
-            and effect.instance.team.status == "accepted"
+        return (effect.instance.registration and effect.instance.registration.status == 'accepted') or (
+            effect.instance.team and effect.instance.team.status == 'accepted'
         )
 
     def is_admin(effect):
         """Is admin"""
-        user = effect.options.get("user", None)
-        return (
-            user
-            and (user.is_staff or user.is_superuser)
-            and effect.instance.user != user
-        )
+        user = effect.options.get('user', None)
+        return user and (user.is_staff or user.is_superuser) and effect.instance.user != user
 
     def is_user(effect):
         """Is user"""
-        user = effect.options.get("user", None)
+        user = effect.options.get('user', None)
         return user == effect.instance.user
 
     def activity_no_spots_left(effect):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return False
-        return (
-            effect.instance.activity.capacity
-            <= effect.instance.activity.accepted_participants.count() + 1
-        )
+        return effect.instance.activity.capacity <= effect.instance.activity.accepted_participants.count() + 1
 
     def activity_spots_left(effect):
         """Activity has spots available after this effect"""
@@ -651,13 +597,10 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
-                TransitionEffect(
-                    ScheduleParticipantStateMachine.schedule,
-                    conditions=[has_scheduled_slot]
-                ),
+                TransitionEffect(ScheduleParticipantStateMachine.schedule, conditions=[has_scheduled_slot]),
                 LockScheduleActivityIfFullEffect,
             ],
         ),
@@ -665,13 +608,9 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
+                NotificationEffect(ParticipantAddedNotification, conditions=[is_not_self, participant_is_active]),
                 NotificationEffect(
-                    ParticipantAddedNotification,
-                    conditions=[is_not_self, participant_is_active]
-                ),
-                NotificationEffect(
-                    InactiveParticipantAddedNotification,
-                    conditions=[is_not_self, participant_is_inactive]
+                    InactiveParticipantAddedNotification, conditions=[is_not_self, participant_is_inactive]
                 ),
                 LockScheduleActivityIfFullEffect,
             ],
@@ -687,16 +626,16 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.succeed,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     RegistrationActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
@@ -706,7 +645,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.reset,
             effects=[
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
             ],
@@ -718,11 +657,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 NotificationEffect(ManagerParticipantWithdrewNotification),
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
@@ -738,7 +677,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ],
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -755,11 +694,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ],
                 ),
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -775,11 +714,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ],
                 ),
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -790,18 +729,18 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 NotificationEffect(UserParticipantRemovedNotification),
                 NotificationEffect(ManagerParticipantRemovedNotification),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -812,16 +751,16 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -832,16 +771,16 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -852,16 +791,16 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -871,16 +810,16 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -910,14 +849,10 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ],
         ),
         ModelChangedTrigger(
-            "slot_id",
+            'slot_id',
             effects=[
-                TransitionEffect(
-                    ScheduleParticipantStateMachine.schedule, conditions=[has_scheduled_slot]
-                ),
-                TransitionEffect(
-                    ScheduleParticipantStateMachine.unschedule, conditions=[has_no_slot]
-                ),
+                TransitionEffect(ScheduleParticipantStateMachine.schedule, conditions=[has_scheduled_slot]),
+                TransitionEffect(ScheduleParticipantStateMachine.unschedule, conditions=[has_no_slot]),
             ],
         ),
     ]
@@ -927,20 +862,18 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
 class TeamScheduleParticipantTriggers(ContributorTriggers):
     def has_slot(effect):
         """Has a slot"""
-        return effect.instance.slot and effect.instance.slot.status == "scheduled"
+        return effect.instance.slot and effect.instance.slot.status == 'scheduled'
 
     def team_is_accepted(effect):
         """Team is accepted"""
-        return effect.instance.team_member and effect.instance.team_member.team.status != "new"
+        return effect.instance.team_member and effect.instance.team_member.team.status != 'new'
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.initiate,
             effects=[
                 CreateScheduleContributionEffect,
-                TransitionEffect(
-                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
-                ),
+                TransitionEffect(TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]),
                 TransitionEffect(
                     TeamScheduleParticipantStateMachine.accept,
                     conditions=[team_is_accepted],
@@ -950,25 +883,21 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.reapply,
             effects=[
-                TransitionEffect(
-                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
-                ),
+                TransitionEffect(TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]),
                 TransitionEffect(
                     TeamScheduleParticipantStateMachine.accept,
                     conditions=[team_is_accepted],
                 ),
                 RelatedTransitionEffect(
-                    "team_member",
+                    'team_member',
                     TeamMemberStateMachine.reapply,
-                )
+                ),
             ],
         ),
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.readd,
             effects=[
-                TransitionEffect(
-                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
-                ),
+                TransitionEffect(TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]),
                 TransitionEffect(
                     TeamScheduleParticipantStateMachine.accept,
                     conditions=[team_is_accepted],
@@ -979,11 +908,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             TeamScheduleParticipantStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.succeed,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     RegistrationActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
@@ -993,7 +922,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             TeamScheduleParticipantStateMachine.reset,
             effects=[
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
             ],
@@ -1002,7 +931,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             TeamScheduleParticipantStateMachine.unschedule,
             effects=[
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
             ],
@@ -1012,7 +941,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
             ],
@@ -1022,7 +951,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
             ],
@@ -1032,7 +961,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.reset,
                 ),
             ],
@@ -1042,11 +971,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -1057,11 +986,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -1072,11 +1001,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -1087,11 +1016,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
-                    "contributions",
+                    'contributions',
                     ContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
@@ -1102,7 +1031,6 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
 
 @register(DateParticipant)
 class DateParticipantTriggers(RegistrationParticipantTriggers):
-
     def participant_slot_is_finished(effect):
         """
         Slot end date/time has passed
@@ -1123,14 +1051,13 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         the slot will be filled
         """
         participant_count = effect.instance.slot.participants.filter(
-            status="accepted",
-            registration__status="accepted"
+            status='accepted', registration__status='accepted'
         ).count()
 
         if (
-                effect.instance.slot.capacity and
-                effect.instance.status == 'accepted' and
-                participant_count + 1 >= effect.instance.slot.capacity
+            effect.instance.slot.capacity
+            and effect.instance.status == 'accepted'
+            and participant_count + 1 >= effect.instance.slot.capacity
         ):
             return True
         return False
@@ -1145,11 +1072,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
 
         slot = effect.instance.slot
         participant_count = spots_taken_after_release(
-            slot.participants.filter(
-                status='accepted',
-                registration__status='accepted'
-            ),
-            effect.instance
+            slot.participants.filter(status='accepted', registration__status='accepted'), effect.instance
         )
         if slot.capacity and participant_count < slot.capacity:
             return True
@@ -1163,17 +1086,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
 
     def registration_is_accepted(effect):
         """Review needed"""
-        return (
-            effect.instance.registration
-            and effect.instance.registration.status in ("accepted", )
-        )
+        return effect.instance.registration and effect.instance.registration.status in ('accepted',)
 
     def registration_is_withdrawn(effect):
         """Registration is withdrawn"""
-        return (
-            effect.instance.registration
-            and effect.instance.registration.status == "withdrawn"
-        )
+        return effect.instance.registration and effect.instance.registration.status == 'withdrawn'
 
     def review_disabled(effect):
         """Review not needed"""
@@ -1193,11 +1110,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         if not hasattr(effect.instance, 'registration') or not effect.instance.registration:
             return False
 
-        return not effect.instance.registration.participants.exclude(
-            id=effect.instance.id
-        ).filter(
-            status__in=['accepted', 'new']
-        ).exists()
+        return (
+            not effect.instance.registration.participants.exclude(id=effect.instance.id)
+            .filter(status__in=['accepted', 'new'])
+            .exists()
+        )
 
     triggers = [
         TransitionTrigger(
@@ -1216,33 +1133,19 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 ),
                 TransitionEffect(
                     DateParticipantStateMachine.accept,
-                    conditions=[
-                        is_participant,
-                        registration_is_accepted
-                    ],
+                    conditions=[is_participant, registration_is_accepted],
                 ),
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
+                    'slot', DateActivitySlotStateMachine.lock, conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(
-                    ManagerSlotParticipantRegisteredNotification,
-                    conditions=[
-                        review_disabled,
-                        is_participant
-                    ]
+                    ManagerSlotParticipantRegisteredNotification, conditions=[review_disabled, is_participant]
                 ),
                 NotificationEffect(
-                    ParticipantSlotParticipantRegisteredNotification,
-                    conditions=[
-                        review_disabled,
-                        is_participant
-                    ]
+                    ParticipantSlotParticipantRegisteredNotification, conditions=[review_disabled, is_participant]
                 ),
-            ]
+            ],
         ),
-
         TransitionTrigger(
             DateParticipantStateMachine.remove,
             effects=[
@@ -1252,67 +1155,48 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     TimeContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.unlock,
-                    conditions=[participant_slot_will_be_not_full]
+                    'slot', DateActivitySlotStateMachine.unlock, conditions=[participant_slot_will_be_not_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
                 SlotParticipantUnFollowActivityEffect,
             ],
         ),
-
         TransitionTrigger(
             DateParticipantStateMachine.accept,
             effects=[
                 TransitionEffect(
-                    RegistrationParticipantStateMachine.succeed,
-                    conditions=[participant_slot_is_finished]
-
+                    RegistrationParticipantStateMachine.succeed, conditions=[participant_slot_is_finished]
                 ),
                 RelatedTransitionEffect(
-                    'registration',
-                    RegistrationStateMachine.restore,
-                    conditions=[registration_is_withdrawn]
+                    'registration', RegistrationStateMachine.restore, conditions=[registration_is_withdrawn]
                 ),
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
+                    'slot', DateActivitySlotStateMachine.lock, conditions=[participant_slot_will_be_full]
                 ),
                 FollowActivityEffect,
-
             ],
         ),
-
         TransitionTrigger(
             DateParticipantStateMachine.add,
             effects=[
                 TransitionEffect(
-                    RegistrationParticipantStateMachine.succeed,
-                    conditions=[participant_slot_is_finished]
-
+                    RegistrationParticipantStateMachine.succeed, conditions=[participant_slot_is_finished]
                 ),
                 CheckPreparationTimeContributionEffect,
                 FollowActivityEffect,
             ],
         ),
-
         TransitionTrigger(
             DateParticipantStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    DateStateMachine.succeed,
-                    conditions=[activity_is_expired]
-                ),
+                RelatedTransitionEffect('activity', DateStateMachine.succeed, conditions=[activity_is_expired]),
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.succeed,
                 ),
             ],
         ),
-
         TransitionTrigger(
             DateParticipantStateMachine.reject,
             effects=[
@@ -1322,14 +1206,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     TimeContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.unlock,
-                    conditions=[participant_slot_will_be_not_full]
+                    'slot', DateActivitySlotStateMachine.unlock, conditions=[participant_slot_will_be_not_full]
                 ),
                 SlotParticipantUnFollowActivityEffect,
             ],
         ),
-
         TransitionTrigger(
             DateParticipantStateMachine.withdraw,
             effects=[
@@ -1339,21 +1220,15 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     TimeContributionStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.unlock,
-                    conditions=[participant_slot_will_be_not_full]
+                    'slot', DateActivitySlotStateMachine.unlock, conditions=[participant_slot_will_be_not_full]
                 ),
                 RelatedTransitionEffect(
-                    'registration',
-                    RegistrationStateMachine.withdraw,
-                    conditions=[no_active_participation]
+                    'registration', RegistrationStateMachine.withdraw, conditions=[no_active_participation]
                 ),
                 NotificationEffect(
                     ManagerSlotParticipantWithdrewNotification,
                 ),
-                NotificationEffect(
-                    UserDateParticipantWithdrewNotification
-                ),
+                NotificationEffect(UserDateParticipantWithdrewNotification),
                 SlotParticipantUnFollowActivityEffect,
             ],
         ),
@@ -1364,72 +1239,50 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-            ]
+            ],
         ),
-
         TransitionTrigger(
             DateParticipantStateMachine.reapply,
             effects=[
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
-                    DateParticipantStateMachine.accept,
-                    conditions=[registration_is_withdrawn, review_disabled]
+                    DateParticipantStateMachine.accept, conditions=[registration_is_withdrawn, review_disabled]
                 ),
                 RelatedTransitionEffect(
-                    'registration',
-                    RegistrationStateMachine.restore,
-                    conditions=[registration_is_withdrawn]
+                    'registration', RegistrationStateMachine.restore, conditions=[registration_is_withdrawn]
                 ),
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
                 ),
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
+                    'slot', DateActivitySlotStateMachine.lock, conditions=[participant_slot_will_be_full]
                 ),
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
+                    'slot', DateActivitySlotStateMachine.lock, conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
-                NotificationEffect(
-                    ManagerSlotParticipantRegisteredNotification,
-                    conditions=[applicant_is_accepted]
-                ),
+                NotificationEffect(ManagerSlotParticipantRegisteredNotification, conditions=[applicant_is_accepted]),
                 FollowActivityEffect,
             ],
         ),
-
         TransitionTrigger(
             DateParticipantStateMachine.readd,
             effects=[
                 CheckPreparationTimeContributionEffect,
-                TransitionEffect(
-                    DateParticipantStateMachine.accept,
-                    conditions=[registration_is_accepted]
-                ),
+                TransitionEffect(DateParticipantStateMachine.accept, conditions=[registration_is_accepted]),
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
                 ),
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
+                    'slot', DateActivitySlotStateMachine.lock, conditions=[participant_slot_will_be_full]
                 ),
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
+                    'slot', DateActivitySlotStateMachine.lock, conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
-                NotificationEffect(
-                    ManagerSlotParticipantRegisteredNotification,
-                    conditions=[applicant_is_accepted]
-                ),
+                NotificationEffect(ManagerSlotParticipantRegisteredNotification, conditions=[applicant_is_accepted]),
                 FollowActivityEffect,
             ],
         ),
@@ -1437,28 +1290,15 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             DateParticipantStateMachine.restore,
             effects=[
                 CheckPreparationTimeContributionEffect,
-                TransitionEffect(
-                    DateParticipantStateMachine.accept,
-                    conditions=[registration_is_accepted]
+                TransitionEffect(DateParticipantStateMachine.accept, conditions=[registration_is_accepted]),
+                RelatedTransitionEffect(
+                    'contributions', TimeContributionStateMachine.reset, conditions=[slot_is_in_future]
                 ),
                 RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.reset,
-                    conditions=[
-                        slot_is_in_future
-                    ]
+                    'contributions', TimeContributionStateMachine.succeed, conditions=[slot_is_in_past]
                 ),
                 RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.succeed,
-                    conditions=[
-                        slot_is_in_past
-                    ]
-                ),
-                RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
+                    'slot', DateActivitySlotStateMachine.lock, conditions=[participant_slot_will_be_full]
                 ),
                 FollowActivityEffect,
             ],
@@ -1466,26 +1306,23 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         ModelDeletedTrigger(
             effects=[
                 RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.unlock,
-                    conditions=[participant_slot_will_be_not_full]
+                    'slot', DateActivitySlotStateMachine.unlock, conditions=[participant_slot_will_be_not_full]
                 ),
-                DeleteRegistrationEffect
+                DeleteRegistrationEffect,
             ]
-        )
+        ),
     ]
 
 
 @register(RegisteredDateParticipant)
 class RegisteredDateParticipantTriggers(ContributorTriggers):
-
     def activity_is_succeeded(effect):
         """Slot has status finished"""
-        return effect.instance.activity and effect.instance.activity.status == "succeeded"
+        return effect.instance.activity and effect.instance.activity.status == 'succeeded'
 
     def activity_is_not_succeeded(effect):
         """Slot has status finished"""
-        return effect.instance.activity and effect.instance.activity.status != "succeeded"
+        return effect.instance.activity and effect.instance.activity.status != 'succeeded'
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -1513,24 +1350,19 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     'activity',
                     RegisteredDateActivityStateMachine,
                     conditions=[activity_is_expired],
-                )
-            ]
+                ),
+            ],
         ),
         TransitionTrigger(
             RegisteredDateParticipantStateMachine.readd,
             effects=[
-                TransitionEffect(
-                    RegisteredDateParticipantStateMachine.succeed,
-                    conditions=[
-                        activity_is_succeeded
-                    ]
-                ),
+                TransitionEffect(RegisteredDateParticipantStateMachine.succeed, conditions=[activity_is_succeeded]),
                 RelatedTransitionEffect(
                     'activity',
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
-                )
-            ]
+                ),
+            ],
         ),
         TransitionTrigger(
             RegisteredDateParticipantStateMachine.remove,
@@ -1543,9 +1375,8 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     'activity',
                     RegisteredDateActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
-                )
-
-            ]
+                ),
+            ],
         ),
         TransitionTrigger(
             RegisteredDateParticipantStateMachine.cancel,
@@ -1554,7 +1385,7 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-            ]
+            ],
         ),
         TransitionTrigger(
             RegisteredDateParticipantStateMachine.restore,
@@ -1567,7 +1398,7 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     'activity',
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
-                )
-            ]
+                ),
+            ],
         ),
     ]

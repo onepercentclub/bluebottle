@@ -23,7 +23,7 @@ def confirmation_form(form_class, model, template):
                 obj=obj,
                 pk=pk,
                 form=form,
-                action_checkbox_name=helpers.ACTION_CHECKBOX_NAME
+                action_checkbox_name=helpers.ACTION_CHECKBOX_NAME,
             )
 
             return TemplateResponse(request, template, context)
@@ -62,7 +62,7 @@ def admin_form(form_class, model, template):
                 obj=obj,
                 pk=pk,
                 form=form,
-                action_checkbox_name=helpers.ACTION_CHECKBOX_NAME
+                action_checkbox_name=helpers.ACTION_CHECKBOX_NAME,
             )
 
             return TemplateResponse(request, template, context)

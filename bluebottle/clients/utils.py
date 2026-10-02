@@ -45,7 +45,7 @@ class LocalTenant(object):
                 del properties.tenant
                 del properties.tenant_properties
             except AttributeError:
-                logger.info("Attempted to clear missing tenant properties.")
+                logger.info('Attempted to clear missing tenant properties.')
         elif self.previous_tenant:
             connection.set_tenant(self.previous_tenant)
             properties.set_tenant(self.previous_tenant)
@@ -59,10 +59,10 @@ def tenant_url(path=None):
     except AttributeError:
         domain = 'example.com'
 
-    if domain.endswith("localhost"):
-        url = "http://{0}:3000".format(domain)
+    if domain.endswith('localhost'):
+        url = 'http://{0}:3000'.format(domain)
     else:
-        url = "https://{0}".format(domain)
+        url = 'https://{0}'.format(domain)
 
     if path:
         return url + path
@@ -77,9 +77,8 @@ def tenant_name():
 
 
 def tenant_site():
-    """ somewhat simulates the old 'Site' object """
-    return namedtuple('Site', ['name', 'domain'])(tenant_name(),
-                                                  connection.tenant.domain_url)
+    """somewhat simulates the old 'Site' object"""
+    return namedtuple('Site', ['name', 'domain'])(tenant_name(), connection.tenant.domain_url)
 
 
 def get_min_amounts(methods):
@@ -94,9 +93,7 @@ def get_min_amounts(methods):
 def get_currencies():
     properties = get_tenant_properties()
 
-    currencies = set(itertools.chain(*[
-        list(method['currencies'].keys()) for method in properties.PAYMENT_METHODS
-    ]))
+    currencies = set(itertools.chain(*[list(method['currencies'].keys()) for method in properties.PAYMENT_METHODS]))
     min_amounts = get_min_amounts(properties.PAYMENT_METHODS)
 
     currencies = list(
@@ -104,8 +101,9 @@ def get_currencies():
             code: {
                 'code': code,
                 'name': get_currency_name(code),
-                'symbol': get_currency_symbol(code).replace('US$', '$').replace('NGN', '₦')
-            } for code in currencies
+                'symbol': get_currency_symbol(code).replace('US$', '$').replace('NGN', '₦'),
+            }
+            for code in currencies
         }.values()
     )
 
@@ -132,10 +130,7 @@ def get_user_site_links(user):
     if not site_links:
         return {}
 
-    response = {
-        'hasCopyright': site_links.has_copyright,
-        'groups': []
-    }
+    response = {'hasCopyright': site_links.has_copyright, 'groups': []}
 
     for group in site_links.link_groups.all():
         links = []
@@ -154,16 +149,13 @@ def get_user_site_links(user):
                     'isHighlighted': link.highlight,
                     'openInNewTab': link.open_in_new_tab,
                     'link': link.link,
-                    'sequence': link.link_order
+                    'sequence': link.link_order,
                 }
                 links.append(link_data)
 
-        response['groups'].append({
-            'title': group.title,
-            'name': group.name,
-            'sequence': group.group_order,
-            'links': links
-        })
+        response['groups'].append(
+            {'title': group.title, 'name': group.name, 'sequence': group.group_order, 'links': links}
+        )
 
     return response
 
@@ -174,24 +166,24 @@ def get_platform_settings(name):
     settings_class = getattr(importlib.import_module(model_app_name), model_name)
     settings_object = settings_class.load()
     serializer_app_name = 'bluebottle.{}.serializers'.format(app_name)
-    serializer_class = getattr(importlib.import_module(serializer_app_name), "{}Serializer".format(model_name))
+    serializer_class = getattr(importlib.import_module(serializer_app_name), '{}Serializer'.format(model_name))
     return serializer_class(settings_object).to_representation(settings_object)
 
 
 def get_public_properties(request):
     """
 
-        Dynamically populate a tenant context with exposed tenant specific properties
-        from reef/clients/client_name/properties.py.
+    Dynamically populate a tenant context with exposed tenant specific properties
+    from reef/clients/client_name/properties.py.
 
-        The context processor looks in tenant settings for the uppercased variable names that are defined in
-        "EXPOSED_TENANT_PROPERTIES" to generate the context.
+    The context processor looks in tenant settings for the uppercased variable names that are defined in
+    "EXPOSED_TENANT_PROPERTIES" to generate the context.
 
-        Example:
+    Example:
 
-        EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics']
+    EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics']
 
-        This adds the value of the keys MIXPANEL and ANALYTICS from the settings file.
+    This adds the value of the keys MIXPANEL and ANALYTICS from the settings file.
 
     """
 
@@ -224,18 +216,17 @@ def get_public_properties(request):
         config = {
             'tenant': current_tenant.client_name,
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
-            'defaultAvatarUrl': "/images/default-avatar.png",
+            'defaultAvatarUrl': '/images/default-avatar.png',
             'currencies': get_currencies(),
             'defaultCurrency': getattr(properties, 'DEFAULT_CURRENCY', 'EUR'),
-            'logoUrl': "/images/logo.svg",
+            'logoUrl': '/images/logo.svg',
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'siteName': current_tenant.name,
-            'languages': [{
-                'code': lang.full_code,
-                'name': lang.language_name,
-                'default': lang.default
-            } for lang in Language.objects.all()],
+            'languages': [
+                {'code': lang.full_code, 'name': lang.language_name, 'default': lang.default}
+                for lang in Language.objects.all()
+            ],
             'languageCode': get_current_language().full_code,
             'siteLinks': get_user_site_links(request.user),
             'platform': {
@@ -245,7 +236,7 @@ def get_public_properties(request):
                 'notifications': get_platform_settings('notifications.NotificationPlatformSettings'),
                 'currencies': get_currency_settings(),
                 'members': get_platform_settings('members.MemberPlatformSettings'),
-            }
+            },
         }
 
         try:
@@ -258,9 +249,7 @@ def get_public_properties(request):
             pass
 
         try:
-            config['readOnlyFields'] = {
-                'user': list(properties.TOKEN_AUTH.get('assertion_mapping', {}).keys())
-            }
+            config['readOnlyFields'] = {'user': list(properties.TOKEN_AUTH.get('assertion_mapping', {}).keys())}
         except AttributeError:
             pass
 
@@ -292,7 +281,7 @@ def get_public_properties(request):
                 config[parent_key][child_key] = value
 
             elif len(parts) > 2:
-                logger.info("Depth is too great for exposed property: {}".format(item))
+                logger.info('Depth is too great for exposed property: {}'.format(item))
 
             else:
                 # Use camelcase for setting keys (convert from snakecase)

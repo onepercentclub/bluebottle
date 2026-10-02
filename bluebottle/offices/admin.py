@@ -39,18 +39,18 @@ class OfficeSubRegionAdmin(admin.ModelAdmin):
 
     def offices(self, obj):
         return format_html(
-            u'<a href="{}?subregion__id__exact={}">{}</a>',
+            '<a href="{}?subregion__id__exact={}">{}</a>',
             reverse('admin:geo_location_changelist'),
             obj.id,
-            len(Location.objects.filter(subregion=obj))
+            len(Location.objects.filter(subregion=obj)),
         )
 
     def activities(self, obj):
         return format_html(
-            u'<a href="{}?office_location__subregion__id__exact={}">{}</a>',
+            '<a href="{}?office_location__subregion__id__exact={}">{}</a>',
             reverse('admin:activities_activity_changelist'),
             obj.id,
-            len(Activity.objects.filter(office_location__subregion=obj))
+            len(Activity.objects.filter(office_location__subregion=obj)),
         )
 
     fields = ('name', 'description', 'region', 'offices', 'activities')
@@ -77,28 +77,28 @@ class OfficeRegionAdmin(admin.ModelAdmin):
 
     def subregions_link(self, obj):
         return format_html(
-            u'<a href="{}?region__id__exact={}">{}</a>',
+            '<a href="{}?region__id__exact={}">{}</a>',
             reverse('admin:offices_officesubregion_changelist'),
             obj.id,
-            len(OfficeSubRegion.objects.filter(region=obj))
+            len(OfficeSubRegion.objects.filter(region=obj)),
         )
 
     subregions_link.short_description = _('work location groups')
 
     def offices(self, obj):
         return format_html(
-            u'<a href="{}?subregion__region__id__exact={}">{}</a>',
+            '<a href="{}?subregion__region__id__exact={}">{}</a>',
             reverse('admin:geo_location_changelist'),
             obj.id,
-            len(Location.objects.filter(subregion__region=obj))
+            len(Location.objects.filter(subregion__region=obj)),
         )
 
     def activities(self, obj):
         return format_html(
-            u'<a href="{}?office_location__subregion__region__id__exact={}">{}</a>',
+            '<a href="{}?office_location__subregion__region__id__exact={}">{}</a>',
             reverse('admin:activities_activity_changelist'),
             obj.id,
-            len(Activity.objects.filter(office_location__subregion__region=obj))
+            len(Activity.objects.filter(office_location__subregion__region=obj)),
         )
 
     fields = ('name', 'description', 'subregions_link', 'offices', 'activities')
@@ -124,9 +124,7 @@ def region_manager_filter(queryset, user):
         elif model == Member:
             subregion_filter = Q(location__subregion__in=subregions)
             self_filter = Q(id=user.id)
-            queryset = queryset.filter(
-                subregion_filter | self_filter
-            ).distinct()
+            queryset = queryset.filter(subregion_filter | self_filter).distinct()
         elif issubclass(model, Contribution):
             subregion_filter = Q(contributor__activity__office_location__subregion__in=subregions)
             owner_filter = Q(contributor__activity__owner__location__subregion__in=subregions)
@@ -137,11 +135,7 @@ def region_manager_filter(queryset, user):
             owner_filter = Q(team__activity__owner__location__subregion__in=subregions)
             self_filter = Q(team__activity__owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
-        elif (
-            issubclass(model, Contributor)
-            or issubclass(model, Slot)
-            or model in [Team, Update, Payout, GrantPayout]
-        ):
+        elif issubclass(model, Contributor) or issubclass(model, Slot) or model in [Team, Update, Payout, GrantPayout]:
             subregion_filter = Q(activity__office_location__subregion__in=subregions)
             owner_filter = Q(activity__owner__location__subregion__in=subregions)
             self_filter = Q(activity__owner=user)
@@ -171,9 +165,7 @@ def office_manager_filter(queryset, user):
         elif model == Member:
             office_filter = Q(location__in=offices)
             self_filter = Q(id=user.id)
-            queryset = queryset.filter(
-                office_filter | self_filter
-            ).distinct()
+            queryset = queryset.filter(office_filter | self_filter).distinct()
         elif issubclass(model, Contribution):
             office_filter = Q(contributor__activity__office_location__in=offices)
             owner_filter = Q(contributor__activity__owner__location__in=offices)
@@ -184,11 +176,7 @@ def office_manager_filter(queryset, user):
             owner_filter = Q(team__activity__owner__location__in=offices)
             self_filter = Q(team__activity__owner=user)
             queryset = queryset.filter(office_filter | owner_filter | self_filter).distinct()
-        elif (
-            issubclass(model, Contributor)
-            or issubclass(model, Slot)
-            or model in [Team, Update, Payout, GrantPayout]
-        ):
+        elif issubclass(model, Contributor) or issubclass(model, Slot) or model in [Team, Update, Payout, GrantPayout]:
             office_filter = Q(activity__office_location__in=offices)
             owner_filter = Q(activity__owner__location__in=offices)
             self_filter = Q(activity__owner=user)
@@ -199,7 +187,6 @@ def office_manager_filter(queryset, user):
 
 
 class RegionManagerAdminMixin:
-
     def get_queryset(self, request):
         queryset = super(RegionManagerAdminMixin, self).get_queryset(request)
         queryset = region_manager_filter(queryset, request.user)

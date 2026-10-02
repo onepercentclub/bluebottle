@@ -17,20 +17,14 @@ class CategoriesTestCase(BluebottleTestCase):
         self.init_projects()
 
     def test_partner_project(self):
-        category_details = {
-            'title': 'Nice things',
-            'description': 'Chit chat blah blah'
-        }
+        category_details = {'title': 'Nice things', 'description': 'Chit chat blah blah'}
 
         cat = CategoryFactory.create(**category_details)
         cat.set_current_language('nl')
         cat.title = 'Leuke dingen'
         cat.save()
 
-        category_details = {
-            'title': 'Other things',
-            'description': 'Chit chat blah blah'
-        }
+        category_details = {'title': 'Other things', 'description': 'Chit chat blah blah'}
 
         cat = CategoryFactory.create(**category_details)
         cat.set_current_language('nl')
@@ -57,10 +51,7 @@ class CategoriesTestCase(BluebottleTestCase):
         self.assertEqual(data['data'][1]['attributes']['title'], 'Leuke dingen')
 
     def test_category_content(self):
-        category_details = {
-            'title': 'Nice things',
-            'description': 'Chit chat blah blah'
-        }
+        category_details = {'title': 'Nice things', 'description': 'Chit chat blah blah'}
 
         category = CategoryFactory.create(**category_details)
 
@@ -69,7 +60,7 @@ class CategoriesTestCase(BluebottleTestCase):
             'description': 'category content description',
             'link_text': 'Find out more...',
             'link_url': 'http://link.com',
-            'category': category
+            'category': category,
         }
 
         CategoryContentFactory.create(**category_content)

@@ -14,18 +14,17 @@ def post(url, data):
 
 def check_payment_status(payment):
     from .states import FlutterwavePaymentStateMachine
-    verify_url = "https://api.ravepay.co/flwv3-pug/getpaidx/api/v2/verify"
+
+    verify_url = 'https://api.ravepay.co/flwv3-pug/getpaidx/api/v2/verify'
 
     from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
+
     provider = FlutterwavePaymentProvider.objects.first()
 
     if not provider:
         raise PaymentException('Flutterwave not enabled')
 
-    data = {
-        'txref': payment.tx_ref,
-        'SECKEY': provider.private_settings['sec_key']
-    }
+    data = {'txref': payment.tx_ref, 'SECKEY': provider.private_settings['sec_key']}
     try:
         data = post(verify_url, data)
     except PaymentException:
@@ -42,6 +41,7 @@ def check_payment_status(payment):
 
     if data['data']['status'] == 'successful':
         from .states import FlutterwavePaymentStateMachine
+
         if payment.status != FlutterwavePaymentStateMachine.succeeded.value:
             payment.states.succeed()
     else:
@@ -53,6 +53,7 @@ def check_payment_status(payment):
 
 def get_flutterwave_settings():
     from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
+
     provider = FlutterwavePaymentProvider.objects.first()
     if not provider:
         raise ImproperlyConfigured('Flutterwave not enabled for this tenant')

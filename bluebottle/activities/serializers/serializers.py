@@ -20,9 +20,19 @@ from rest_framework_json_api.serializers import (
 )
 
 from bluebottle.activities.models import (
-    Activity, Contribution, Contributor, ActivityQuestion,
-    FileUploadQuestion, SegmentQuestion, TextQuestion, ConfirmationAnswer,
-    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion,
+    Activity,
+    Contribution,
+    Contributor,
+    ActivityQuestion,
+    FileUploadQuestion,
+    SegmentQuestion,
+    TextQuestion,
+    ConfirmationAnswer,
+    ActivityAnswer,
+    TextAnswer,
+    SegmentAnswer,
+    FileUploadAnswer,
+    ConfirmationQuestion,
     ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
@@ -35,13 +45,13 @@ from bluebottle.collect.serializers import (
     CollectActivityListSerializer,
     CollectActivitySerializer,
     CollectContributorListSerializer,
-    CollectContributorSerializer
+    CollectContributorSerializer,
 )
 from bluebottle.deeds.serializers import (
     DeedListSerializer,
     DeedParticipantListSerializer,
     DeedParticipantSerializer,
-    DeedSerializer
+    DeedSerializer,
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import IMAGE_SIZES, ImageField, ImageSerializer, PrivateDocumentSerializer
@@ -56,10 +66,7 @@ from bluebottle.funding.serializers import (
     TinyFundingSerializer,
 )
 from bluebottle.geo.serializers import PointSerializer
-from bluebottle.grant_management.serializers import (
-    GrantSerializer,
-    GrantApplicationSerializer
-)
+from bluebottle.grant_management.serializers import GrantSerializer, GrantApplicationSerializer
 from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,
@@ -81,19 +88,20 @@ from bluebottle.time_based.serializers import (
     PolymorphicSlotSerializer,
     ScheduleActivitySerializer,
     ScheduleParticipantSerializer,
-    TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
+    TeamScheduleParticipantSerializer,
+    RegisteredDateActivitySerializer,
 )
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
 
-ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
+ActivityLocation = namedtuple('Position', ['pk', 'created', 'position', 'activity'])
 
 
 class ActivityLocationRelationSerializer(Serializer):
     class JSONAPIMeta:
-        resource_name = "activity-location-relations"
+        resource_name = 'activity-location-relations'
 
 
 class ActivityLocationSerializer(Serializer):
@@ -108,13 +116,13 @@ class ActivityLocationSerializer(Serializer):
         return obj.activity
 
     class JSONAPIMeta:
-        resource_name = "activity-locations"
+        resource_name = 'activity-locations'
 
 
 class ActivityImageSerializer(ImageSerializer):
     sizes = IMAGE_SIZES
-    content_view_name = "activity-image"
-    relationship = "activity_set"
+    content_view_name = 'activity-image'
+    relationship = 'activity_set'
 
 
 class ActivitySerializer(PolymorphicModelSerializer):
@@ -127,71 +135,71 @@ class ActivitySerializer(PolymorphicModelSerializer):
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
         RegisteredDateActivitySerializer,
-        GrantApplicationSerializer
+        GrantApplicationSerializer,
     ]
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
 
     included_serializers = {
-        "owner": "bluebottle.initiatives.serializers.MemberSerializer",
-        "initiative": "bluebottle.initiatives.serializers.InitiativeSerializer",
-        "goals": "bluebottle.impact.serializers.ImpactGoalSerializer",
-        "goals.type": "bluebottle.impact.serializers.ImpactTypeSerializer",
-        "location": "bluebottle.geo.serializers.GeolocationSerializer",
-        "image": "bluebottle.activities.serializers.ActivityImageSerializer",
-        "segments": "bluebottle.segments.serializers.SegmentListSerializer",
-        "initiative.activity_managers": "bluebottle.initiatives.serializers.MemberSerializer",
-        "initiative.promoter": "bluebottle.initiatives.serializers.MemberSerializer",
-        "initiative.image": "bluebottle.initiatives.serializers.InitiativeImageSerializer",
-        "initiative.place": "bluebottle.geo.serializers.GeolocationSerializer",
-        "initiative.organization": "bluebottle.organizations.serializers.OrganizationSerializer",
-        "initiative.organization_contact": "bluebottle.organizations.serializers.OrganizationContactSerializer",
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'initiative.organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'initiative.organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
     }
 
     class Meta(object):
         model = Activity
         meta_fields = (
-            "permissions",
-            "transitions",
-            "created",
-            "updated",
-            "errors",
-            "required",
-            "current_status",
-            "contributor_count",
-            "deleted_successful_contributors",
-            "registration_status",
+            'permissions',
+            'transitions',
+            'created',
+            'updated',
+            'errors',
+            'required',
+            'current_status',
+            'contributor_count',
+            'deleted_successful_contributors',
+            'registration_status',
         )
 
     class JSONAPIMeta(object):
         included_resources = [
-            "owner",
-            "image",
-            "initiative",
-            "goals",
-            "goals.type",
-            "location",
-            "initiative.image",
-            "initiative.place",
-            "initiative.location",
-            "initiative.activity_managers",
-            "initiative.promoter",
-            "initiative.organization",
-            "initiative.organization_contact",
+            'owner',
+            'image',
+            'initiative',
+            'goals',
+            'goals.type',
+            'location',
+            'initiative.image',
+            'initiative.place',
+            'initiative.location',
+            'initiative.activity_managers',
+            'initiative.promoter',
+            'initiative.organization',
+            'initiative.organization_contact',
         ]
 
 
 class PreviewRelatedActivityField(PolymorphicResourceRelatedField):
     def to_representation(self, obj):
-        return {"id": obj.meta.id, "type": obj.resource_name}
+        return {'id': obj.meta.id, 'type': obj.resource_name}
 
 
 class ActivityPreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
-    initiative = serializers.CharField(source="initiative.title", required=False)
-    host_name = serializers.CharField(source="host_organization.name", required=False)
+    initiative = serializers.CharField(source='initiative.title', required=False)
+    host_name = serializers.CharField(source='host_organization.name', required=False)
     host_logo = serializers.SerializerMethodField()
 
     owner = serializers.SerializerMethodField()
@@ -220,9 +228,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     highlight = serializers.BooleanField()
     contribution_duration = serializers.SerializerMethodField()
     current_status = serializers.SerializerMethodField()
-    activity = PreviewRelatedActivityField(
-        ActivitySerializer, queryset=Activity.objects.all(), source="*"
-    )
+    activity = PreviewRelatedActivityField(ActivitySerializer, queryset=Activity.objects.all(), source='*')
 
     collect_type = serializers.SerializerMethodField()
     collect_target = serializers.SerializerMethodField()
@@ -236,12 +242,12 @@ class ActivityPreviewSerializer(ModelSerializer):
         return None
 
     def get_activity(self, obj):
-        return {"id": obj.meta["id"], "type": obj.resource_name}
+        return {'id': obj.meta['id'], 'type': obj.resource_name}
 
     def get_current_status(self, obj):
         model = None
 
-        for app in ["time_based", "collect", "deeds", "funding"]:
+        for app in ['time_based', 'collect', 'deeds', 'funding']:
             try:
                 model = apps.get_model(app, obj.type)
                 break
@@ -250,7 +256,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
         if model:
             try:
-                state = getattr(model._state_machines["states"], obj.current_status.value)
+                state = getattr(model._state_machines['states'], obj.current_status.value)
             except AttributeError:
                 # FIXME
                 return obj.current_status
@@ -258,13 +264,13 @@ class ActivityPreviewSerializer(ModelSerializer):
             state = obj.current_status
 
         return {
-            "value": state.value,
-            "name": state.name,
-            "description": state.description,
+            'value': state.value,
+            'name': state.name,
+            'description': state.description,
         }
 
     def get_start(self, obj):
-        if hasattr(obj, "slots") and obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             slots = self.get_filtered_slots(obj)
             if slots:
                 return slots[0].start
@@ -272,7 +278,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.start[0]
 
     def get_end(self, obj):
-        if hasattr(obj, "slots") and obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             slots = self.get_filtered_slots(obj)
             if slots:
                 return max(slot.end for slot in slots)
@@ -282,58 +288,49 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_expertise(self, obj):
         try:
             return [
-                expertise.name
-                for expertise in obj.expertise or []
-                if expertise.language == get_current_language()
+                expertise.name for expertise in obj.expertise or [] if expertise.language == get_current_language()
             ][0]
         except IndexError:
             pass
 
     def get_contribution_duration(self, obj):
-        if hasattr(obj, "contribution_duration"):
+        if hasattr(obj, 'contribution_duration'):
             if not obj.contribution_duration:
-                return {"no": "1"}
-            if (
-                len(obj.contribution_duration) == 0
-                or obj.contribution_duration[0].period == 0
-            ):
-                return {"no": "too"}
+                return {'no': '1'}
+            if len(obj.contribution_duration) == 0 or obj.contribution_duration[0].period == 0:
+                return {'no': 'too'}
             elif len(obj.contribution_duration) == 1:
                 return {
-                    "period": obj.contribution_duration[0].period,
-                    "value": obj.contribution_duration[0].value,
+                    'period': obj.contribution_duration[0].period,
+                    'value': obj.contribution_duration[0].value,
                 }
             elif len(obj.contribution_duration) > 1:
                 return {
-                    "period": obj.contribution_duration[0].period,
-                    "value": obj.contribution_duration[0].value,
+                    'period': obj.contribution_duration[0].period,
+                    'value': obj.contribution_duration[0].value,
                 }
 
     def get_collect_type(self, obj):
         try:
             return [
                 collect_type.name
-                for collect_type in getattr(obj, "collect_type", [])
+                for collect_type in getattr(obj, 'collect_type', [])
                 if collect_type.language == get_current_language()
             ][0]
         except IndexError:
             pass
 
     def get_collect_target(self, obj):
-        target = getattr(obj, "target", None)
+        target = getattr(obj, 'target', None)
         if target and isinstance(obj.target, (int, float)):
             return target
 
     def get_realized(self, obj):
-        return getattr(obj, "realized", None)
+        return getattr(obj, 'realized', None)
 
     def get_theme(self, obj):
         try:
-            return [
-                theme.name
-                for theme in obj.theme or []
-                if theme.language == get_current_language()
-            ][0]
+            return [theme.name for theme in obj.theme or [] if theme.language == get_current_language()][0]
         except IndexError:
             pass
 
@@ -344,7 +341,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         if obj.type == 'grantapplication':
             return 'grantApplication'
 
-        return obj.type.replace("activity", "")
+        return obj.type.replace('activity', '')
 
     def get_location(self, obj):
         return ActivityPreviewLocationSerializer(
@@ -353,77 +350,73 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_image(self, obj):
         if obj.image:
-            hash = hashlib.md5(obj.image.file.encode("utf-8")).hexdigest()
-            if obj.image.type == "activity":
+            hash = hashlib.md5(obj.image.file.encode('utf-8')).hexdigest()
+            if obj.image.type == 'activity':
                 url = reverse(
-                    "activity-image",
+                    'activity-image',
                     args=(
                         obj.image.id,
-                        IMAGE_SIZES["large"],
+                        IMAGE_SIZES['large'],
                     ),
                 )
-            if obj.image.type == "initiative":
+            if obj.image.type == 'initiative':
                 url = reverse(
-                    "initiative-image",
+                    'initiative-image',
                     args=(
                         obj.image.id,
-                        IMAGE_SIZES["large"],
+                        IMAGE_SIZES['large'],
                     ),
                 )
-            if obj.image.type == "link":
+            if obj.image.type == 'link':
                 url = reverse(
-                    "activity_links:image",
+                    'activity_links:image',
                     args=(
                         obj.image.id,
-                        IMAGE_SIZES["large"],
+                        IMAGE_SIZES['large'],
                     ),
                 )
 
-            return f"{url}?_={hash}"
+            return f'{url}?_={hash}'
 
     def get_matching_properties(self, obj):
-        user = self.context["request"].user
-        matching = {"skill": False, "theme": False, "location": False}
+        user = self.context['request'].user
+        matching = {'skill': False, 'theme': False, 'location': False}
 
         if not user.is_authenticated or not obj.is_upcoming:
             return matching
 
-        if "skills" not in self.context:
-            self.context["skills"] = [skill.pk for skill in user.skills.all()]
+        if 'skills' not in self.context:
+            self.context['skills'] = [skill.pk for skill in user.skills.all()]
 
-        if "themes" not in self.context:
-            self.context["themes"] = [theme.pk for theme in user.favourite_themes.all()]
+        if 'themes' not in self.context:
+            self.context['themes'] = [theme.pk for theme in user.favourite_themes.all()]
 
-        if "location" not in self.context:
+        if 'location' not in self.context:
             if user.location and user.location.position:
-                self.context["location"] = user.location
+                self.context['location'] = user.location
 
             if user.place and user.place.position:
-                self.context["location"] = user.place
+                self.context['location'] = user.place
 
-        matching = {"location": False}
-        matching["skill"] = (
-            obj.expertise[0].id in self.context["skills"] if obj.expertise else False
-        )
-        matching["theme"] = (
-            obj.theme[0].id in self.context["themes"] if obj.theme else False
-        )
+        matching = {'location': False}
+        matching['skill'] = obj.expertise[0].id in self.context['skills'] if obj.expertise else False
+        matching['theme'] = obj.theme[0].id in self.context['themes'] if obj.theme else False
 
         if obj.is_online:
-            matching["location"] = True
-        elif "location" in self.context and obj.position:
-            positions = [obj.position] if "lat" in obj.position else obj.position
+            matching['location'] = True
+        elif 'location' in self.context and obj.position:
+            positions = [obj.position] if 'lat' in obj.position else obj.position
 
             dist = min(
                 distance(
-                    lonlat(pos["lon"], pos["lat"]),
-                    lonlat(*self.context["location"].position.tuple),
+                    lonlat(pos['lon'], pos['lat']),
+                    lonlat(*self.context['location'].position.tuple),
                 )
                 for pos in positions
             )
 
             if dist.km < settings.MATCHING_DISTANCE:
-                matching["location"] = True
+                matching['location'] = True
 
         return matching
 
@@ -451,7 +444,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         ).get_slots()
 
     def get_slot_count(self, obj):
-        if hasattr(obj, "slots") and obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             upcoming = self.get_filtered_slots(obj, only_upcoming=True)
             if upcoming:
                 return len(upcoming)
@@ -459,7 +452,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             return len(self.get_filtered_slots(obj, only_upcoming=False))
 
     def get_is_online(self, obj):
-        if hasattr(obj, "slots") and obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             return all(slot.is_online for slot in self.get_filtered_slots(obj))
         else:
             return obj.is_online
@@ -473,9 +466,9 @@ class ActivityPreviewSerializer(ModelSerializer):
         slots = self.get_filtered_slots(obj)
 
         if len(slots):
-            return all(slot.status != "open" for slot in slots)
-        elif obj.type == "period":
-            return obj.status != "open"
+            return all(slot.status != 'open' for slot in slots)
+        elif obj.type == 'period':
+            return obj.status != 'open'
 
     def get_owner(self, obj):
         return obj.owner.full_name if obj.owner else None
@@ -492,50 +485,46 @@ class ActivityPreviewSerializer(ModelSerializer):
     class Meta(object):
         model = Activity
         fields = (
-            "id",
-            "slug",
-            "activity_type",
-            "title",
-            "theme",
-            "expertise",
-            "initiative",
-            "image",
-            "link",
-            "host_name",
-            "host_logo",
-            "matching_properties",
-            "amount_raised",
-            "realized",
-            "collect_target",
-            "target",
-            "amount_matching",
-            "end",
-            "start",
-            "status",
-            "location",
-            "team_activity",
-            "slot_count",
-            "is_online",
-            "has_multiple_locations",
-            "is_full",
-            "collect_type",
-            "highlight",
-            "contribution_duration",
-            "owner",
-            "resource_name",
-            "activity",
-            "capacity",
-            "contributor_count",
-            "translations"
+            'id',
+            'slug',
+            'activity_type',
+            'title',
+            'theme',
+            'expertise',
+            'initiative',
+            'image',
+            'link',
+            'host_name',
+            'host_logo',
+            'matching_properties',
+            'amount_raised',
+            'realized',
+            'collect_target',
+            'target',
+            'amount_matching',
+            'end',
+            'start',
+            'status',
+            'location',
+            'team_activity',
+            'slot_count',
+            'is_online',
+            'has_multiple_locations',
+            'is_full',
+            'collect_type',
+            'highlight',
+            'contribution_duration',
+            'owner',
+            'resource_name',
+            'activity',
+            'capacity',
+            'contributor_count',
+            'translations',
         )
-        meta_fields = (
-            "current_status",
-            "created",
-            "translations"
-        )
+        meta_fields = ('current_status', 'created', 'translations')
 
     class JSONAPIMeta:
-        resource_name = "activities/preview"
+        resource_name = 'activities/preview'
 
 
 class ActivityListSerializer(PolymorphicModelSerializer):
@@ -548,41 +537,41 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
-        RegisteredDateActivitySerializer
+        RegisteredDateActivitySerializer,
     ]
 
     included_serializers = {
-        "owner": "bluebottle.initiatives.serializers.MemberSerializer",
-        "initiative": "bluebottle.initiatives.serializers.InitiativeSerializer",
-        "image": "bluebottle.activities.serializers.ActivityImageSerializer",
-        "location": "bluebottle.geo.serializers.GeolocationSerializer",
-        "initiative.image": "bluebottle.initiatives.serializers.InitiativeImageSerializer",
-        "initiative.place": "bluebottle.geo.serializers.GeolocationSerializer",
-        "goals": "bluebottle.impact.serializers.ImpactGoalSerializer",
-        "collect_type": "bluebottle.collect.serializers.CollectTypeSerializer",
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
     }
 
     class Meta(object):
         model = Activity
         meta_fields = (
-            "permissions",
-            "created",
-            "updated",
-            "matching_properties",
-            "current_status",
+            'permissions',
+            'created',
+            'updated',
+            'matching_properties',
+            'current_status',
         )
 
     class JSONAPIMeta:
         included_resources = [
-            "owner",
-            "initiative",
-            "location",
-            "image",
-            "goals",
-            "goals.type",
-            "initiative.image",
-            "initiative.place",
-            "initiative.location",
+            'owner',
+            'initiative',
+            'location',
+            'image',
+            'goals',
+            'goals.type',
+            'initiative.image',
+            'initiative.place',
+            'initiative.location',
         ]
 
 
@@ -594,17 +583,17 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
         RegisteredDateActivitySerializer,
-        CollectActivitySerializer
+        CollectActivitySerializer,
     ]
 
     class Meta(object):
         model = Activity
         fields = (
-            "id",
-            "slug",
-            "title",
+            'id',
+            'slug',
+            'title',
         )
-        meta_fields = ("created", "updated", "current_status")
+        meta_fields = ('created', 'updated', 'current_status')
 
 
 class ContributorSerializer(PolymorphicModelSerializer):
@@ -618,30 +607,30 @@ class ContributorSerializer(PolymorphicModelSerializer):
         TeamScheduleParticipantSerializer,
         DeedParticipantSerializer,
         CollectContributorSerializer,
-        GrantSerializer
+        GrantSerializer,
     ]
 
     included_serializers = {
-        "activity": "bluebottle.activities.serializers.ActivitySerializer",
-        "user": "bluebottle.initiatives.serializers.MemberSerializer",
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
     class JSONAPIMeta(object):
         included_resources = [
-            "user",
-            "activity",
+            'user',
+            'activity',
         ]
 
     class Meta(object):
         model = Contributor
         meta_fields = (
-            "created",
-            "updated",
-            "start",
-            "current_status",
-            "transitions",
-            "permissions",
-            "slot_count",
+            'created',
+            'updated',
+            'start',
+            'current_status',
+            'transitions',
+            'permissions',
+            'slot_count',
         )
 
 
@@ -658,35 +647,35 @@ class PolymorphicContributorSerializer(PolymorphicModelSerializer):
     ]
 
     included_serializers = {
-        "activity": "bluebottle.activities.serializers.ActivitySerializer",
-        "user": "bluebottle.initiatives.serializers.MemberSerializer",
-        "contributions": "bluebottle.activities.serializers.MoneySerializer",
-        "slot": "bluebottle.time_based.serializers.DateActivitySlotSerializer",
-        "registration": "bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer",
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'contributions': 'bluebottle.activities.serializers.MoneySerializer',
+        'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        'registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
     }
 
     class JSONAPIMeta(object):
-        included_resources = ["user", "activity", "slots", "slots.slot", "registration"]
+        included_resources = ['user', 'activity', 'slots', 'slots.slot', 'registration']
 
     class Meta(object):
         model = Contributor
         meta_fields = (
-            "created",
-            "updated",
-            "start",
-            "current_status",
-            "registration_status",
+            'created',
+            'updated',
+            'start',
+            'current_status',
+            'registration_status',
         )
 
 
 class ContributionSerializer(ModelSerializer):
     contributor = PolymorphicResourceRelatedField(ContributorSerializer, queryset=Contributor.objects.all())
-    current_status = CurrentStatusField(source="states.current_state")
+    current_status = CurrentStatusField(source='states.current_state')
     value = serializers.SerializerMethodField()
 
     def get_value(self, obj):
         if isinstance(obj.contributor, Donor):
-            return {"amount": obj.value.amount, "currency": str(obj.value.currency)}
+            return {'amount': obj.value.amount, 'currency': str(obj.value.currency)}
         if isinstance(obj, TimeContribution):
             return str(obj.value)
         return
@@ -713,31 +702,31 @@ class ContributionSerializer(ModelSerializer):
     )
 
     def get_registration(self, obj):
-        return getattr(obj.contributor, "registration", None)
+        return getattr(obj.contributor, 'registration', None)
 
     class JSONAPIMeta(object):
-        resource_name = "contributions"
+        resource_name = 'contributions'
         included_resources = [
-            "contributor",
-            "contributor.activity",
-            "contributor.activity.image",
-            "contributor.activity.segments",
-            "contributor.activity.initiative.image",
-            "registration",
-            "slot",
+            'contributor',
+            'contributor.activity',
+            'contributor.activity.image',
+            'contributor.activity.segments',
+            'contributor.activity.initiative.image',
+            'registration',
+            'slot',
         ]
 
     class Meta(object):
         model = Contribution
         fields = (
-            "id",
-            "start",
-            "contributor",
-            "value",
-            "slot",
-            "registration",
+            'id',
+            'start',
+            'contributor',
+            'value',
+            'slot',
+            'registration',
         )
-        meta_fields = ("start", "current_status")
+        meta_fields = ('start', 'current_status')
 
     included_serializers = {
         'contributor': 'bluebottle.activities.serializers.ContributorSerializer',
@@ -750,87 +739,83 @@ class ContributionSerializer(ModelSerializer):
 
 
 class ContributionListSerializer(ModelSerializer):
-    contributor = PolymorphicResourceRelatedField(
-        PolymorphicContributorSerializer, queryset=Contributor.objects.all()
-    )
+    contributor = PolymorphicResourceRelatedField(PolymorphicContributorSerializer, queryset=Contributor.objects.all())
 
     class JSONAPIMeta(object):
-        resource_name = "contributions"
+        resource_name = 'contributions'
         included_resources = [
-            "contributor",
-            "contributor.activity",
-            "slots",
-            "slots.slot",
+            'contributor',
+            'contributor.activity',
+            'slots',
+            'slots.slot',
         ]
 
     class Meta(object):
         model = Contributor
-        fields = ("id", "type", "contributor")
-        meta_fields = ("created", "updated", "start", "current_status")
+        fields = ('id', 'type', 'contributor')
+        meta_fields = ('created', 'updated', 'start', 'current_status')
 
     included_serializers = {
-        "contributor.activity": "bluebottle.activities.serializers.ActivitySerializer",
-        "contributor": "bluebottle.activities.serializers.ContributorListSerializer",
+        'contributor.activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'contributor': 'bluebottle.activities.serializers.ContributorListSerializer',
     }
 
 
 class UserStatSerializer(ModelSerializer):
     class JSONAPIMeta(object):
-        resource_name = "user-stats"
+        resource_name = 'user-stats'
 
     class Meta(object):
         model = Contributor
-        fields = ("id", "type", "contributor")
+        fields = ('id', 'type', 'contributor')
 
 
 class ActivityTransitionSerializer(TransitionSerializer):
-    resource = PolymorphicResourceRelatedField(
-        ActivitySerializer, queryset=Activity.objects.all()
-    )
-    field = "states"
+    resource = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
+    field = 'states'
 
     included_serializers = {
-        "resource": "bluebottle.activities.serializers.ActivitySerializer",
+        'resource': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
     class JSONAPIMeta(object):
-        included_resources = ["resource"]
-        resource_name = "activities/transitions"
+        included_resources = ['resource']
+        resource_name = 'activities/transitions'
 
 
 class RelatedActivityImageSerializer(ModelSerializer):
     image = ImageField(required=False, allow_null=True)
     resource = PolymorphicResourceRelatedField(
-        ActivitySerializer, queryset=Activity.objects.all(), source="content_object"
+        ActivitySerializer, queryset=Activity.objects.all(), source='content_object'
     )
 
     included_serializers = {
-        "resource": "bluebottle.activities.serializers.ActivitySerializer",
-        "image": "bluebottle.activities.serializers.RelatedActivityImageContentSerializer",
+        'resource': 'bluebottle.activities.serializers.ActivitySerializer',
+        'image': 'bluebottle.activities.serializers.RelatedActivityImageContentSerializer',
     }
 
     class Meta(object):
         model = RelatedImage
         fields = (
-            "image",
-            "resource",
+            'image',
+            'resource',
         )
 
     class JSONAPIMeta(object):
         included_resources = [
-            "resource",
-            "image",
+            'resource',
+            'image',
         ]
 
-        resource_name = "related-activity-images"
+        resource_name = 'related-activity-images'
 
 
 class RelatedActivityImageContentSerializer(ImageSerializer):
     sizes = {
-        "large": "600",
+        'large': '600',
     }
-    content_view_name = "related-activity-image-content"
-    relationship = "relatedimage_set"
+    content_view_name = 'related-activity-image-content'
+    relationship = 'relatedimage_set'
 
 
 class BaseQuestionSerializer(ModelSerializer):
@@ -867,9 +852,7 @@ class SegmentQuestionSerializer(BaseQuestionSerializer):
         resource_name = 'segment-questions'
         included_resources = ['segment_type']
 
-    included_serializers = {
-        'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer'
-    }
+    included_serializers = {'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer'}
 
 
 class FileUploadQuestionSerializer(BaseQuestionSerializer):
@@ -885,25 +868,21 @@ class ActivityQuestionSerializer(PolymorphicModelSerializer):
         TextQuestionSerializer,
         ConfirmationQuestionSerializer,
         SegmentQuestionSerializer,
-        FileUploadQuestionSerializer
+        FileUploadQuestionSerializer,
     ]
 
     class Meta:
         model = ActivityQuestion
 
-    class JSONAPIMeta():
+    class JSONAPIMeta:
         included_resources = ['segment_type']
 
-    included_serializers = {
-        'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer'
-    }
+    included_serializers = {'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer'}
 
 
 class BaseAnswerSerializer(ModelSerializer):
     activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
-    question = PolymorphicResourceRelatedField(
-        ActivityQuestionSerializer, queryset=ActivityQuestion.objects.all()
-    )
+    question = PolymorphicResourceRelatedField(ActivityQuestionSerializer, queryset=ActivityQuestion.objects.all())
 
     class Meta:
         fields = ('activity', 'question')
@@ -962,11 +941,8 @@ class FileUploadAnswerDocumentSerializer(PrivateDocumentSerializer):
             activity = answer.activity
             question = answer.question
 
-            if (
-                question.visibility == 'all' or
-                ActivityOwnerPermission().has_object_action_permission(
-                    'POST', self.context['request'].user, activity
-                )
+            if question.visibility == 'all' or ActivityOwnerPermission().has_object_action_permission(
+                'POST', self.context['request'].user, activity
             ):
                 return super().get_link(obj)
 
@@ -980,9 +956,7 @@ class FileUploadAnswerSerializer(BaseAnswerSerializer):
         resource_name = 'file-upload-answers'
         included_resources = ['file']
 
-    included_serializers = {
-        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
-    }
+    included_serializers = {'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'}
 
 
 class ActivityAnswerSerializer(PolymorphicModelSerializer):
@@ -990,10 +964,10 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
         TextAnswerSerializer,
         ConfirmationAnswerSerializer,
         SegmentAnswerSerializer,
-        FileUploadAnswerSerializer
+        FileUploadAnswerSerializer,
     ]
 
-    class Meta():
+    class Meta:
         model = ActivityAnswer
 
     class JSONAPIMeta:
@@ -1002,7 +976,7 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
     included_serializers = {
         'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
         'segment': 'bluebottle.segments.serializers.SegmentListSerializer',
-        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
+        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer',
     }
 
 

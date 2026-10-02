@@ -19,19 +19,12 @@ class Command(BaseCommand):
     help = 'Create a tenant'
 
     option_list = BaseCommand.options + (
-        make_option('--full-name',
-                    help='Specifies the full name for the tenant (e.g. "Our New Tenant").'),
-        make_option('--schema-name',
-                    help='Specifies the schema name for the tenant (e.g. "new_tenant").'),
-        make_option('--domain-url',
-                    help='Specifies the domain_url for the tenant (e.g. "new-tenant.localhost").'),
-        make_option('--client-name',
-                    help='Specifies the client name for the tenant (e.g. "new-tenant").'),
-        make_option('--languages',
-                    default='en',
-                    help='Specifies the client languages (e.g. "en,nl").'),
-        make_option('--post-command',
-                    help='Calls another management command after the tenant is created.')
+        make_option('--full-name', help='Specifies the full name for the tenant (e.g. "Our New Tenant").'),
+        make_option('--schema-name', help='Specifies the schema name for the tenant (e.g. "new_tenant").'),
+        make_option('--domain-url', help='Specifies the domain_url for the tenant (e.g. "new-tenant.localhost").'),
+        make_option('--client-name', help='Specifies the client name for the tenant (e.g. "new-tenant").'),
+        make_option('--languages', default='en', help='Specifies the client languages (e.g. "en,nl").'),
+        make_option('--post-command', help='Calls another management command after the tenant is created.'),
     )
 
     def handle(self, *args, **options):
@@ -55,10 +48,7 @@ class Command(BaseCommand):
             client_name.replace('_', '-')
 
             client = self.store_client(
-                name=name,
-                client_name=client_name,
-                domain_url=domain_url,
-                schema_name=schema_name
+                name=name, client_name=client_name, domain_url=domain_url, schema_name=schema_name
             )
 
             if client is False:
@@ -98,10 +88,7 @@ class Command(BaseCommand):
             client_name.replace('_', '-')
 
             client = self.store_client(
-                name=name,
-                client_name=client_name,
-                domain_url=domain_url,
-                schema_name=schema_name
+                name=name, client_name=client_name, domain_url=domain_url, schema_name=schema_name
             )
             if client is False:
                 break
@@ -112,6 +99,7 @@ class Command(BaseCommand):
 
         if client and client_name:
             from django.db import connection
+
             connection.set_tenant(client)
             self.create_languages(languages)
             self.create_client_superuser()
@@ -128,43 +116,31 @@ class Command(BaseCommand):
         return
 
     def create_languages(self, languages):
-        for lang in languages.split(","):
+        for lang in languages.split(','):
             if lang == 'nl':
                 Language.objects.get_or_create(
-                    code='nl',
-                    defaults={
-                        'language_name': 'Dutch',
-                        'native_name': 'Nederlands'
-
-                    }
+                    code='nl', defaults={'language_name': 'Dutch', 'native_name': 'Nederlands'}
                 )
             if lang == 'en':
                 Language.objects.get_or_create(
-                    code='en',
-                    defaults={
-                        'language_name': 'English',
-                        'native_name': 'English'
-
-                    }
+                    code='en', defaults={'language_name': 'English', 'native_name': 'English'}
                 )
             if lang == 'fr':
                 Language.objects.get_or_create(
-                    code='fr',
-                    defaults={
-                        'language_name': 'French',
-                        'native_name': 'Français'
-                    }
+                    code='fr', defaults={'language_name': 'French', 'native_name': 'Français'}
                 )
 
     def create_client_superuser(self):
         password = 'pbkdf2_sha256$12000$MKnW1lFPvfhP$IFidWIsLSjfaWErZa4NFK2N40kbdYhn4PiebBGIgMLg='
-        su = Member.objects.create(first_name='admin',
-                                   last_name='example',
-                                   email='admin@example.com',
-                                   password=password,
-                                   is_active=True,
-                                   is_staff=True,
-                                   is_superuser=True)
+        su = Member.objects.create(
+            first_name='admin',
+            last_name='example',
+            email='admin@example.com',
+            password=password,
+            is_active=True,
+            is_staff=True,
+            is_superuser=True,
+        )
         su.save()
 
     def store_client(self, name, client_name, domain_url, schema_name):
@@ -172,13 +148,13 @@ class Command(BaseCommand):
             client = get_tenant_model().objects.create(
                 name=name,
                 client_name=client_name,
-                domain_url=domain_url.split(":", 1)[0],  # strip optional port
-                schema_name=schema_name
+                domain_url=domain_url.split(':', 1)[0],  # strip optional port
+                schema_name=schema_name,
             )
             client.save()
             return client
         except exceptions.ValidationError as e:
-            self.stderr.write("Error: %s" % '; '.join(e.messages))
+            self.stderr.write('Error: %s' % '; '.join(e.messages))
             name = None
             return False
         except IntegrityError:

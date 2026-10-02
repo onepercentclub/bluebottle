@@ -35,10 +35,7 @@ class LookerAppDashboardTest(BluebottleAdminTestCase):
         self.request = RequestFactory().get(self.admin_url)
         self.request.user = self.superuser
         for looker_id in range(7):
-            LookerEmbedFactory.create(
-                title='Looker Dashboard: {}'.format(looker_id),
-                looker_id=looker_id
-            )
+            LookerEmbedFactory.create(title='Looker Dashboard: {}'.format(looker_id), looker_id=looker_id)
 
     def test_app_dashboard(self):
         parent_dashboard = AppIndexDashboard({'request': self.request}, app_label='looker')
@@ -46,9 +43,7 @@ class LookerAppDashboardTest(BluebottleAdminTestCase):
         dashboard.init_with_context({})
         self.assertTrue(isinstance(dashboard, LookerDashboard))
 
-        self.assertEqual(
-            len(dashboard.children), 7
-        )
+        self.assertEqual(len(dashboard.children), 7)
 
 
 @override_settings(LOOKER_HOST='looker.example.com', LOOKER_SECRET='secret')
@@ -59,73 +54,49 @@ class LookerEmbedViewTest(BluebottleAdminTestCase):
 
     def setUp(self):
         super(LookerEmbedViewTest, self).setUp()
-        self.embed = LookerEmbedFactory.create(
-            title='Looker Dashboard',
-            type='look',
-            looker_id=1
-        )
-        self.target_url = 'https://looker.example.com/login/embed/{}'.format(
-            quote_plus('/embed/looks/1')
-        )
+        self.embed = LookerEmbedFactory.create(title='Looker Dashboard', type='look', looker_id=1)
+        self.target_url = 'https://looker.example.com/login/embed/{}'.format(quote_plus('/embed/looks/1'))
 
-        self.embed_url = reverse('jet-dashboard:looker-embed', args=(self.embed.pk, ))
+        self.embed_url = reverse('jet-dashboard:looker-embed', args=(self.embed.pk,))
 
     def test_view_superuser(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.embed_url)
-        self.assertTrue(
-            '<iframe src="{}'.format(self.target_url) in response.content.decode()
-        )
+        self.assertTrue('<iframe src="{}'.format(self.target_url) in response.content.decode())
         self.assertContains(response, 'Manage Reporting')
 
     def test_hide_filters(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.embed_url)
-        self.assertTrue(
-            "hide_filter%3DWork+location" in response.content.decode()
-        )
-        self.assertTrue(
-            urllib.parse.quote('hide_filter=Category') in response.content.decode()
-        )
-        self.assertTrue(
-            urllib.parse.quote('hide_filter=Segment') in response.content.decode()
-        )
+        self.assertTrue('hide_filter%3DWork+location' in response.content.decode())
+        self.assertTrue(urllib.parse.quote('hide_filter=Category') in response.content.decode())
+        self.assertTrue(urllib.parse.quote('hide_filter=Segment') in response.content.decode())
 
         CategoryFactory.create()
         LocationFactory.create()
         SegmentTypeFactory.create()
         response = self.client.get(self.embed_url)
-        self.assertFalse(
-            'hide_filter' in response.content.decode()
-        )
+        self.assertFalse('hide_filter' in response.content.decode())
 
     def test_view_permission(self):
         staff_user = BlueBottleUserFactory.create(is_staff=True)
-        staff_user.user_permissions.add(
-            Permission.objects.get(codename='access_looker_embeds')
-        )
+        staff_user.user_permissions.add(Permission.objects.get(codename='access_looker_embeds'))
 
         self.client.force_login(staff_user)
         response = self.client.get(self.embed_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(
-            '<iframe src="{}'.format(self.target_url) in response.content.decode()
-        )
+        self.assertTrue('<iframe src="{}'.format(self.target_url) in response.content.decode())
         self.assertNotContains(response, 'Manage Reporting')
 
     @override_settings(LOOKER_SECRET='')
     def test_no_settings(self):
         staff_user = BlueBottleUserFactory.create(is_staff=True)
-        staff_user.user_permissions.add(
-            Permission.objects.get(codename='access_looker_embeds')
-        )
+        staff_user.user_permissions.add(Permission.objects.get(codename='access_looker_embeds'))
 
         self.client.force_login(staff_user)
         response = self.client.get(self.embed_url)
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            '<iframe src="{}'.format(self.target_url) in response.content.decode()
-        )
+        self.assertFalse('<iframe src="{}'.format(self.target_url) in response.content.decode())
 
     def test_view_not_authenticated(self):
         response = self.client.get(self.embed_url)

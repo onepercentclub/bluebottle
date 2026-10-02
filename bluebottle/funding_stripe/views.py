@@ -25,7 +25,11 @@ from bluebottle.funding.permissions import PaymentPermission, IntentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
-    StripePayment, StripePayoutAccount, ExternalAccount, StripePaymentProvider, STRIPE_EUROPEAN_COUNTRY_CODES
+    StripePayment,
+    StripePayoutAccount,
+    ExternalAccount,
+    StripePaymentProvider,
+    STRIPE_EUROPEAN_COUNTRY_CODES,
 )
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.serializers import (
@@ -37,7 +41,7 @@ from bluebottle.funding_stripe.serializers import (
     CountrySpecSerializer,
     ExternalAccountSerializer,
     BankTransferSerializer,
-    ConnectVerificationLinkSerializer
+    ConnectVerificationLinkSerializer,
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.grant_management.models import GrantPayment
@@ -60,13 +64,16 @@ class StripeSourcePaymentList(PaymentList):
     serializer_class = StripeSourcePaymentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
+        JSONWebTokenAuthentication,
+        DonorAuthentication,
     )
 
     permission_classes = (PaymentPermission,)
 
 
-def get_init_args(donation, ):
+def get_init_args(
+    donation,
+):
     statement_descriptor = connection.tenant.name[:22]
 
     intent_args = dict(
@@ -75,11 +82,11 @@ def get_init_args(donation, ):
         statement_descriptor=statement_descriptor,
         statement_descriptor_suffix=statement_descriptor[:18],
         metadata={
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "activity_id": donation.activity.id,
-            "activity_title": donation.activity.title,
-        }
+            'tenant_name': connection.tenant.client_name,
+            'tenant_domain': connection.tenant.domain_url,
+            'activity_id': donation.activity.id,
+            'activity_title': donation.activity.title,
+        },
     )
     return intent_args
 
@@ -89,17 +96,15 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     serializer_class = PaymentIntentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, ClientSecretAuthentication,
+        JSONWebTokenAuthentication,
+        ClientSecretAuthentication,
     )
 
     permission_classes = (PaymentPermission,)
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):
-            self.check_object_permissions(
-                self.request,
-                serializer.Meta.model(**serializer.validated_data)
-            )
+            self.check_object_permissions(self.request, serializer.Meta.model(**serializer.validated_data))
         payment_intent_data = serializer.validated_data
         donation = payment_intent_data['donation']
         connect_account = donation.activity.bank_account.connect_account
@@ -108,7 +113,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
         init_args['transfer_data'] = {
             'destination': connect_account.account_id,
         }
-        init_args['automatic_payment_methods'] = {"enabled": True}
+        init_args['automatic_payment_methods'] = {'enabled': True}
 
         payment_provider = StripePaymentProvider.objects.first()
 
@@ -129,9 +134,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
                 init_args['on_behalf_of'] = connect_account.account_id
 
         stripe = get_stripe()
-        intent = stripe.PaymentIntent.create(
-            **init_args
-        )
+        intent = stripe.PaymentIntent.create(**init_args)
         serializer.validated_data['intent_id'] = intent.id
         serializer.validated_data['client_secret'] = intent.client_secret
         super().perform_create(serializer)
@@ -142,7 +145,8 @@ class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPI
     serializer_class = PaymentIntentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
+        JSONWebTokenAuthentication,
+        DonorAuthentication,
     )
     permission_classes = [IntentPermission]
 
@@ -193,28 +197,25 @@ class StripeBankTransferList(PaymentList):
 
         bank_transfer_type = 'eu_bank_transfer'
         if currency == 'USD':
-            bank_transfer_type = "us_bank_transfer"
+            bank_transfer_type = 'us_bank_transfer'
         elif currency == 'GBP':
-            bank_transfer_type = "gb_bank_transfer"
+            bank_transfer_type = 'gb_bank_transfer'
         elif currency == 'MXN':
-            bank_transfer_type = "mx_bank_transfer"
+            bank_transfer_type = 'mx_bank_transfer'
 
         if currency == 'EUR':
             init_args['payment_method_options'] = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": bank_transfer_type,
-                        "eu_bank_transfer": {"country": "NL"}
-                    },
+                'customer_balance': {
+                    'funding_type': 'bank_transfer',
+                    'bank_transfer': {'type': bank_transfer_type, 'eu_bank_transfer': {'country': 'NL'}},
                 },
             }
         else:
             init_args['payment_method_options'] = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": bank_transfer_type,
+                'customer_balance': {
+                    'funding_type': 'bank_transfer',
+                    'bank_transfer': {
+                        'type': bank_transfer_type,
                     },
                 },
             }
@@ -229,20 +230,18 @@ class StripeBankTransferList(PaymentList):
 
         # Create the payment method in Stripe
         payment_method = stripe.PaymentMethod.create(
-            type="customer_balance",
+            type='customer_balance',
             stripe_account=connect_account.account_id,
         )
 
         init_args['stripe_account'] = connect_account.account_id
-        init_args['payment_method_types'] = ["customer_balance"]
+        init_args['payment_method_types'] = ['customer_balance']
         init_args['payment_method'] = payment_method.id
         init_args['customer'] = customer.id
         init_args['confirm'] = True
 
         # Prepare Stripe and other necessary objects
-        intent = stripe.PaymentIntent.create(
-            **init_args
-        )
+        intent = stripe.PaymentIntent.create(**init_args)
 
         serializer.validated_data['intent_id'] = intent.id
         serializer.validated_data['client_secret'] = intent.client_secret
@@ -268,7 +267,10 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         'external_accounts': ['external_accounts'],
     }
 
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = (
+        IsAuthenticated,
+        IsOwner,
+    )
 
     def get_queryset(self, *args, **kwargs):
         return self.queryset.filter(owner=self.request.user)
@@ -282,20 +284,23 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
 
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = (
+        IsAuthenticated,
+        IsOwner,
+    )
 
     prefetch_for_includes = {
-        "owner": ["owner"],
-        "external_accounts": ["external_accounts"],
+        'owner': ['owner'],
+        'external_accounts': ['external_accounts'],
     }
 
     def perform_update(self, serializer):
         if (
-                "country" in serializer.validated_data
-                and serializer.instance.country != serializer.validated_data["country"]
+            'country' in serializer.validated_data
+            and serializer.instance.country != serializer.validated_data['country']
         ):
-            if serializer.instance.status == "verified":
-                raise ValidationError("Cannot change country of verified account")
+            if serializer.instance.status == 'verified':
+                raise ValidationError('Cannot change country of verified account')
 
             serializer.instance.external_accounts.all().delete()
             serializer.instance.account_id = None
@@ -305,12 +310,9 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
 
 
 class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
-
     def create(self, request):
         stripe = get_stripe()
-        account = get_object_or_404(
-            StripePayoutAccount.objects.all(), pk=request.data.get("account_id")
-        )
+        account = get_object_or_404(StripePayoutAccount.objects.all(), pk=request.data.get('account_id'))
         if account.owner != request.user:
             raise PermissionDenied()
 
@@ -318,13 +320,13 @@ class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
         account_session = stripe.AccountSession.create(
             account=account.account_id,
             components={
-                "account_onboarding": {
-                    "enabled": True,
-                    "features": {"external_account_collection": False},
+                'account_onboarding': {
+                    'enabled': True,
+                    'features': {'external_account_collection': False},
                 },
-                "account_management": {
-                    "enabled": True,
-                    "features": {"external_account_collection": False},
+                'account_management': {
+                    'enabled': True,
+                    'features': {'external_account_collection': False},
                 },
             },
         )
@@ -332,20 +334,15 @@ class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
         serializer = self.get_serializer(instance=account_session)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     serializer_class = ConnectAccountSessionSerializer
 
 
 class ConnectVerificationLink(JsonApiViewMixin, CreateAPIView):
-
     def create(self, request):
         stripe = get_stripe()
-        account = get_object_or_404(
-            StripePayoutAccount.objects.all(), pk=request.data.get("account_id")
-        )
+        account = get_object_or_404(StripePayoutAccount.objects.all(), pk=request.data.get('account_id'))
         if account.owner != request.user:
             raise PermissionDenied()
 
@@ -355,20 +352,18 @@ class ConnectVerificationLink(JsonApiViewMixin, CreateAPIView):
             account=account.account_id,
             refresh_url=f'{get_current_host()}/activities/stripe/expired',
             return_url=f'{get_current_host()}/activities/stripe/complete',
-            type="account_onboarding",
+            type='account_onboarding',
             collection_options={
-                "fields": "eventually_due",
-                "future_requirements": "include",
-            }
+                'fields': 'eventually_due',
+                'future_requirements': 'include',
+            },
         )
 
         verification_link.pk = str(uuid.uuid4())
         serializer = self.get_serializer(instance=verification_link)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     serializer_class = ConnectVerificationLinkSerializer
 
@@ -383,37 +378,26 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
         'connect_account': ['connect_account'],
     }
 
-    related_permission_classes = {"connect_account": [IsOwner]}
+    related_permission_classes = {'connect_account': [IsOwner]}
 
     def get_queryset(self):
         settings = FundingPlatformSettings.load()
         if settings.public_accounts:
-            return self.queryset.order_by("-created").filter(
-                connect_account__public=True,
-                connect_account__status='verified'
+            return self.queryset.order_by('-created').filter(
+                connect_account__public=True, connect_account__status='verified'
             )
         else:
-            return self.queryset.order_by("-created").filter(
-                connect_account__owner=self.request.user
-            )
+            return self.queryset.order_by('-created').filter(connect_account__owner=self.request.user)
 
     def perform_create(self, serializer):
-        if hasattr(serializer.Meta, "model"):
-            validated_data = dict(
-                (key, value)
-                for key, value in serializer.validated_data.items()
-                if key != "token"
-            )
-            self.check_object_permissions(
-                self.request, serializer.Meta.model(**validated_data)
-            )
+        if hasattr(serializer.Meta, 'model'):
+            validated_data = dict((key, value) for key, value in serializer.validated_data.items() if key != 'token')
+            self.check_object_permissions(self.request, serializer.Meta.model(**validated_data))
 
         super().perform_create(serializer)
 
 
-class ExternalAccountDetails(
-    JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
-):
+class ExternalAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = ExternalAccount.objects.all()
     serializer_class = BankAccountSerializer
 
@@ -421,9 +405,7 @@ class ExternalAccountDetails(
         'connect_account': ['connect_account'],
     }
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}
 
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
@@ -438,9 +420,7 @@ class IntentWebHookView(View):
         stripe = get_stripe()
 
         try:
-            event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret_intents
-            )
+            event = stripe.Webhook.construct_event(payload, signature_header, stripe.webhook_secret_intents)
         except stripe.error.SignatureVerificationError:
             # Invalid signature
             return HttpResponse('Signature failed to verify', status=400)
@@ -517,9 +497,7 @@ class SessionWebHookView(View):
         stripe = get_stripe()
 
         try:
-            event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret_checkout
-            )
+            event = stripe.Webhook.construct_event(payload, signature_header, stripe.webhook_secret_checkout)
         except stripe.error.SignatureVerificationError:
             # Invalid signature
             return HttpResponse('Signature failed to verify', status=400)
@@ -538,22 +516,19 @@ class ConnectWebHookView(View):
         signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
         try:
-            event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret_connect
-            )
+            event = stripe.Webhook.construct_event(payload, signature_header, stripe.webhook_secret_connect)
         except stripe.error.SignatureVerificationError:
             # Invalid signature
-            error = "Signature failed to verify"
+            error = 'Signature failed to verify'
             logger.error(error)
             return HttpResponse(error, status=400)
 
         try:
-            if event.type == "account.updated":
+            if event.type == 'account.updated':
                 account = self.get_account(event.data.object.id)
 
                 external_account_ids = [
-                    external_account.id for external_account
-                    in event.data.object.external_accounts.data
+                    external_account.id for external_account in event.data.object.external_accounts.data
                 ]
                 for bank_account in account.external_accounts.all():
                     if bank_account.account_id not in external_account_ids:
@@ -562,33 +537,31 @@ class ConnectWebHookView(View):
                 for external_account in event.data.object.external_accounts.data:
                     status = 'new'
                     if (
-                        account.status == 'verified' and
-                        external_account.requirements.currently_due == [] and
-                        external_account.requirements.past_due == [] and
-                        external_account.requirements.pending_verification == [] and
-                        external_account.future_requirements.currently_due == [] and
-                        external_account.future_requirements.past_due == [] and
-                        external_account.future_requirements.pending_verification == []
+                        account.status == 'verified'
+                        and external_account.requirements.currently_due == []
+                        and external_account.requirements.past_due == []
+                        and external_account.requirements.pending_verification == []
+                        and external_account.future_requirements.currently_due == []
+                        and external_account.future_requirements.past_due == []
+                        and external_account.future_requirements.pending_verification == []
                     ):
                         status = 'verified'
                     ExternalAccount.objects.get_or_create(
-                        connect_account=account,
-                        account_id=external_account.id,
-                        defaults={'status': status}
+                        connect_account=account, account_id=external_account.id, defaults={'status': status}
                     )
 
                 account.update(event.data.object)
                 account.save()
 
-                return HttpResponse("Updated connect account")
+                return HttpResponse('Updated connect account')
             else:
-                return HttpResponse("Skipped event {}".format(event.type))
+                return HttpResponse('Skipped event {}'.format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
             tenant = connection.tenant
-            error = f"Payout account not found {event.data.object.id} on {tenant.name}"
+            error = f'Payout account not found {event.data.object.id} on {tenant.name}'
             logger.error(error)
-            return HttpResponse("Skipped event {}, account not found".format(event.type))
+            return HttpResponse('Skipped event {}, account not found'.format(event.type))
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)
@@ -619,10 +592,9 @@ class CountrySpecDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
         assert lookup_url_kwarg in self.kwargs, (
-            "Expected view %s to be called with a URL keyword argument "
+            'Expected view %s to be called with a URL keyword argument '
             'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly."
-            % (self.__class__.__name__, lookup_url_kwarg)
+            'attribute on the view correctly.' % (self.__class__.__name__, lookup_url_kwarg)
         )
         try:
             spec = stripe.CountrySpec.retrieve(self.kwargs[lookup_url_kwarg])

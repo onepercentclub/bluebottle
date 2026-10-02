@@ -14,6 +14,7 @@ class ActivityRejectedForm(TransitionConfirmationForm):
     @classmethod
     def message_class(cls):
         from bluebottle.activities.messages.activity_manager import ActivityRejectedNotification
+
         return ActivityRejectedNotification
 
 
@@ -23,6 +24,7 @@ class ActivityAcceptedForm(TransitionConfirmationForm):
     @classmethod
     def message_class(cls):
         from bluebottle.activities.messages.activity_manager import ActivityApprovedNotification
+
         return ActivityApprovedNotification
 
 
@@ -32,6 +34,7 @@ class ActivityNeedsWorkForm(TransitionConfirmationForm):
     @classmethod
     def message_class(cls):
         from bluebottle.activities.messages.activity_manager import ActivityNeedsWorkNotification
+
         return ActivityNeedsWorkNotification
 
 
@@ -41,6 +44,7 @@ class ActivityCancelledForm(TransitionConfirmationForm):
     @classmethod
     def message_class(cls):
         from bluebottle.activities.messages.activity_manager import ActivityCancelledNotification
+
         return ActivityCancelledNotification
 
 
@@ -50,4 +54,5 @@ class ActivityRestoredForm(TransitionConfirmationForm):
     @classmethod
     def message_class(cls):
         from bluebottle.activities.messages.activity_manager import ActivityRestoredNotification
+
         return ActivityRestoredNotification

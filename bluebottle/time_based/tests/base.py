@@ -98,7 +98,8 @@ class TimeBasedActivityListAPITestCase:
         settings = InitiativePlatformSettings.load()
 
         settings.activity_types = [
-            activity_type for activity_type in settings.activity_types
+            activity_type
+            for activity_type in settings.activity_types
             if activity_type != self.factory._meta.model._meta.model_name
         ]
         settings.save()
@@ -125,10 +126,7 @@ class TimeBasedActivityDetailAPITestCase:
     }
 
     def setUp(self):
-        self.model = self.factory.create(
-            initiative=InitiativeFactory.create(status='approved'),
-            **self.defaults
-        )
+        self.model = self.factory.create(initiative=InitiativeFactory.create(status='approved'), **self.defaults)
         self.url = reverse(self.url_name, args=(self.model.pk,))
 
         super().setUp()
@@ -158,9 +156,7 @@ class TimeBasedActivityDetailAPITestCase:
         self.perform_get(user=self.model.owner)
         self.assertStatus(status.HTTP_200_OK)
 
-        self.assertIsNone(
-            self.response.json()['data']['attributes']['participants-export-url']
-        )
+        self.assertIsNone(self.response.json()['data']['attributes']['participants-export-url'])
 
     def test_export_url(self):
         initiative_settings = InitiativePlatformSettings.load()
@@ -171,9 +167,7 @@ class TimeBasedActivityDetailAPITestCase:
 
         self.assertStatus(status.HTTP_200_OK)
 
-        self.assertTrue(
-            'url' in self.response.json()['data']['attributes']['participants-export-url']
-        )
+        self.assertTrue('url' in self.response.json()['data']['attributes']['participants-export-url'])
 
     def test_export_url_other_user(self):
         initiative_settings = InitiativePlatformSettings.load()
@@ -183,15 +177,10 @@ class TimeBasedActivityDetailAPITestCase:
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
 
-        self.assertIsNone(
-            self.response.json()['data']['attributes']['participants-export-url']
-
-        )
+        self.assertIsNone(self.response.json()['data']['attributes']['participants-export-url'])
 
     def test_get_with_segments(self):
-        segment = SegmentFactory.create(
-            name="SDG1"
-        )
+        segment = SegmentFactory.create(name='SDG1')
         self.model.segments.add(segment)
         self.model.save()
         self.perform_get(user=self.model.owner)
@@ -201,10 +190,7 @@ class TimeBasedActivityDetailAPITestCase:
         self.assertRelationship('segments', [segment])
 
     def test_get_closed_segment(self):
-        segment = SegmentFactory.create(
-            name="SDG1",
-            closed=True
-        )
+        segment = SegmentFactory.create(name='SDG1', closed=True)
         self.model.segments.add(segment)
         self.model.save()
         self.perform_get()
@@ -212,10 +198,7 @@ class TimeBasedActivityDetailAPITestCase:
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_get_closed_segment_logged_in(self):
-        segment = SegmentFactory.create(
-            name="SDG1",
-            closed=True
-        )
+        segment = SegmentFactory.create(name='SDG1', closed=True)
         self.model.segments.add(segment)
         self.model.save()
         self.perform_get(user=BlueBottleUserFactory.create())
@@ -223,15 +206,9 @@ class TimeBasedActivityDetailAPITestCase:
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_get_closed_segment_logged_in_with_segment(self):
-        segment = SegmentFactory.create(
-            name="SDG1",
-            closed=True
-        )
+        segment = SegmentFactory.create(name='SDG1', closed=True)
 
-        SegmentFactory.create(
-            name="SDG2",
-            closed=True
-        )
+        SegmentFactory.create(name='SDG2', closed=True)
 
         self.model.segments.add(segment)
         self.model.save()
@@ -274,7 +251,7 @@ class TimeBasedActivityDetailAPITestCase:
 
         self.perform_update(
             {'start': date.today() + timedelta(days=10), 'deadline': date.today() + timedelta(days=5)},
-            user=self.model.owner
+            user=self.model.owner,
         )
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
@@ -284,7 +261,7 @@ class TimeBasedActivityDetailAPITestCase:
             {
                 'description': '',
             },
-            user=self.model.owner
+            user=self.model.owner,
         )
         self.assertStatus(status.HTTP_200_OK)
 
@@ -300,7 +277,7 @@ class TimeBasedActivityDetailAPITestCase:
             {
                 'description': '',
             },
-            user=self.model.owner
+            user=self.model.owner,
         )
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
@@ -316,10 +293,7 @@ class TimeBasedActivityDetailAPITestCase:
 
     def test_put_initiative_activity_manager(self):
         new_description = 'Test description'
-        self.perform_update(
-            {'description': new_description},
-            user=self.model.initiative.activity_managers.first()
-        )
+        self.perform_update({'description': new_description}, user=self.model.initiative.activity_managers.first())
 
         self.assertStatus(status.HTTP_200_OK)
 
@@ -503,9 +477,7 @@ class TimeBasedRegistrationRelatedAPIListTestCase:
 
         self.assertTotal(1)
 
-        self.assertObjectList(
-            [registration]
-        )
+        self.assertObjectList([registration])
 
     def test_get_staff(self):
         self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
@@ -546,9 +518,7 @@ class TimeBasedRegistrationRelatedAPIListTestCase:
         )
 
     def test_get_user_hide_first_name(self):
-        self.factory.create(
-            activity=self.activity, status='accepted', user=self.activity.owner
-        )
+        self.factory.create(activity=self.activity, status='accepted', user=self.activity.owner)
         MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
 
         self.perform_get(user=self.user)
@@ -604,7 +574,7 @@ class TimeBasedRegistrationDetailAPITestCase:
         self.defaults = {
             'answer': 'Some answer',
             'document': PrivateDocumentFactory.create(),
-            'activity': self.activity
+            'activity': self.activity,
         }
         self.model = self.factory.create(**self.defaults)
         self.url = reverse(self.url_name, args=(self.model.pk,))
@@ -662,35 +632,23 @@ class TimeBasedRegistrationDetailAPITestCase:
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_update(self):
-        self.perform_update(
-            {'answer': 'updated answer'},
-            user=self.model.user
-        )
+        self.perform_update({'answer': 'updated answer'}, user=self.model.user)
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('answer', 'updated answer')
 
     def test_update_user(self):
         current_user = self.model.user
-        self.perform_update(
-            {'user': BlueBottleUserFactory.create()},
-            user=self.model.user
-        )
+        self.perform_update({'user': BlueBottleUserFactory.create()}, user=self.model.user)
         self.assertStatus(status.HTTP_200_OK)
         self.assertRelationship('user', [current_user])
 
     def test_update_owner(self):
-        self.perform_update(
-            {'answer': 'updated answer'},
-            user=self.model.user
-        )
+        self.perform_update({'answer': 'updated answer'}, user=self.model.user)
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('answer', 'updated answer')
 
     def test_update_other_user(self):
-        self.perform_update(
-            {'answer': 'updated answer'},
-            user=self.user
-        )
+        self.perform_update({'answer': 'updated answer'}, user=self.user)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_update_anonymous(self):
@@ -701,7 +659,7 @@ class TimeBasedRegistrationDetailAPITestCase:
 
 
 class TimeBasedRegistrationTransitionListAPITestCase:
-    fields = ["resource", "transition", "send_email", "message"]
+    fields = ['resource', 'transition', 'send_email', 'message']
 
     activity_defaults = {
         'start': date.today() + timedelta(days=10),
@@ -713,7 +671,7 @@ class TimeBasedRegistrationTransitionListAPITestCase:
             initiative=InitiativeFactory.create(status='approved'),
             status='draft',
             review=True,
-            **self.activity_defaults
+            **self.activity_defaults,
         )
         self.activity.states.publish(save=True)
         self.registration = self.factory.create(activity=self.activity)
@@ -743,14 +701,12 @@ class TimeBasedRegistrationTransitionListAPITestCase:
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have been selected for the activity "{}"'.format(
-                self.activity.title
-            ),
+            'You have been selected for the activity "{}"'.format(self.activity.title),
         )
 
     def test_accept_no_mail(self):
         mail.outbox = []
-        self.defaults["send_email"] = False
+        self.defaults['send_email'] = False
         self.perform_create(user=self.activity.owner)
 
         self.assertStatus(status.HTTP_201_CREATED)
@@ -772,16 +728,14 @@ class TimeBasedRegistrationTransitionListAPITestCase:
         self.assertEqual(self.defaults['resource'].status, 'rejected')
 
     def test_reject_manager(self):
-        self.defaults["transition"] = "reject"
+        self.defaults['transition'] = 'reject'
         mail.outbox = []
         self.perform_create(user=self.activity.owner)
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have not been selected for the activity "{}"'.format(
-                self.activity.title
-            ),
+            'You have not been selected for the activity "{}"'.format(self.activity.title),
         )
         self.assertStatus(status.HTTP_201_CREATED)
 
@@ -871,9 +825,7 @@ class TimeBasedParticipantRelatedListAPITestCase:
         )
 
     def test_get_user_hide_first_name(self):
-        self.factory.create(
-            activity=self.activity, status='accepted', user=self.activity.owner
-        )
+        self.factory.create(activity=self.activity, status='accepted', user=self.activity.owner)
         MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
 
         self.perform_get(user=self.user)
@@ -925,9 +877,7 @@ class TimeBasedParticipantDetailAPITestCase:
             initiative=InitiativeFactory.create(status='approved'),
             status='open',
         )
-        self.defaults = {
-            'activity': self.activity
-        }
+        self.defaults = {'activity': self.activity}
         self.participant = self.factory.create(**self.defaults)
         self.url = reverse(self.url_name, args=(self.participant.pk,))
 
@@ -980,7 +930,7 @@ class TimeBasedParticipantTransitionListAPITestCase:
             initiative=InitiativeFactory.create(status='approved'),
             status='open',
             review=False,
-            **self.activity_defaults
+            **self.activity_defaults,
         )
         self.url = reverse(self.url_name)
         self.participant = self.factory.create(activity=self.activity)
@@ -1045,8 +995,8 @@ class TimeBasedActivityAPIExportTestCase:
         )
 
         response = self.client.get(
-            reverse(self.url_name, args=(self.activity.pk, )),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.activity.owner.get_jwt_token())
+            reverse(self.url_name, args=(self.activity.pk,)),
+            HTTP_AUTHORIZATION='JWT {0}'.format(self.activity.owner.get_jwt_token()),
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
@@ -1064,7 +1014,13 @@ class TimeBasedActivityAPIExportTestCase:
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', )
+            (
+                'Email',
+                'Name',
+                'Registration Date',
+                'Status',
+                'Registration answer',
+            ),
         )
 
     def test_get_incorrect_signature(self):

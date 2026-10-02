@@ -11,6 +11,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 class InitiativeFollowFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Follow
+
     user = factory.SubFactory(BlueBottleUserFactory)
     instance = factory.SubFactory(InitiativeFactory)
 
@@ -18,6 +19,7 @@ class InitiativeFollowFactory(factory.DjangoModelFactory):
 class DateActivityFollowFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Follow
+
     user = factory.SubFactory(BlueBottleUserFactory)
     instance = factory.SubFactory(DateActivityFactory)
 
@@ -25,5 +27,6 @@ class DateActivityFollowFactory(factory.DjangoModelFactory):
 class FundingFollowFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Follow
+
     user = factory.SubFactory(BlueBottleUserFactory)
     instance = factory.SubFactory(FundingFactory)

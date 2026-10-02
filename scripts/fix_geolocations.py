@@ -48,9 +48,7 @@ def run(*args):
 
     tenant_list = list(tenants)
     if not tenant_list:
-        print('No tenants found{}'.format(
-            ' for schema {!r}'.format(options.tenant) if options.tenant else ''
-        ))
+        print('No tenants found{}'.format(' for schema {!r}'.format(options.tenant) if options.tenant else ''))
         return
 
     print(
@@ -66,9 +64,7 @@ def run(*args):
             site_settings = SitePlatformSettings.load()
             if site_settings.terminated:
                 continue
-            locations = Geolocation.objects.filter(
-                geofeatures__isnull=True
-            )
+            locations = Geolocation.objects.filter(geofeatures__isnull=True)
 
             total = locations.count()
             print('{}: {} locations to update'.format(tenant.name, total), flush=True)
@@ -78,7 +74,7 @@ def run(*args):
             skipped = 0
             for index, geolocation in enumerate(locations.iterator(), start=1):
                 try:
-                    print(f"{geolocation.id} fixing")
+                    print(f'{geolocation.id} fixing')
                     if is_v6_mapbox_id(geolocation.mapbox_id):
                         geolocation.save()
                     else:
@@ -96,8 +92,6 @@ def run(*args):
                         failed += 1
 
             print(
-                '{} done: {} updated, {} skipped, {} failed'.format(
-                    tenant.name, updated, skipped, failed
-                ),
+                '{} done: {} updated, {} skipped, {} failed'.format(tenant.name, updated, skipped, failed),
                 flush=True,
             )

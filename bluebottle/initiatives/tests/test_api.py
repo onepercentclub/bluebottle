@@ -17,8 +17,12 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.impact.tests.factories import ImpactGoalFactory, ImpactTypeFactory
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, InitiativeSearchFilter, \
-    ActivitySearchFilter
+from bluebottle.initiatives.models import (
+    Initiative,
+    InitiativePlatformSettings,
+    InitiativeSearchFilter,
+    ActivitySearchFilter,
+)
 from bluebottle.initiatives.models import Theme
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -34,7 +38,8 @@ from bluebottle.time_based.tests.factories import (
     DeadlineParticipantFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    DateRegistrationFactory, )
+    DateRegistrationFactory,
+)
 
 
 def get_include(response, name):
@@ -65,32 +70,20 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
                 'type': 'initiatives',
                 'attributes': {
                     'title': 'Some title',
-                    'story': "About that initiative",
-                    'pitch': "A pitch",
+                    'story': 'About that initiative',
+                    'pitch': 'A pitch',
                 },
                 'relationships': {
                     'theme': {
-                        'data': {
-                            'type': 'themes',
-                            'id': self.theme.pk
-                        },
+                        'data': {'type': 'themes', 'id': self.theme.pk},
                     },
-                    'image': {
-                        'data': {
-                            'type': 'images',
-                            'id': str(self.image.id)
-                        }
-                    }
-                }
+                    'image': {'data': {'type': 'images', 'id': str(self.image.id)}},
+                },
             }
         }
 
     def test_create(self):
-        response = self.client.post(
-            self.url,
-            json.dumps(self.data),
-            user=self.owner
-        )
+        response = self.client.post(self.url, json.dumps(self.data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_data = json.loads(response.content)
 
@@ -99,14 +92,8 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response_data['data']['attributes']['title'], 'Some title')
         self.assertEqual(response_data['data']['attributes']['slug'], 'some-title')
         self.assertEqual(initiative.title, 'Some title')
-        self.assertEqual(
-            response_data['data']['relationships']['owner']['data']['id'],
-            str(self.owner.pk)
-        )
-        self.assertEqual(
-            response_data['data']['relationships']['theme']['data']['id'],
-            str(initiative.theme.pk)
-        )
+        self.assertEqual(response_data['data']['relationships']['owner']['data']['id'], str(self.owner.pk))
+        self.assertEqual(response_data['data']['relationships']['theme']['data']['id'], str(initiative.theme.pk))
         self.assertEqual(len(response_data['included']), 3)
         transitions = [t['name'] for t in response_data['data']['meta']['transitions']]
         self.assertTrue('submit' in transitions)
@@ -115,11 +102,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_reviewing = False
         initiative_settings.save()
-        response = self.client.post(
-            self.url,
-            json.dumps(self.data),
-            user=self.owner
-        )
+        response = self.client.post(self.url, json.dumps(self.data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_data = json.loads(response.content)
         transitions = [t['name'] for t in response_data['data']['meta']['transitions']]
@@ -127,11 +110,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
 
     def test_create_special_chars(self):
         self.data['data']['attributes']['title'] = ':)'
-        response = self.client.post(
-            self.url,
-            json.dumps(self.data),
-            user=self.owner
-        )
+        response = self.client.post(self.url, json.dumps(self.data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_data = json.loads(response.content)
         self.assertEqual(response_data['data']['attributes']['title'], ':)')
@@ -141,38 +120,24 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         data = {
             'data': {
                 'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                },
+                'attributes': {'title': 'Some title'},
                 'relationships': {
                     'theme': {
-                        'data': {
-                            'type': 'themes',
-                            'id': self.theme.pk
-                        },
+                        'data': {'type': 'themes', 'id': self.theme.pk},
                     }
-                }
+                },
             }
         }
-        response = self.client.post(
-            self.url,
-            json.dumps(data),
-            user=self.owner
-        )
+        response = self.client.post(self.url, json.dumps(data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(
-            '/data/attributes/image' in (
-                error['source']['pointer'] for error in response.json()['data']['meta']['required']
-            )
+            '/data/attributes/image'
+            in (error['source']['pointer'] for error in response.json()['data']['meta']['required'])
         )
 
     def test_create_duplicate_title(self):
         InitiativeFactory.create(title='Some title', status='approved')
-        response = self.client.post(
-            self.url,
-            json.dumps(self.data),
-            user=self.owner
-        )
+        response = self.client.post(self.url, json.dumps(self.data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
@@ -183,27 +148,16 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
     def test_create_with_location(self):
         geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
         self.data['data']['relationships']['place'] = {
-            'data': {
-                'type': 'geolocations',
-                'id': geolocation.id
-            },
+            'data': {'type': 'geolocations', 'id': geolocation.id},
         }
 
-        response = self.client.post(
-            self.url,
-            json.dumps(self.data),
-            user=self.owner
-        )
+        response = self.client.post(self.url, json.dumps(self.data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         geolocation = get_include(response, 'geolocations')
-        self.assertEqual(geolocation['attributes']['position'],
-                         {'latitude': 43.0579025, 'longitude': 23.6851594})
+        self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
 
     def test_create_anonymous(self):
-        response = self.client.post(
-            self.url,
-            json.dumps({})
-        )
+        response = self.client.post(self.url, json.dumps({}))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
@@ -211,27 +165,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
     def setUp(self):
         super(InitiativeDetailAPITestCase, self).setUp()
         self.initiative = InitiativeFactory(
-            owner=self.owner,
-            place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
+            owner=self.owner, place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
         )
         self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
-        self.data = {
-            'data': {
-                'id': self.initiative.id,
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                }
-            }
-        }
+        self.data = {'data': {'id': self.initiative.id, 'type': 'initiatives', 'attributes': {'title': 'Some title'}}}
 
     def test_patch(self):
-        response = self.client.patch(
-            self.url,
-            json.dumps(self.data),
-            user=self.owner
-        )
+        response = self.client.patch(self.url, json.dumps(self.data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['title'], 'Some title')
@@ -239,11 +180,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
     def test_patch_activity_manager(self):
         manager = BlueBottleUserFactory.create()
         self.initiative.activity_managers.add(manager)
-        response = self.client.patch(
-            self.url,
-            json.dumps(self.data),
-            user=manager
-        )
+        response = self.client.patch(self.url, json.dumps(self.data), user=manager)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['title'], 'Some title')
@@ -254,9 +191,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
-                user=self.owner
+                user=self.owner,
             )
 
         file_data = json.loads(response.content)
@@ -264,41 +201,21 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             'data': {
                 'id': self.initiative.id,
                 'type': 'initiatives',
-                'relationships': {
-                    'image': {
-                        'data': {
-                            'type': 'images',
-                            'id': file_data['data']['id']
-                        }
-                    }
-                }
+                'relationships': {'image': {'data': {'type': 'images', 'id': file_data['data']['id']}}},
             }
         }
         response = self.client.patch(
-            self.url,
-            json.dumps(data),
-            content_type="application/vnd.api+json",
-            user=self.owner
+            self.url, json.dumps(data), content_type='application/vnd.api+json', user=self.owner
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(
-            data['data']['relationships']['image']['data']['id'],
-            file_data['data']['id']
-        )
+        self.assertEqual(data['data']['relationships']['image']['data']['id'], file_data['data']['id'])
 
         image = get_include(response, 'images')
-        response = self.client.get(
-            image['attributes']['links']['large'],
-            user=self.owner
-        )
+        response = self.client.get(image['attributes']['links']['large'], user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(
-            response['X-Accel-Redirect'].startswith(
-                '/media/cache/'
-            )
-        )
+        self.assertTrue(response['X-Accel-Redirect'].startswith('/media/cache/'))
 
     def test_patch_anonymous(self):
         response = self.client.patch(
@@ -308,11 +225,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_wrong_user(self):
-        response = self.client.patch(
-            self.url,
-            json.dumps(self.data),
-            user=BlueBottleUserFactory.create()
-        )
+        response = self.client.patch(self.url, json.dumps(self.data), user=BlueBottleUserFactory.create())
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_cancelled(self):
@@ -343,40 +256,29 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.initiative.title = ''
         self.initiative.save()
 
-        response = self.client.get(
-            self.url,
-            user=self.owner
-        )
+        response = self.client.get(self.url, user=self.owner)
 
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
         self.assertEqual(data['meta']['status'], self.initiative.status)
-        self.assertEqual(
-            data['meta']['transitions'],
-            []
-        )
+        self.assertEqual(data['meta']['transitions'], [])
         self.assertEqual(data['relationships']['theme']['data']['id'], str(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], str(self.initiative.owner.pk))
 
         geolocation = get_include(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
 
-        self.assertTrue(
-            '/data/attributes/title' in (error['source']['pointer'] for error in data['meta']['required'])
-        )
+        self.assertTrue('/data/attributes/title' in (error['source']['pointer'] for error in data['meta']['required']))
         self.assertEqual(
             data['relationships']['activities']['links']['related'],
-            f'/api/activities/search?filter[initiative.id]={self.initiative.id}&page[size]=1000'
+            f'/api/activities/search?filter[initiative.id]={self.initiative.id}&page[size]=1000',
         )
 
     def test_get_image_used_twice(self):
         InitiativeFactory.create(image=self.initiative.image)
 
-        response = self.client.get(
-            self.url,
-            user=self.owner
-        )
+        response = self.client.get(self.url, user=self.owner)
 
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -386,10 +288,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.initiative.image = None
         self.initiative.save()
 
-        response = self.client.get(
-            self.url,
-            user=self.owner
-        )
+        response = self.client.get(self.url, user=self.owner)
 
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -403,7 +302,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             initiative=self.initiative,
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
-            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3),
         )
 
         period_activity.states.publish(save=True)
@@ -411,29 +310,21 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         DeadlineParticipantFactory.create_batch(3, activity=period_activity, status='withdrawn')
 
         date_activity = DateActivityFactory.create(
-            initiative=self.initiative,
-            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
-
+            initiative=self.initiative, registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
         )
         date_activity.states.publish(save=True)
         slot = DateActivitySlotFactory.create(
             activity=date_activity,
             start=now() - datetime.timedelta(weeks=1),
         )
-        for registration in DateRegistrationFactory.create_batch(
-            3, activity=date_activity
-        ):
+        for registration in DateRegistrationFactory.create_batch(3, activity=date_activity):
             DateParticipantFactory.create(registration=registration, slot=slot)
 
-        for registration in DateRegistrationFactory.create_batch(
-            3, activity=date_activity, status="rejected"
-        ):
+        for registration in DateRegistrationFactory.create_batch(3, activity=date_activity, status='rejected'):
             DateParticipantFactory.create(registration=registration, slot=slot, status='rejected')
 
         funding = FundingFactory.create(
-            initiative=self.initiative,
-            deadline=now() - datetime.timedelta(weeks=1),
-            status='succeeded'
+            initiative=self.initiative, deadline=now() - datetime.timedelta(weeks=1), status='succeeded'
         )
         donor_user = BlueBottleUserFactory.create()
         for donor in DonorFactory.create_batch(3, activity=funding, user=donor_user, amount=Money(10, 'EUR')):
@@ -444,7 +335,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         deed_activity = DeedFactory.create(
             initiative=self.initiative,
             start=datetime.date.today() - datetime.timedelta(days=10),
-            end=datetime.date.today() - datetime.timedelta(days=5)
+            end=datetime.date.today() - datetime.timedelta(days=5),
         )
         deed_activity.states.publish(save=True)
         deed_activity.states.succeed(save=True)
@@ -481,16 +372,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             initiative=unrelated_initiative,
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
-            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3),
         )
 
         unrelated_activity.states.publish(save=True)
         DeadlineParticipantFactory.create_batch(3, activity=unrelated_activity)
 
-        response = self.client.get(
-            self.url,
-            user=self.owner
-        )
+        response = self.client.get(self.url, user=self.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
@@ -508,50 +396,30 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         # organizers are not counted here
         self.assertEqual(stats['contributors'], 19)
         self.assertEqual(stats['effort'], 3)
-        self.assertEqual(
-            len(stats['collected']),
-            2
-        )
+        self.assertEqual(len(stats['collected']), 2)
 
     def test_get_stats_impact(self):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
-        co2 = ImpactTypeFactory.create(
-            slug='co2',
-            name='reduce CO₂ emissions by {} kg',
-            text_passed='kg CO₂ saved'
-        )
-        water = ImpactTypeFactory.create(
-            slug='water',
-            name='water saved',
-            text_passed='liter water saved'
-        )
+        co2 = ImpactTypeFactory.create(slug='co2', name='reduce CO₂ emissions by {} kg', text_passed='kg CO₂ saved')
+        water = ImpactTypeFactory.create(slug='water', name='water saved', text_passed='liter water saved')
 
-        first = DeedFactory.create(
-            initiative=self.initiative, target=5, enable_impact=True
-        )
+        first = DeedFactory.create(initiative=self.initiative, target=5, enable_impact=True)
         ImpactGoalFactory.create(activity=first, type=co2, realized=100)
         ImpactGoalFactory.create(activity=first, type=water, realized=0, target=1000)
         DeedParticipantFactory.create_batch(5, activity=first)
 
-        second = DeedFactory.create(
-            initiative=self.initiative, target=5, enable_impact=True
-        )
+        second = DeedFactory.create(initiative=self.initiative, target=5, enable_impact=True)
         ImpactGoalFactory.create(activity=second, type=co2, realized=200)
         ImpactGoalFactory.create(activity=second, type=water, realized=0, target=1000)
 
-        third = DeedFactory.create(
-            initiative=self.initiative, target=10, enable_impact=True
-        )
+        third = DeedFactory.create(initiative=self.initiative, target=10, enable_impact=True)
         ImpactGoalFactory.create(activity=third, type=co2, realized=300)
         ImpactGoalFactory.create(activity=third, type=water, realized=0, target=500)
         DeedParticipantFactory.create_batch(5, activity=third)
 
-        response = self.client.get(
-            self.url,
-            user=self.owner
-        )
+        response = self.client.get(self.url, user=self.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
@@ -563,26 +431,18 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(stats['impact'][1]['value'], 1250.0)
 
     def test_get_staff(self):
-        response = self.client.get(
-            self.url,
-            user=BlueBottleUserFactory.create(is_staff=True)
-        )
+        response = self.client.get(self.url, user=BlueBottleUserFactory.create(is_staff=True))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
         self.assertTrue(response.json()['data']['meta']['permissions']['PUT'])
 
     def test_get_other(self):
-        response = self.client.get(
-            self.url,
-            user=BlueBottleUserFactory.create()
-        )
+        response = self.client.get(self.url, user=BlueBottleUserFactory.create())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
 
     def test_get_anonymous(self):
-        response = self.client.get(
-            self.url
-        )
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
 
@@ -598,48 +458,35 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertIsNone(self._admin_url(self.owner))
 
     def test_admin_url_staff(self):
-        expected = reverse(
-            'admin:initiatives_initiative_change', args=(self.initiative.pk,)
-        )
-        self.assertEqual(
-            self._admin_url(BlueBottleUserFactory.create(is_staff=True)),
-            expected
-        )
+        expected = reverse('admin:initiatives_initiative_change', args=(self.initiative.pk,))
+        self.assertEqual(self._admin_url(BlueBottleUserFactory.create(is_staff=True)), expected)
 
     def test_admin_url_superuser(self):
-        expected = reverse(
-            'admin:initiatives_initiative_change', args=(self.initiative.pk,)
-        )
-        self.assertEqual(
-            self._admin_url(BlueBottleUserFactory.create(is_superuser=True)),
-            expected
-        )
+        expected = reverse('admin:initiatives_initiative_change', args=(self.initiative.pk,))
+        self.assertEqual(self._admin_url(BlueBottleUserFactory.create(is_superuser=True)), expected)
 
     def test_get_story_safe(self):
-        self.initiative.story = json.dumps({
-            'html': (
-                '<p>Test</p><img src="/media/test.jpg">'
-                '<ul><li class="bla">List</li></ul>'
-                '<script type="javascript">alert("bla")</script>'
-            ),
-            'delta': ''
-        })
+        self.initiative.story = json.dumps(
+            {
+                'html': (
+                    '<p>Test</p><img src="/media/test.jpg">'
+                    '<ul><li class="bla">List</li></ul>'
+                    '<script type="javascript">alert("bla")</script>'
+                ),
+                'delta': '',
+            }
+        )
         self.initiative.save()
 
-        response = self.client.get(
-            self.url
-        )
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.json()['data']['attributes']['story'],
-            '<p>Test</p><img src="/media/test.jpg"><ul><li class="bla">List</li></ul>'
+            '<p>Test</p><img src="/media/test.jpg"><ul><li class="bla">List</li></ul>',
         )
 
 
-@override_settings(
-    ELASTICSEARCH_DSL_AUTOSYNC=True,
-    ELASTICSEARCH_DSL_AUTO_REFRESH=True
-)
+@override_settings(ELASTICSEARCH_DSL_AUTOSYNC=True, ELASTICSEARCH_DSL_AUTO_REFRESH=True)
 @tag('elasticsearch')
 class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
@@ -653,9 +500,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         if isinstance(filter, str):
             url = filter
         else:
-            params = dict(
-                (f'filter[{key}]', value) for key, value in filter.items()
-            )
+            params = dict((f'filter[{key}]', value) for key, value in filter.items())
 
             if sort:
                 params['sort'] = sort
@@ -664,10 +509,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
             url = f'{self.url}?{query}'
 
-        response = self.client.get(
-            url,
-            user=user
-        )
+        response = self.client.get(url, user=user)
 
         self.data = json.loads(response.content)
 
@@ -683,9 +525,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.assertTrue(activity['id'] in ids)
 
     def assertFacets(self, filter, facets, active=None):
-        found_facets = dict(
-            (facet['id'], facet) for facet in self.data['meta']['facets'][filter]
-        )
+        found_facets = dict((facet['id'], facet) for facet in self.data['meta']['facets'][filter])
 
         for key, value in facets.items():
             self.assertEqual(found_facets[key]['count'], value)
@@ -696,7 +536,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_no_filter(self):
         matching = (
             InitiativeFactory.create(owner=self.owner, status='approved'),
-            InitiativeFactory.create(status='approved')
+            InitiativeFactory.create(status='approved'),
         )
 
         self.search({})
@@ -711,11 +551,10 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_only_owner(self):
         owned = InitiativeFactory.create(owner=self.owner, status='draft')
-        InitiativeFactory.create(status="draft")
+        InitiativeFactory.create(status='draft')
 
         response = self.client.get(
-            self.url + '?filter[owner]=me',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            self.url + '?filter[owner]=me', HTTP_AUTHORIZATION='JWT {0}'.format(self.owner.get_jwt_token())
         )
         data = json.loads(response.content)
 
@@ -726,28 +565,22 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_only_owner_as_guest(self):
         InitiativeFactory.create(status='approved')
-        InitiativeFactory.create(status="draft")
+        InitiativeFactory.create(status='draft')
 
-        response = self.client.get(
-            self.url + '?filter[owner]=me'
-        )
+        response = self.client.get(self.url + '?filter[owner]=me')
         self.assertEqual(response.status_code, 401)
 
     def test_only_owner_permission_owner(self):
         owned = InitiativeFactory.create(owner=self.owner, status='draft')
-        InitiativeFactory.create(status="approved")
+        InitiativeFactory.create(status='approved')
 
         authenticated = Group.objects.get(name='Authenticated')
-        authenticated.permissions.remove(
-            Permission.objects.get(codename='api_read_initiative')
-        )
-        authenticated.permissions.add(
-            Permission.objects.get(codename='api_read_own_initiative')
-        )
+        authenticated.permissions.remove(Permission.objects.get(codename='api_read_initiative'))
+        authenticated.permissions.add(Permission.objects.get(codename='api_read_own_initiative'))
 
         response = self.client.get(
             self.url + '?filter[owner]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION='JWT {0}'.format(self.owner.get_jwt_token()),
         )
         data = json.loads(response.content)
 
@@ -768,9 +601,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_filter_owner(self):
         matching = (
-            InitiativeFactory.create_batch(2, owner=self.owner, status='approved') +
-            InitiativeFactory.create_batch(2, owner=self.owner, status='draft') +
-            InitiativeFactory.create_batch(2, activity_managers=[self.owner], status='approved')
+            InitiativeFactory.create_batch(2, owner=self.owner, status='approved')
+            + InitiativeFactory.create_batch(2, owner=self.owner, status='draft')
+            + InitiativeFactory.create_batch(2, activity_managers=[self.owner], status='approved')
         )
 
         self.search({'owner': 'me'}, user=self.owner)
@@ -780,12 +613,12 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         segment_type = SegmentTypeFactory.create()
 
         matching_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
-        matching = InitiativeFactory.create_batch(3, status="approved")
+        matching = InitiativeFactory.create_batch(3, status='approved')
         for initiative in matching:
             activity = DateActivityFactory.create(status='open', initiative=initiative)
             activity.segments.add(matching_segment)
 
-        other = InitiativeFactory.create_batch(2, status="approved")
+        other = InitiativeFactory.create_batch(2, status='approved')
         for initiative in other:
             activity = DateActivityFactory.create(status='open', initiative=initiative)
             activity.segments.add(other_segment)
@@ -794,10 +627,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             f'segment.{segment_type.slug}',
-            {
-                str(f'{matching_segment.pk}'): len(matching),
-                str(f'{other_segment.pk}'): len(other)
-            }
+            {str(f'{matching_segment.pk}'): len(matching), str(f'{other_segment.pk}'): len(other)},
         )
         self.assertFound(matching)
 
@@ -808,77 +638,53 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = InitiativeFactory.create_batch(2, status='approved')
         for initiative in matching:
             DeadlineActivityFactory.create(
-                status='open',
-                initiative=initiative,
-                office_location=LocationFactory.create(country=matching_country)
+                status='open', initiative=initiative, office_location=LocationFactory.create(country=matching_country)
             )
 
         other = InitiativeFactory.create_batch(3, status='approved')
         for initiative in other:
             DeadlineActivityFactory.create(
-                status='open',
-                initiative=initiative,
-                office_location=LocationFactory.create(country=other_country)
+                status='open', initiative=initiative, office_location=LocationFactory.create(country=other_country)
             )
 
         self.search({'country': matching_country.pk})
-        self.assertFacets(
-            'country',
-            {
-                str(matching_country.pk): len(matching),
-                str(other_country.pk): len(other)
-            }
-        )
+        self.assertFacets('country', {str(matching_country.pk): len(matching), str(other_country.pk): len(other)})
         self.assertFound(matching)
 
     def test_unknown_filters_are_ignored(self):
         matching = InitiativeFactory.create_batch(2, status='approved')
 
-        self.search({
-            'distance': '20km',
-            'activity-type': 'grantapplication',
-            'is_online': '1',
-        })
+        self.search(
+            {
+                'distance': '20km',
+                'activity-type': 'grantapplication',
+                'is_online': '1',
+            }
+        )
         self.assertFound(matching)
 
     def test_filter_office(self):
         settings = InitiativePlatformSettings.load()
-        settings.search_filters_initiatives.add(
-            InitiativeSearchFilter.objects.create(
-                settings=settings,
-                type='office'
-            )
-        )
+        settings.search_filters_initiatives.add(InitiativeSearchFilter.objects.create(settings=settings, type='office'))
 
         matching_office = LocationFactory.create()
 
         matching = InitiativeFactory.create_batch(2, status='approved')
         for initiative in matching:
             DeadlineActivityFactory.create_batch(
-                3,
-                status='open',
-                initiative=initiative,
-                office_location=matching_office
+                3, status='open', initiative=initiative, office_location=matching_office
             )
 
         other_office = LocationFactory.create()
         other = InitiativeFactory.create_batch(2, status='approved')
         for initiative in other:
-            DeadlineActivityFactory.create_batch(
-                3,
-                status='open',
-                initiative=initiative,
-                office_location=other_office
-            )
+            DeadlineActivityFactory.create_batch(3, status='open', initiative=initiative, office_location=other_office)
 
         self.search({'office': matching_office.pk})
         self.assertFacets(
             'office',
-            {
-                str(matching_office.pk): len(matching),
-                str(other_office.pk): len(other)
-            },
-            active=str(matching_office.pk)
+            {str(matching_office.pk): len(matching), str(other_office.pk): len(other)},
+            active=str(matching_office.pk),
         )
         self.assertFound(matching)
 
@@ -889,13 +695,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = InitiativeFactory.create_batch(3, status='approved', theme=other_theme)
 
         self.search({'theme': matching_theme.pk})
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_theme.pk): len(matching),
-                str(other_theme.pk): len(other)
-            }
-        )
+        self.assertFacets('theme', {str(matching_theme.pk): len(matching), str(other_theme.pk): len(other)})
         self.assertFound(matching)
 
     def test_filter_category(self):
@@ -910,20 +710,14 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             initiative.categories.add(other_category)
 
         self.search({'category': matching_category.pk})
-        self.assertFacets(
-            'category',
-            {
-                str(matching_category.pk): len(matching),
-                str(other_category.pk): len(other)
-            }
-        )
+        self.assertFacets('category', {str(matching_category.pk): len(matching), str(other_category.pk): len(other)})
         self.assertFound(matching)
 
     def test_search(self):
         text = 'lorem ipsum'
         matching = [
             InitiativeFactory.create(title='Lorem ipsum dolor sit amet', status='approved'),
-            InitiativeFactory.create(title='Other title', pitch="Lorem ipsum", status='approved')
+            InitiativeFactory.create(title='Other title', pitch='Lorem ipsum', status='approved'),
         ]
         InitiativeFactory.create(title='consectetur adipiscing elit', status='approved')
         InitiativeFactory.create(title='Nam eu turpis erat', status='approved')
@@ -935,7 +729,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         text = 'lorem ipsum'
         matching = [
             InitiativeFactory.create(title='LÔrem Ïpsum dolor sit amet', status='approved'),
-            InitiativeFactory.create(title='Other title', pitch="Lorem ipsum", status='approved')
+            InitiativeFactory.create(title='Other title', pitch='Lorem ipsum', status='approved'),
         ]
         InitiativeFactory.create(title='consectetur adipiscing elit', status='approved')
         InitiativeFactory.create(title='Nam eu turpis erat', status='approved')
@@ -985,10 +779,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
 
         self.url = reverse('initiative-review-transition-list')
 
-        self.initiative = InitiativeFactory(
-            has_organization=False,
-            owner=self.owner
-        )
+        self.initiative = InitiativeFactory(has_organization=False, owner=self.owner)
 
     def test_transition_disallowed(self):
         self.initiative.states.submit(save=True)
@@ -999,26 +790,15 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
                 'attributes': {
                     'transition': 'approve',
                 },
-                'relationships': {
-                    'resource': {
-                        'data': {
-                            'type': 'initiatives',
-                            'id': self.initiative.pk
-                        }
-                    }
-                }
+                'relationships': {'resource': {'data': {'type': 'initiatives', 'id': self.initiative.pk}}},
             }
         }
 
-        response = self.client.post(
-            self.url,
-            json.dumps(data),
-            user=self.owner
-        )
+        response = self.client.post(self.url, json.dumps(data), user=self.owner)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content)
-        self.assertEqual(data['errors'][0], u'Transition is not available')
+        self.assertEqual(data['errors'][0], 'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
         self.assertEqual(initiative.status, 'submitted')
@@ -1036,26 +816,16 @@ class InitiativeRedirectTest(TestCase):
         data = {
             'data': {
                 'type': 'initiative-redirects',
-                'attributes': {
-                    'route': 'project',
-                    'params': {'project_id': initiative.slug}
-                },
+                'attributes': {'route': 'project', 'params': {'project_id': initiative.slug}},
             }
         }
-        response = self.client.post(
-            self.url,
-            json.dumps(data)
-        )
+        response = self.client.post(self.url, json.dumps(data))
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.assertEqual(
-            response.json()['data']['attributes']['target-route'], 'initiatives.details'
-        )
+        self.assertEqual(response.json()['data']['attributes']['target-route'], 'initiatives.details')
 
-        self.assertEqual(
-            response.json()['data']['attributes']['target-params'], [initiative.pk, initiative.slug]
-        )
+        self.assertEqual(response.json()['data']['attributes']['target-params'], [initiative.pk, initiative.slug])
 
     def test_initiative_duplicate(self):
         initiative = InitiativeFactory.create()
@@ -1064,26 +834,16 @@ class InitiativeRedirectTest(TestCase):
         data = {
             'data': {
                 'type': 'initiative-redirects',
-                'attributes': {
-                    'route': 'project',
-                    'params': {'project_id': initiative.slug}
-                },
+                'attributes': {'route': 'project', 'params': {'project_id': initiative.slug}},
             }
         }
-        response = self.client.post(
-            self.url,
-            json.dumps(data)
-        )
+        response = self.client.post(self.url, json.dumps(data))
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.assertEqual(
-            response.json()['data']['attributes']['target-route'], 'initiatives.details'
-        )
+        self.assertEqual(response.json()['data']['attributes']['target-route'], 'initiatives.details')
 
-        self.assertEqual(
-            response.json()['data']['attributes']['target-params'], [initiative.pk, initiative.slug]
-        )
+        self.assertEqual(response.json()['data']['attributes']['target-params'], [initiative.pk, initiative.slug])
 
     def test_initiative_with_funding(self):
         initiative = InitiativeFactory.create()
@@ -1092,16 +852,10 @@ class InitiativeRedirectTest(TestCase):
         data = {
             'data': {
                 'type': 'initiative-redirects',
-                'attributes': {
-                    'route': 'project',
-                    'params': {'project_id': initiative.slug}
-                },
+                'attributes': {'route': 'project', 'params': {'project_id': initiative.slug}},
             }
         }
-        response = self.client.post(
-            self.url,
-            json.dumps(data)
-        )
+        response = self.client.post(self.url, json.dumps(data))
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -1109,24 +863,16 @@ class InitiativeRedirectTest(TestCase):
             response.json()['data']['attributes']['target-route'], 'initiatives.activities.details.funding'
         )
 
-        self.assertEqual(
-            response.json()['data']['attributes']['target-params'], [funding.pk, funding.slug]
-        )
+        self.assertEqual(response.json()['data']['attributes']['target-params'], [funding.pk, funding.slug])
 
     def test_does_not_exist(self):
         data = {
             'data': {
                 'type': 'initiative-redirects',
-                'attributes': {
-                    'route': 'tasks.detail',
-                    'params': {'id': '123'}
-                },
+                'attributes': {'route': 'tasks.detail', 'params': {'id': '123'}},
             }
         }
-        response = self.client.post(
-            self.url,
-            json.dumps(data)
-        )
+        response = self.client.post(self.url, json.dumps(data))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -1145,9 +891,9 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),
-                content_type="image/png",
+                content_type='image/png',
                 HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
-                user=self.owner
+                user=self.owner,
             )
 
         self.file_data = json.loads(response.content)
@@ -1157,31 +903,22 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
             'data': {
                 'type': 'related-initiative-images',
                 'relationships': {
-                    'image': {
-                        'data': {
-                            'type': 'images',
-                            'id': self.file_data['data']['id']
-                        }
-                    },
+                    'image': {'data': {'type': 'images', 'id': self.file_data['data']['id']}},
                     'resource': {
                         'data': {
                             'type': 'initiatives',
                             'id': self.initiative.pk,
                         }
-                    }
-                }
+                    },
+                },
             }
         }
-        response = self.client.post(
-            self.related_image_url,
-            data=json.dumps(data),
-            user=self.owner
-        )
+        response = self.client.post(self.related_image_url, data=json.dumps(data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(
             response.json()['included'][0]['attributes']['links']['large'].split('?')[0],
-            u'/api/initiatives/{}/related-image/600'.format(response.json()['data']['id'])
+            '/api/initiatives/{}/related-image/600'.format(response.json()['data']['id']),
         )
 
     def test_create_non_owner(self):
@@ -1189,32 +926,22 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
             'data': {
                 'type': 'related-initiative-images',
                 'relationships': {
-                    'image': {
-                        'data': {
-                            'type': 'images',
-                            'id': self.file_data['data']['id']
-                        }
-                    },
+                    'image': {'data': {'type': 'images', 'id': self.file_data['data']['id']}},
                     'resource': {
                         'data': {
                             'type': 'initiatives',
                             'id': self.initiative.pk,
                         }
-                    }
-                }
+                    },
+                },
             }
         }
-        response = self.client.post(
-            self.related_image_url,
-            data=json.dumps(data),
-            user=BlueBottleUserFactory.create()
-        )
+        response = self.client.post(self.related_image_url, data=json.dumps(data), user=BlueBottleUserFactory.create())
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class ThemeAPITestCase(BluebottleTestCase):
-
     def setUp(self):
         super(ThemeAPITestCase, self).setUp()
 
@@ -1232,18 +959,14 @@ class ThemeAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(
-            len(response.json()['data']), 5
-        )
+        self.assertEqual(len(response.json()['data']), 5)
         result = response.json()['data'][0]
         self.assertEqual(self.theme.name, result['attributes']['name'])
 
     def test_list_anonymous(self):
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            len(response.json()['data']), 5
-        )
+        self.assertEqual(len(response.json()['data']), 5)
 
     def test_list_closed(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -1254,9 +977,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         ThemeFactory.create(disabled=True)
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            len(response.json()['data']), 5
-        )
+        self.assertEqual(len(response.json()['data']), 5)
 
     def test_detail(self):
         response = self.client.get(self.detail_url, user=self.user)
@@ -1287,11 +1008,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         theme.name = 'World domination'
         theme.save()
         url = reverse('initiative-theme', args=(theme.id,))
-        response = self.client.get(
-            url,
-            user=self.user,
-            HTTP_X_APPLICATION_LANGUAGE='en'
-        )
+        response = self.client.get(url, user=self.user, HTTP_X_APPLICATION_LANGUAGE='en')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.json()['data']
         self.assertEqual(result['attributes']['name'], 'World domination')
@@ -1303,11 +1020,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         theme.name = 'World domination'
         theme.save()
         url = reverse('initiative-theme', args=(theme.id,))
-        response = self.client.get(
-            url,
-            user=self.user,
-            HTTP_X_APPLICATION_LANGUAGE='nl'
-        )
+        response = self.client.get(url, user=self.user, HTTP_X_APPLICATION_LANGUAGE='nl')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.json()['data']
         self.assertEqual(result['attributes']['name'], 'World domination')
@@ -1320,18 +1033,13 @@ class ThemeAPITestCase(BluebottleTestCase):
         theme.name = 'Wereldoverheersing'
         theme.save()
         url = reverse('initiative-theme', args=(theme.id,))
-        response = self.client.get(
-            url,
-            user=self.user,
-            HTTP_X_APPLICATION_LANGUAGE='nl'
-        )
+        response = self.client.get(url, user=self.user, HTTP_X_APPLICATION_LANGUAGE='nl')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.json()['data']
         self.assertEqual(result['attributes']['name'], 'Wereldoverheersing')
 
 
 class ThemeApiTestCase(BluebottleTestCase):
-
     def setUp(self):
         super().setUp()
         MemberPlatformSettings.objects.update(closed=True)
@@ -1349,19 +1057,14 @@ class ThemeApiTestCase(BluebottleTestCase):
 
 
 class InitiativeAPITestCase(APITestCase):
-
     def setUp(self):
         super().setUp()
 
-        self.model = InitiativeFactory.create(
-            status='approved'
-        )
+        self.model = InitiativeFactory.create(status='approved')
         self.url = reverse('initiative-detail', args=(self.model.id,))
 
     def test_get_with_segments(self):
-        segment = SegmentFactory.create(
-            name='SDG1'
-        )
+        segment = SegmentFactory.create(name='SDG1')
         activity = DateActivityFactory.create(
             initiative=self.model,
             status='open',
@@ -1374,7 +1077,6 @@ class InitiativeAPITestCase(APITestCase):
 
 
 class InitiativePlatformSettingsApiTestCase(APITestCase):
-
     def setUp(self):
         super().setUp()
         self.settings = InitiativePlatformSettings.load()
@@ -1420,17 +1122,11 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
 
         for filter_type in ['date', 'distance', 'is_online']:
             self.settings.search_filters_activities.add(
-                ActivitySearchFilter.objects.create(
-                    settings=self.settings,
-                    type=filter_type
-                )
+                ActivitySearchFilter.objects.create(settings=self.settings, type=filter_type)
             )
         for filter_type in ['theme', 'country']:
             self.settings.search_filters_initiatives.add(
-                InitiativeSearchFilter.objects.create(
-                    settings=self.settings,
-                    type=filter_type
-                )
+                InitiativeSearchFilter.objects.create(settings=self.settings, type=filter_type)
             )
 
         response = self.client.get(self.url)
@@ -1441,24 +1137,19 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
             [
                 {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select a date'},
                 {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select distance'},
-                {'type': 'is_online', 'name': 'Online / In-person', 'highlight': False, 'placeholder': 'Make a choice'}
-            ]
-
+                {'type': 'is_online', 'name': 'Online / In-person', 'highlight': False, 'placeholder': 'Make a choice'},
+            ],
         )
         self.assertEqual(
             data['platform']['initiatives']['search_filters_initiatives'],
             [
                 {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
-                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'}
-            ]
-
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'},
+            ],
         )
 
         self.settings.search_filters_initiatives.add(
-            InitiativeSearchFilter.objects.create(
-                settings=self.settings,
-                type='old_filter'
-            )
+            InitiativeSearchFilter.objects.create(settings=self.settings, type='old_filter')
         )
 
         response = self.client.get(self.url)
@@ -1469,6 +1160,6 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
             [
                 {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
                 {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'},
-                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select --------'}
-            ]
+                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select --------'},
+            ],
         )

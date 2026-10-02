@@ -13,47 +13,45 @@ from bluebottle.segments.filters import segment_filter
 
 class RecentlySubmittedInitiatives(DashboardModule):
     title = _('Recently submitted initiatives')
-    title_url = "{}?status[]=draft&status[]=needs_work".format(
-        reverse('admin:initiatives_initiative_changelist')
-    )
+    title_url = '{}?status[]=draft&status[]=needs_work'.format(reverse('admin:initiatives_initiative_changelist'))
     template = 'dashboard/recent_initiatives.html'
     limit = 5
     column = 0
 
     def init_with_context(self, context):
-        initiatives = Initiative.objects.filter(
-            status='submitted'
-        ).annotate(
-            transition_date=Subquery(recent_log_entries(polymorphic=False))
-        ).order_by('transition_date')
+        initiatives = (
+            Initiative.objects.filter(status='submitted')
+            .annotate(transition_date=Subquery(recent_log_entries(polymorphic=False)))
+            .order_by('transition_date')
+        )
         user = context.request.user
         initiatives = region_manager_filter(initiatives, user)
         initiatives = segment_filter(initiatives, user)
-        self.children = initiatives[:self.limit]
+        self.children = initiatives[: self.limit]
 
 
 class RecentlyPublishedInitiatives(DashboardModule):
     title = _('Recently published initiatives')
-    title_url = "{}?status[]=approved".format(reverse('admin:initiatives_initiative_changelist'))
+    title_url = '{}?status[]=approved'.format(reverse('admin:initiatives_initiative_changelist'))
     template = 'dashboard/recent_initiatives.html'
     limit = 5
     column = 0
 
     def init_with_context(self, context):
-        initiatives = Initiative.objects.filter(
-            status='approved'
-        ).annotate(
-            transition_date=Subquery(recent_log_entries(polymorphic=False))
-        ).order_by('transition_date')
+        initiatives = (
+            Initiative.objects.filter(status='approved')
+            .annotate(transition_date=Subquery(recent_log_entries(polymorphic=False)))
+            .order_by('transition_date')
+        )
         user = context.request.user
         initiatives = region_manager_filter(initiatives, user)
         initiatives = segment_filter(initiatives, user)
-        self.children = initiatives[:self.limit]
+        self.children = initiatives[: self.limit]
 
 
 class MyReviewingInitiatives(DashboardModule):
     title = _("Initiatives I'm reviewing")
-    title_url = "{}?reviewer=True".format(reverse('admin:initiatives_initiative_changelist'))
+    title_url = '{}?reviewer=True'.format(reverse('admin:initiatives_initiative_changelist'))
     template = 'dashboard/recent_initiatives.html'
     limit = 5
     column = 0
@@ -61,11 +59,10 @@ class MyReviewingInitiatives(DashboardModule):
     def init_with_context(self, context):
         if getattr(context, 'request', None):
             user = context.request.user
-            self.children = Initiative.objects.filter(reviewer=user).order_by('-created')[:self.limit]
+            self.children = Initiative.objects.filter(reviewer=user).order_by('-created')[: self.limit]
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):
-
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
         self.children.append(RecentlySubmittedInitiatives())

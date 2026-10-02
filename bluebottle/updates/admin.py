@@ -62,16 +62,23 @@ class ReplyInline(admin.TabularInline):
 
 
 @admin.register(Update)
-class UpdateAdmin(
-    ActivitySegmentAdminMixin,
-    admin.ModelAdmin
-):
+class UpdateAdmin(ActivitySegmentAdminMixin, admin.ModelAdmin):
     readonly_fields = ['created', 'notify']
     inlines = [UpdateImageInline, UpdateDocumentInline]
 
     raw_id_fields = ['author', 'parent', 'activity', 'contribution']
-    fields = ['activity', 'created', 'author', 'parent', 'notify', 'audience', 'video_url', 'message', 'pinned',
-              'contribution']
+    fields = [
+        'activity',
+        'created',
+        'author',
+        'parent',
+        'notify',
+        'audience',
+        'video_url',
+        'message',
+        'pinned',
+        'contribution',
+    ]
 
     list_display = ['created', 'activity', 'audience']
     list_filter = (

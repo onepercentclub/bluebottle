@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 class UtilsConfig(AppConfig):
     name = 'bluebottle.utils'
-    verbose_name = "Utils"
+    verbose_name = 'Utils'
 
     def ready(self):
         import bluebottle.utils.monkey_patch_migration  # noqa

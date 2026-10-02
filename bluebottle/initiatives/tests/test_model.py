@@ -6,7 +6,6 @@ from bluebottle.test.factory_models.organizations import OrganizationFactory, Or
 
 
 class InitiativeTestCase(TestCase):
-
     def test_status_changes(self):
         initiative = InitiativeFactory.create(title='Dharma initiative')
         self.assertEqual(initiative.status, 'draft')
@@ -68,29 +67,18 @@ class InitiativeTestCase(TestCase):
     def test_organization_contact_already_set(self):
         organization_contact = OrganizationContactFactory.create()
         initiative = InitiativeFactory(
-            has_organization=True,
-            organization=OrganizationFactory.create(),
-            organization_contact=organization_contact
+            has_organization=True, organization=OrganizationFactory.create(), organization_contact=organization_contact
         )
-        self.assertEqual(
-            initiative.organization_contact.pk,
-            organization_contact.pk
-        )
+        self.assertEqual(initiative.organization_contact.pk, organization_contact.pk)
 
     def test_slug(self):
         initiative = InitiativeFactory(title='Test Title')
-        self.assertEqual(
-            initiative.slug, 'test-title'
-        )
+        self.assertEqual(initiative.slug, 'test-title')
 
     def test_slug_empty(self):
         initiative = InitiativeFactory(title='')
-        self.assertEqual(
-            initiative.slug, 'new'
-        )
+        self.assertEqual(initiative.slug, 'new')
 
     def test_slug_special_characters(self):
         initiative = InitiativeFactory(title='!!! $$$$')
-        self.assertEqual(
-            initiative.slug, 'new'
-        )
+        self.assertEqual(initiative.slug, 'new')

@@ -15,11 +15,8 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             'inbox': 'https://example.com/person/inbox',
             'outbox': 'https://example.com/person/outbox',
             'name': 'Tester',
-            'publicKey': {
-                'id': 'https://example.com/person/public-key',
-                'publicKeyPem': 'some-public-key'
-            },
-            'type': 'Person'
+            'publicKey': {'id': 'https://example.com/person/public-key', 'publicKeyPem': 'some-public-key'},
+            'type': 'Person',
         }
         result = self.expand(data)
         attributes = {
@@ -38,14 +35,14 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             'id': 'https://example.com/follow',
             'object': 'https://example.com/object',
             'actor': 'https://example.com/actor',
-            'type': 'Follow'
+            'type': 'Follow',
         }
         result = self.expand(data)
         attributes = {
             '@id',
             '@type',
             'https://www.w3.org/ns/activitystreams#actor',
-            'https://www.w3.org/ns/activitystreams#object'
+            'https://www.w3.org/ns/activitystreams#object',
         }
         self.assertEqual(attributes, set(result.keys()))
         self.assertEqual(result['@type'], ['https://www.w3.org/ns/activitystreams#Follow'])
@@ -63,7 +60,7 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             '@id',
             '@type',
             'https://www.w3.org/ns/activitystreams#actor',
-            'https://www.w3.org/ns/activitystreams#object'
+            'https://www.w3.org/ns/activitystreams#object',
         }
         self.assertEqual(attributes, set(result.keys()))
 
@@ -150,23 +147,25 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             'id': 'https://example.com/date',
             'name': 'Activity title',
             'summary': 'Some activity description',
-            'subEvent': [{
-                'id': 'https://example.com/slot',
-                'startTime': datetime.date(2026, 1, 1).isoformat(),
-                'endTime': datetime.date(2026, 2, 1).isoformat(),
-                'location': {
+            'subEvent': [
+                {
                     'id': 'https://example.com/slot',
-                    'latitude': 20.45,
-                    'longitude': 40.3,
-                    'address': {
-                        'id': 'https://example.com/address',
-                        'locality': 'Amsterdam',
-                        'country': 'NL',
-                        'postalCode': '1013BZ',
-                        'streetAddress': 'Van Noordtkade 24b'
-                    }
-                },
-            }],
+                    'startTime': datetime.date(2026, 1, 1).isoformat(),
+                    'endTime': datetime.date(2026, 2, 1).isoformat(),
+                    'location': {
+                        'id': 'https://example.com/slot',
+                        'latitude': 20.45,
+                        'longitude': 40.3,
+                        'address': {
+                            'id': 'https://example.com/address',
+                            'locality': 'Amsterdam',
+                            'country': 'NL',
+                            'postalCode': '1013BZ',
+                            'streetAddress': 'Van Noordtkade 24b',
+                        },
+                    },
+                }
+            ],
             'type': 'Event',
         }
         result = self.expand(data)
@@ -186,38 +185,28 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             'https://www.w3.org/ns/activitystreams#location',
             'https://www.w3.org/ns/activitystreams#startTime',
             'https://www.w3.org/ns/activitystreams#endTime',
-
         }
         sub_event = result['https://goodup.com/json-ld#subEvent'][0]
-        self.assertEqual(
-            sub_event_attributes, set(sub_event.keys())
-        )
+        self.assertEqual(sub_event_attributes, set(sub_event.keys()))
 
         location_attributes = {
             '@id',
             'https://www.w3.org/ns/activitystreams#longitude',
             'https://www.w3.org/ns/activitystreams#latitude',
             'https://www.w3.org/ns/activitystreams#address',
-
         }
         location = sub_event['https://www.w3.org/ns/activitystreams#location'][0]
-        self.assertEqual(
-            location_attributes,
-            set(location.keys())
-        )
+        self.assertEqual(location_attributes, set(location.keys()))
 
         address_attributes = {
             '@id',
             'https://schema.org/addressLocality',
             'https://schema.org/addressCountry',
             'https://schema.org/postalCode',
-            'https://schema.org/streetAddress'
+            'https://schema.org/streetAddress',
         }
         address = location['https://www.w3.org/ns/activitystreams#address'][0]
-        self.assertEqual(
-            address_attributes,
-            set(address.keys())
-        )
+        self.assertEqual(address_attributes, set(address.keys()))
 
     def test_expand_place_identifier(self):
         data = {
@@ -228,11 +217,13 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             'latitude': 52.15782,
             'longitude': 4.49075,
             'placeType': 'city',
-            'identifier': [{
-                'type': 'PropertyValue',
-                'propertyID': 'mapbox-feature-id',
-                'value': 'dXJu-test',
-            }],
+            'identifier': [
+                {
+                    'type': 'PropertyValue',
+                    'propertyID': 'mapbox-feature-id',
+                    'value': 'dXJu-test',
+                }
+            ],
         }
         result = self.expand(data)
         self.assertEqual(result['@type'], ['https://www.w3.org/ns/activitystreams#Place'])

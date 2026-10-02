@@ -15,7 +15,7 @@ from bluebottle.activity_pub.models import Actor
 class DjangoRequestComponentResolver(resolvers.HTTPSignatureComponentResolver):
     def __init__(self, message):
         self.message = message
-        self.message_type = "request"
+        self.message_type = 'request'
 
         if hasattr(message, 'build_absolute_uri'):
             self.url = str(message.build_absolute_uri())
@@ -47,9 +47,7 @@ class JSONLDKeyResolver(HTTPSignatureKeyResolver):
     def resolve_public_key(self, key_id):
         actor = self.get_actor(key_id)
         if actor:
-            return load_pem_public_key(
-                bytes(actor.public_key.public_key_pem, encoding='utf-8')
-            )
+            return load_pem_public_key(bytes(actor.public_key.public_key_pem, encoding='utf-8'))
 
     def resolve_private_key(self, key_id):
         actor = self.get_actor(key_id)
@@ -75,9 +73,7 @@ class HTTPSignatureAuthentication(authentication.BaseAuthentication):
 
             try:
                 verify_result = DjangoHTTPSignatureAuth.verify(
-                    request,
-                    signature_algorithm=getattr(algorithms, algorithm.upper()),
-                    key_resolver=key_resolver
+                    request, signature_algorithm=getattr(algorithms, algorithm.upper()), key_resolver=key_resolver
                 )
                 return (None, Actor.objects.get(iri=verify_result.parameters['keyid']))
             except Actor.DoesNotExist:

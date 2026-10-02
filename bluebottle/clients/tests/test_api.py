@@ -20,7 +20,6 @@ from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 
 class ClientSettingsTestCase(APITestCase):
-
     def setUp(self):
         super(ClientSettingsTestCase, self).setUp()
         self.settings_url = reverse('settings')
@@ -30,7 +29,7 @@ class ClientSettingsTestCase(APITestCase):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['parent']['child'], True)
 
-    @override_settings(CLOSED_SITE=False, TOP_SECRET="*****", EXPOSED_TENANT_PROPERTIES=['closed_site'])
+    @override_settings(CLOSED_SITE=False, TOP_SECRET='*****', EXPOSED_TENANT_PROPERTIES=['closed_site'])
     def test_settings_show(self):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
@@ -59,37 +58,39 @@ class ClientSettingsTestCase(APITestCase):
         self.assertEqual(response.data['readOnlyFields'], {'user': ['first_name']})
 
     @override_settings(
-        PAYMENT_METHODS=[{
-            'provider': 'docdata',
-            'id': 'docdata-ideal',
-            'profile': 'ideal',
-            'name': 'iDEAL',
-            'restricted_countries': ('NL',),
-            'currencies': {
-                'EUR': {'max_amount': 100}
-            }
-        }, {
-            'provider': 'docdata',
-            'id': 'docdata-directdebit',
-            'profile': 'directdebit',
-            'name': 'Direct Debit',
-            'restricted_countries': ('NL', 'BE',),
-            'currencies': {
-                'EUR': {'min_amount': 10, 'max_amount': 100}
-            }
-
-        }, {
-            'provider': 'docdata',
-            'id': 'docdata-creditcard',
-            'profile': 'creditcard',
-            'name': 'CreditCard',
-            'currencies': {
-                'USD': {'min_amount': 5, 'max_amount': 100},
-                'NGN': {'min_amount': 3000, 'max_amount': 100},
-                'XOF': {'min_amount': 5000, 'max_amount': 100},
-            }
-        }],
-        DEFAULT_CURRENCY='USD'
+        PAYMENT_METHODS=[
+            {
+                'provider': 'docdata',
+                'id': 'docdata-ideal',
+                'profile': 'ideal',
+                'name': 'iDEAL',
+                'restricted_countries': ('NL',),
+                'currencies': {'EUR': {'max_amount': 100}},
+            },
+            {
+                'provider': 'docdata',
+                'id': 'docdata-directdebit',
+                'profile': 'directdebit',
+                'name': 'Direct Debit',
+                'restricted_countries': (
+                    'NL',
+                    'BE',
+                ),
+                'currencies': {'EUR': {'min_amount': 10, 'max_amount': 100}},
+            },
+            {
+                'provider': 'docdata',
+                'id': 'docdata-creditcard',
+                'profile': 'creditcard',
+                'name': 'CreditCard',
+                'currencies': {
+                    'USD': {'min_amount': 5, 'max_amount': 100},
+                    'NGN': {'min_amount': 3000, 'max_amount': 100},
+                    'XOF': {'min_amount': 5000, 'max_amount': 100},
+                },
+            },
+        ],
+        DEFAULT_CURRENCY='USD',
     )
     def test_settings_currencies(self):
         # Check that exposed property is in settings api (locale-independent: names come from babel)
@@ -114,10 +115,7 @@ class ClientSettingsTestCase(APITestCase):
             self.assertTrue(len(actual['symbol']) > 0, 'currency symbol should be non-empty')
 
 
-@override_settings(
-    ELASTICSEARCH_DSL_AUTOSYNC=True,
-    ELASTICSEARCH_DSL_AUTO_REFRESH=True
-)
+@override_settings(ELASTICSEARCH_DSL_AUTOSYNC=True, ELASTICSEARCH_DSL_AUTO_REFRESH=True)
 @tag('elasticsearch')
 class TestDefaultAPI(ESTestCase, BluebottleTestCase):
     """
@@ -130,28 +128,26 @@ class TestDefaultAPI(ESTestCase, BluebottleTestCase):
 
         self.init_projects()
         self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = 'JWT {0}'.format(self.user.get_jwt_token())
         self.initiatives_url = reverse('initiative-preview-list')
 
     def test_open_api(self):
-        """ request open api, expect projects """
+        """request open api, expect projects"""
         response = self.client.get(self.initiatives_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_not_authenticated(self):
-        """ request closed api, expect 403 ? if not authenticated """
+        """request closed api, expect 403 ? if not authenticated"""
         anonymous = Group.objects.get(name='Anonymous')
-        anonymous.permissions.remove(
-            Permission.objects.get(codename='api_read_initiative')
-        )
+        anonymous.permissions.remove(Permission.objects.get(codename='api_read_initiative'))
 
         response = self.client.get(self.initiatives_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_authenticated(self):
-        """ request closed api, expect projects if authenticated """
+        """request closed api, expect projects if authenticated"""
         response = self.client.get(self.initiatives_url, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -177,7 +173,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
                 copyright='Malle Eppie Ltd.',
                 powered_by_text='Powered by',
                 powered_by_link='https://epp.ie',
-                footer_banner=image
+                footer_banner=image,
             )
 
         response = self.client.get(self.settings_url)
@@ -186,11 +182,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['copyright'], 'Malle Eppie Ltd.')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://epp.ie')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
-        self.assertTrue(
-            response.data['platform']['content']['footer_banner'].startswith(
-                '/media/'
-            )
-        )
+        self.assertTrue(response.data['platform']['content']['footer_banner'].startswith('/media/'))
 
     def test_initiative_platform_settings(self):
         # Create initiative platform settings and confirm they end up correctly in settings api
@@ -200,18 +192,16 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             activity_search_filters=['type', 'skill', 'status'],
             contact_method='phone',
             require_organization=True,
-            team_activities=True
+            team_activities=True,
         )
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['initiatives']['activity_types'], ['event', 'job'])
         self.assertEqual(
-            response.data['platform']['initiatives']['activity_search_filters'],
-            ['type', 'skill', 'status']
+            response.data['platform']['initiatives']['activity_search_filters'], ['type', 'skill', 'status']
         )
         self.assertEqual(
-            response.data['platform']['initiatives']['initiative_search_filters'],
-            ['category', 'location']
+            response.data['platform']['initiatives']['initiative_search_filters'], ['category', 'location']
         )
         self.assertEqual(response.data['platform']['initiatives']['require_organization'], True)
         self.assertEqual(response.data['platform']['initiatives']['contact_method'], 'phone')
@@ -220,8 +210,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
     def test_notification_platform_settings(self):
         # Create notification platform settings and confirm they end up correctly in settings api
         NotificationPlatformSettings.objects.create(
-            share_options=['twitter', 'facebook_at_work'],
-            facebook_at_work_url='https://my.facebook.com'
+            share_options=['twitter', 'facebook_at_work'], facebook_at_work_url='https://my.facebook.com'
         )
 
         response = self.client.get(self.settings_url)
@@ -230,19 +219,13 @@ class TestPlatformSettingsApi(BluebottleTestCase):
 
     def test_funding_platform_settings(self):
         # Create funding platform settings and confirm they end up correctly in settings api
-        FundingPlatformSettings.objects.create(
-            anonymous_donations=True
-        )
+        FundingPlatformSettings.objects.create(anonymous_donations=True)
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['funding']['anonymous_donations'], True)
 
     def test_member_platform_settings(self):
-        MemberPlatformSettings.objects.create(
-            closed=False,
-            retention_anonymize=24,
-            retention_delete=36
-        )
+        MemberPlatformSettings.objects.create(closed=False, retention_anonymize=24, retention_delete=36)
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['members']['closed'], False)
@@ -250,23 +233,17 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['members']['retention_delete'], 36)
 
     def test_member_platform_settings_closed(self):
-        MemberPlatformSettings.objects.create(
-            closed=True,
-            consent_link="example.com"
-        )
+        MemberPlatformSettings.objects.create(closed=True, consent_link='example.com')
 
         user = BlueBottleUserFactory.create()
-        user_token = "JWT {0}".format(user.get_jwt_token())
+        user_token = 'JWT {0}'.format(user.get_jwt_token())
 
         response = self.client.get(self.settings_url, token=user_token)
         self.assertEqual(response.data['platform']['members']['closed'], True)
         self.assertEqual(response.data['platform']['members']['consent_link'], 'example.com')
 
     def test_member_platform_settings_closed_anonymous(self):
-        MemberPlatformSettings.objects.create(
-            closed=True,
-            consent_link="example.com"
-        )
+        MemberPlatformSettings.objects.create(closed=True, consent_link='example.com')
 
         response = self.client.get(self.settings_url)
 
@@ -278,10 +255,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'powered_by_logo': None,
             'powered_by_text': None,
             'logo': None,
-            'favicons': {
-                'large': '',
-                'small': ''
-            },
+            'favicons': {'large': '', 'small': ''},
             'action_color': None,
             'action_text_color': '#ffffff',
             'alternative_link_color': None,
@@ -304,8 +278,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'request_access_email': None,
             'request_access_instructions': None,
             'request_access_method': 'email',
-            'account_creation_rules': 'anyone'
-
+            'account_creation_rules': 'anyone',
         }
 
         self.assertEqual(response.data['platform']['members'], members)
@@ -317,10 +290,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertIn('start_page', response.data['platform']['content'])
 
     def test_member_platform_required_settings(self):
-        MemberPlatformSettings.objects.create(
-            require_office=True,
-            verify_office=False
-        )
+        MemberPlatformSettings.objects.create(require_office=True, verify_office=False)
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['members']['require_office'], True)

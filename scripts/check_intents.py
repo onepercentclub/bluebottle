@@ -11,7 +11,7 @@ def run(*args):
     fix = 'fix' in args
     start = now() - timedelta(days=100)
     for client in Client.objects.filter(schema_name='voor_apeldoorn').all():
-        with (LocalTenant(client)):
+        with LocalTenant(client):
             print('##### Client:', client.name)
             intents = PaymentIntent.objects.filter(created__gt=start).all()
             count = intents.count()
@@ -22,8 +22,8 @@ def run(*args):
                     if intent.intent.status == 'requires_payment_method':
                         continue
                     print(
-                        f'{client.name} ;{intent.donation.id} ;'
-                        f'No payment id for intent remote: {intent.intent.status}')
+                        f'{client.name} ;{intent.donation.id} ;No payment id for intent remote: {intent.intent.status}'
+                    )
                     if fix:
                         payment = intent.get_payment()
                         payment.update()
@@ -39,11 +39,13 @@ def run(*args):
                             continue
                         print(
                             f'{client.name} ;{intent.donation.id} ; '
-                            f'Should have been refunded, but remote {intent.intent.status}')
+                            f'Should have been refunded, but remote {intent.intent.status}'
+                        )
                     else:
                         print(
                             f'{client.name} ;{intent.donation.id} ;'
-                            f'Local: {intent.donation.status} vs remote: {intent.intent.status}')
+                            f'Local: {intent.donation.status} vs remote: {intent.intent.status}'
+                        )
                         if fix:
                             payment = intent.get_payment()
                             payment.update()

@@ -69,10 +69,7 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         This is important for polymorphic parent models (e.g. Activity) that
         can emit signals for child instances with dedicated documents.
         """
-        return any(
-            sender is model or issubclass(model, sender)
-            for model in models
-        )
+        return any(sender is model or issubclass(model, sender) for model in models)
 
     def handle_pre_delete(self, sender, instance, **kwargs):
         """Handle removing of instance object from related models instance.
@@ -89,9 +86,7 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
             except ObjectDoesNotExist:
                 related = None
 
-            registry_delete_related_task.delay_on_commit(
-                doc_instance, related, tenant
-            )
+            registry_delete_related_task.delay_on_commit(doc_instance, related, tenant)
 
     def handle_delete(self, sender, instance, **kwargs):
         """Handle delete.
@@ -107,22 +102,14 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, update the object in the index.
         Update the related objects either.
         """
-        model_info = {
-            'app_label': sender._meta.app_label,
-            'model_name': sender._meta.model_name,
-            'pk': instance.pk
-        }
+        model_info = {'app_label': sender._meta.app_label, 'model_name': sender._meta.model_name, 'pk': instance.pk}
         tenant = connection.tenant
 
         if self._sender_matches_registered_model(sender, self.models):
-            registry_update_task.delay_on_commit(
-                model_info, tenant
-            )
+            registry_update_task.delay_on_commit(model_info, tenant)
 
         if self._sender_matches_registered_model(sender, self.related_models):
-            registry_update_related_task.delay_on_commit(
-                model_info, tenant
-            )
+            registry_update_related_task.delay_on_commit(model_info, tenant)
 
 
 @app.task

@@ -83,23 +83,21 @@ class NotificationAdminMixin(object):
 
         post = request.POST
 
-        title = _("Are you sure?")
+        title = _('Are you sure?')
 
-        context = dict(
-            obj=obj,
-            title=title,
-            post=post,
-            opts=opts,
-            media=self.media,
-            notifications=notifications
+        context = dict(obj=obj, title=title, post=post, opts=opts, media=self.media, notifications=notifications)
+
+        return TemplateResponse(
+            request,
+            self.change_confirmation_template
+            or [
+                'admin/%s/%s/change_confirmation.html' % (app_label, opts.model_name),
+                'admin/%s/change_confirmation.html' % app_label,
+                'admin/change_confirmation.html',
+                'admin/change_confirmation.html',
+            ],
+            context,
         )
-
-        return TemplateResponse(request, self.change_confirmation_template or [
-            "admin/%s/%s/change_confirmation.html" % (app_label, opts.model_name),
-            "admin/%s/change_confirmation.html" % app_label,
-            "admin/change_confirmation.html",
-            "admin/change_confirmation.html"
-        ], context)
 
 
 class MessageTemplateAdminCreateForm(forms.ModelForm):
@@ -151,5 +149,5 @@ class MessageTemplateAdmin(TranslatableAdmin):
                 ('{title}', _('Activity title')),
             ]
         }
-        html = mark_safe(render_to_string("admin/notifications/placeholders.html", data))
+        html = mark_safe(render_to_string('admin/notifications/placeholders.html', data))
         return html

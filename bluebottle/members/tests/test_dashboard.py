@@ -13,7 +13,7 @@ class MemberDashboardTest(BluebottleAdminTestCase):
     def setUp(self):
         super(MemberDashboardTest, self).setUp()
         self.client.force_login(self.superuser)
-        self.member_admin_url = reverse('admin:app_list', args=('members', ))
+        self.member_admin_url = reverse('admin:app_list', args=('members',))
         BlueBottleUserFactory.create(username='Cousin Sven')
 
     def test_member_dashboard(self):

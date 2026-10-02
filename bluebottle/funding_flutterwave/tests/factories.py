@@ -6,7 +6,6 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment, Flutterwav
 
 
 class FlutterwavePaymentFactory(factory.DjangoModelFactory):
-
     donation = factory.SubFactory(DonorFactory)
     tx_ref = factory.Sequence(lambda n: 'uid-{0}'.format(n))
 
@@ -15,7 +14,6 @@ class FlutterwavePaymentFactory(factory.DjangoModelFactory):
 
 
 class FlutterwavePaymentProviderFactory(factory.DjangoModelFactory):
-
     pub_key = 'fyi'
     sec_key = 'sssht'
 
@@ -24,7 +22,6 @@ class FlutterwavePaymentProviderFactory(factory.DjangoModelFactory):
 
 
 class FlutterwaveBankAccountFactory(factory.DjangoModelFactory):
-
     account_number = factory.fuzzy.FuzzyInteger(10000, 99999)
     account_holder_name = 'Test Name'
     bank_country_code = 'NG'

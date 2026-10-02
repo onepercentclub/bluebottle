@@ -9,16 +9,13 @@ class LipishaPaymentSerializer(PaymentSerializer):
 
     class Meta(PaymentSerializer.Meta):
         model = LipishaPayment
-        fields = PaymentSerializer.Meta.fields + (
-            'mobile_number',
-            'transaction')
+        fields = PaymentSerializer.Meta.fields + ('mobile_number', 'transaction')
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/lipisha-payments'
 
 
 class LipishaBankAccountSerializer(BaseBankAccountSerializer):
-
     class Meta(BaseBankAccountSerializer.Meta):
         model = LipishaBankAccount
 
@@ -55,5 +52,5 @@ class PayoutLipishaBankAccountSerializer(serializers.ModelSerializer):
             'branch_code',
             'address',
             'swift',
-            'mpesa_code'
+            'mpesa_code',
         )

@@ -43,8 +43,7 @@ def preview_slot_filters_from_request(request):
     tz = get_current_timezone()
     try:
         start, end = (
-            dateutil.parser.parse(value).astimezone(tz)
-            for value in request.GET.get('filter[date]').split(',')
+            dateutil.parser.parse(value).astimezone(tz) for value in request.GET.get('filter[date]').split(',')
         )
     except (TypeError, ValueError, AttributeError):
         pass
@@ -70,33 +69,19 @@ class ActivityPreviewSlotSelection:
             for slot in self.activity.slots
             if (
                 slot.status not in ['draft', 'cancelled']
-                and (
-                    not self.upcoming
-                    or datetime.fromisoformat(slot.start) >= now()
-                )
-                and (
-                    not start
-                    or _as_date(slot.start) >= start
-                )
-                and (
-                    not end
-                    or _as_date(slot.end) <= end
-                )
+                and (not self.upcoming or datetime.fromisoformat(slot.start) >= now())
+                and (not start or _as_date(slot.start) >= start)
+                and (not end or _as_date(slot.end) <= end)
             )
         ]
 
     def distinct_location_ids(self, slots=None):
         if slots is None:
             slots = self.get_slots()
-        return {
-            slot.location_id
-            for slot in slots
-            if getattr(slot, 'location_id', None)
-        }
+        return {slot.location_id for slot in slots if getattr(slot, 'location_id', None)}
 
 
 class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
-
     def _slot_selection(self, activity):
         return ActivityPreviewSlotSelection(
             activity,
@@ -162,10 +147,7 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
             if location_id and location_id not in seen:
                 seen[location_id] = slot
 
-        location_parts = [
-            self._parts_for_slot(activity, slot, language)
-            for slot in seen.values()
-        ]
+        location_parts = [self._parts_for_slot(activity, slot, language) for slot in seen.values()]
 
         return format_common_card_location(
             activity,
@@ -176,7 +158,6 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
 
 
 class ActivityPreviewSingleLocationSerializer(serializers.Serializer):
-
     def to_representation(self, activity):
         location_types = (
             'location',
@@ -215,7 +196,6 @@ class ActivityPreviewSingleLocationSerializer(serializers.Serializer):
 
 
 class ActivityPreviewLocationSerializer(serializers.Serializer):
-
     def to_representation(self, activity):
         if getattr(activity, 'slots', None):
             return ActivityPreviewSlottedLocationSerializer(

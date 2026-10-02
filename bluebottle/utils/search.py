@@ -23,13 +23,9 @@ class Search(BaseSearch):
         qs = self._model.objects.filter(pk__in=pks)
 
         if keep_order:
-
             # Annotate the queryset in order for ordering to work
             # with polymorphic models
-            preserved_order = Case(
-                *[When(pk=pk, then=pos) for pos, pk in enumerate(pks)],
-                output_field=IntegerField()
-            )
+            preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pks)], output_field=IntegerField())
             qs = qs.annotate(search_order=preserved_order).order_by('search_order')
 
         return qs

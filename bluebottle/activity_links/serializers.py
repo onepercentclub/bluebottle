@@ -7,9 +7,16 @@ from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_links.models import (
-    LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity,
-    LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity,
-    LinkedScheduleActivity, LinkedGrantApplication
+    LinkedActivity,
+    LinkedDeed,
+    LinkedDateActivity,
+    LinkedDeadlineActivity,
+    LinkedFunding,
+    LinkedDateSlot,
+    LinkedCollectCampaign,
+    LinkedPeriodicActivity,
+    LinkedScheduleActivity,
+    LinkedGrantApplication,
 )
 from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.activity_pub.serializers.fields import MapboxIdField
@@ -32,10 +39,7 @@ class LinkedActivityImageSerializer(serializers.ModelSerializer):
 
         file = File(BytesIO(response.content), name=validated_data['name'])
 
-        return super().create({
-            'file': file,
-            'name': validated_data['name']
-        })
+        return super().create({'file': file, 'name': validated_data['name']})
 
     def update(self, instance, validated_data):
         image = ActivityPubImage.objects.from_iri(validated_data['id'])
@@ -45,10 +49,7 @@ class LinkedActivityImageSerializer(serializers.ModelSerializer):
 
         file = File(BytesIO(response.content), name=validated_data['name'])
 
-        return super().update(instance, {
-            'file': file,
-            'name': validated_data['name']
-        })
+        return super().update(instance, {'file': file, 'name': validated_data['name']})
 
     class Meta:
         model = Image
@@ -68,14 +69,10 @@ class LatLongPositionField(PointSerializer):
 
 
 class AddressSerializer(serializers.Serializer):
-    street_address = serializers.CharField(
-        source='street', required=False, allow_null=True, allow_blank=True
-    )
+    street_address = serializers.CharField(source='street', required=False, allow_null=True, allow_blank=True)
     postal_code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    region = serializers.CharField(
-        source='province', required=False, allow_null=True, allow_blank=True
-    )
+    region = serializers.CharField(source='province', required=False, allow_null=True, allow_blank=True)
     country = serializers.SlugRelatedField(
         queryset=Country.objects.all(),
         slug_field='alpha2_code',
@@ -86,9 +83,7 @@ class AddressSerializer(serializers.Serializer):
 
 class LinkedLocationSerializer(GeolocationSerializer):
     address = AddressSerializer(source='*', write_only=True, required=False)
-    name = serializers.CharField(
-        source='formatted_address', write_only=True, required=False, allow_null=True
-    )
+    name = serializers.CharField(source='formatted_address', write_only=True, required=False, allow_null=True)
     position = LatLongPositionField(write_only=True, required=False)
     identifier = MapboxIdField(source='mapbox_id', write_only=True, required=False)
 
@@ -100,7 +95,10 @@ class LinkedLocationSerializer(GeolocationSerializer):
     class Meta:
         model = Geolocation
         fields = (
-            'address', 'name', 'position', 'identifier',
+            'address',
+            'name',
+            'position',
+            'identifier',
         )
 
 
@@ -155,9 +153,7 @@ class LinkedDeedSerializer(BaseLinkedActivitySerializer):
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeed
-        fields = BaseLinkedActivitySerializer.Meta.fields + (
-            'start_time', 'end_time'
-        )
+        fields = BaseLinkedActivitySerializer.Meta.fields + ('start_time', 'end_time')
 
 
 class LinkedCollectCampaignSerializer(BaseLinkedActivitySerializer):
@@ -168,7 +164,11 @@ class LinkedCollectCampaignSerializer(BaseLinkedActivitySerializer):
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedCollectCampaign
         fields = BaseLinkedActivitySerializer.Meta.fields + (
-            'start_time', 'end_time', 'location', 'location_hint', 'collect_type'
+            'start_time',
+            'end_time',
+            'location',
+            'location_hint',
+            'collect_type',
         )
 
 
@@ -179,10 +179,7 @@ class LinkedSlotSerializer(BaseLinkedActivitySerializer):
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDateSlot
-        fields = (
-            'start_time', 'end_time',
-            'location'
-        )
+        fields = ('start_time', 'end_time', 'location')
 
 
 class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):
@@ -224,16 +221,14 @@ class LinkedDeadlineActivitySerializer(BaseLinkedActivitySerializer):
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
-        fields = BaseLinkedActivitySerializer.Meta.fields + (
-            'start_time', 'end_time', 'location', 'duration'
-        )
+        fields = BaseLinkedActivitySerializer.Meta.fields + ('start_time', 'end_time', 'location', 'duration')
 
 
 class PeriodChoiceField(serializers.CharField):
     mapping = {
-        "days": "DailyRepetitionMode",
-        "weeks": "WeeklyRepetitionMode",
-        "months": "MonthlyRepetitionMode",
+        'days': 'DailyRepetitionMode',
+        'weeks': 'WeeklyRepetitionMode',
+        'months': 'MonthlyRepetitionMode',
     }
 
     def to_representation(self, value):
@@ -254,8 +249,11 @@ class LinkedPeriodicActivitySerializer(BaseLinkedActivitySerializer):
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedPeriodicActivity
         fields = BaseLinkedActivitySerializer.Meta.fields + (
-            'start_time', 'end_time', 'location',
-            'duration', 'repetition_mode'
+            'start_time',
+            'end_time',
+            'location',
+            'duration',
+            'repetition_mode',
         )
 
 
@@ -266,10 +264,7 @@ class LinkedScheduleActivitySerializer(BaseLinkedActivitySerializer):
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedScheduleActivity
-        fields = BaseLinkedActivitySerializer.Meta.fields + (
-            'start_time', 'end_time', 'location',
-            'duration'
-        )
+        fields = BaseLinkedActivitySerializer.Meta.fields + ('start_time', 'end_time', 'location', 'duration')
 
 
 class LinkedRegisteredDateActivitySerializer(BaseLinkedActivitySerializer):
@@ -284,10 +279,7 @@ class LinkedFundingSerializer(BaseLinkedActivitySerializer):
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedFunding
-        fields = BaseLinkedActivitySerializer.Meta.fields + (
-            'target', 'donated',
-            'start_time', 'end_time', 'location'
-        )
+        fields = BaseLinkedActivitySerializer.Meta.fields + ('target', 'donated', 'start_time', 'end_time', 'location')
 
 
 class LinkedGrantApplicationSerializer(BaseLinkedActivitySerializer):
@@ -297,10 +289,7 @@ class LinkedGrantApplicationSerializer(BaseLinkedActivitySerializer):
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedGrantApplication
-        fields = BaseLinkedActivitySerializer.Meta.fields + (
-            'target',
-            'start_time', 'end_time', 'location'
-        )
+        fields = BaseLinkedActivitySerializer.Meta.fields + ('target', 'start_time', 'end_time', 'location')
 
 
 class LinkedActivitySerializer(PolymorphicSerializer):

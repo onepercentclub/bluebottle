@@ -12,29 +12,16 @@ from bluebottle.test.factory_models.slides import SlideFactory, DraftSlideFactor
 
 
 class SlideTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(SlideTestCase, self).setUp()
         self.user = BlueBottleUserFactory.create()
-        self.slide1 = SlideFactory.create(
-            author=self.user,
-            title='Ons platform',
-            language='nl')
-        self.slide2 = SlideFactory.create(
-            author=self.user,
-            title='Our platform',
-            language='en')
+        self.slide1 = SlideFactory.create(author=self.user, title='Ons platform', language='nl')
+        self.slide2 = SlideFactory.create(author=self.user, title='Our platform', language='en')
 
         with open('bluebottle/slides/tests/files/sparks.mp4', 'rb') as video:
-            self.slide2.video.save(
-                'sparks.mp4',
-                File(video)
-            )
+            self.slide2.video.save('sparks.mp4', File(video))
 
-        self.slide3 = SlideFactory.create(
-            author=self.user,
-            title='Things to do',
-            language='en')
+        self.slide3 = SlideFactory.create(author=self.user, title='Things to do', language='en')
         self.slide4 = DraftSlideFactory.create(author=self.user, language='nl')
         self.homepage_url = reverse('home-detail')
 
@@ -53,8 +40,7 @@ class SlideTestCase(BluebottleTestCase):
         response = self.client.get(self.homepage_url, HTTP_X_APPLICATION_LANGUAGE='nl')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         slides = [
-            included for included in response.json()['included']
-            if included['type'] == 'pages/blocks/slides/slides'
+            included for included in response.json()['included'] if included['type'] == 'pages/blocks/slides/slides'
         ]
         self.assertEqual(len(slides), 1)
         self.assertEqual(slides[0]['attributes']['title'], self.slide1.title)
@@ -67,14 +53,10 @@ class SlideTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         slides = [
-            included for included in response.json()['included']
-            if included['type'] == 'pages/blocks/slides/slides'
+            included for included in response.json()['included'] if included['type'] == 'pages/blocks/slides/slides'
         ]
         self.assertEqual(len(slides), 2)
-        slide = next(
-            item for item in slides
-            if item['attributes']['title'] == self.slide2.title
-        )
+        slide = next(item for item in slides if item['attributes']['title'] == self.slide2.title)
         self.assertEqual(slide['attributes']['title'], self.slide2.title)
         self.assertTrue(slide['attributes']['video'].startswith('http://test.localhost/media/banner_slides/sparks'))
         self.assertEqual(slide['attributes']['body'], self.slide2.body)

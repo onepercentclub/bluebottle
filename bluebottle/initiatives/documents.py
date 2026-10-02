@@ -28,10 +28,7 @@ SCORE_MAP = {
 # The name of your index
 initiative = MultiTenantIndex('initiatives')
 # See Elasticsearch Indices API reference for available settings
-initiative.settings(
-    number_of_shards=1,
-    number_of_replicas=0
-)
+initiative.settings(number_of_shards=1, number_of_replicas=0)
 
 
 def deduplicate(items):
@@ -44,13 +41,7 @@ def get_translated_list(obj, field='name'):
 
     for lang in Language.objects.all():
         obj.set_current_language(lang.full_code)
-        data.append(
-            {
-                'id': obj.pk,
-                field: getattr(obj, field),
-                'language': lang.full_code
-            }
-        )
+        data.append({'id': obj.pk, field: getattr(obj, field), 'language': lang.full_code})
     obj._current_language = current_language
     return data
 
@@ -61,12 +52,14 @@ def get_translated_country_list(country):
 
     for lang in Language.objects.all():
         country.set_current_language(lang.full_code)
-        data.append({
-            'id': country.pk,
-            'name': country.name,
-            'code': country.alpha2_code or '',
-            'language': lang.full_code,
-        })
+        data.append(
+            {
+                'id': country.pk,
+                'name': country.name,
+                'code': country.alpha2_code or '',
+                'language': lang.full_code,
+            }
+        )
     country._current_language = current_language
     return data
 
@@ -86,7 +79,7 @@ def get_translated_segments(segment):
                 'type': segment.segment_type.slug,
                 'name': name,
                 'language': lang.full_code,
-                'closed': segment.closed
+                'closed': segment.closed,
             }
         )
     segment._current_language = current_language
@@ -105,16 +98,20 @@ class InitiativeDocument(Document):
     status = fields.KeywordField()
     created = fields.DateField()
 
-    current_status = fields.NestedField(properties={
-        'name': fields.KeywordField(),
-        'label': fields.KeywordField(),
-        'description': fields.KeywordField(),
-    })
+    current_status = fields.NestedField(
+        properties={
+            'name': fields.KeywordField(),
+            'label': fields.KeywordField(),
+            'description': fields.KeywordField(),
+        }
+    )
 
-    image = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'name': fields.KeywordField(),
-    })
+    image = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
 
     owner = fields.KeywordField()
     is_open = fields.BooleanField()
@@ -140,11 +137,7 @@ class InitiativeDocument(Document):
     )
 
     categories = fields.NestedField(
-        properties={
-            'id': fields.KeywordField(),
-            'title': fields.KeywordField(),
-            'language': fields.KeywordField()
-        }
+        properties={'id': fields.KeywordField(), 'title': fields.KeywordField(), 'language': fields.KeywordField()}
     )
 
     segments = fields.NestedField(
@@ -157,22 +150,26 @@ class InitiativeDocument(Document):
         }
     )
 
-    activities = fields.NestedField(properties={
-        'id': fields.LongField(),
-        'title': fields.KeywordField(),
-        'status': fields.KeywordField(),
-        'activity_date': fields.DateField(),
-    })
+    activities = fields.NestedField(
+        properties={
+            'id': fields.LongField(),
+            'title': fields.KeywordField(),
+            'status': fields.KeywordField(),
+            'activity_date': fields.DateField(),
+        }
+    )
 
     open_activities_count = fields.IntegerField()
     succeeded_activities_count = fields.IntegerField()
 
-    place = fields.NestedField(properties={
-        'province': TextField(),
-        'locality': TextField(),
-        'street': TextField(),
-        'postal_code': TextField(),
-    })
+    place = fields.NestedField(
+        properties={
+            'province': TextField(),
+            'locality': TextField(),
+            'street': TextField(),
+            'postal_code': TextField(),
+        }
+    )
 
     location = fields.NestedField(
         properties={
@@ -187,7 +184,7 @@ class InitiativeDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
-        }
+        },
     )
 
     office_region = fields.NestedField(
@@ -195,40 +192,37 @@ class InitiativeDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
-        }
+        },
     )
 
     class Django:
         model = Initiative
-        related_models = (
-            Geolocation,
-            Theme,
-            Funding,
-            DeadlineActivity,
-            PeriodicActivity,
-            DateActivity,
-            Deed
-        )
+        related_models = (Geolocation, Theme, Funding, DeadlineActivity, PeriodicActivity, DateActivity, Deed)
 
     def get_queryset(self):
-        return super(InitiativeDocument, self).get_queryset().select_related(
-            'theme',
-            'owner',
-            'promoter',
-            'reviewer',
-            'place',
-            'place__country',
-            'location',
-            'location__country',
-            'image',
-        ).prefetch_related(
-            'activity_managers',
-            'categories',
-            'activities',
-            'activities__segments',
-            'activities__segments__segment_type',
-            'activities__office_location',
-            'activities__office_location__country',
+        return (
+            super(InitiativeDocument, self)
+            .get_queryset()
+            .select_related(
+                'theme',
+                'owner',
+                'promoter',
+                'reviewer',
+                'place',
+                'place__country',
+                'location',
+                'location__country',
+                'image',
+            )
+            .prefetch_related(
+                'activity_managers',
+                'categories',
+                'activities',
+                'activities__segments',
+                'activities__segments__segment_type',
+                'activities__office_location',
+                'activities__office_location__country',
+            )
         )
 
     def get_indexing_queryset(self):
@@ -262,25 +256,14 @@ class InitiativeDocument(Document):
                 'title': activity.title,
                 'activity_date': activity.activity_date,
                 'status': activity.status,
-            } for activity in instance.activities.filter(
-                status__in=(
-                    'succeeded',
-                    'open',
-                    'partially_funded',
-                    'full',
-                    'registration_closed',
-                    'running'
-                )
+            }
+            for activity in instance.activities.filter(
+                status__in=('succeeded', 'open', 'partially_funded', 'full', 'registration_closed', 'running')
             )
         ]
 
     def prepare_open_activities_count(self, instance):
-        return instance.activities.filter(
-            status__in=(
-                'open',
-                'running'
-            )
-        ).count()
+        return instance.activities.filter(status__in=('open', 'running')).count()
 
     def prepare_succeeded_activities_count(self, instance):
         return instance.activities.filter(
@@ -305,9 +288,7 @@ class InitiativeDocument(Document):
         if instance.place and instance.place.country:
             countries += get_translated_country_list(instance.place.country)
 
-        for activity in instance.activities.filter(
-                status__in=['open', 'succeeded', 'full', 'partially_funded']
-        ):
+        for activity in instance.activities.filter(status__in=['open', 'succeeded', 'full', 'partially_funded']):
             if activity.office_location and activity.office_location.country:
                 countries += get_translated_country_list(activity.office_location.country)
 
@@ -341,8 +322,9 @@ class InitiativeDocument(Document):
                 {
                     'id': activity.office_location.id,
                     'name': activity.office_location.name,
-                    'city': activity.office_location.city
+                    'city': activity.office_location.city,
                 }
-                for activity in instance.activities.all() if activity.office_location
+                for activity in instance.activities.all()
+                if activity.office_location
             ]
         )

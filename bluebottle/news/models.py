@@ -19,42 +19,36 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 
 @python_2_unicode_compatible
 class NewsItem(PublishableModel):
-    title = models.CharField(_("Title"), max_length=200)
-    slug = models.SlugField(_("Slug"), max_length=50)
+    title = models.CharField(_('Title'), max_length=200)
+    slug = models.SlugField(_('Slug'), max_length=50)
 
     # Contents
     main_image = ImageField(
-        _("Main image"),
-        help_text=_("Shows at the top of your post."),
-        upload_to='blogs', blank=True,
-
+        _('Main image'),
+        help_text=_('Shows at the top of your post.'),
+        upload_to='blogs',
+        blank=True,
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
-    language = models.CharField(_("language"),
-                                max_length=7,
-                                choices=lazy(get_language_choices, list)())
-    contents = PlaceholderField("blog_contents", plugins=[
-        'TextPlugin',
-        'ImageTextPlugin',
-        'OEmbedPlugin',
-        'RawHtmlPlugin',
-        'PicturePlugin'
-    ])
+    language = models.CharField(_('language'), max_length=7, choices=lazy(get_language_choices, list)())
+    contents = PlaceholderField(
+        'blog_contents', plugins=['TextPlugin', 'ImageTextPlugin', 'OEmbedPlugin', 'RawHtmlPlugin', 'PicturePlugin']
+    )
     # This should not be necessary, but fixes deletion of some news items
     # See https://github.com/edoburu/django-fluent-contents/issues/19
     contentitem_set = ContentItemRelation()
 
-    allow_comments = models.BooleanField(_("Allow comments"), default=True)
+    allow_comments = models.BooleanField(_('Allow comments'), default=True)
 
     def save(self, *args, **kwargs):
         slug_field = self._meta.get_field('slug')
         if self.slug and len(self.slug) > slug_field.max_length:
-            self.slug = self.slug[:slug_field.max_length]
+            self.slug = self.slug[: slug_field.max_length]
         super(NewsItem, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -72,12 +66,12 @@ class NewsItem(PublishableModel):
     @property
     def summary(self) -> str:
         items = self.contents.get_content_items()
-        text = " ".join(str(item) for item in items)
+        text = ' '.join(str(item) for item in items)
         return Truncator(text).chars(250)
 
     class Meta(object):
-        verbose_name = _("news item")
-        verbose_name_plural = _("news items")
+        verbose_name = _('news item')
+        verbose_name_plural = _('news items')
 
         permissions = (
             ('api_read_newsitem', 'Can view news items through the API'),

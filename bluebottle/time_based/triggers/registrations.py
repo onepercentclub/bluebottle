@@ -8,7 +8,8 @@ from bluebottle.time_based.effects.interests import DeleteInterestEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
+    AdjustInitialPeriodicParticipantEffect,
+    CreateSlotParticipantEffect,
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -31,9 +32,15 @@ from bluebottle.time_based.messages.registrations import (
     UserRegistrationRestartedNotification,
     UserRegistrationStoppedNotification,
     ManagerRegistrationStoppedNotification,
-    ManagerRegistrationRestartedNotification, DeadlineUserAppliedNotification, DeadlineUserJoinedNotification,
-    PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, ScheduleUserAppliedNotification,
-    ScheduleUserJoinedNotification, DateUserAppliedNotification, )
+    ManagerRegistrationRestartedNotification,
+    DeadlineUserAppliedNotification,
+    DeadlineUserJoinedNotification,
+    PeriodicUserAppliedNotification,
+    PeriodicUserJoinedNotification,
+    ScheduleUserAppliedNotification,
+    ScheduleUserJoinedNotification,
+    DateUserAppliedNotification,
+)
 from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
@@ -45,7 +52,8 @@ from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
     RegistrationStateMachine,
     TeamStateMachine,
-    ScheduleActivityStateMachine, )
+    ScheduleActivityStateMachine,
+)
 from bluebottle.time_based.states.participants import (
     PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
@@ -72,20 +80,19 @@ def no_review_needed(effect):
 
 def is_user(effect):
     """Is user"""
-    user = effect.options.get("user")
+    user = effect.options.get('user')
     return user and effect.instance.user_id == user.id
 
 
 def is_admin(effect):
     """Is not user"""
-    user = effect.options.get("user")
-    return (
-        user and effect.instance.user_id and effect.instance.user != user and (user.is_staff or user.is_superuser)
-    )
+    user = effect.options.get('user')
+    return user and effect.instance.user_id and effect.instance.user != user and (user.is_staff or user.is_superuser)
 
 
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
+
     settings = MemberPlatformSettings.load()
     return settings.closed or effect.instance.user.is_active
 
@@ -95,32 +102,20 @@ def participant_is_inactive(effect):
 
 
 class RegistrationTriggers(TriggerManager):
-
     triggers = [
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
                 DeleteInterestEffect,
-                TransitionEffect(
-                    RegistrationStateMachine.auto_accept,
-                    conditions=[
-                        no_review_needed,
-                        is_user
-                    ]
-                ),
-                TransitionEffect(
-                    RegistrationStateMachine.add,
-                    conditions=[
-                        is_admin
-                    ]
-                ),
-            ]
+                TransitionEffect(RegistrationStateMachine.auto_accept, conditions=[no_review_needed, is_user]),
+                TransitionEffect(RegistrationStateMachine.add, conditions=[is_admin]),
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
             effects=[
                 FollowActivityEffect,
-            ]
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.accept,
@@ -136,10 +131,10 @@ class RegistrationTriggers(TriggerManager):
             RegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
-            ]
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
@@ -148,16 +143,13 @@ class RegistrationTriggers(TriggerManager):
                     'participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
-            ]
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.restore,
             effects=[
-                TransitionEffect(
-                    RegistrationStateMachine.accept,
-                    conditions=[no_review_needed]
-                ),
-            ]
+                TransitionEffect(RegistrationStateMachine.accept, conditions=[no_review_needed]),
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.reject,
@@ -167,9 +159,8 @@ class RegistrationTriggers(TriggerManager):
                     RegistrationParticipantStateMachine.reject,
                 ),
                 UnFollowActivityEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             RegistrationStateMachine.withdraw,
             effects=[
@@ -178,16 +169,13 @@ class RegistrationTriggers(TriggerManager):
                     RegistrationParticipantStateMachine.withdraw,
                 ),
                 UnFollowActivityEffect,
-            ]
+            ],
         ),
     ]
 
 
 def _is_registration_withdraw_trigger(trigger):
-    return (
-        isinstance(trigger, TransitionTrigger)
-        and trigger.transition == RegistrationStateMachine.withdraw
-    )
+    return isinstance(trigger, TransitionTrigger) and trigger.transition == RegistrationStateMachine.withdraw
 
 
 @register(DeadlineRegistration)
@@ -201,29 +189,19 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],
                 ),
-                NotificationEffect(
-                    DeadlineUserAppliedNotification, conditions=[review_needed, is_user]
-                ),
+                NotificationEffect(DeadlineUserAppliedNotification, conditions=[review_needed, is_user]),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
-                NotificationEffect(
-                    DeadlineUserJoinedNotification, conditions=[no_review_needed, is_user]
-                ),
-            ]
+                NotificationEffect(DeadlineUserJoinedNotification, conditions=[no_review_needed, is_user]),
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.add,
             effects=[
-                NotificationEffect(
-                    ParticipantAddedNotification,
-                    conditions=[participant_is_active]
-                ),
-                NotificationEffect(
-                    InactiveParticipantAddedNotification,
-                    conditions=[participant_is_inactive]
-                ),
+                NotificationEffect(ParticipantAddedNotification, conditions=[participant_is_active]),
+                NotificationEffect(InactiveParticipantAddedNotification, conditions=[participant_is_inactive]),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
                 ),
@@ -233,7 +211,7 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     DeadlineParticipantStateMachine.accept,
                 ),
                 NotificationEffect(
@@ -245,7 +223,7 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     DeadlineParticipantStateMachine.accept,
                 ),
             ],
@@ -267,21 +245,15 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return False
-        accepted = effect.instance.activity.registrations.filter(
-            status="accepted"
-        ).count()
+        accepted = effect.instance.activity.registrations.filter(status='accepted').count()
         return effect.instance.activity.capacity <= accepted + 1
 
     def activity_spots_left(effect):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return True
-        accepted = effect.instance.activity.registrations.filter(
-            status="accepted"
-        )
-        return effect.instance.activity.capacity > spots_taken_after_release(
-            accepted, effect.instance
-        )
+        accepted = effect.instance.activity.registrations.filter(status='accepted')
+        return effect.instance.activity.capacity > spots_taken_after_release(accepted, effect.instance)
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
@@ -292,29 +264,19 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],
                 ),
-                NotificationEffect(
-                    PeriodicUserAppliedNotification, conditions=[review_needed, is_user]
-                ),
+                NotificationEffect(PeriodicUserAppliedNotification, conditions=[review_needed, is_user]),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
-                NotificationEffect(
-                    PeriodicUserJoinedNotification, conditions=[no_review_needed, is_user]
-                ),
+                NotificationEffect(PeriodicUserJoinedNotification, conditions=[no_review_needed, is_user]),
             ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.add,
             effects=[
-                NotificationEffect(
-                    ParticipantAddedNotification,
-                    conditions=[participant_is_active]
-                ),
-                NotificationEffect(
-                    InactiveParticipantAddedNotification,
-                    conditions=[participant_is_inactive]
-                ),
+                NotificationEffect(ParticipantAddedNotification, conditions=[participant_is_active]),
+                NotificationEffect(InactiveParticipantAddedNotification, conditions=[participant_is_inactive]),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
                 ),
@@ -324,7 +286,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             PeriodicRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -335,7 +297,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             PeriodicRegistrationStateMachine.add,
             effects=[
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -346,13 +308,13 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             PeriodicRegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
                 AdjustInitialPeriodicParticipantEffect,
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     PeriodicParticipantStateMachine.accept,
                 ),
                 NotificationEffect(
@@ -364,7 +326,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             PeriodicRegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
@@ -379,7 +341,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(UserRegistrationRestartedNotification),
                 NotificationEffect(ManagerRegistrationRestartedNotification),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -391,25 +353,24 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(UserRegistrationStoppedNotification),
                 NotificationEffect(ManagerRegistrationStoppedNotification),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
             ],
         ),
-
         TransitionTrigger(
             PeriodicRegistrationStateMachine.remove,
             effects=[
                 UnFollowActivityEffect,
                 NotificationEffect(UserRegistrationRemovedNotification),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     PeriodicParticipantStateMachine.auto_remove,
                 ),
             ],
@@ -424,9 +385,7 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
         if not effect.instance.activity.capacity:
             return False
 
-        accepted = effect.instance.activity.registrations.filter(
-            status="accepted"
-        ).count()
+        accepted = effect.instance.activity.registrations.filter(status='accepted').count()
 
         return effect.instance.activity.capacity <= accepted + 1
 
@@ -435,12 +394,8 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
         if not effect.instance.activity.capacity:
             return True
 
-        accepted = effect.instance.activity.registrations.filter(
-            status="accepted"
-        )
-        return effect.instance.activity.capacity > spots_taken_after_release(
-            accepted, effect.instance
-        )
+        accepted = effect.instance.activity.registrations.filter(status='accepted')
+        return effect.instance.activity.capacity > spots_taken_after_release(accepted, effect.instance)
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
@@ -451,34 +406,24 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],
                 ),
-                NotificationEffect(
-                    ScheduleUserAppliedNotification, conditions=[review_needed, is_user]
-                ),
+                NotificationEffect(ScheduleUserAppliedNotification, conditions=[review_needed, is_user]),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
-                NotificationEffect(
-                    ScheduleUserJoinedNotification, conditions=[no_review_needed, is_user]
-                ),
+                NotificationEffect(ScheduleUserJoinedNotification, conditions=[no_review_needed, is_user]),
             ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.add,
             effects=[
-                NotificationEffect(
-                    ParticipantAddedNotification,
-                    conditions=[participant_is_active]
-                ),
-                NotificationEffect(
-                    InactiveParticipantAddedNotification,
-                    conditions=[participant_is_inactive]
-                ),
+                NotificationEffect(ParticipantAddedNotification, conditions=[participant_is_active]),
+                NotificationEffect(InactiveParticipantAddedNotification, conditions=[participant_is_inactive]),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -488,11 +433,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     ScheduleParticipantStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -505,11 +450,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     ScheduleParticipantStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -519,11 +464,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     ScheduleParticipantStateMachine.reject,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
@@ -542,9 +487,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
         if not effect.instance.activity.capacity:
             return False
 
-        accepted = effect.instance.activity.registrations.filter(
-            status="accepted"
-        ).count()
+        accepted = effect.instance.activity.registrations.filter(status='accepted').count()
 
         return effect.instance.activity.capacity <= accepted + 1
 
@@ -553,12 +496,8 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
         if not effect.instance.activity.capacity:
             return True
 
-        accepted = effect.instance.activity.registrations.filter(
-            status="accepted"
-        )
-        return effect.instance.activity.capacity > spots_taken_after_release(
-            accepted, effect.instance
-        )
+        accepted = effect.instance.activity.registrations.filter(status='accepted')
+        return effect.instance.activity.capacity > spots_taken_after_release(accepted, effect.instance)
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
@@ -572,12 +511,8 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
                     ManagerTeamRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
-                NotificationEffect(
-                    TeamAppliedNotification, conditions=[review_needed, is_user]
-                ),
-                NotificationEffect(
-                    TeamJoinedNotification, conditions=[no_review_needed, is_user]
-                ),
+                NotificationEffect(TeamAppliedNotification, conditions=[review_needed, is_user]),
+                NotificationEffect(TeamJoinedNotification, conditions=[no_review_needed, is_user]),
             ],
         ),
         TransitionTrigger(
@@ -595,15 +530,15 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    "teams",
+                    'teams',
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     TeamScheduleParticipantStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -616,11 +551,11 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "teams",
+                    'teams',
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -630,11 +565,11 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.add,
             effects=[
                 RelatedTransitionEffect(
-                    "teams",
+                    'teams',
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
@@ -644,15 +579,15 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "teams",
+                    'teams',
                     TeamStateMachine.reject,
                 ),
                 RelatedTransitionEffect(
-                    "participants",
+                    'participants',
                     TeamScheduleParticipantStateMachine.reject,
                 ),
                 RelatedTransitionEffect(
-                    "activity",
+                    'activity',
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
@@ -667,9 +602,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
 @register(DateRegistration)
 class DateRegistrationTriggers(RegistrationTriggers):
     triggers = [
-        trigger
-        for trigger in RegistrationTriggers.triggers
-        if not _is_registration_withdraw_trigger(trigger)
+        trigger for trigger in RegistrationTriggers.triggers if not _is_registration_withdraw_trigger(trigger)
     ] + [
         TransitionTrigger(
             RegistrationStateMachine.withdraw,
@@ -679,7 +612,7 @@ class DateRegistrationTriggers(RegistrationTriggers):
                     RegistrationParticipantStateMachine.withdraw,
                 ),
                 UnFollowActivityEffect,
-            ]
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.initiate,
@@ -688,14 +621,8 @@ class DateRegistrationTriggers(RegistrationTriggers):
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],
                 ),
-                NotificationEffect(
-                    DateUserAppliedNotification,
-                    conditions=[
-                        review_needed,
-                        is_user
-                    ]
-                ),
-            ]
+                NotificationEffect(DateUserAppliedNotification, conditions=[review_needed, is_user]),
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.add,

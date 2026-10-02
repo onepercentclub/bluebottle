@@ -5,23 +5,14 @@ from django.urls import reverse
 from bluebottle.collect.models import CollectActivity
 
 
-def api_create_collect_activity(
-        test, initiative, attributes,
-        request_user=None, status_code=201, msg=None):
+def api_create_collect_activity(test, initiative, attributes, request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = initiative.owner
     test.data = {
         'data': {
             'type': 'activities/collects',
             'attributes': attributes,
-            'relationships': {
-                'initiative': {
-                    'data': {
-                        'type': 'initiatives',
-                        'id': initiative.pk
-                    }
-                }
-            }
+            'relationships': {'initiative': {'data': {'type': 'initiatives', 'id': initiative.pk}}},
         }
     }
     url = reverse('collect-activity-list')
@@ -31,9 +22,7 @@ def api_create_collect_activity(
         return CollectActivity.objects.get(id=response.data['id'])
 
 
-def api_update_collect_activity(
-        test, activity, attributes,
-        request_user=None, status_code=200, msg=None):
+def api_update_collect_activity(test, activity, attributes, request_user=None, status_code=200, msg=None):
     if not request_user:
         request_user = activity.owner
     test.data = {
@@ -41,14 +30,7 @@ def api_update_collect_activity(
             'type': 'activities/collects',
             'id': activity.id,
             'attributes': attributes,
-            'relationships': {
-                'initiative': {
-                    'data': {
-                        'type': 'initiatives',
-                        'id': activity.initiative.pk
-                    }
-                }
-            }
+            'relationships': {'initiative': {'data': {'type': 'initiatives', 'id': activity.initiative.pk}}},
         }
     }
     url = reverse('collect-activity-detail', args=(activity.id,))
@@ -58,25 +40,14 @@ def api_update_collect_activity(
         return CollectActivity.objects.get(id=response.data['id'])
 
 
-def api_collect_activity_transition(
-        test, activity, transition,
-        request_user=None, status_code=201, msg=None):
+def api_collect_activity_transition(test, activity, transition, request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = activity.owner
     test.data = {
         'data': {
             'type': 'activities/collect-activity-transitions',
-            'attributes': {
-                'transition': transition
-            },
-            'relationships': {
-                'resource': {
-                    'data': {
-                        'type': 'activities/collects',
-                        'id': activity.pk
-                    }
-                }
-            }
+            'attributes': {'transition': transition},
+            'relationships': {'resource': {'data': {'type': 'activities/collects', 'id': activity.pk}}},
         }
     }
     url = reverse('collect-activities-transition-list')
@@ -84,8 +55,7 @@ def api_collect_activity_transition(
     test.assertEqual(response.status_code, status_code, msg)
 
 
-def api_read_collect_activity(
-        test, activity, request_user=None, status_code=200, msg=None):
+def api_read_collect_activity(test, activity, request_user=None, status_code=200, msg=None):
     if not request_user:
         request_user = activity.owner
     url = reverse('collect-activity-detail', args=(activity.id,))

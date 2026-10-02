@@ -9,11 +9,11 @@ from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBan
 class LipishaPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = LipishaPayment
+
     donation = factory.SubFactory(DonorFactory)
 
 
 class LipishaPaymentProviderFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = LipishaPaymentProvider
 
@@ -22,7 +22,6 @@ class LipishaPaymentProviderFactory(factory.DjangoModelFactory):
 
 
 class LipishaBankAccountFactory(factory.DjangoModelFactory):
-
     account_number = factory.fuzzy.FuzzyInteger(10000, 99999)
     account_name = 'Test name'
     bank_name = 'Big Duck Bank'

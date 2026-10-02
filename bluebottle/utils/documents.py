@@ -9,8 +9,8 @@ from elasticsearch_dsl import analyzer
 
 default_analyzer = analyzer(
     'standard',
-    tokenizer="standard",
-    filter=["lowercase", "asciifolding"],
+    tokenizer='standard',
+    filter=['lowercase', 'asciifolding'],
 )
 
 
@@ -28,7 +28,7 @@ class MultiTenantIndex(Index):
             name = '{}-{}'.format(connection.tenant.schema_name, self.__name)
             test_prefix = getattr(settings, 'ELASTICSEARCH_TEST_INDEX_PREFIX', None)
             if test_prefix:
-                worker_id = os.environ.get("DJANGO_TEST_PROCESS_NUMBER")
+                worker_id = os.environ.get('DJANGO_TEST_PROCESS_NUMBER')
                 if worker_id:
                     name = '{}-w{}-{}'.format(test_prefix, worker_id, name)
                 else:

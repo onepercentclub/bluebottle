@@ -13,6 +13,7 @@ Responsibilities are split as follows:
 This command does not require database queries for state-machine inspection;
 it uses class introspection only.
 """
+
 import re
 from collections import OrderedDict
 from pathlib import Path
@@ -143,7 +144,8 @@ def _effect_docstring(effect_cls):
             if sources:
                 source_names = [getattr(s, 'name', str(s)).capitalize() for s in sources]
                 return "Execute transition '{}' to state {} (from {}).".format(
-                    tname, target_name, ' | '.join(source_names))
+                    tname, target_name, ' | '.join(source_names)
+                )
             return "Execute transition '{}' to state {}.".format(tname, target_name)
     if hasattr(effect_cls, 'transition_effect_class') and hasattr(effect_cls, 'relation'):
         rel = getattr(effect_cls, 'relation', '')
@@ -160,11 +162,11 @@ def _effect_docstring(effect_cls):
             msg_name = getattr(msg, '__name__', str(msg))
             subject = getattr(msg, 'subject', '')
             if subject:
-                return "Send notification {} (subject: {}).".format(msg_name, subject)
-            return "Send notification {}.".format(msg_name)
+                return 'Send notification {} (subject: {}).'.format(msg_name, subject)
+            return 'Send notification {}.'.format(msg_name)
     name = getattr(effect_cls, '__name__', str(effect_cls))
     if name and not name.startswith('_'):
-        return "Effect: {}.".format(name)
+        return 'Effect: {}.'.format(name)
     return None
 
 
@@ -180,7 +182,7 @@ def _format_effect_summary(effect_cls, cond_str):
         target = getattr(tr, 'target', None) if tr else None
         target_name = getattr(target, 'name', '').capitalize() if target else ''
         transition_name = getattr(tr, 'name', '') if tr else ''
-        base = "Transition: {} to {}".format(transition_name, target_name) + (' if ' + cond_str if cond_str else '')
+        base = 'Transition: {} to {}'.format(transition_name, target_name) + (' if ' + cond_str if cond_str else '')
     elif hasattr(effect_cls, 'transition_effect_class'):
         te = getattr(effect_cls, 'transition_effect_class', None)
         tr = getattr(te, 'transition', None) if te else None
@@ -189,7 +191,7 @@ def _format_effect_summary(effect_cls, cond_str):
         transition_name = getattr(tr, 'name', '') if tr else ''
         rel = getattr(effect_cls, 'relation', '')
         base = "Relation '{}' → {} to {}".format(rel, transition_name, target_name)
-        base += (' if ' + cond_str if cond_str else '')
+        base += ' if ' + cond_str if cond_str else ''
     elif hasattr(effect_cls, 'message'):
         msg = getattr(effect_cls, 'message', None)
         msg_name = getattr(msg, '__name__', str(msg)) if msg else name
@@ -214,15 +216,13 @@ def _is_redundant_effect_doc(doc_str, detail):
     ):
         return True
     # Same as generated "Execute transition 'X' to state Y on related 'Z'."
-    if detail.get('related') and re.match(
-        r"Execute transition '[^']+' to state [^.]+ on related '[^']+'\.", doc_str
-    ):
+    if detail.get('related') and re.match(r"Execute transition '[^']+' to state [^.]+ on related '[^']+'\.", doc_str):
         return True
     # Same as generated "Send notification X (subject: Y)." or
     # "Send notification X." — subject shown in notification block
     if detail.get('notification') and (
-        re.match(r"Send notification [^.]+ \(subject: [^)]+\)\.", doc_str)
-        or re.match(r"Send notification [^.]+\.$", doc_str)
+        re.match(r'Send notification [^.]+ \(subject: [^)]+\)\.', doc_str)
+        or re.match(r'Send notification [^.]+\.$', doc_str)
     ):
         return True
     return False
@@ -269,8 +269,7 @@ def document_fsm_from_classes(model):
     }
     for transition in transitions:
         triggers_for_trans = [
-            t for t in model.triggers.triggers
-            if isinstance(t, TransitionTrigger) and t.transition == transition
+            t for t in model.triggers.triggers if isinstance(t, TransitionTrigger) and t.transition == transition
         ]
         effects = []
         for t in triggers_for_trans:
@@ -292,19 +291,21 @@ def document_fsm_from_classes(model):
                     effects.append({'summary': summary, 'detail': detail})
                 except Exception:
                     effects.append({'summary': getattr(effect_cls, '__name__', str(effect_cls)), 'detail': None})
-        doc['transitions'].append({
-            'name': transition.name,
-            'description': transition.description or '',
-            'from_states': [s.name.capitalize() for s in transition.sources],
-            'to': transition.target.name.capitalize(),
-            'manual': 'Automatic' if transition.automatic else 'Manual',
-            'conditions': [get_doc(c) for c in transition.conditions],
-            'effects': effects,
-            'id': get_transition_id(transition),
-            'field': getattr(transition, 'field', ''),
-            'permission_doc': get_doc(transition.permission) if getattr(transition, 'permission', None) else None,
-            'caused_by': [],
-        })
+        doc['transitions'].append(
+            {
+                'name': transition.name,
+                'description': transition.description or '',
+                'from_states': [s.name.capitalize() for s in transition.sources],
+                'to': transition.target.name.capitalize(),
+                'manual': 'Automatic' if transition.automatic else 'Manual',
+                'conditions': [get_doc(c) for c in transition.conditions],
+                'effects': effects,
+                'id': get_transition_id(transition),
+                'field': getattr(transition, 'field', ''),
+                'permission_doc': get_doc(transition.permission) if getattr(transition, 'permission', None) else None,
+                'caused_by': [],
+            }
+        )
     # caused_by: triggers that are not TransitionTrigger(this) but have an effect for this transition
     transition_by_id = {id(t): i for i, t in enumerate(transitions)}
     for trigger in model.triggers.triggers:
@@ -324,11 +325,13 @@ def document_fsm_from_classes(model):
             if idx is not None:
                 conds = getattr(effect_cls, 'conditions', None) or []
                 cond_docs = [get_doc(c) for c in conds]
-                doc['transitions'][idx]['caused_by'].append({
-                    'trigger': str(trigger),
-                    'conditions': cond_docs,
-                    'effect_name': getattr(effect_cls, '__name__', str(effect_cls)),
-                })
+                doc['transitions'][idx]['caused_by'].append(
+                    {
+                        'trigger': str(trigger),
+                        'conditions': cond_docs,
+                        'effect_name': getattr(effect_cls, '__name__', str(effect_cls)),
+                    }
+                )
     # Other triggers (not TransitionTrigger)
     for trigger in model.triggers.triggers:
         if isinstance(trigger, TransitionTrigger):
@@ -352,11 +355,13 @@ def document_fsm_from_classes(model):
                 effect_list.append({'summary': summary, 'detail': detail})
             except Exception:
                 effect_list.append({'summary': getattr(effect_cls, '__name__', str(effect_cls)), 'detail': None})
-        doc['triggers'].append({
-            'when': str(trigger),
-            'effects': effect_list,
-            'id': re.sub(r'[^a-z0-9]+', '-', str(trigger).lower().strip()).strip('-'),
-        })
+        doc['triggers'].append(
+            {
+                'when': str(trigger),
+                'effects': effect_list,
+                'id': re.sub(r'[^a-z0-9]+', '-', str(trigger).lower().strip()).strip('-'),
+            }
+        )
     # Periodic tasks (model.periodic_tasks)
     for task_cls in getattr(model, 'periodic_tasks', []) or []:
         task_name = getattr(task_cls, '__name__', str(task_cls))
@@ -382,12 +387,14 @@ def document_fsm_from_classes(model):
                 effects.append({'summary': summary, 'detail': detail})
             except Exception:
                 effects.append({'summary': getattr(effect_cls, '__name__', str(effect_cls)), 'detail': None})
-        doc['periodic_tasks'].append({
-            'name': task_name,
-            'id': re.sub(r'[^a-z0-9]+', '-', task_name.lower()).strip('-') or 'task',
-            'description': task_doc,
-            'effects': effects,
-        })
+        doc['periodic_tasks'].append(
+            {
+                'name': task_name,
+                'id': re.sub(r'[^a-z0-9]+', '-', task_name.lower()).strip('-') or 'task',
+                'description': task_doc,
+                'effects': effects,
+            }
+        )
     return doc
 
 
@@ -449,15 +456,13 @@ def _state_links_from_doc(doc, base_id):
         trans_id = '{}-trans-{}'.format(base_id, t.get('id', ''))
         trans_name = t.get('name', '')
         for from_s in t.get('from_states', []):
-            result.setdefault(
-                from_s,
-                {'from_transitions': [], 'to_transitions': []}
-            )['from_transitions'].append((trans_name, trans_id))
+            result.setdefault(from_s, {'from_transitions': [], 'to_transitions': []})['from_transitions'].append(
+                (trans_name, trans_id)
+            )
         to_s = t.get('to', '')
-        result.setdefault(
-            to_s,
-            {'from_transitions': [], 'to_transitions': []}
-        )['to_transitions'].append((trans_name, trans_id))
+        result.setdefault(to_s, {'from_transitions': [], 'to_transitions': []})['to_transitions'].append(
+            (trans_name, trans_id)
+        )
     return result
 
 
@@ -521,8 +526,7 @@ def render_html(fsm_entries):
         )
 
     jump_links = [
-        {'href': '#{}'.format(first_id_by_app[app]), 'label': app.replace('_', ' ').title()}
-        for app in first_id_by_app
+        {'href': '#{}'.format(first_id_by_app[app]), 'label': app.replace('_', ' ').title()} for app in first_id_by_app
     ]
     apps_label = ', '.join(sorted(set(m._meta.app_label for m, _ in fsm_entries)))
     title = 'FSM documentation – ' + apps_label
@@ -530,11 +534,11 @@ def render_html(fsm_entries):
     # Inline CSS so the generated HTML is fully self‑contained.
     # Command lives in ``fsm/management/commands``; static file is in ``fsm/static/fsm``.
     app_root = Path(__file__).resolve().parent.parent.parent
-    css_path = app_root / "static" / "fsm" / "fsm_documentation.css"
+    css_path = app_root / 'static' / 'fsm' / 'fsm_documentation.css'
     try:
-        inline_css = css_path.read_text(encoding="utf-8")
+        inline_css = css_path.read_text(encoding='utf-8')
     except OSError:
-        inline_css = ""
+        inline_css = ''
 
     context = {
         'title': title,
@@ -557,13 +561,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--output', '-o',
+            '--output',
+            '-o',
             type=str,
             default='fsm_documentation.html',
             help='Output HTML file path (default: fsm_documentation.html)',
         )
         parser.add_argument(
-            '--app', '-a',
+            '--app',
+            '-a',
             type=str,
             action='append',
             dest='apps',
@@ -611,7 +617,8 @@ class Command(BaseCommand):
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(html)
         apps_included = sorted(set(m._meta.app_label for m, _ in fsm_entries))
-        self.stdout.write(self.style.SUCCESS(
-            'Wrote {} ({} models from apps: {})'.format(
-                out_path, len(fsm_entries), ', '.join(apps_included))
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                'Wrote {} ({} models from apps: {})'.format(out_path, len(fsm_entries), ', '.join(apps_included))
+            )
+        )

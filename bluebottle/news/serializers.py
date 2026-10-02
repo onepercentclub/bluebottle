@@ -16,7 +16,7 @@ class NewsItemContentsField(serializers.Field):
         try:
             contents_html = mark_safe(render_placeholder(request, obj).html)
         except FileNotFoundError:
-            contents_html = "Missing image"
+            contents_html = 'Missing image'
         return contents_html
 
 
@@ -28,9 +28,17 @@ class NewsItemSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = NewsItem
-        fields = ('id', 'title', 'body', 'main_image', 'author',
-                  'publication_date', 'allow_comments', 'language',
-                  'main_image')
+        fields = (
+            'id',
+            'title',
+            'body',
+            'main_image',
+            'author',
+            'publication_date',
+            'allow_comments',
+            'language',
+            'main_image',
+        )
 
 
 class NewsItemPreviewSerializer(serializers.ModelSerializer):

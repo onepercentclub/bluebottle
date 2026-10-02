@@ -3,9 +3,7 @@ from requests import Request
 from django.test import RequestFactory
 from django.db import connection
 
-from bluebottle.activity_pub.authentication import (
-    DjangoHTTPSignatureAuth, key_resolver
-)
+from bluebottle.activity_pub.authentication import DjangoHTTPSignatureAuth, key_resolver
 
 from requests_http_signature import algorithms
 
@@ -30,12 +28,7 @@ class SignedRequestFactory(RequestFactory):
         path = self.overrides.get('path', result.path)
         data = self.overrides.get('data', result.body)
 
-        request = Request(
-            result.method,
-            f'http://test.localhost{path}',
-            data=data,
-            headers=result.headers
-        ).prepare()
+        request = Request(result.method, f'http://test.localhost{path}', data=data, headers=result.headers).prepare()
 
         signed = self.signer(request)
 

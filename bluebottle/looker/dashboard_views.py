@@ -13,10 +13,7 @@ from bluebottle.segments.models import SegmentType
 
 
 @method_decorator(login_required, name='dispatch')
-@method_decorator(
-    permission_required('looker.access_looker_embeds', raise_exception=True),
-    name='dispatch'
-)
+@method_decorator(permission_required('looker.access_looker_embeds', raise_exception=True), name='dispatch')
 class LookerEmbedView(DetailView):
     template_name = 'dashboard/embed.html'
     queryset = LookerEmbed.objects.all()
@@ -52,17 +49,11 @@ class LookerEmbedView(DetailView):
                 self.request.user,
                 type=context['object'].type,
                 id=context['object'].looker_id,
-                hide_filters=hide_filters
+                hide_filters=hide_filters,
             ).url
         else:
             context['looker_embed_url'] = None
         return context
 
 
-urls.register_urls([
-    path(
-        'looker_embed/<int:pk>/',
-        LookerEmbedView.as_view(),
-        name='looker-embed'
-    )
-])
+urls.register_urls([path('looker_embed/<int:pk>/', LookerEmbedView.as_view(), name='looker-embed')])

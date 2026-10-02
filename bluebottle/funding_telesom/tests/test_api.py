@@ -14,14 +14,13 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class MockReponse(object):
-    status_code = 200,
+    status_code = (200,)
 
     def json(self):
         return {'params': {'state': 'APPROVED'}}
 
 
 class TelesomPaymentTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(TelesomPaymentTestCase, self).setUp()
         TelesomPaymentProvider.objects.all().delete()
@@ -42,8 +41,7 @@ class TelesomPaymentTestCase(BluebottleTestCase):
         self.data = {
             'data': {
                 'type': 'payments/telesom-payments',
-                'attributes': {
-                },
+                'attributes': {},
                 'relationships': {
                     'donation': {
                         'data': {
@@ -51,7 +49,7 @@ class TelesomPaymentTestCase(BluebottleTestCase):
                             'id': self.donation.pk,
                         }
                     }
-                }
+                },
             }
         }
 

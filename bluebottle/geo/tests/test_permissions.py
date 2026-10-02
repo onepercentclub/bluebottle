@@ -21,7 +21,9 @@ class IsConnectedToProfileTestCase(BluebottleTestCase):
         self.request.user = self.member
         self.assertTrue(
             self.permission.has_object_permission(
-                self.request, self.view, self.location,
+                self.request,
+                self.view,
+                self.location,
             )
         )
 
@@ -29,7 +31,9 @@ class IsConnectedToProfileTestCase(BluebottleTestCase):
         self.request.user = self.other_user
         self.assertFalse(
             self.permission.has_object_permission(
-                self.request, self.view, self.location,
+                self.request,
+                self.view,
+                self.location,
             )
         )
 
@@ -38,6 +42,8 @@ class IsConnectedToProfileTestCase(BluebottleTestCase):
         self.request.user = staff
         self.assertTrue(
             self.permission.has_object_permission(
-                self.request, self.view, self.location,
+                self.request,
+                self.view,
+                self.location,
             )
         )

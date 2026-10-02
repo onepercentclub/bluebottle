@@ -1,13 +1,9 @@
 import re
 
 import dateutil
-from elasticsearch_dsl import (
-    FacetedSearch, Facet
-)
+from elasticsearch_dsl import FacetedSearch, Facet
 from elasticsearch_dsl.aggs import A
-from elasticsearch_dsl.query import (
-    Terms, Term, Nested, MultiMatch, Bool, Range, MatchAll
-)
+from elasticsearch_dsl.query import Terms, Term, Nested, MultiMatch, Bool, Range, MatchAll
 from rest_framework import filters
 from rest_framework.filters import BaseFilterBackend
 
@@ -18,9 +14,8 @@ FACET_LIMIT = 10000
 
 
 class TrigramFilter(filters.SearchFilter):
-
     def construct_search(self, field_name):
-        return "%s__unaccent__trigram_similar" % field_name
+        return '%s__unaccent__trigram_similar' % field_name
 
     def get_search_terms(self, request):
         """
@@ -49,13 +44,9 @@ class ModelFacet(Facet):
             path=self.path,
             aggs={
                 'filter': A(
-                    'filter',
-                    filter=self.filter,
-                    aggs={
-                        'inner': A('terms', size=FACET_LIMIT, field=f"{self.path}.id")
-                    }
+                    'filter', filter=self.filter, aggs={'inner': A('terms', size=FACET_LIMIT, field=f'{self.path}.id')}
                 )
-            }
+            },
         )
 
     def get_values(self, data, filter_values):
@@ -66,25 +57,17 @@ class ModelFacet(Facet):
             result.append((filter_values[0], 0, True))
             ids.append(filter_values[0])
 
-        models = dict(
-            (str(model.pk), model)
-            for model in self.model.objects.filter(pk__in=ids)
-        )
+        models = dict((str(model.pk), model) for model in self.model.objects.filter(pk__in=ids))
 
         result = [
-            ((getattr(models[id], self.attr), id), count, active)
-            for (id, count, active) in result
-            if id in models
+            ((getattr(models[id], self.attr), id), count, active) for (id, count, active) in result if id in models
         ]
 
         return result
 
     def add_filter(self, filter_values):
         if filter_values:
-            return Nested(
-                path=self.path,
-                query=Terms(**{f'{self.path}.id': filter_values})
-            )
+            return Nested(path=self.path, query=Terms(**{f'{self.path}.id': filter_values}))
 
 
 class SegmentFacet(ModelFacet):
@@ -94,10 +77,7 @@ class SegmentFacet(ModelFacet):
 
     @property
     def filter(self):
-        return Bool(filter=[
-            Term(**{'segments.type': self.segment_type.slug}),
-            super().filter
-        ])
+        return Bool(filter=[Term(**{'segments.type': self.segment_type.slug}), super().filter])
 
 
 class DateRangeFacet(Facet):
@@ -111,12 +91,7 @@ class DateRangeFacet(Facet):
         start, end = filter_value.split(',')
         return Range(
             _expand__to_dot=False,
-            **{
-                self._params["field"]: {
-                    "gte": dateutil.parser.parse(start),
-                    "lt": dateutil.parser.parse(end)
-                }
-            }
+            **{self._params['field']: {'gte': dateutil.parser.parse(start), 'lt': dateutil.parser.parse(end)}},
         )
 
 
@@ -141,10 +116,7 @@ class Search(FacetedSearch):
         self.user = user
         self.index = self.doc_types[0]._name
 
-        filters = {
-            key: value for key, value in filters.items()
-            if key in self.facets
-        }
+        filters = {key: value for key, value in filters.items() if key in self.facets}
 
         super().__init__(query, filters, sort)
 
@@ -172,21 +144,12 @@ class Search(FacetedSearch):
                         Nested(
                             path=path,
                             query=MultiMatch(
-                                fields=[f'{path}.{field}' for field in fields],
-                                type="phrase_prefix",
-                                query=query
-                            )
+                                fields=[f'{path}.{field}' for field in fields], type='phrase_prefix', query=query
+                            ),
                         )
                     )
                 else:
-                    queries.append(
-                        MultiMatch(
-                            fields=fields,
-                            query=query,
-                            type="phrase_prefix"
-                        )
-
-                    )
+                    queries.append(MultiMatch(fields=fields, query=query, type='phrase_prefix'))
 
             return search.query(Bool(should=queries))
         else:
@@ -216,8 +179,9 @@ class SearchFilterBackend(BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         # Get all query parameters that start with "filter["
-        filter_params = {key[7:-1]: value for key, value in request.GET.items() if
-                         key.startswith('filter[') and key.endswith(']')}
+        filter_params = {
+            key[7:-1]: value for key, value in request.GET.items() if key.startswith('filter[') and key.endswith(']')
+        }
 
         # Apply the filters dynamically to the queryset
         if filter_params:

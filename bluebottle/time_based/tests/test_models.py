@@ -3,35 +3,25 @@ from datetime import timedelta
 from django.utils.timezone import now
 
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateActivitySlotFactory, PeriodicActivityFactory
-)
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, PeriodicActivityFactory
 
 
 class DeadlineActivityModelTestCase(BluebottleTestCase):
     def test_registration_deadline_validation_empty(self):
-        activity = PeriodicActivityFactory.create(
-            start=None,
-            deadline=None,
-            registration_deadline=None
-        )
+        activity = PeriodicActivityFactory.create(start=None, deadline=None, registration_deadline=None)
 
         self.assertEqual(list(activity.errors), [])
 
     def test_registration_deadline_validation_no_start_or_deadline(self):
         activity = PeriodicActivityFactory.create(
-            start=None,
-            deadline=None,
-            registration_deadline=now() + timedelta(days=10)
+            start=None, deadline=None, registration_deadline=now() + timedelta(days=10)
         )
 
         self.assertEqual(list(activity.errors), [])
 
     def test_registration_deadline_validation_after_deadline(self):
         activity = PeriodicActivityFactory.create(
-            start=None,
-            deadline=now() + timedelta(days=5),
-            registration_deadline=now() + timedelta(days=10)
+            start=None, deadline=now() + timedelta(days=5), registration_deadline=now() + timedelta(days=10)
         )
 
         self.assertEqual(len(list(activity.errors)), 1)
@@ -41,34 +31,19 @@ class DeadlineActivityModelTestCase(BluebottleTestCase):
         activity = PeriodicActivityFactory.create(
             start=now() + timedelta(days=10),
             deadline=now() + timedelta(days=10),
-            registration_deadline=now() + timedelta(days=5)
+            registration_deadline=now() + timedelta(days=5),
         )
 
         self.assertEqual(list(activity.errors), [])
 
 
 class DateActivityModelTestCase(BluebottleTestCase):
-
     def setUp(self):
-        self.activity = DateActivityFactory.create(
-            slots=[]
-        )
-        self.slotA = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=now() + timedelta(days=10)
-        )
-        self.slotB = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=now() + timedelta(days=3)
-        )
-        self.slotC = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=now() + timedelta(days=4)
-        )
-        self.slotD = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=None
-        )
+        self.activity = DateActivityFactory.create(slots=[])
+        self.slotA = DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=10))
+        self.slotB = DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=3))
+        self.slotC = DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=4))
+        self.slotD = DateActivitySlotFactory.create(activity=self.activity, start=None)
 
     def test_slot_sequence(self):
         self.assertEqual(self.slotA.sequence, 3)

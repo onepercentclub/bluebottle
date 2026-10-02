@@ -19,8 +19,7 @@ class TenantFileSystemStorage(BaseTenantFileSystemStorage):
         try:
             path = safe_join(location, name)
         except ValueError:
-            raise SuspiciousFileOperation(
-                "Attempted access to '%s' denied." % name)
+            raise SuspiciousFileOperation("Attempted access to '%s' denied." % name)
         return os.path.normpath(path)
 
     @property

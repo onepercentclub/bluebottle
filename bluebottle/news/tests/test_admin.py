@@ -13,11 +13,10 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class TestNewsAdmin(BluebottleAdminTestCase):
     LONG_TITLE = (
-        "This is just a ridiculously long title, "
-        "because there's people out there that think we should support that."
+        "This is just a ridiculously long title, because there's people out there that think we should support that."
     )
 
-    EXPECTED_SLUG = "this-is-just-a-ridiculously-long-title-because-the"
+    EXPECTED_SLUG = 'this-is-just-a-ridiculously-long-title-because-the'
 
     extra_environ = {}
     csrf_checks = False
@@ -39,16 +38,12 @@ class TestNewsAdmin(BluebottleAdminTestCase):
 
         form = []
         news_item.author = None
-        self.news_admin.save_model(request=self.request,
-                                   obj=news_item,
-                                   form=form, change=True)
+        self.news_admin.save_model(request=self.request, obj=news_item, form=form, change=True)
         news_item.refresh_from_db()
         self.assertEqual(news_item.author, self.superuser)
 
         news_item.author = user
-        self.news_admin.save_model(request=self.request,
-                                   obj=news_item,
-                                   form=form, change=True)
+        self.news_admin.save_model(request=self.request, obj=news_item, form=form, change=True)
         news_item.refresh_from_db()
         self.assertEqual(news_item.author, user)
 

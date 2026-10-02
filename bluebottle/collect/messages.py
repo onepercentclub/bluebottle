@@ -5,7 +5,6 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class CollectActivityDateChangedNotification(TransitionMessage):
-
     subject = pgettext('platform-email', 'The date for the activity "{title}" has changed')
     template = 'messages/collect_activity_date_changed'
 
@@ -34,13 +33,10 @@ class CollectActivityDateChangedNotification(TransitionMessage):
 
     def get_recipients(self):
         """contributors that signed up"""
-        return [
-            contributor.user for contributor in self.obj.active_contributors.all()
-        ]
+        return [contributor.user for contributor in self.obj.active_contributors.all()]
 
 
 class CollectActivityReminderNotification(TransitionMessage):
-
     subject = pgettext('platform-email', 'Your activity "{title}" will start tomorrow!')
     template = 'messages/collect_activity_reminder'
     send_once = True
@@ -64,6 +60,7 @@ class ParticipantJoinedNotification(TransitionMessage):
     """
     The participant joined
     """
+
     subject = pgettext('platform-email', 'You have joined the activity "{title}"')
     template = 'messages/collect_participant_joined'
     context = {

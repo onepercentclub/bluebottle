@@ -5,6 +5,6 @@ from bluebottle.utils.views import CreateAPIView
 
 
 class TransitionList(CreateAPIView):
-    parser_classes = (JSONParser, )
-    renderer_classes = (BluebottleJSONAPIRenderer, )
+    parser_classes = (JSONParser,)
+    renderer_classes = (BluebottleJSONAPIRenderer,)
     permission_classes = ()

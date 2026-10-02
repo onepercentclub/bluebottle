@@ -34,10 +34,10 @@ class StateMachineAdminMixin(object):
         Determines the HttpResponse for the change_view stage.
         """
         if (
-            object_id and
-            request.method == 'POST' and
-            not request.POST.get('post', False) and
-            '_saveasnew' not in request.POST
+            object_id
+            and request.method == 'POST'
+            and not request.POST.get('post', False)
+            and '_saveasnew' not in request.POST
         ):
             obj = self.model.objects.get(pk=object_id)
             ModelForm = self.get_form(request, obj)
@@ -60,21 +60,15 @@ class StateMachineAdminMixin(object):
                             form.save(commit=False)
                             if form.instance and form.instance.pk:
                                 effects += form.instance.execute_triggers(
-                                    user=request.user,
-                                    send_messages=send_messages
+                                    user=request.user, send_messages=send_messages
                                 )
             rendered_effects = get_effects(effects)
             if rendered_effects:
-
                 cancel_link = reverse(
-                    'admin:{}_{}_change'.format(
-                        self.model._meta.app_label, self.model._meta.model_name
-                    ),
-                    args=(object_id, )
+                    'admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name),
+                    args=(object_id,),
                 )
-                action_text = ' and '.join(
-                    str(trigger.title) for trigger in obj._triggers
-                ) or _('perform changes')
+                action_text = ' and '.join(str(trigger.title) for trigger in obj._triggers) or _('perform changes')
 
                 context = dict(
                     obj=obj,
@@ -84,16 +78,11 @@ class StateMachineAdminMixin(object):
                     opts=self.model._meta,
                     action_text=action_text,
                     media=self.media,
-                    has_notifications=any(
-                        isinstance(effect, BaseNotificationEffect)
-                        for effect in effects
-                    ),
-                    effects=rendered_effects
+                    has_notifications=any(isinstance(effect, BaseNotificationEffect) for effect in effects),
+                    effects=rendered_effects,
                 )
 
-                return TemplateResponse(
-                    request, "admin/change_effects_confirmation.html", context
-                )
+                return TemplateResponse(request, 'admin/change_effects_confirmation.html', context)
 
         return super(StateMachineAdminMixin, self).changeform_view(request, object_id, form_url, extra_context)
 
@@ -124,17 +113,10 @@ class StateMachineAdminMixin(object):
                 return transition
 
     def transition(self, request, pk, field_name, transition_name):
-        link = reverse(
-            'admin:{}_{}_change'.format(
-                self.model._meta.app_label, self.model._meta.model_name
-            ),
-            args=(pk, )
-        )
+        link = reverse('admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name), args=(pk,))
 
         # perform actual check for change permission. using self.model
-        permission = '{}.change_{}'.format(
-            self.model._meta.app_label, self.model._meta.model_name
-        )
+        permission = '{}.change_{}'.format(self.model._meta.app_label, self.model._meta.model_name)
         if not request.user.has_perm(permission):
             messages.error(request, 'Missing permission: {}'.format(permission))
             return HttpResponseRedirect(link)
@@ -157,9 +139,7 @@ class StateMachineAdminMixin(object):
         if 'confirm' in request.POST and request.POST['confirm']:
             if form.is_valid():
                 send_messages = form.cleaned_data['send_messages']
-                getattr(state_machine, transition_name)(
-                    user=request.user
-                )
+                getattr(state_machine, transition_name)(user=request.user)
                 if transition.form:
                     form.save()
                 custom_message = getattr(transition, 'custom_message', None)
@@ -176,12 +156,9 @@ class StateMachineAdminMixin(object):
         effects = instance.execute_triggers(user=request.user)
         rendered_effects = get_effects(effects)
         cancel_link = reverse(
-            'admin:{}_{}_change'.format(
-                self.model._meta.app_label, self.model._meta.model_name
-            ),
-            args=(pk, )
+            'admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name), args=(pk,)
         )
-        action_text = "change the status to {}".format(transition.target.name)
+        action_text = 'change the status to {}'.format(transition.target.name)
 
         context = dict(
             self.admin_site.each_context(request),
@@ -195,17 +172,13 @@ class StateMachineAdminMixin(object):
             action_text=action_text,
             form=form,
             media=self.media + form.media,
-            has_notifications=any(
-                isinstance(effect, BaseNotificationEffect) for effect in effects
-            ),
+            has_notifications=any(isinstance(effect, BaseNotificationEffect) for effect in effects),
             source=instance.status,
             effects=rendered_effects,
             target=transition.target.name,
         )
 
-        return TemplateResponse(
-            request, 'admin/change_effects_confirmation.html', context
-        )
+        return TemplateResponse(request, 'admin/change_effects_confirmation.html', context)
 
     def get_urls(self):
         urls = super(StateMachineAdminMixin, self).get_urls()
@@ -213,9 +186,7 @@ class StateMachineAdminMixin(object):
             path(
                 '<path:pk>/transition/<path:field_name>/<path:transition_name>',
                 self.admin_site.admin_view(self.transition),
-                name='{}_{}_state_transition'.format(
-                    self.model._meta.app_label, self.model._meta.model_name
-                ),
+                name='{}_{}_state_transition'.format(self.model._meta.app_label, self.model._meta.model_name),
             )
         ]
         return custom_urls + urls
@@ -250,8 +221,6 @@ class StateMachineFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(
-                status=self.value()
-            )
+            return queryset.filter(status=self.value())
         else:
             return queryset

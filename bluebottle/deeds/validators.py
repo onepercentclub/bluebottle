@@ -9,8 +9,4 @@ class EndDateValidator(Validator):
     message = _('The end date should be after the start date')
 
     def is_valid(self):
-        return (
-            not self.instance.start or
-            not self.instance.end or
-            self.instance.start <= self.instance.end
-        )
+        return not self.instance.start or not self.instance.end or self.instance.start <= self.instance.end

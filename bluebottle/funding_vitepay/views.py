@@ -23,7 +23,6 @@ class VitepayPaymentList(PaymentList):
 
 
 class VitepayWebhookView(View):
-
     def post(self, request, *args, **kwargs):
         success = 'success' in request.POST
         failure = 'failure' in request.POST
@@ -46,9 +45,7 @@ class VitepayBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCre
     serializer_class = VitepayBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}
 
 
 class VitepayBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -56,6 +53,4 @@ class VitepayBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, Retri
     serializer_class = VitepayBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}

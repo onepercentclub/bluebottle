@@ -76,9 +76,7 @@ def repoint_geolocation_references(sources, target, dry_run=False):
             continue
         field_name = relation.field.name
         related_model = relation.related_model
-        related_queryset = related_model.objects.filter(
-            **{'{}__in'.format(field_name): source_ids}
-        )
+        related_queryset = related_model.objects.filter(**{'{}__in'.format(field_name): source_ids})
         count = related_queryset.count()
         if not count:
             continue
@@ -95,9 +93,7 @@ def merge_geofeatures(sources, target, dry_run=False):
 
     through = Geolocation.geofeatures.through
     geofeature_ids = list(
-        through.objects.filter(geolocation_id__in=source_ids)
-        .values_list('geofeature_id', flat=True)
-        .distinct()
+        through.objects.filter(geolocation_id__in=source_ids).values_list('geofeature_id', flat=True).distinct()
     )
     merged = len(geofeature_ids)
 
@@ -136,8 +132,7 @@ def merge_geolocations(sources, target, dry_run=False):
 
 def deduplicate_geolocations(dry_run=False):
     duplicate_groups = list(
-        Geolocation.objects
-        .values('mapbox_id', 'formatted_address')
+        Geolocation.objects.values('mapbox_id', 'formatted_address')
         .annotate(count=Count('id'))
         .filter(count__gt=1)
         .order_by('-count')
@@ -161,9 +156,7 @@ def deduplicate_geolocations(dry_run=False):
             continue
 
         groups_processed += 1
-        merged, repointed, merged_features = merge_geolocations(
-            duplicates, canonical, dry_run=dry_run
-        )
+        merged, repointed, merged_features = merge_geolocations(duplicates, canonical, dry_run=dry_run)
         merged_count += merged
         repointed_count += repointed
         geofeatures_merged += merged_features
@@ -224,9 +217,7 @@ def run(*args):
 
     tenant_list = list(tenants)
     if not tenant_list:
-        print('No tenants found{}'.format(
-            ' for schema {!r}'.format(options.tenant) if options.tenant else ''
-        ))
+        print('No tenants found{}'.format(' for schema {!r}'.format(options.tenant) if options.tenant else ''))
         return
 
     print(

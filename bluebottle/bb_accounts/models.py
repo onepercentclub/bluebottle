@@ -8,9 +8,7 @@ from builtins import range
 from builtins import str
 
 from django.conf import settings
-from django.contrib.auth.models import (
-    AbstractBaseUser, PermissionsMixin, UserManager
-)
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models.signals import post_save
@@ -82,9 +80,7 @@ class BlueBottleUserManager(UserManager):
         if isinstance(username, int):
             return self.get(pk=username)
         else:
-            return self.get(**{
-                '{}__iexact'.format(self.model.USERNAME_FIELD): username
-            })
+            return self.get(**{'{}__iexact'.format(self.model.USERNAME_FIELD): username})
 
 
 @python_2_unicode_compatible
@@ -97,6 +93,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     The Django Meta attribute seems the best place for this configuration, so we
     have to add this.
     """
+
     class Gender(DjangoChoices):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
@@ -113,13 +110,16 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), db_index=True, max_length=254, unique=True)
     username = models.CharField(_('username'), max_length=254, unique=True)
 
-    is_staff = models.BooleanField(_('Back office access'),
-                                   default=False,
-                                   help_text=_('Allow this user to access the back office.'))
-    is_active = models.BooleanField(_('active'),
-                                    default=False,
-                                    help_text=_('Designates whether this user should be treated as active. Unselect '
-                                                'this instead of deleting accounts.'))
+    is_staff = models.BooleanField(
+        _('Back office access'), default=False, help_text=_('Allow this user to access the back office.')
+    )
+    is_active = models.BooleanField(
+        _('active'),
+        default=False,
+        help_text=_(
+            'Designates whether this user should be treated as active. Unselect this instead of deleting accounts.'
+        ),
+    )
 
     disable_token = models.CharField(blank=True, max_length=32, null=True)
 
@@ -135,14 +135,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(_('first name'), blank=True, max_length=100)
     last_name = models.CharField(_('last name'), blank=True, max_length=100)
     location = models.ForeignKey(
-        'geo.Location', blank=True,
-        verbose_name=_('Work location'),
-        null=True, on_delete=models.SET_NULL)
-
-    location_verified = models.BooleanField(
-        default=False,
-        help_text=_('Work location is verified by the user')
+        'geo.Location', blank=True, verbose_name=_('Work location'), null=True, on_delete=models.SET_NULL
     )
+
+    location_verified = models.BooleanField(default=False, help_text=_('Work location is verified by the user'))
 
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
@@ -157,29 +153,29 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     about_me = models.TextField(_('about me'), blank=True)
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(
-        _('picture'), blank=True, upload_to='profiles',
-
+        _('picture'),
+        blank=True,
+        upload_to='profiles',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     is_co_financer = models.BooleanField(
         _('Co-financer'),
         default=False,
-        help_text=_('Donations by co-financers are shown in a separate list on the '
-                    'project page. These donation will always be visible.'))
-    can_pledge = models.BooleanField(
-        _('Can pledge'),
-        default=False,
-        help_text=_('User can create a pledge donation.'))
+        help_text=_(
+            'Donations by co-financers are shown in a separate list on the '
+            'project page. These donation will always be visible.'
+        ),
+    )
+    can_pledge = models.BooleanField(_('Can pledge'), default=False, help_text=_('User can create a pledge donation.'))
     can_do_bank_transfer = models.BooleanField(
-        _('Can do bank transfer'),
-        default=False,
-        help_text=_('Bank transfers are only available to selected regions.'))
+        _('Can do bank transfer'), default=False, help_text=_('Bank transfers are only available to selected regions.')
+    )
 
     # Use lazy for the choices and default, so that tenant properties
     # will be correctly loaded
@@ -188,7 +184,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         choices=lazy(get_language_choices, tuple)(),
         default=lazy(get_default_language, str)(),
         help_text=_('Language used for website and emails.'),
-        max_length=7
+        max_length=7,
     )
     translate_user_content = models.BooleanField(
         _('Translate user content'),
@@ -199,9 +195,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     share_money = models.BooleanField(_('share money'), default=False)
     newsletter = models.BooleanField(_('newsletter'), default=True, help_text=_('Subscribe to newsletter.'))
     campaign_notifications = models.BooleanField(
-        _('Updates'),
-        help_text=_('Updates from initiatives and activities that this person follows'),
-        default=True
+        _('Updates'), help_text=_('Updates from initiatives and activities that this person follows'), default=True
     )
     submitted_initiative_notifications = models.BooleanField(
         _('New activities/initiatives notification'),
@@ -209,7 +203,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             'Receive a notification via email when new activities and initiatives get submitted '
             'or published. This depends on the review setting of the platform.'
         ),
-        default=False
+        default=False,
     )
 
     website = models.URLField(_('website'), blank=True)
@@ -219,12 +213,14 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     partner_organization = models.ForeignKey(
         'organizations.Organization',
-        blank=True, null=True,
-        help_text=_('Users that are connected to a partner organisation '
-                    'will skip the organisation step in initiative create.'),
+        blank=True,
+        null=True,
+        help_text=_(
+            'Users that are connected to a partner organisation will skip the organisation step in initiative create.'
+        ),
         related_name='partner_organization_members',
         verbose_name=_('Partner organisation'),
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
 
     is_anonymized = models.BooleanField(_('Is anonymized'), default=False)
@@ -247,24 +243,23 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             ('api_add_member', 'Can add members through the API'),
             ('api_change_member', 'Can change members through the API'),
             ('api_delete_member', 'Can delete members through the API'),
-
             ('api_read_own_member', 'Can view own members through the API'),
             ('api_change_own_member', 'Can change own members through the API'),
             ('api_delete_own_member', 'Can delete own members through the API'),
         )
 
-    class JSONAPIMeta():
+    class JSONAPIMeta:
         resource_name = 'members'
 
     def update_deleted_timestamp(self):
-        """ Automatically set or unset the deleted timestamp."""
+        """Automatically set or unset the deleted timestamp."""
         if not self.is_active and self.deleted is None:
             self.deleted = timezone.now()
         elif self.is_active and self.deleted is not None:
             self.deleted = None
 
     def generate_username(self):
-        """ Generate and set a username if it hasn't already been set. """
+        """Generate and set a username if it hasn't already been set."""
         if not self.username:
             username = self.email
             original_username = username
@@ -293,8 +288,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         Returns the first_name plus the last_name, with a space in between.
         """
         from ..members.models import MemberPlatformSettings
+
         member_settings = MemberPlatformSettings.load()
-        full_name = u'{0} {1}'.format(self.first_name, self.last_name)
+        full_name = '{0} {1}'.format(self.first_name, self.last_name)
         if member_settings.display_member_names == 'first_name_strict':
             full_name = self.first_name
         return full_name.strip()
@@ -370,8 +366,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def is_supporter(self):
         from bluebottle.funding.states import DonorStateMachine
         from bluebottle.funding.models import Donor
-        return bool(self.contributor_set.instance_of(Donor).
-                    filter(status=DonorStateMachine.succeeded.value).count())
+
+        return bool(self.contributor_set.instance_of(Donor).filter(status=DonorStateMachine.succeeded.value).count())
 
     @cached_property
     def is_volunteer(self):
@@ -399,20 +395,20 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         from bluebottle.funding.states import DonorStateMachine
         from bluebottle.funding.models import Donor
         from bluebottle.funding.utils import calculate_total
-        donations = self.contributor_set.instance_of(Donor).filter(
-            status=DonorStateMachine.succeeded.value
-        )
+
+        donations = self.contributor_set.instance_of(Donor).filter(status=DonorStateMachine.succeeded.value)
         return calculate_total(donations)
 
     @cached_property
     def time_spent(self):
         from bluebottle.time_based.models import TimeContribution, TimeContributionStateMachine
-        total = TimeContribution.objects.filter(
-            contributor__user=self,
-            status=TimeContributionStateMachine.succeeded.value
-        ).aggregate(
-            time_spent=models.Sum('value')
-        )['time_spent'] or datetime.timedelta()
+
+        total = (
+            TimeContribution.objects.filter(
+                contributor__user=self, status=TimeContributionStateMachine.succeeded.value
+            ).aggregate(time_spent=models.Sum('value'))['time_spent']
+            or datetime.timedelta()
+        )
 
         return total.total_seconds() / 3600
 
@@ -442,11 +438,13 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
 
     USER_MODEL = get_user_model()
-    if getattr(settings, "SEND_WELCOME_MAIL") and \
-            isinstance(instance, USER_MODEL) and \
-            created and \
-            instance.is_active and \
-            not instance.welcome_email_is_sent:
+    if (
+        getattr(settings, 'SEND_WELCOME_MAIL')
+        and isinstance(instance, USER_MODEL)
+        and created
+        and instance.is_active
+        and not instance.welcome_email_is_sent
+    ):
         if valid_email(instance.email):
             send_welcome_mail(user=instance)
 

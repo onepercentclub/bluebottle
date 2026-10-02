@@ -13,9 +13,12 @@ from bluebottle.wallposts.models import Wallpost
 
 for client in Client.objects.all():
     with LocalTenant(client):
-        duplicate = Member.objects.annotate(
-            lower=Lower('email')
-        ).values('lower').annotate(count=Count('lower')).filter(count__gt=1)
+        duplicate = (
+            Member.objects.annotate(lower=Lower('email'))
+            .values('lower')
+            .annotate(count=Count('lower'))
+            .filter(count__gt=1)
+        )
         for result in duplicate:
             first, *duplicates = Member.objects.filter(email__iexact=result['lower']).order_by('date_joined')
             for duplicate in duplicates:

@@ -33,6 +33,7 @@ class TransitionMessage(object):
     The value is taken as an attribute of the related object (self.obj).
     So in the example if the transition is on initiative it wil be `initiative.title`.
     """
+
     subject = 'Status changed'
     template = 'messages/base'
     context = {}
@@ -79,13 +80,13 @@ class TransitionMessage(object):
     @property
     def generic_content(self):
         context = self.get_generic_context()
-        template = loader.get_template("mails/{}.html".format(self.template))
+        template = loader.get_template('mails/{}.html'.format(self.template))
         return template.render(context)
 
     @property
     def generic_content_html(self):
         context = self.get_generic_context()
-        template = loader.get_template("mails/{}.html".format(self.template))
+        template = loader.get_template('mails/{}.html'.format(self.template))
         return template.render(context)
 
     @property
@@ -97,7 +98,7 @@ class TransitionMessage(object):
         context = self.get_context(recipient)
         if obj:
             context['obj'] = obj
-        template = loader.get_template("mails/{}.html".format(self.template))
+        template = loader.get_template('mails/{}.html'.format(self.template))
         return template.render(context)
 
     def get_content_text(self, recipient):
@@ -137,7 +138,7 @@ class TransitionMessage(object):
     def _render_message_block_html(self, context):
         context = dict(context)
         context['only_message'] = True
-        template = loader.get_template("mails/{}.html".format(self.template))
+        template = loader.get_template('mails/{}.html'.format(self.template))
         return template.render(context)
 
     def attachments(self, recipients):
@@ -145,16 +146,17 @@ class TransitionMessage(object):
 
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
+
         context = {
-            "site": tenant_url(),
-            "site_name": tenant_name(),
-            "language": recipient.primary_language,
-            "contact_email": properties.CONTACT_EMAIL,
-            "recipient_name": recipient.first_name,
-            "first_name": recipient.first_name,
-            "action_link": self.get_action_link(recipient),
-            "action_title": getattr(self, "action_title", None),
-            "utm_campaign": self.__class__.__name__,
+            'site': tenant_url(),
+            'site_name': tenant_name(),
+            'language': recipient.primary_language,
+            'contact_email': properties.CONTACT_EMAIL,
+            'recipient_name': recipient.first_name,
+            'first_name': recipient.first_name,
+            'action_link': self.get_action_link(recipient),
+            'action_title': getattr(self, 'action_title', None),
+            'utm_campaign': self.__class__.__name__,
         }
         for key, item in list(self.context.items()):
             try:
@@ -173,7 +175,7 @@ class TransitionMessage(object):
         return context
 
     def get_action_link(self, recipient):
-        return getattr(self, "action_link", None)
+        return getattr(self, 'action_link', None)
 
     def __init__(self, obj, **options):
         self.obj = obj
@@ -191,16 +193,19 @@ class TransitionMessage(object):
         return self.template
 
     def get_message_template(self):
-        path = "{}.{}".format(self.__module__, self.__class__.__name__)
+        path = '{}.{}'.format(self.__module__, self.__class__.__name__)
         return MessageTemplate.objects.filter(message=path).first()
 
     def already_send(self, recipient):
-        return Message.objects.filter(
-            template=self.get_template(),
-            recipient=recipient,
-            content_type=get_content_type_for_model(self.obj),
-            object_id=self.obj.pk
-        ).count() > 0
+        return (
+            Message.objects.filter(
+                template=self.get_template(),
+                recipient=recipient,
+                content_type=get_content_type_for_model(self.obj),
+                object_id=self.obj.pk,
+            ).count()
+            > 0
+        )
 
     def get_messages(self, **base_context):
         custom_message = self.options.get('custom_message', '')
@@ -240,7 +245,7 @@ class TransitionMessage(object):
                     recipient=recipient,
                     body_html=body_html,
                     bcc=self.get_bcc_addresses(),
-                    custom_message=custom_message
+                    custom_message=custom_message,
                 )
 
     def get_recipients(self):
@@ -268,15 +273,12 @@ class TransitionMessage(object):
         cache.set(self.task_id, True, self.delay)
 
         from django.conf import settings
+
         if getattr(settings, 'TESTING', False) or getattr(settings, 'CELERY_ALWAYS_EAGER', False):
             compose_and_send(self, connection.tenant)
             return
 
-        compose_and_send.apply_async(
-            [self, connection.tenant],
-            countdown=self.delay,
-            task_id=self.task_id
-        )
+        compose_and_send.apply_async([self, connection.tenant], countdown=self.delay, task_id=self.task_id)
 
 
 @app.task(acks_late=True)

@@ -39,9 +39,7 @@ class TranslatableLabelAdminMixin:
         return form
 
     class Media:
-        css = {
-            'all': ('admin/css/translatable-fields.css',)
-        }
+        css = {'all': ('admin/css/translatable-fields.css',)}
 
     def translatable_info(self, obj):
         return admin_info_box(
@@ -74,10 +72,4 @@ class TranslationAdmin(admin.ModelAdmin):
 
     truncated_text.admin_order_field = _('Text')
 
-    fields = (
-        'text',
-        'source_language',
-        'translation',
-        'target_language',
-        'created'
-    )
+    fields = ('text', 'source_language', 'translation', 'target_language', 'created')

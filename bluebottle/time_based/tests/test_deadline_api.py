@@ -44,9 +44,7 @@ class DeadlineActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestC
     serializer = DeadlineActivitySerializer
     factory = DeadlineActivityFactory
     fields = TimeBasedActivityListAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
-    attributes = TimeBasedActivityListAPITestCase.attributes + [
-        'capacity', 'deadline', 'duration', 'is-online'
-    ]
+    attributes = TimeBasedActivityListAPITestCase.attributes + ['capacity', 'deadline', 'duration', 'is-online']
 
     def setUp(self):
         super().setUp()
@@ -67,30 +65,24 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
     factory = DeadlineActivityFactory
 
     fields = TimeBasedActivityDetailAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
-    attributes = TimeBasedActivityDetailAPITestCase.attributes + [
-        'capacity', 'deadline', 'duration', 'is-online'
-    ]
+    attributes = TimeBasedActivityDetailAPITestCase.attributes + ['capacity', 'deadline', 'duration', 'is-online']
 
     defaults = dict(
         TimeBasedActivityDetailAPITestCase.defaults,
         **{
             'start': date.today() + timedelta(days=10),
             'deadline': date.today() + timedelta(days=20),
-        }
+        },
     )
 
     def test_registration_count(self):
-        DeadlineRegistrationFactory.create_batch(1, status="new", activity=self.model)
-        DeadlineRegistrationFactory.create_batch(
-            2, status="rejected", activity=self.model
-        )
-        DeadlineRegistrationFactory.create_batch(
-            3, status="accepted", activity=self.model
-        )
+        DeadlineRegistrationFactory.create_batch(1, status='new', activity=self.model)
+        DeadlineRegistrationFactory.create_batch(2, status='rejected', activity=self.model)
+        DeadlineRegistrationFactory.create_batch(3, status='accepted', activity=self.model)
 
         self.perform_get(user=self.model.owner)
 
-        self.assertMeta("registration-status", {"accepted": 3, "new": 1, "rejected": 2})
+        self.assertMeta('registration-status', {'accepted': 3, 'new': 1, 'rejected': 2})
 
 
 class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):
@@ -104,7 +96,7 @@ class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListA
         **{
             'start': date.today() + timedelta(days=10),
             'deadline': date.today() + timedelta(days=20),
-        }
+        },
     )
 
 
@@ -251,16 +243,8 @@ class DeadlineActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
 
     def test_get_with_segments(self):
         segment_type = SegmentTypeFactory.create()
-        segment1 = SegmentFactory.create(
-            segment_type=segment_type,
-            slug='vis',
-            name='Vis'
-        )
-        segment2 = SegmentFactory.create(
-            segment_type=segment_type,
-            slug='vlees',
-            name='Vlees'
-        )
+        segment1 = SegmentFactory.create(segment_type=segment_type, slug='vis', name='Vis')
+        segment2 = SegmentFactory.create(segment_type=segment_type, slug='vlees', name='Vlees')
         self.participants[0].user.segments.add(segment1)
         reg_date = now() - timedelta(days=10)
         self.participants[1].user.segments.add(segment1)
@@ -280,19 +264,25 @@ class DeadlineActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', segment_type.name)
+            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', segment_type.name),
         )
 
         user = self.participants[0].user
 
         self.assertEqual(
             tuple(sheet.values)[1],
-            (user.email, user.full_name, reg_date.strftime('%d-%m-%y %H:%M'), 'new', None, segment1.name)
+            (user.email, user.full_name, reg_date.strftime('%d-%m-%y %H:%M'), 'new', None, segment1.name),
         )
 
         user = self.participants[1].user
         self.assertEqual(
             tuple(sheet.values)[2],
-            (user.email, user.full_name, reg_date.strftime('%d-%m-%y %H:%M'), 'new', None,
-             f"{segment1.name}, {segment2.name}")
+            (
+                user.email,
+                user.full_name,
+                reg_date.strftime('%d-%m-%y %H:%M'),
+                'new',
+                None,
+                f'{segment1.name}, {segment2.name}',
+            ),
         )

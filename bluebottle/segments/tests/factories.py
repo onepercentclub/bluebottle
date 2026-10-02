@@ -5,7 +5,7 @@ from bluebottle.test.factory_models import generate_rich_text
 
 
 class SegmentTypeFactory(factory.DjangoModelFactory):
-    class Meta():
+    class Meta:
         model = SegmentType
 
     name = factory.Faker('sentence')
@@ -13,15 +13,12 @@ class SegmentTypeFactory(factory.DjangoModelFactory):
 
 
 class SegmentFactory(factory.DjangoModelFactory):
-
-    class Meta():
+    class Meta:
         model = Segment
 
     name = factory.Sequence(lambda n: 'Segment - {0}'.format(n))
 
-    alternate_names = factory.List([
-        factory.Faker('word')
-    ])
+    alternate_names = factory.List([factory.Faker('word')])
 
     segment_type = factory.SubFactory(SegmentTypeFactory)
 

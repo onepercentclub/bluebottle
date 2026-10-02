@@ -19,7 +19,6 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -28,15 +27,11 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         super(TestInitiativeAdmin, self).setUp()
         self.site = AdminSite()
         self.initiative_admin = InitiativeAdmin(Initiative, self.site)
-        self.initiative = InitiativeFactory.create(
-            title='The Dharma Initiative',
-            reviewer=None
-        )
+        self.initiative = InitiativeFactory.create(title='The Dharma Initiative', reviewer=None)
         self.initiative.states.submit(save=True)
 
         self.approve_url = reverse(
-            'admin:initiatives_initiative_state_transition',
-            args=(self.initiative.id, 'states', 'approve')
+            'admin:initiatives_initiative_state_transition', args=(self.initiative.id, 'states', 'approve')
         )
 
     def test_initiative_admin(self):
@@ -44,8 +39,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.image = image
         self.initiative.save()
         self.client.force_login(self.superuser)
-        admin_url = reverse('admin:initiatives_initiative_change',
-                            args=(self.initiative.id,))
+        admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
         response = self.client.get(admin_url)
         self.assertContains(response, image.id)
         self.assertContains(response, 'View on site')
@@ -58,8 +52,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.image = image
         self.initiative.save()
         self.client.force_login(self.superuser)
-        admin_url = reverse('admin:initiatives_initiative_change',
-                            args=(123456789,))
+        admin_url = reverse('admin:initiatives_initiative_change', args=(123456789,))
         response = self.client.get(admin_url)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '/en/admin/')
@@ -68,7 +61,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(
             str(messages[0]),
             'Initiative with ID “123456789” can’t be found. '
-            'Perhaps you don’t have permission to view it or maybe it was deleted?'
+            'Perhaps you don’t have permission to view it or maybe it was deleted?',
         )
 
     def test_initiative_admin_with_organization_contact(self):
@@ -78,8 +71,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.save()
         self.assertIsNotNone(self.initiative.organization_contact)
         self.client.force_login(self.superuser)
-        admin_url = reverse('admin:initiatives_initiative_change',
-                            args=(self.initiative.id,))
+        admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
         response = self.client.get(admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -93,10 +85,9 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Send email notifications')
 
         # Confirm should change status
-        response = self.app.post(self.approve_url, {
-            'confirm': "Yes, I'm sure",
-            'send_messages': 'on'
-        }, user=self.superuser)
+        response = self.app.post(
+            self.approve_url, {'confirm': "Yes, I'm sure", 'send_messages': 'on'}, user=self.superuser
+        )
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
@@ -113,9 +104,13 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Send email')
 
         # Confirm should change status
-        response = self.app.post(self.approve_url, {
-            'confirm': "Yes, I'm sure",
-        }, user=self.superuser)
+        response = self.app.post(
+            self.approve_url,
+            {
+                'confirm': "Yes, I'm sure",
+            },
+            user=self.superuser,
+        )
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
@@ -124,8 +119,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
     def test_review_initiative_request_changes(self):
         request_changes_url = reverse(
-            'admin:initiatives_initiative_state_transition',
-            args=(self.initiative.id, 'states', 'request_changes')
+            'admin:initiatives_initiative_state_transition', args=(self.initiative.id, 'states', 'request_changes')
         )
 
         self.client.force_login(self.superuser)
@@ -134,14 +128,12 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'You are about to')
-        self.assertNotContains(response, 'Don\'t send any messages')
+        self.assertNotContains(response, "Don't send any messages")
 
         # Confirm should change status
-        response = self.app.post(self.approve_url, {
-            'confirm': "Yes, I'm sure",
-            'send_messages': 'on',
-            'post': 'yes'
-        }, user=self.superuser)
+        response = self.app.post(
+            self.approve_url, {'confirm': "Yes, I'm sure", 'send_messages': 'on', 'post': 'yes'}, user=self.superuser
+        )
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
@@ -183,9 +175,8 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
         response = self.client.get(admin_url)
         self.assertFalse(
-            '/en/admin/initiatives/initiative/{}/transition/states/delete'.format(
-                initiative.pk
-            ) in response.content.decode('utf-8')
+            '/en/admin/initiatives/initiative/{}/transition/states/delete'.format(initiative.pk)
+            in response.content.decode('utf-8')
         )
 
     def test_add_reviewer(self):
@@ -250,9 +241,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertFalse('is_open' in page.forms[1].fields)
 
     def test_admin_open_initiative_enabled(self):
-        InitiativePlatformSettingsFactory.create(
-            enable_open_initiatives=True
-        )
+        InitiativePlatformSettingsFactory.create(enable_open_initiatives=True)
         initiative = InitiativeFactory.create()
         url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
         self.app.set_user(self.staff_member)
@@ -267,7 +256,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
 
 class TestThemeAdmin(BluebottleAdminTestCase):
-
     def setUp(self):
         super(TestThemeAdmin, self).setUp()
         self.site = AdminSite()
@@ -287,7 +275,6 @@ class TestThemeAdmin(BluebottleAdminTestCase):
 
 
 class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True

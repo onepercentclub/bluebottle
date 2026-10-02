@@ -21,11 +21,13 @@ def user_can_view_contributor_updates(user, activity):
 
 
 def get_active_contributor_users(activity, exclude=()):
-    contributors = activity.contributors.filter(
-        status__in=ACTIVE_CONTRIBUTOR_STATUSES,
-        user__isnull=False,
-        user__campaign_notifications=True,
-    ).exclude(
-        user__in=exclude
-    ).select_related('user')
+    contributors = (
+        activity.contributors.filter(
+            status__in=ACTIVE_CONTRIBUTOR_STATUSES,
+            user__isnull=False,
+            user__campaign_notifications=True,
+        )
+        .exclude(user__in=exclude)
+        .select_related('user')
+    )
     return list({contributor.user for contributor in contributors})

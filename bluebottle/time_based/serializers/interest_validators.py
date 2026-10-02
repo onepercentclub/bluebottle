@@ -93,15 +93,9 @@ class UserAlreadyInvolvedValidator:
         registration_validator=None,
         activity_participant_validator=None,
     ):
-        self.slot_participant_validator = (
-            slot_participant_validator or ActiveSlotParticipantValidator()
-        )
-        self.registration_validator = (
-            registration_validator or ActiveRegistrationValidator()
-        )
-        self.activity_participant_validator = (
-            activity_participant_validator or ActiveActivityParticipantValidator()
-        )
+        self.slot_participant_validator = slot_participant_validator or ActiveSlotParticipantValidator()
+        self.registration_validator = registration_validator or ActiveRegistrationValidator()
+        self.activity_participant_validator = activity_participant_validator or ActiveActivityParticipantValidator()
 
     def is_involved(self, user, activity, slot=None):
         if slot:

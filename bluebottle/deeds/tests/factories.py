@@ -22,15 +22,9 @@ class DeedFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
-    start = factory.fuzzy.FuzzyDate(
-        date.today(),
-        date.today() + timedelta(days=2)
-    )
+    start = factory.fuzzy.FuzzyDate(date.today(), date.today() + timedelta(days=2))
 
-    end = factory.fuzzy.FuzzyDate(
-        date.today() + timedelta(days=3),
-        date.today() + timedelta(days=20)
-    )
+    end = factory.fuzzy.FuzzyDate(date.today() + timedelta(days=3), date.today() + timedelta(days=20))
 
     theme = factory.SubFactory(ThemeFactory)
 

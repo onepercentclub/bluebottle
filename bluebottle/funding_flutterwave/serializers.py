@@ -5,17 +5,15 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment, Flutterwav
 
 
 class FlutterwavePaymentSerializer(PaymentSerializer):
-
     class Meta(PaymentSerializer.Meta):
         model = FlutterwavePayment
-        fields = PaymentSerializer.Meta.fields + ('tx_ref', )
+        fields = PaymentSerializer.Meta.fields + ('tx_ref',)
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/flutterwave-payments'
 
 
 class FlutterwaveBankAccountSerializer(BaseBankAccountSerializer):
-
     class Meta(BaseBankAccountSerializer.Meta):
         model = FlutterwaveBankAccount
 
@@ -23,7 +21,7 @@ class FlutterwaveBankAccountSerializer(BaseBankAccountSerializer):
             'account_holder_name',
             'bank_code',
             'bank_country_code',
-            'account_number'
+            'account_number',
         )
 
     included_serializers = {
@@ -35,7 +33,6 @@ class FlutterwaveBankAccountSerializer(BaseBankAccountSerializer):
 
 
 class PayoutFlutterwaveBankAccountSerializer(serializers.ModelSerializer):
-
     class Meta(BaseBankAccountSerializer.Meta):
         model = FlutterwaveBankAccount
 

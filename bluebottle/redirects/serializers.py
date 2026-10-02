@@ -4,7 +4,6 @@ from bluebottle.redirects.models import Redirect
 
 
 class RedirectSerializer(ModelSerializer):
-
     class Meta:
         model = Redirect
         fields = ('id', 'old_path', 'new_path')

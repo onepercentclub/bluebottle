@@ -32,25 +32,32 @@ class InterestList(JsonApiViewMixin, ListCreateAPIView):
         if self.request.method != 'GET':
             return queryset
 
-        return queryset.filter(
-            user=self.request.user,
-        ).filter(
-            Q(
-                slot__isnull=True,
-                activity__status__in=INTEREST_VISIBLE_STATUSES,
-            ) | Q(
-                slot__isnull=False,
-                slot__status__in=INTEREST_VISIBLE_STATUSES,
-                activity__status__in=INTEREST_VISIBLE_STATUSES,
+        return (
+            queryset.filter(
+                user=self.request.user,
             )
-        ).select_related(
-            'slot',
-        ).prefetch_related(
-            'activity',
-            'activity__image',
-            'activity__initiative',
-            'activity__initiative__image',
-        ).order_by('-created')
+            .filter(
+                Q(
+                    slot__isnull=True,
+                    activity__status__in=INTEREST_VISIBLE_STATUSES,
+                )
+                | Q(
+                    slot__isnull=False,
+                    slot__status__in=INTEREST_VISIBLE_STATUSES,
+                    activity__status__in=INTEREST_VISIBLE_STATUSES,
+                )
+            )
+            .select_related(
+                'slot',
+            )
+            .prefetch_related(
+                'activity',
+                'activity__image',
+                'activity__initiative',
+                'activity__initiative__image',
+            )
+            .order_by('-created')
+        )
 
 
 class InterestDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
@@ -66,13 +73,9 @@ class InterestDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     )
 
 
-class RelatedInterestListView(
-    AnonymizeMembersMixin, JsonApiViewMixin, ListAPIView
-):
+class RelatedInterestListView(AnonymizeMembersMixin, JsonApiViewMixin, ListAPIView):
     permission_classes = (RelatedActivityInterestListPermission,)
-    queryset = Interest.objects.prefetch_related(
-        'user', 'activity', 'slot'
-    ).order_by('-created', 'pk')
+    queryset = Interest.objects.prefetch_related('user', 'activity', 'slot').order_by('-created', 'pk')
     serializer_class = InterestSerializer
     activity_level_only = True
 

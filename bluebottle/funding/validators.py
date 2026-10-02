@@ -19,11 +19,11 @@ class KYCReadyValidator(Validator):
 
     def is_valid(self):
         return (
-            self.instance.pk and
-            self.instance.payout_account
-            and self.instance.payout_account.status == "verified"
+            self.instance.pk
+            and self.instance.payout_account
+            and self.instance.payout_account.status == 'verified'
             and self.instance.bank_account
-            and self.instance.bank_account.status == "verified"
+            and self.instance.bank_account.status == 'verified'
         )
 
 
@@ -34,12 +34,9 @@ class DeadlineValidator(Validator):
 
     def is_valid(self):
         return (
-            self.instance.status in ('submitted', 'needs_work', 'draft', 'partially_funded', 'succeeded') or
-            self.instance.duration or
-            (
-                self.instance.deadline and
-                now() < self.instance.deadline
-            )
+            self.instance.status in ('submitted', 'needs_work', 'draft', 'partially_funded', 'succeeded')
+            or self.instance.duration
+            or (self.instance.deadline and now() < self.instance.deadline)
         )
 
 
@@ -50,12 +47,9 @@ class DeadlineMaxValidator(Validator):
 
     def is_valid(self):
         return (
-            self.instance.status in ('submitted', 'needs_work', 'draft') or
-            self.instance.duration or
-            (
-                self.instance.deadline and
-                self.instance.deadline <= now() + timedelta(days=60)
-            )
+            self.instance.status in ('submitted', 'needs_work', 'draft')
+            or self.instance.duration
+            or (self.instance.deadline and self.instance.deadline <= now() + timedelta(days=60))
         )
 
 

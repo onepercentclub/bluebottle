@@ -29,12 +29,6 @@ def check_grant_payment_readiness():
                 payment.check_status()
 
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    grant_provider_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), grant_provider_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/20'),
-    check_grant_payment_readiness.s()
-)
+app.add_periodic_task(crontab(minute='*/20'), check_grant_payment_readiness.s())

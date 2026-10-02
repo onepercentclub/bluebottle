@@ -19,6 +19,7 @@ class Organization(ValidatedModelMixin, models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
     """
+
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100)
     description = models.TextField(_('description'), default='', blank=True)
@@ -28,12 +29,10 @@ class Organization(ValidatedModelMixin, models.Model):
 
     verified = models.BooleanField(_('Verified'), default=False)
 
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
-    )
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE)
 
     origin = models.ForeignKey(
-        'activity_pub.Organization', null=True, related_name="organizations", on_delete=models.SET_NULL
+        'activity_pub.Organization', null=True, related_name='organizations', on_delete=models.SET_NULL
     )
 
     website = models.URLField(_('website'), blank=True)
@@ -44,13 +43,12 @@ class Organization(ValidatedModelMixin, models.Model):
         max_length=255,
         null=True,
         upload_to='partner_organization_logos/',
-
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     required_fields = ['name']
@@ -69,6 +67,7 @@ class Organization(ValidatedModelMixin, models.Model):
     @property
     def activity_pub_url(self):
         from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+
         try:
             return self.activity_pub_organization.iri
         except ActivityPubOrganization.DoesNotExist:
@@ -76,8 +75,8 @@ class Organization(ValidatedModelMixin, models.Model):
 
     class Meta(object):
         ordering = ['name']
-        verbose_name = _("organisation")
-        verbose_name_plural = _("organisations")
+        verbose_name = _('organisation')
+        verbose_name_plural = _('organisations')
 
     class JSONAPIMeta:
         resource_name = 'organizations'
@@ -87,12 +86,11 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
     """
     Basic details for an organization contact
     """
+
     name = models.TextField(_('name'), null=True, blank=True, max_length=100)
     email = models.EmailField(_('email'), null=True, blank=True, max_length=254)
     phone = models.TextField(_('phone'), null=True, blank=True, max_length=40)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
-    )
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE)
 
     created = models.DateTimeField(_('created'), auto_now_add=True)
     updated = models.DateTimeField(_('updated'), auto_now=True)

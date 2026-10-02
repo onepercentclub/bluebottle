@@ -6,7 +6,11 @@ from bluebottle.clients import properties
 from bluebottle.cms.models import HomePage
 from bluebottle.cms.permissions import PlatformPagePermission
 from bluebottle.cms.serializers import (
-    HomeSerializer, PageSerializer, BlockSerializer, NewsItemSerializer, PlatformPageSerializer
+    HomeSerializer,
+    PageSerializer,
+    BlockSerializer,
+    NewsItemSerializer,
+    PlatformPageSerializer,
 )
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page, PlatformPage
@@ -36,16 +40,10 @@ class CMSDetailView(JsonApiViewMixin, RetrieveAPIView):
         queryset = self.get_queryset().published()
         language = get_language_from_request(self.request)
         try:
-            return queryset.get(
-                language=language,
-                slug=self.kwargs['slug']
-            )
+            return queryset.get(language=language, slug=self.kwargs['slug'])
         except ObjectDoesNotExist:
             try:
-                return queryset.get(
-                    language=properties.LANGUAGE_CODE,
-                    slug=self.kwargs['slug']
-                )
+                return queryset.get(language=properties.LANGUAGE_CODE, slug=self.kwargs['slug'])
             except ObjectDoesNotExist:
                 page = queryset.filter(slug=self.kwargs['slug']).first()
                 if page:
@@ -68,14 +66,10 @@ class PlatformPageDetail(CMSDetailView):
     def get_object(self, queryset=None):
         queryset = self.get_queryset()
         try:
-            return queryset.get(
-                slug=self.kwargs['slug']
-            )
+            return queryset.get(slug=self.kwargs['slug'])
         except ObjectDoesNotExist:
             try:
-                return queryset.get(
-                    slug=self.kwargs['slug']
-                )
+                return queryset.get(slug=self.kwargs['slug'])
             except ObjectDoesNotExist:
                 page = queryset.filter(slug=self.kwargs['slug']).first()
                 if page:
@@ -91,8 +85,6 @@ class NewsItemDetail(CMSDetailView):
 class NewsItemList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self, *args, **kwargs):
         language = get_language_from_request(self.request)
-        return NewsItem.objects.filter(
-            language=language
-        ).published().order_by('-publication_date', '-id')
+        return NewsItem.objects.filter(language=language).published().order_by('-publication_date', '-id')
 
     serializer_class = NewsItemSerializer

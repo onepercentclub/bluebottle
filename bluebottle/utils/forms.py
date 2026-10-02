@@ -13,7 +13,6 @@ from bluebottle.utils.utils import clean_html
 
 
 class CustomMessageFormField(QuillFormField):
-
     def __init__(self, *args, **kwargs):
         kwargs['widget'] = QuillWidget(config_name='custom_message')
         super(QuillFormField, self).__init__(*args, **kwargs)
@@ -38,10 +37,7 @@ class FSMModelFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs and False:
             for transition in attrs['Meta'].model._transitions:
-                attrs[transition[0]] = forms.ChoiceField(
-                    required=False,
-                    widget=ButtonSelectWidget()
-                )
+                attrs[transition[0]] = forms.ChoiceField(required=False, widget=ButtonSelectWidget())
 
         return super(FSMModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
@@ -55,15 +51,13 @@ class FSMModelForm(with_metaclass(FSMModelFormMetaClass, forms.ModelForm)):
 
             def get_url(name):
                 url_name = 'admin:{}_{}_transition'.format(
-                    self.instance._meta.app_label,
-                    self.instance._meta.model_name
+                    self.instance._meta.app_label, self.instance._meta.model_name
                 )
-                return reverse(
-                    url_name, args=(self.instance.pk, fsm_field, name)
-                )
+                return reverse(url_name, args=(self.instance.pk, fsm_field, name))
 
             self.fields[fsm_field].choices = [
-                (get_url(transition.name), transition.name) for transition in transitions
+                (get_url(transition.name), transition.name)
+                for transition in transitions
                 if not transition.options.get('automatic')
             ]
 
@@ -87,7 +81,7 @@ class TransitionConfirmationForm(forms.Form):
         required=False,
         widget=forms.CheckboxInput(attrs={'checked': True}),
         label=_('Send messages'),
-        help_text=_('Should messages be send or should we transition without notifying users?')
+        help_text=_('Should messages be send or should we transition without notifying users?'),
     )
 
     @classmethod
@@ -108,15 +102,15 @@ class TransitionConfirmationForm(forms.Form):
         return cls.resolve_message_class() is not None
 
     def __init__(self, *args, **kwargs):
-        self.instance = kwargs.pop("instance", None)
-        self.transition = kwargs.pop("transition", None)
+        self.instance = kwargs.pop('instance', None)
+        self.transition = kwargs.pop('transition', None)
         super().__init__(*args, **kwargs)
 
         if self.use_custom_message() and 'custom_message' not in self.fields:
             self.fields['custom_message'] = CustomMessageFormField(
                 label=_('Email message'),
                 required=False,
-                help_text=_('Edit the message text only. The greeting and link are added automatically.')
+                help_text=_('Edit the message text only. The greeting and link are added automatically.'),
             )
 
         message_class = self.resolve_message_class()

@@ -18,31 +18,27 @@ class CollectType(SortableTranslatableModel):
     disabled = models.BooleanField(
         _('disabled'),
         default=False,
-        help_text=_('Disable this item so it cannot be selected when creating an activity.')
+        help_text=_('Disable this item so it cannot be selected when creating an activity.'),
     )
 
     translations = TranslatedFields(
         name=models.CharField(
-            _('name'),
-            help_text=_('The item to be collected (E.g. Bicycles, Clothing, Groceries, …)'),
-            max_length=100
+            _('name'), help_text=_('The item to be collected (E.g. Bicycles, Clothing, Groceries, …)'), max_length=100
         ),
         unit=models.CharField(
             _('unit'),
             help_text=_(
-                'The unit in which you want to count the item '
-                '(E.g. Bicycle, Bag of clothing, Crate of groceries, …)'
+                'The unit in which you want to count the item (E.g. Bicycle, Bag of clothing, Crate of groceries, …)'
             ),
-            max_length=100
+            max_length=100,
         ),
         unit_plural=models.CharField(
             _('unit plural'),
             help_text=_(
-                'The unit in which you want to count the item '
-                '(E.g. Bicycles, Bags of clothing, Crates of groceries, …)'
+                'The unit in which you want to count the item (E.g. Bicycles, Bags of clothing, Crates of groceries, …)'
             ),
-            max_length=100
-        )
+            max_length=100,
+        ),
     )
 
     def __str__(self):
@@ -52,23 +48,20 @@ class CollectType(SortableTranslatableModel):
         verbose_name = _('items')
         verbose_name_plural = _('item')
         ordering = ('pk',)
-        permissions = (
-            ('api_read_collecttype', 'Can view collect items through API'),
-        )
+        permissions = (('api_read_collecttype', 'Can view collect items through API'),)
 
 
 class CollectActivity(Activity):
     """
     Campaign to collect goods
     """
+
     include_in_documentation = True
 
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
 
-    collect_type = models.ForeignKey(
-        CollectType, null=True, blank=True, on_delete=SET_NULL
-    )
+    collect_type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
 
     location = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
@@ -87,24 +80,20 @@ class CollectActivity(Activity):
         return self.start
 
     class Meta(object):
-        verbose_name = _("Collect Campaign")
-        verbose_name_plural = _("Collect Campaigns")
+        verbose_name = _('Collect Campaign')
+        verbose_name_plural = _('Collect Campaigns')
         permissions = (
             ('api_read_collectactivity', 'Can view collect campaign through the API'),
             ('api_add_collectactivity', 'Can add collect campaign through the API'),
             ('api_change_collectactivity', 'Can change collect campaign through the API'),
             ('api_delete_collectactivity', 'Can delete collect campaign through the API'),
-
             ('api_read_own_collectactivity', 'Can view own collect campaign through the API'),
             ('api_add_own_collectactivity', 'Can add own collect campaign through the API'),
             ('api_change_own_collectactivity', 'Can change own collect campaign through the API'),
             ('api_delete_own_collectactivity', 'Can delete own collect campaign through the API'),
         )
 
-    validators = [
-        EndDateValidator,
-        TosAcceptedValidator
-    ]
+    validators = [EndDateValidator, TosAcceptedValidator]
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'
@@ -112,11 +101,7 @@ class CollectActivity(Activity):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        return u"{}/{}/activities/details/collect/{}/{}".format(
-            domain, language,
-            self.pk,
-            self.slug
-        )
+        return '{}/{}/activities/details/collect/{}/{}'.format(domain, language, self.pk, self.slug)
 
     @property
     def uid(self):
@@ -125,7 +110,7 @@ class CollectActivity(Activity):
     @property
     def details(self):
         collect_type = _('Collecting {type}').format(type=self.collect_type)
-        return f"{self.description.html},\n {collect_type}, {self.get_absolute_url()}"
+        return f'{self.description.html},\n {collect_type}, {self.get_absolute_url()}'
 
     @property
     def google_calendar_link(self):
@@ -134,11 +119,11 @@ class CollectActivity(Activity):
         details += _('\nCollecting {type}').format(type=self.collect_type)
 
         end = self.end + timedelta(days=1)
-        dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+        dates = '{}/{}'.format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
 
-        url = u'https://calendar.google.com/calendar/render'
+        url = 'https://calendar.google.com/calendar/render'
         params = {
-            'action': u'TEMPLATE',
+            'action': 'TEMPLATE',
             'text': self.title,
             'dates': dates,
             'details': details,
@@ -148,7 +133,7 @@ class CollectActivity(Activity):
         if self.location:
             params['location'] = self.location.formatted_address
 
-        return u'{}?{}'.format(url, urlencode(params))
+        return '{}?{}'.format(url, urlencode(params))
 
     @property
     def participants(self):
@@ -159,9 +144,7 @@ class CollectActivity(Activity):
 
     @property
     def active_contributors(self):
-        return self.participants.filter(
-            status__in=['succeeded', 'accepted']
-        )
+        return self.participants.filter(status__in=['succeeded', 'accepted'])
 
     @property
     def succeeded_contributor_count(self):
@@ -169,29 +152,27 @@ class CollectActivity(Activity):
 
     @property
     def required_fields(self):
-        return super().required_fields + [
-            'title', 'description.html', 'collect_type'
-        ]
+        return super().required_fields + ['title', 'description.html', 'collect_type']
 
 
 class CollectContributor(Contributor):
     """
     A contributor to a collect campaign.
     """
+
     include_in_documentation = True
 
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
 
     class Meta(object):
-        verbose_name = _("Collect contributor")
-        verbose_name_plural = _("Collect contributors")
+        verbose_name = _('Collect contributor')
+        verbose_name_plural = _('Collect contributors')
 
         permissions = (
             ('api_read_collectcontributor', 'Can view collect contributor through the API'),
             ('api_add_collectcontributor', 'Can add collect contributor  through the API'),
             ('api_change_collectcontributor', 'Can change collect contributor  through the API'),
             ('api_delete_collectcontributor', 'Can delete collect contributor  through the API'),
-
             ('api_read_own_collectcontributor', 'Can view own collect contributor through the API'),
             ('api_add_own_collectcontributor', 'Can add own collect contributor through the API'),
             ('api_change_own_collectcontributor', 'Can change own collect contributor through the API'),
@@ -206,6 +187,7 @@ class CollectContribution(Contribution):
     """
     A contribution to a collect campaign.
     """
+
     include_in_documentation = True
 
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
@@ -217,8 +199,8 @@ class CollectContribution(Contribution):
         super().save(*args, **kwargs)
 
     class Meta(object):
-        verbose_name = _("Collect contribution")
-        verbose_name_plural = _("Collect contributions")
+        verbose_name = _('Collect contribution')
+        verbose_name_plural = _('Collect contributions')
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/collect/contributions'

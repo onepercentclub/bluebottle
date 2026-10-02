@@ -33,19 +33,16 @@ def complete(request, backend):
     try:
         user = request.backend.complete(request=request)
     except AuthCanceled:
-        raise AuthenticationFailed(
-            _('Authentication was cancelled'),
-            code="cancelled"
-        )
+        raise AuthenticationFailed(_('Authentication was cancelled'), code='cancelled')
     if not user.email:
         if user.date_joined > now() - timedelta(hours=1):
             user.delete()
         raise AuthenticationFailed(
             _('Please allow Facebook access to your email address if you wish to sign up/log in via Facebook.'),
-            code="email_required"
+            code='email_required',
         )
     if not user.is_active:
-        raise AuthenticationFailed(_('User account is disabled'), code="account_disabled")
+        raise AuthenticationFailed(_('User account is disabled'), code='account_disabled')
     return user
 
 
@@ -59,10 +56,7 @@ class SocialLoginView(JsonApiViewMixin, CreateAPIView):
         user.last_login = now()
         user.save()
 
-        serializer.instance = type('obj', (object,), {
-            'pk': user.id,
-            'token': user.get_jwt_token()
-        })
+        serializer.instance = type('obj', (object,), {'pk': user.id, 'token': user.get_jwt_token()})
 
 
 @csrf_protect
@@ -76,7 +70,7 @@ def admin_password_reset(
     token_generator=default_token_generator,
     post_reset_redirect=None,
     from_email=None,
-    extra_context=None
+    extra_context=None,
 ):
     """
     This is a copy of django.contrib.auth.views.password_reset but this
@@ -88,7 +82,7 @@ def admin_password_reset(
     else:
         post_reset_redirect = resolve_url(post_reset_redirect)
 
-    if request.method == "POST":
+    if request.method == 'POST':
         form = password_reset_form(request.POST)
         if form.is_valid():
             opts = {
@@ -124,22 +118,20 @@ def admin_logout(request, extra_context=None):
     This should *not* assume the user is already logged in.
     """
     from django.contrib.auth.views import LogoutView
+
     defaults = {
         'extra_context': {
             # Since the user isn't logged out at this point, the value of
             # has_permission must be overridden.
             'has_permission': False,
-            **(extra_context or {})
+            **(extra_context or {}),
         },
     }
     return LogoutView.as_view(**defaults)(request)
 
 
 class MethodForm(forms.Form):
-    method = forms.ChoiceField(
-        label=_("Authentication method"),
-        widget=forms.RadioSelect
-    )
+    method = forms.ChoiceField(label=_('Authentication method'), widget=forms.RadioSelect)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -167,7 +159,7 @@ class MethodForm(forms.Form):
                         'enter your phone number and receive verification codes via SMS.'
                         '</p>'
                     )
-                )
+                ),
             ),
         ]
         method.initial = method.choices[0][0]

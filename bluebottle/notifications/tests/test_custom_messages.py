@@ -173,7 +173,7 @@ def _message_cases():
             'factory': DateRegistrationFactory,
             'message': UserRegistrationRejectedNotification,
             'default_snippet': 'you have not been selected for the activity',
-        }
+        },
     ]
 
 
@@ -197,7 +197,6 @@ def _assert_custom_message_replaces_default(test_case, obj, message_class, defau
 
 
 class CustomMessageNotificationTestCase(BluebottleTestCase):
-
     def test_custom_message_replaces_default_body(self):
         for case in _message_cases():
             with self.subTest(case=case['label']):
@@ -229,7 +228,6 @@ def _form_has_custom_message_field(form_class):
 
 
 class TransitionCustomMessageCoverageTestCase(BluebottleTestCase):
-
     def test_transitions_with_custom_message_forms_have_notifications(self):
         cases = [
             (Deed, 'approve', ActivityAcceptedForm, ActivityApprovedNotification),

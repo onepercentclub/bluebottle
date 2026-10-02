@@ -5,8 +5,7 @@ from PIL import ImageFile
 
 from .admin_dashboard import *  # noqa
 
-BASE_DIR = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), os.path.pardir, os.path.pardir))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir))
 PROJECT_ROOT = BASE_DIR
 
 DEBUG = True
@@ -130,7 +129,7 @@ TEMPLATES = [
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
                 'tenant_extras.context_processors.conf_settings',
-                'tenant_extras.context_processors.tenant_properties'
+                'tenant_extras.context_processors.tenant_properties',
             ],
         },
     },
@@ -173,17 +172,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication'
+        'rest_framework.authentication.TokenAuthentication',
     ),
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'bluebottle.utils.permissions.TenantConditionalOpenClose',
-    ),
-    'DEFAULT_THROTTLE_RATES': {
-        'user': '10/hour'
-    }
+    'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
+    'DEFAULT_PERMISSION_CLASSES': ('bluebottle.utils.permissions.TenantConditionalOpenClose',),
+    'DEFAULT_THROTTLE_RATES': {'user': '10/hour'},
 }
 
 if not DEBUG:
@@ -206,9 +199,18 @@ JWT_TOKEN_RENEWAL_LIMIT = datetime.timedelta(days=90)
 JWT_EXPIRATION_DELTA = datetime.timedelta(days=7)
 
 # List of paths to ignore for locale redirects
-LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
-                          '/media', '/downloads', '/login-with',
-                          '/surveys', '/token', '/jet', '/.well-known')
+LOCALE_REDIRECT_IGNORE = (
+    '/docs',
+    '/go',
+    '/api',
+    '/media',
+    '/downloads',
+    '/login-with',
+    '/surveys',
+    '/token',
+    '/jet',
+    '/.well-known',
+)
 
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
 
@@ -224,7 +226,7 @@ AUTHENTICATION_BACKENDS = (
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'bluebottle.social.backends.NoStateGoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
-    'bluebottle.utils.backends.AnonymousAuthenticationBackend'
+    'bluebottle.utils.backends.AnonymousAuthenticationBackend',
 )
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -232,7 +234,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'bluebottle.auth.password_validation.CustomMinimumLengthValidator',
         'OPTIONS': {
             'min_length': 10,
-        }
+        },
     },
     {
         'NAME': 'bluebottle.auth.password_validation.CommonPasswordValidator',
@@ -268,15 +270,12 @@ SHARED_APPS = (
     'django_extensions',
     'django_admin_inline_paginator',
     'django_better_admin_arrayfield',
-
     # Django apps
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
-
     'mapwidgets',
-
     # 3rd party apps
     'lockdown',
     'micawber.contrib.mcdjango',  # Embedding videos
@@ -288,9 +287,7 @@ SHARED_APPS = (
     'solo',
     'django_filters',
     'multiselectfield',
-
     'djmoney.contrib.exchange',
-
 )
 
 TENANT_APPS = (
@@ -300,45 +297,35 @@ TENANT_APPS = (
     'django_otp.plugins.otp_totp',
     'two_factor',
     'two_factor.plugins.phonenumber',  # <- if you want phone number capability.
-
     'django.contrib.contenttypes',
     'polymorphic',
     'social_django',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
     'bluebottle.token_auth',
-
     'jet',
     'jet.dashboard',
     'rest_framework',
-
     'admin_tools',
     # 'admin_tools.theming',
     # 'admin_tools.menu',
     # 'admin_tools.dashboard',
-
     # Thumbnails
     'sorl.thumbnail',
-
     # FB Auth
     'bluebottle.auth',
-
     'bluebottle.fsm',
     'django.contrib.admin',
     'django.contrib.sites',
     'django.contrib.admindocs',
     'django.contrib.auth',
-
     'rest_framework.authtoken',
     'django_elasticsearch_dsl',
-
     'bluebottle.looker',
-
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',
     'bluebottle.impact',
-
     'bluebottle.transitions',
     'bluebottle.files',
     'bluebottle.follow',
@@ -398,21 +385,17 @@ TENANT_APPS = (
     'bluebottle.updates',
     'bluebottle.activity_links',
     'bluebottle.translations',
-
     # Custom dashboard
     # 'fluent_dashboard',
-
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_projects',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
-
     # Basic Bb implementations
     'bluebottle.fundraisers',
     'bluebottle.donations',
     'bluebottle.orders',
-
     # CMS page contents
     'fluent_contents',
     'fluent_contents.plugins.text',
@@ -422,9 +405,7 @@ TENANT_APPS = (
     'django_wysiwyg',
     'django.contrib.humanize',
     'django_tools',
-
     'bluebottle.cms',
-
     'django.contrib.gis',
     'djmoney',
     'solo',
@@ -435,7 +416,6 @@ TENANT_APPS = (
     'django_recaptcha',
     'colorfield',
     'django_quill',
-
     'bluebottle.activity_pub',
     'bluebottle.webfinger',
 )
@@ -446,8 +426,8 @@ CSRF_USE_SESSIONS = True
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_AGE = 24 * 60 * 60
 
-TENANT_MODEL = "clients.Client"
-TENANT_PROPERTIES = "bluebottle.clients.properties"
+TENANT_MODEL = 'clients.Client'
+TENANT_PROPERTIES = 'bluebottle.clients.properties'
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 SESSION_ENGINE = 'bluebottle.clients.session_backends'
@@ -464,23 +444,13 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'verbose': {
-            'format': '%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d %(message)s'
-        },
-        'simple': {
-            'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
-        },
-        'json': {
-            '()': 'bluebottle.utils.formatters.JsonFormatter'
-        },
+        'verbose': {'format': '%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d %(message)s'},
+        'simple': {'format': '%(asctime)s %(levelname)s %(name)s %(message)s'},
+        'json': {'()': 'bluebottle.utils.formatters.JsonFormatter'},
     },
     'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue'
-        }
+        'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'},
+        'require_debug_true': {'()': 'django.utils.log.RequireDebugTrue'},
     },
     'handlers': {
         'null': {
@@ -491,12 +461,12 @@ LOGGING = {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
+            'formatter': 'simple',
         },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
+            'class': 'django.utils.log.AdminEmailHandler',
         },
         'json': {
             'level': 'INFO',
@@ -511,11 +481,7 @@ LOGGING = {
             'formatter': 'verbose',
             'facility': 'local0',
         },
-        'default': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        }
+        'default': {'level': 'INFO', 'class': 'logging.StreamHandler', 'formatter': 'verbose'},
     },
     'loggers': {
         'django.request': {
@@ -528,18 +494,25 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO',
         },
-        "django.security.DisallowedHost": {
-            "handlers": ["null"],
-            "propagate": False,
+        'django.security.DisallowedHost': {
+            'handlers': ['null'],
+            'propagate': False,
         },
-    }
+    },
 }
 
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
 
-SOCIAL_AUTH_USER_FIELDS = ('username', 'email', 'first_name', 'last_name',)
-SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
+SOCIAL_AUTH_USER_FIELDS = (
+    'username',
+    'email',
+    'first_name',
+    'last_name',
+)
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = [
+    'email',
+]
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 SOCIAL_AUTH_USER_MODEL = 'members.Member'
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_friends', 'public_profile', 'user_birthday']
@@ -597,29 +570,38 @@ CLOSED_SITE = False
 PARTNER_LOGIN = False
 
 EXPOSED_TENANT_PROPERTIES = [
-    'mixpanel', 'analytics', 'maps_api_key', 'git_commit',
-    'social_auth_facebook_key', 'date_format', 'bb_apps', 'donation_amounts',
-    'facebook_sharing_reviewed', 'project_create_flow', 'project_create_types',
-    'project_contact_types', 'project_contact_method', 'closed_site',
-    'partner_login', 'sso_url', 'project_suggestions',
-    'readOnlyFields', 'search_options', 'tasks'
+    'mixpanel',
+    'analytics',
+    'maps_api_key',
+    'git_commit',
+    'social_auth_facebook_key',
+    'date_format',
+    'bb_apps',
+    'donation_amounts',
+    'facebook_sharing_reviewed',
+    'project_create_flow',
+    'project_create_types',
+    'project_contact_types',
+    'project_contact_method',
+    'closed_site',
+    'partner_login',
+    'sso_url',
+    'project_suggestions',
+    'readOnlyFields',
+    'search_options',
+    'tasks',
 ]
 
 STORAGES = {
-    "default": {
-        "BACKEND": 'bluebottle.utils.storage.TenantFileSystemStorage',
+    'default': {
+        'BACKEND': 'bluebottle.utils.storage.TenantFileSystemStorage',
     },
-
-    "staticfiles": {
-        "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
 }
 
-PROJECT_PAYOUT_FEES = {
-    'beneath_threshold': 1,
-    'fully_funded': .05,
-    'not_fully_funded': .05
-}
+PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': 0.05, 'not_fully_funded': 0.05}
 
 LIVE_PAYMENTS_ENABLED = False
 MINIMAL_PAYOUT_AMOUNT = 20
@@ -627,7 +609,7 @@ MINIMAL_PAYOUT_AMOUNT = 20
 CELERY_MAIL = False
 SEND_MAIL = False
 
-DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
+DJANGO_WYSIWYG_FLAVOR = 'tinymce_advanced'
 
 # Sometimes images crash projects
 # Error: Exception Value: image file is truncated (26 bytes not processed)
@@ -636,18 +618,25 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-IMAGE_ALLOWED_MIME_TYPES = (
-    'image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'
-)
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', 'image/svg+xml')
 VIDEO_FILE_ALLOWED_MIME_TYPES = (
-    'video/ogg', 'video/mp4', 'video/webm', 'video/3gpp',
-    'video/x-msvideo', 'video/quicktime'
+    'video/ogg',
+    'video/mp4',
+    'video/webm',
+    'video/3gpp',
+    'video/x-msvideo',
+    'video/quicktime',
 )
 PRIVATE_FILE_ALLOWED_MIME_TYPES = (
-    'image/png', 'image/jpeg', 'image/gif', 'image/tiff',
-    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/pdf', 'application/vnd.oasis.opendocument.text',
-    'text/rtf'
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'image/tiff',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf',
+    'application/vnd.oasis.opendocument.text',
+    'text/rtf',
 )
 
 TOKEN_AUTH_SETTINGS = 'bluebottle.clients.properties'
@@ -701,27 +690,13 @@ LOCKDOWN_URL_EXCEPTIONS = [
 
 REMINDER_MAIL_DELAY = 60 * 24 * 3  # Three days
 
-SEARCH_OPTIONS = {
-    'filters': {
-        'projects': [
-            {
-                'name': 'status'
-            },
-            {
-                'name': 'location'
-            },
-            {
-                'name': 'theme'
-            }
-        ]
-    }
-}
+SEARCH_OPTIONS = {'filters': {'projects': [{'name': 'status'}, {'name': 'location'}, {'name': 'theme'}]}}
 
 TASKS = {
     'cv_upload': 'disabled',  # allowed, required or disabled
     'accepting': 'manual',
     'plus_one': False,
-    'show_accepting': True
+    'show_accepting': True,
 }
 
 ENABLE_REFUNDS = False
@@ -736,17 +711,15 @@ QUILL_CONFIGS = {
         'theme': 'snow',
         'modules': {
             'toolbar': [
-                {
-                    "header": [4, 5, False]
-                },
+                {'header': [4, 5, False]},
                 'bold',
                 'italic',
                 'image',
                 'link',
-                {"list": 'ordered'},
-                {"list": 'bullet'},
+                {'list': 'ordered'},
+                {'list': 'bullet'},
             ],
-        }
+        },
     },
     'custom_message': {
         'theme': 'snow',
@@ -761,9 +734,7 @@ QUILL_CONFIGS = {
 
 HOMEPAGE = {}
 ELASTICSEARCH_DSL = {
-    'default': {
-        'hosts': 'localhost:9200'
-    },
+    'default': {'hosts': 'localhost:9200'},
 }
 ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'bluebottle.clients.signals.TenantCelerySignalProcessor'
 
@@ -780,14 +751,17 @@ JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
 SILENCED_SYSTEM_CHECKS = [
-    'urls.W002', 'django_recaptcha.recaptcha_test_key_error', 'models.E006', 'fields.E304',
-    'fields.E305'
+    'urls.W002',
+    'django_recaptcha.recaptcha_test_key_error',
+    'models.E006',
+    'fields.E304',
+    'fields.E305',
 ]
 
 AXES_LOCKOUT_URL = '/admin/locked/'
 AXES_FAILURE_LIMIT = 10
 AXES_COOLOFF_TIME = datetime.timedelta(minutes=10)
-AXES_CLIENT_IP_CALLABLE = "bluebottle.utils.utils.get_client_ip"
+AXES_CLIENT_IP_CALLABLE = 'bluebottle.utils.utils.get_client_ip'
 
 AXES_USERNAME_FORM_FIELD = 'email'
 
@@ -807,7 +781,7 @@ MATCHING_DISTANCE = 50
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-X_FRAME_OPTIONS = "SAMEORIGIN"
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 TWO_FACTOR_SMS_GATEWAY = 'two_factor.gateways.twilio.gateway.Twilio'
 
@@ -819,13 +793,13 @@ TWO_FACTOR_REMEMBER_COOKIE_PREFIX = '__HOST-remember-two-factor-'
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale/'),)
 
 IBAN_CHECK_API = {
-    "token_url": "https://auth-mtls-sandbox.abnamro.com/as/token.oauth2",
-    "base_url": "https://api-sandbox.abnamro.com",
-    "client_id": "client-id",
-    "api_key": "api-key",
-    "private_key": "path-to-private-key",
-    "public_cert": "path-to-public-cert",
+    'token_url': 'https://auth-mtls-sandbox.abnamro.com/as/token.oauth2',
+    'base_url': 'https://api-sandbox.abnamro.com',
+    'client_id': 'client-id',
+    'api_key': 'api-key',
+    'private_key': 'path-to-private-key',
+    'public_cert': 'path-to-public-cert',
 }
 
-DEEPL_API_KEY = "deepl-key"
-DEEPL_API_URL = "deepl-url"
+DEEPL_API_KEY = 'deepl-key'
+DEEPL_API_URL = 'deepl-url'

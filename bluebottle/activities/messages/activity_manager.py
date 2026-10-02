@@ -52,17 +52,17 @@ class ImpactReminderMessage(OwnerActivityNotification):
     """
     Remind the activity manager to add impact results to their activity.
     """
+
     subject = pgettext('platform-email', 'Please share the impact results for your activity "{title}".')
     template = 'messages/activity_manager/activity_impact_reminder'
-    context = {
-        'title': 'title'
-    }
+    context = {'title': 'title'}
 
 
 class ActivitySucceededNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity succeeded.
     """
+
     subject = pgettext('platform-email', 'Your activity "{title}" has succeeded 🎉')
     template = 'messages/activity_manager/activity_succeeded'
 
@@ -71,6 +71,7 @@ class ActivityRestoredNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity was restored
     """
+
     subject = pgettext('platform-email', 'The activity "{title}" has been restored')
     template = 'messages/activity_manager/activity_restored'
 
@@ -79,6 +80,7 @@ class ActivityRejectedNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity was rejected
     """
+
     subject = pgettext('platform-email', 'Your activity "{title}" has been rejected')
     template = 'messages/activity_manager/activity_rejected'
 
@@ -87,6 +89,7 @@ class ActivityCancelledNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity got cancelled
     """
+
     subject = pgettext('platform-email', 'Your activity "{title}" has been cancelled')
     template = 'messages/activity_manager/activity_cancelled'
 
@@ -95,6 +98,7 @@ class ActivityExpiredNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity expired (no sign-ups before registration deadline or start date)
     """
+
     subject = pgettext('platform-email', 'The registration deadline for your activity "{title}" has expired')
     template = 'messages/activity_manager/activity_expired'
 
@@ -103,7 +107,8 @@ class ActivityPublishedNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity was published
     """
-    subject = pgettext('platform-email', "Your activity on {site_name} has been published!")
+
+    subject = pgettext('platform-email', 'Your activity on {site_name} has been published!')
     template = 'messages/activity_manager/activity_published'
 
 
@@ -111,7 +116,8 @@ class ActivitySubmittedNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity was submitted
     """
-    subject = pgettext('platform-email', "You submitted an activity on {site_name}")
+
+    subject = pgettext('platform-email', 'You submitted an activity on {site_name}')
     template = 'messages/activity_manager/activity_submitted'
 
 
@@ -119,7 +125,8 @@ class ActivityApprovedNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity was approved
     """
-    subject = pgettext('platform-email', "Your activity on {site_name} has been approved!")
+
+    subject = pgettext('platform-email', 'Your activity on {site_name} has been approved!')
     template = 'messages/activity_manager/activity_approved'
 
 
@@ -127,7 +134,8 @@ class ActivityNeedsWorkNotification(OwnerActivityNotification):
     """
     Notify the activity manager that the activity needs work
     """
-    subject = pgettext('platform-email', "The activity you submitted on {site_name} needs work")
+
+    subject = pgettext('platform-email', 'The activity you submitted on {site_name} needs work')
     template = 'messages/activity_manager/activity_needs_work'
 
 
@@ -135,6 +143,7 @@ class PublishActivityReminderNotification(OwnerActivityNotification):
     """
     Notify the activity manager that an activity still needs to be published
     """
+
     subject = pgettext('platform-email', 'Publish your activity "{title}"')
     template = 'messages/activity_manager/publish_activity_reminder'
     send_once = True
@@ -150,6 +159,7 @@ class ContactActivityManagerNotification(TransitionMessage):
     """
     Notify the activity manager that someone sent a message via the contact form.
     """
+
     subject = pgettext(
         'platform-email',
         'Someone is trying to get in touch with you about your activity on "{site_name}"',
@@ -175,11 +185,13 @@ class ContactActivityManagerNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         sender = self.obj.sender
-        context.update({
-            'sender_name': sender.first_name,
-            'title': self.obj.activity.title,
-            'recipient_name': recipient.first_name,
-        })
+        context.update(
+            {
+                'sender_name': sender.first_name,
+                'title': self.obj.activity.title,
+                'recipient_name': recipient.first_name,
+            }
+        )
         return context
 
 
@@ -188,6 +200,7 @@ class TermsOfServiceNotification(OwnerActivityNotification):
     Notify the activity manager about the terms of service they accepted.
     A BCC will be sent to other email address if configured.
     """
+
     subject = pgettext('platform-email', 'Terms of service')
     template = 'messages/activity_manager/terms_of_service'
     send_once = False
@@ -205,7 +218,7 @@ class TermsOfServiceNotification(OwnerActivityNotification):
             self.obj.organization and self.obj.organization.name or self.obj.owner.full_name
         )
         # This
-        fallback_text = "Please contact your platform manager to share the Terms of Service."
+        fallback_text = 'Please contact your platform manager to share the Terms of Service.'
         settings = InitiativePlatformSettings.load()
         template = settings.terms_of_service_mail_text or settings.terms_of_service or fallback_text
         template = template.replace('\n', '<br />')

@@ -12,9 +12,7 @@ class GenerateLipishaAccountsEffect(Effect):
     def post_save(self, **kwargs):
         account = self.instance
         if not self.instance.mpesa_code:
-            self.instance.mpesa_code = generate_mpesa_account(
-                name=account.account_name
-            )
+            self.instance.mpesa_code = generate_mpesa_account(name=account.account_name)
             self.instance.save()
         if not self.instance.payout_code:
             self.instance.payout_code = generate_payout_account(
@@ -23,7 +21,7 @@ class GenerateLipishaAccountsEffect(Effect):
                 bank_name=account.bank_name,
                 bank_branch=account.branch_name,
                 bank_address=account.address,
-                swift_code=account.swift
+                swift_code=account.swift,
             )
             self.instance.save()
 

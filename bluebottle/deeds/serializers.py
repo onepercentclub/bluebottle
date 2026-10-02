@@ -1,14 +1,9 @@
 import dateutil
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework_json_api.relations import (
-    ResourceRelatedField,
-    SerializerMethodResourceRelatedField
-)
+from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
 
-from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
-)
+from bluebottle.activities.utils import BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -18,7 +13,7 @@ from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
-class StartDateValidator():
+class StartDateValidator:
     requires_context = True
 
     def __call__(self, value, serializer):
@@ -53,28 +48,26 @@ class DeedSerializer(BaseActivitySerializer):
     links = serializers.SerializerMethodField()
 
     my_contributor = SerializerMethodResourceRelatedField(
-        model=DeedParticipant,
-        read_only=True,
-        source='get_my_contributor'
+        model=DeedParticipant, read_only=True, source='get_my_contributor'
     )
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
         source='participants',
-        related_link_view_name="related-deed-participants",
-        related_link_url_kwarg="activity_id",
+        related_link_view_name='related-deed-participants',
+        related_link_url_kwarg='activity_id',
         statuses={
-            "active": ["succeeded", "accepted"],
-            "failed": ["rejected", "withdrawn", "removed"],
+            'active': ['succeeded', 'accepted'],
+            'failed': ['rejected', 'withdrawn', 'removed'],
         },
     )
 
     participants_export_url = PrivateFileSerializer(
         'deed-participant-export',
-        url_args=('pk', ),
+        url_args=('pk',),
         filename='participant.csv',
         permission=CanExportParticipantsPermission,
-        read_only=True
+        read_only=True,
     )
 
     def get_my_contributor(self, instance):
@@ -85,7 +78,7 @@ class DeedSerializer(BaseActivitySerializer):
     def get_links(self, instance):
         if instance.start and instance.end:
             return {
-                'ical': reverse_signed('deed-ical', args=(instance.pk, )),
+                'ical': reverse_signed('deed-ical', args=(instance.pk,)),
                 'google': instance.google_calendar_link,
             }
         else:
@@ -107,8 +100,8 @@ class DeedSerializer(BaseActivitySerializer):
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/deeds'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
-            "my_contributor",
-            "my_contributor.user",
+            'my_contributor',
+            'my_contributor.user',
         ]
 
     included_serializers = dict(
@@ -116,7 +109,7 @@ class DeedSerializer(BaseActivitySerializer):
         **{
             'my_contributor': 'bluebottle.deeds.serializers.DeedParticipantSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        }
+        },
     )
 
 
@@ -141,27 +134,27 @@ class DeedTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        included_resources = ['resource', ]
+        included_resources = [
+            'resource',
+        ]
         resource_name = 'activities/deed-transitions'
 
 
 class DeedParticipantSerializer(BaseContributorSerializer):
-    activity = ResourceRelatedField(
-        queryset=Deed.objects.all()
-    )
+    activity = ResourceRelatedField(queryset=Deed.objects.all())
     permissions = ResourcePermissionField('deed-participant-detail', view_args=('pk',))
 
     class Meta(BaseContributorSerializer.Meta):
         model = DeedParticipant
-        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/deeds/participants'
         included_resources = [
-            "user",
-            "user.avatar",
-            "activity",
-            "activity.goals",
+            'user',
+            'user.avatar',
+            'activity',
+            'activity.goals',
         ]
 
     included_serializers = {
@@ -188,6 +181,4 @@ class DeedParticipantTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/deeds/participant-transitions'
-        included_resources = [
-            'resource', 'resource.activity', 'resource.activity.goals'
-        ]
+        included_resources = ['resource', 'resource.activity', 'resource.activity.goals']

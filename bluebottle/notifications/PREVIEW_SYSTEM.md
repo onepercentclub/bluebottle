@@ -189,7 +189,7 @@ Edit `preview_all_messages.py` to add attributes to mock classes:
 ```python
 class MockActivity:
     def __init__(self, language='en'):
-        self.title = "Clean up the local park"
+        self.title = 'Clean up the local park'
         self.start = datetime.datetime.now()  # Add new attribute
         # ...
 ```
@@ -209,6 +209,7 @@ class MockNewFeature:
     def __init__(self, language='en'):
         # Define attributes needed by your messages
         pass
+
 
 # Then update get_mock_object():
 def get_mock_object(message_class, language='en'):

@@ -18,17 +18,11 @@ class ActivityModelTestCase(TestCase):
 
     def test_categories(self):
         deed = Deed.objects.create(initiative=self.initiative)
-        self.assertEqual(
-            len(deed.categories.all()),
-            3
-        )
+        self.assertEqual(len(deed.categories.all()), 3)
 
     def test_categories_no_initiatve(self):
         deed = Deed.objects.create(owner=BlueBottleUserFactory.create())
-        self.assertEqual(
-            len(deed.categories.all()),
-            0
-        )
+        self.assertEqual(len(deed.categories.all()), 0)
 
 
 class ActivitySegmentsTestCase(TestCase):

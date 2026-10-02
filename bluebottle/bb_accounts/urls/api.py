@@ -1,14 +1,27 @@
-
 from django.urls import path
 from django.urls import re_path
 from bluebottle.bb_accounts.views import UserActivityDetail, OldUserActivityDetail
 from bluebottle.bb_accounts.views import (
-    UserProfileDetail, CurrentUser, CurrentMemberDetail, UserCreate,
-    PasswordReset, PasswordResetConfirm, UserVerification, UserDataExport, EmailSetView,
-    PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
-    SignUpTokenConfirmation, CaptchaVerification,
-    PasswordStrengthDetail, MemberSignUp,
-    MemberProfileDetail, AvatarImage
+    UserProfileDetail,
+    CurrentUser,
+    CurrentMemberDetail,
+    UserCreate,
+    PasswordReset,
+    PasswordResetConfirm,
+    UserVerification,
+    UserDataExport,
+    EmailSetView,
+    PasswordSetView,
+    TokenLogin,
+    Logout,
+    MemberDetail,
+    SignUpToken,
+    SignUpTokenConfirmation,
+    CaptchaVerification,
+    PasswordStrengthDetail,
+    MemberSignUp,
+    MemberProfileDetail,
+    AvatarImage,
 )
 
 # Public User API:
@@ -42,26 +55,10 @@ urlpatterns = [
     path('member/current', CurrentMemberDetail.as_view(), name='current-member-detail'),
     path('member/profile/<int:pk>', MemberProfileDetail.as_view(), name='member-profile-detail'),
     path('member/<int:pk>', MemberDetail.as_view(), name='member-detail'),
-    path(
-        'profiles/<int:pk>', UserProfileDetail.as_view(),
-        name='user-profile-detail'
-    ),
+    path('profiles/<int:pk>', UserProfileDetail.as_view(), name='user-profile-detail'),
     path('tokenlogin', TokenLogin.as_view(), name='token-login'),
-    path(
-        'verification/', UserVerification.as_view(),
-        name='user-verification'
-    ),
-    path(
-        'export/', UserDataExport.as_view(),
-        name='user-export'
-    ),
-    path(
-        'password-strength', PasswordStrengthDetail.as_view(),
-        name='password-strength'
-    ),
-    re_path(
-        r'^(?P<pk>\d+)/avatar/(?P<size>\d+(x\d+)?)$',
-        AvatarImage.as_view(),
-        name='avatar-image'
-    ),
+    path('verification/', UserVerification.as_view(), name='user-verification'),
+    path('export/', UserDataExport.as_view(), name='user-export'),
+    path('password-strength', PasswordStrengthDetail.as_view(), name='password-strength'),
+    re_path(r'^(?P<pk>\d+)/avatar/(?P<size>\d+(x\d+)?)$', AvatarImage.as_view(), name='avatar-image'),
 ]

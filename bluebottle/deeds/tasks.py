@@ -18,7 +18,4 @@ def deed_tasks():
                 task.execute()
 
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    deed_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), deed_tasks.s())

@@ -20,6 +20,7 @@ class GeneratePayoutsEffect(Effect):
 
     def post_save(self, **kwargs):
         from bluebottle.funding.models import Payout
+
         try:
             Payout.generate(self.instance)
         except AssertionError:
@@ -97,15 +98,8 @@ class SetDeadlineEffect(Effect):
         if not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
             self.instance.deadline = make_aware(
-                datetime.datetime(
-                    deadline.year,
-                    deadline.month,
-                    deadline.day,
-                    hour=23,
-                    minute=59,
-                    second=59
-                ),
-                get_current_timezone()
+                datetime.datetime(deadline.year, deadline.month, deadline.day, hour=23, minute=59, second=59),
+                get_current_timezone(),
             )
 
     def __str__(self):
@@ -114,7 +108,6 @@ class SetDeadlineEffect(Effect):
 
 @python_2_unicode_compatible
 class RefundPaymentAtPSPEffect(Effect):
-
     title = _('Refund payment')
 
     template = 'admin/execute_refund_effect.html'
@@ -166,9 +159,7 @@ class SubmitConnectedActivitiesEffect(Effect):
     template = 'admin/submit_connected_activities_effect.html'
 
     def post_save(self, **kwargs):
-        for funding in self.instance.funding_set.filter(
-                status__in=('draft', 'needs_work')
-        ):
+        for funding in self.instance.funding_set.filter(status__in=('draft', 'needs_work')):
             try:
                 funding.states.submit(save=True)
             except TransitionNotPossible:
@@ -252,11 +243,7 @@ class CreateDonationEffect(Effect):
     display = False
 
     def post_save(self, **kwargs):
-        money_contribution = MoneyContribution(
-            contributor=self.instance,
-            start=now(),
-            value=self.instance.amount
-        )
+        money_contribution = MoneyContribution(contributor=self.instance, start=now(), value=self.instance.amount)
         money_contribution.save()
 
     def __str__(self):
@@ -289,6 +276,7 @@ class SelectOrCreatePayoutAccountEffect(Effect):
         user = self.instance.owner
         country = self.instance.country.alpha2_code or 'NL'
         from bluebottle.funding_stripe.models import StripePayoutAccount
+
         payout_account = StripePayoutAccount.objects.filter(
             owner=user,
         ).first()

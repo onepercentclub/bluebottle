@@ -4,11 +4,25 @@ from datetime import timedelta
 from django.utils.timezone import now
 from djmoney.money import Money
 
-from bluebottle.funding.effects import GeneratePayoutsEffect, DeletePayoutsEffect, UpdateFundingAmountsEffect, \
-    SetDeadlineEffect, GenerateDonorWallpostEffect, RemoveDonorWallpostEffect, \
-    SubmitConnectedActivitiesEffect, SetDateEffect, ClearPayoutDatesEffect
-from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
-    PlainPayoutAccountFactory, DonorFactory, PayoutFactory
+from bluebottle.funding.effects import (
+    GeneratePayoutsEffect,
+    DeletePayoutsEffect,
+    UpdateFundingAmountsEffect,
+    SetDeadlineEffect,
+    GenerateDonorWallpostEffect,
+    RemoveDonorWallpostEffect,
+    SubmitConnectedActivitiesEffect,
+    SetDateEffect,
+    ClearPayoutDatesEffect,
+)
+from bluebottle.funding.tests.factories import (
+    FundingFactory,
+    BudgetLineFactory,
+    BankAccountFactory,
+    PlainPayoutAccountFactory,
+    DonorFactory,
+    PayoutFactory,
+)
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -20,23 +34,14 @@ class FundingEffectsTests(BluebottleTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        self.payout_account = PlainPayoutAccountFactory.create(
-            status='verified'
-        )
+        self.payout_account = PlainPayoutAccountFactory.create(status='verified')
         self.bank_account = BankAccountFactory.create(connect_account=self.payout_account, status='verified')
         self.funding = FundingFactory.create(
-            initiative=self.initiative,
-            target=Money(1000, 'EUR'),
-            duration=30,
-            bank_account=self.bank_account
+            initiative=self.initiative, target=Money(1000, 'EUR'), duration=30, bank_account=self.bank_account
         )
         BudgetLineFactory.create(activity=self.funding)
         self.funding.states.submit(save=True)
-        self.donation = DonorFactory.create(
-            activity=self.funding,
-            amount=Money(100, 'EUR'),
-            status='succeeded'
-        )
+        self.donation = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'), status='succeeded')
         PledgePaymentFactory.create(donation=self.donation)
 
     def test_generate_payouts_effect(self):
@@ -70,7 +75,7 @@ class FundingEffectsTests(BluebottleTestCase):
     def test_generate_donation_wallpost_effect(self):
         PayoutFactory.create(activity=self.funding)
         effect = GenerateDonorWallpostEffect(self.donation)
-        self.assertEqual(str(effect), "Generate wall update for donation")
+        self.assertEqual(str(effect), 'Generate wall update for donation')
         effect.post_save()
         self.assertEqual(Update.objects.count(), 1)
 

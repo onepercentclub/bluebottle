@@ -10,10 +10,7 @@ from djmoney.money import Money
 from rest_framework import status
 
 from bluebottle.funding.models import FundingPlatformSettings
-from bluebottle.funding.tests.factories import (
-    FundingFactory, DonorFactory,
-    BudgetLineFactory, RewardFactory
-)
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, BudgetLineFactory, RewardFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.base import FundingStripeMixin
@@ -30,9 +27,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative.states.approve(save=True)
         bank_account = generate_mock_bank_account()
         self.funding = FundingFactory.create(
-            owner=self.superuser,
-            initiative=self.initiative,
-            bank_account=bank_account
+            owner=self.superuser, initiative=self.initiative, bank_account=bank_account
         )
         BudgetLineFactory.create(activity=self.funding)
         self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id,))
@@ -44,8 +39,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'approve')
-        reviewed_url = reverse('admin:funding_funding_state_transition',
-                               args=(self.funding.id, 'states', 'approve'))
+        reviewed_url = reverse('admin:funding_funding_state_transition', args=(self.funding.id, 'states', 'approve'))
         self.assertContains(response, reviewed_url)
         response = self.client.get(reviewed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -63,10 +57,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
         self.funding.save()
-        donation = DonorFactory.create(
-            activity=self.funding,
-            amount=Money(70, 'EUR')
-        )
+        donation = DonorFactory.create(activity=self.funding, amount=Money(70, 'EUR'))
         donation.states.succeed(save=True)
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
@@ -82,8 +73,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertContains(response, self.funding.title)
 
         self.assertContains(response, 'recalculate')
-        recalculate_url = reverse('admin:funding_funding_state_transition',
-                                  args=(self.funding.id, 'states', 'recalculate'))
+        recalculate_url = reverse(
+            'admin:funding_funding_state_transition', args=(self.funding.id, 'states', 'recalculate')
+        )
 
         self.assertContains(response, recalculate_url)
         self.client.post(recalculate_url, {'confirm': True})
@@ -94,7 +86,6 @@ class FundingTestCase(BluebottleAdminTestCase):
 
 
 class DonationAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
-
     def setUp(self):
         super(DonationAdminTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
@@ -104,25 +95,17 @@ class DonationAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
         bank_account = generate_mock_bank_account()
 
         self.funding = FundingFactory.create(
-            owner=self.superuser,
-            initiative=self.initiative,
-            bank_account=bank_account
+            owner=self.superuser, initiative=self.initiative, bank_account=bank_account
         )
         self.admin_url = reverse('admin:funding_donor_changelist')
 
     def test_donation_total(self):
-        for donation in DonorFactory.create_batch(
-                2,
-                activity=self.funding,
-                amount=Money(100, 'NGN')
-        ):
+        for donation in DonorFactory.create_batch(2, activity=self.funding, amount=Money(100, 'NGN')):
             PledgePaymentFactory.create(donation=donation)
 
         self.client.force_login(self.superuser)
         response = self.client.get(self.admin_url)
-        self.assertTrue(
-            u'Total amount:  <b>€0.60</b>'.encode('utf-8') in response.content
-        )
+        self.assertTrue('Total amount:  <b>€0.60</b>'.encode('utf-8') in response.content)
 
     def test_donation_admin_pledge_filter(self):
         for donation in DonorFactory.create_batch(2, activity=self.funding):
@@ -159,7 +142,6 @@ class DonationAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
 
 
 class PayoutAccountAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
-
     def setUp(self):
         super(PayoutAccountAdminTestCase, self).setUp()
         self.bank_account = generate_mock_bank_account()
@@ -170,20 +152,26 @@ class PayoutAccountAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
 
     def test_payout_account_admin(self):
-        connect_account = stripe.StripeObject.construct_from({
-            "id": "some-connect-id",
-            "country": "NL",
-            "requirements": stripe.StripeObject.construct_from({
-                'current_deadline': None,
-                'currently_due': [],
-                'disabled_reason': None,
-                'eventually_due': [],
-                'past_due': [],
-                'pending_verification': []
-            }, stripe.api_key),
-            "charges_enabled": True,
-            "payouts_enabled": True,
-        }, stripe.api_key)
+        connect_account = stripe.StripeObject.construct_from(
+            {
+                'id': 'some-connect-id',
+                'country': 'NL',
+                'requirements': stripe.StripeObject.construct_from(
+                    {
+                        'current_deadline': None,
+                        'currently_due': [],
+                        'disabled_reason': None,
+                        'eventually_due': [],
+                        'past_due': [],
+                        'pending_verification': [],
+                    },
+                    stripe.api_key,
+                ),
+                'charges_enabled': True,
+                'payouts_enabled': True,
+            },
+            stripe.api_key,
+        )
 
         country_spec = SimpleNamespace(**{'data': []})
 
@@ -214,7 +202,7 @@ class FundingPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url)
         page = page.click('Funding settings')
         form = page.forms[1]
-        form["anonymous_donations"] = True
+        form['anonymous_donations'] = True
         form.submit()
 
         funding_settings = FundingPlatformSettings.load()

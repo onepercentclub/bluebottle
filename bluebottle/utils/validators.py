@@ -42,10 +42,7 @@ def validate_postal_code(value, country_code):
 # Taken from django 1.11
 # TODO: use normal validator once we have upgraded
 class FileExtensionValidator(object):
-    message = _(
-        "File extension '%(extension)s' is not allowed. "
-        "Allowed extensions are: '%(allowed_extensions)s'."
-    )
+    message = _("File extension '%(extension)s' is not allowed. Allowed extensions are: '%(allowed_extensions)s'.")
     code = 'invalid_extension'
 
     def __init__(self, allowed_extensions=None, message=None, code=None):
@@ -63,19 +60,15 @@ class FileExtensionValidator(object):
             raise ValidationError(
                 self.message,
                 code=self.code,
-                params={
-                    'extension': extension,
-                    'allowed_extensions': ', '.join(self.allowed_extensions)
-                }
+                params={'extension': extension, 'allowed_extensions': ', '.join(self.allowed_extensions)},
             )
 
     def __eq__(self, other):
         return (
-            isinstance(other, self.__class__) and
-            self.allowed_extensions == other.allowed_extensions and
-            self.message == other.message and
-            self.code == other.code
-
+            isinstance(other, self.__class__)
+            and self.allowed_extensions == other.allowed_extensions
+            and self.message == other.message
+            and self.code == other.code
         )
 
     def deconstruct(self):
@@ -86,15 +79,12 @@ class FileExtensionValidator(object):
                 getattr(self, 'messsage', None),
                 getattr(self, 'code', None),
             ),
-            {}
+            {},
         )
 
 
 class FileMimetypeValidator(object):
-    message = _(
-        "Mime type '%(mimetype)s' is not allowed. "
-        "Allowed mime-types are: '%(allowed_mimetypes)s'."
-    )
+    message = _("Mime type '%(mimetype)s' is not allowed. Allowed mime-types are: '%(allowed_mimetypes)s'.")
     code = 'invalid_mimetype'
 
     def __init__(self, allowed_mimetypes=None, message=None, code=None):
@@ -117,33 +107,24 @@ class FileMimetypeValidator(object):
 
         if extension.lower() not in mimetypes.guess_all_extensions(mimetype):
             raise ValidationError(
-                message=_(
-                    "Mime type '%(mimetype)s' doesn't match the filename extension '%(extension)s'."
-                ),
+                message=_("Mime type '%(mimetype)s' doesn't match the filename extension '%(extension)s'."),
                 code=self.code,
-                params={
-                    'mimetype': mimetype,
-                    'extension': extension
-                }
+                params={'mimetype': mimetype, 'extension': extension},
             )
 
         if self.allowed_mimetypes is not None and mimetype not in self.allowed_mimetypes:
             raise ValidationError(
                 self.message,
                 code=self.code,
-                params={
-                    'mimetype': mimetype,
-                    'allowed_mimetypes': ', '.join(self.allowed_mimetypes)
-                }
+                params={'mimetype': mimetype, 'allowed_mimetypes': ', '.join(self.allowed_mimetypes)},
             )
 
     def __eq__(self, other):
         return (
-            isinstance(other, self.__class__) and
-            self.allowed_mimetypes == other.allowed_mimetypes and
-            self.message == other.message and
-            self.code == other.code
-
+            isinstance(other, self.__class__)
+            and self.allowed_mimetypes == other.allowed_mimetypes
+            and self.message == other.message
+            and self.code == other.code
         )
 
     def deconstruct(self):
@@ -154,7 +135,7 @@ class FileMimetypeValidator(object):
                 getattr(self, 'messsage', None),
                 getattr(self, 'code', None),
             ),
-            {}
+            {},
         )
 
 

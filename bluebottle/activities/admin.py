@@ -94,10 +94,7 @@ from bluebottle.utils.widgets import get_human_readable_duration
 
 @admin.register(Contributor)
 class ContributorAdmin(
-    PolymorphicParentModelAdmin,
-    RegionManagerAdminMixin,
-    ActivitySegmentAdminMixin,
-    StateMachineAdmin
+    PolymorphicParentModelAdmin, RegionManagerAdminMixin, ActivitySegmentAdminMixin, StateMachineAdmin
 ):
     base_model = Contributor
     child_models = (
@@ -114,7 +111,10 @@ class ContributorAdmin(
         RegisteredDateParticipant,
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
-    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
+    list_filter = (
+        PolymorphicChildModelFilter,
+        StateMachineFilter,
+    )
     date_hierarchy = 'created'
 
     ordering = ('-created',)
@@ -132,12 +132,8 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
     ordering = ['-created']
 
     def contributor_link(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj._meta.app_label,
-            obj._meta.model_name),
-            args=(obj.id,)
-        )
-        return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
+        url = reverse('admin:{}_{}_change'.format(obj._meta.app_label, obj._meta.model_name), args=(obj.id,))
+        return format_html("<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
     contributor_link.short_description = _('Edit')
 
@@ -167,10 +163,7 @@ class BaseContributorInline(TabularInlinePaginated):
     def edit(self, obj):
         if not obj.user and obj.activity.has_deleted_data:
             return format_html(f'<i>{_("Anonymous")}</i>')
-        url = reverse('admin:{}_{}_change'.format(
-            obj._meta.app_label,
-            obj._meta.model_name
-        ), args=(obj.id,))
+        url = reverse('admin:{}_{}_change'.format(obj._meta.app_label, obj._meta.model_name), args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, _('Edit'))
 
     edit.short_description = _('Edit')
@@ -184,11 +177,13 @@ class ContributorChildAdmin(
     PolymorphicChildModelAdmin,
     RegionManagerAdminMixin,
     ActivitySegmentAdminMixin,
-    StateMachineAdmin
+    StateMachineAdmin,
 ):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
-    list_filter = [StateMachineFilter, ]
+    list_filter = [
+        StateMachineFilter,
+    ]
     ordering = ('-created',)
     show_in_index = True
 
@@ -197,42 +192,37 @@ class ContributorChildAdmin(
     raw_id_fields = ('user',)
 
     readonly_fields = [
-        "activity",
-        "contributor_date",
-        "created",
-        "updated",
+        'activity',
+        'contributor_date',
+        'created',
+        'updated',
     ]
 
     fields = [
-        "activity",
-        "user",
-        "states",
-        "status",
-        "contributor_date",
-        "created",
-        "updated",
+        'activity',
+        'user',
+        'states',
+        'status',
+        'contributor_date',
+        'created',
+        'updated',
     ]
 
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
-        fieldsets = (
-            (_('Details'), {'fields': fields}),
-        )
+        fieldsets = ((_('Details'), {'fields': fields}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': self.superadmin_fields}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': self.superadmin_fields}),)
         return fieldsets
 
     def activity_link(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj.activity._meta.app_label,
-            obj.activity._meta.model_name),
-            args=(obj.activity.id,)
+        url = reverse(
+            'admin:{}_{}_change'.format(obj.activity._meta.app_label, obj.activity._meta.model_name),
+            args=(obj.activity.id,),
         )
-        return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
+        return format_html("<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
 
     activity_link.short_description = _('Activity')
 
@@ -260,7 +250,10 @@ class OrganizerAdmin(ContributorChildAdmin):
     raw_id_fields = ('user', 'activity')
     inlines = [EffortContributionInline]
 
-    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', ]
+    readonly_fields = ContributorChildAdmin.readonly_fields + [
+        'status',
+        'created',
+    ]
 
     date_hierarchy = 'created'
 
@@ -275,22 +268,12 @@ class OrganizerAdmin(ContributorChildAdmin):
 
 @admin.register(Contribution)
 class ContributionAdmin(
-    PolymorphicParentModelAdmin,
-    RegionManagerAdminMixin,
-    ActivitySegmentAdminMixin,
-    StateMachineAdmin
+    PolymorphicParentModelAdmin, RegionManagerAdminMixin, ActivitySegmentAdminMixin, StateMachineAdmin
 ):
     base_model = Contribution
-    child_models = (
-        MoneyContribution,
-        TimeContribution,
-        EffortContribution
-    )
+    child_models = (MoneyContribution, TimeContribution, EffortContribution)
     list_display = ['start', 'contribution_type', 'contributor_link', 'state_name', 'value']
-    list_filter = (
-        PolymorphicChildModelFilter,
-        StateMachineFilter
-    )
+    list_filter = (PolymorphicChildModelFilter, StateMachineFilter)
     date_hierarchy = 'start'
 
     ordering = ('-start',)
@@ -325,28 +308,21 @@ class ContributionAdmin(
 class ContributionChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Contribution
     raw_id_fields = ('contributor',)
-    readonly_fields = ['status', 'created', ]
-
-    fields = [
-        'contributor',
-        'start',
+    readonly_fields = [
         'status',
-        'states',
-        'created'
+        'created',
     ]
+
+    fields = ['contributor', 'start', 'status', 'states', 'created']
 
     superadmin_fields = [
         'force_status',
     ]
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = (
-            (_('Details'), {'fields': self.fields}),
-        )
+        fieldsets = ((_('Details'), {'fields': self.fields}),)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': self.superadmin_fields}),
-            )
+            fieldsets += ((_('Super admin'), {'fields': self.superadmin_fields}),)
         return fieldsets
 
 
@@ -388,9 +364,7 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
                 selected_by_type.setdefault(segment.segment_type_id, []).append(segment)
             for segment_type in SegmentType.objects.all():
                 if segment_type.field_name in self.fields:
-                    self.initial[segment_type.field_name] = selected_by_type.get(
-                        segment_type.id, []
-                    )
+                    self.initial[segment_type.field_name] = selected_by_type.get(segment_type.id, [])
 
 
 class TeamInline(admin.TabularInline):
@@ -403,11 +377,7 @@ class TeamInline(admin.TabularInline):
     ordering = ['slot__start']
 
     def team_link(self, obj):
-        return format_html(
-            '<a href="{}">{}</a>',
-            reverse('admin:activities_team_change', args=(obj.id,)),
-            obj
-        )
+        return format_html('<a href="{}">{}</a>', reverse('admin:activities_team_change', args=(obj.id,)), obj)
 
     team_link.short_description = _('Edit')
 
@@ -417,18 +387,18 @@ class TeamInline(admin.TabularInline):
                 return format_html(
                     '<a href="{}#/tab/inline_1/">{}</a>',
                     reverse('admin:activities_team_change', args=(obj.id,)),
-                    obj.slot.start.astimezone(timezone(obj.slot.location.timezone)).strftime('%c')
+                    obj.slot.start.astimezone(timezone(obj.slot.location.timezone)).strftime('%c'),
                 )
             else:
                 return format_html(
                     '<a href="{}#/tab/inline_1/">{}</a>',
                     reverse('admin:activities_team_change', args=(obj.id,)),
-                    obj.slot.start.strftime('%c')
+                    obj.slot.start.strftime('%c'),
                 )
         return format_html(
             '<a href="{}#/tab/inline_1/">{}</a>',
             reverse('admin:activities_team_change', args=(obj.id,)),
-            _('Add time slot')
+            _('Add time slot'),
         )
 
     slot_link.short_description = _('Time slot')
@@ -438,17 +408,16 @@ class ActivityBulkAddForm(forms.Form):
     emails = forms.CharField(
         label=_('Emails'),
         help_text=_(
-            'Separate the email addresses by commas, one per '
-            'line or copy & paste a column from a spreadsheet.'
+            'Separate the email addresses by commas, one per line or copy & paste a column from a spreadsheet.'
         ),
-        widget=forms.Textarea
+        widget=forms.Textarea,
     )
 
     send_messages = forms.BooleanField(
         label=_('Send messages'),
         help_text=_('Email participants that they have been added to this activity.'),
         initial=True,
-        required=False
+        required=False,
     )
 
     title = _('Bulk add participants')
@@ -460,9 +429,7 @@ class ActivityBulkAddForm(forms.Form):
             super(ActivityBulkAddForm, self).__init__()
 
     class Media:
-        css = {
-            'all': ('checkbox.css',)
-        }
+        css = {'all': ('checkbox.css',)}
 
 
 class BulkAddMixin(object):
@@ -476,27 +443,21 @@ class BulkAddMixin(object):
             path(
                 '<int:pk>/bulk_add/',
                 self.admin_site.admin_view(self.bulk_add_participants),
-                name='{}_{}_bulk_add'.format(
-                    self.model._meta.app_label,
-                    self.model._meta.model_name
-                )
+                name='{}_{}_bulk_add'.format(self.model._meta.app_label, self.model._meta.model_name),
             ),
         ]
         return extra_urls + urls
 
     def bulk_add_participants(self, request, pk, *args, **kwargs):
         activity = self.model.objects.get(pk=pk)
-        route = 'admin:{}_{}_change'.format(
-            self.model._meta.app_label,
-            self.model._meta.model_name
-        )
+        route = 'admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name)
 
         activity_detail = reverse(route, args=(pk,))
 
         if not request.user.is_superuser:
             return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
 
-        if request.method == "POST":
+        if request.method == 'POST':
             form = self.bulk_add_form(data=request.POST)
             if form.is_valid():
                 data = form.cleaned_data
@@ -508,10 +469,8 @@ class BulkAddMixin(object):
                         request,
                         messages.INFO,
                         ngettext(
-                            '{count} participant was added.',
-                            '{count} participants were added.',
-                            result['added']
-                        ).format(count=result['added'])
+                            '{count} participant was added.', '{count} participants were added.', result['added']
+                        ).format(count=result['added']),
                     )
                 if result['created']:
                     messages.add_message(
@@ -520,8 +479,8 @@ class BulkAddMixin(object):
                         ngettext(
                             '{count} user created and added as a participant.',
                             '{count} users created and added as a participant.',
-                            result['added']
-                        ).format(count=result['created'])
+                            result['added'],
+                        ).format(count=result['created']),
                     )
 
                 if result['existing']:
@@ -531,8 +490,8 @@ class BulkAddMixin(object):
                         ngettext(
                             '{count} participant already joined.',
                             '{count} participants already joined.',
-                            result['existing']
-                        ).format(count=result['existing'])
+                            result['existing'],
+                        ).format(count=result['existing']),
                     )
 
                 if result['failed']:
@@ -542,8 +501,8 @@ class BulkAddMixin(object):
                         ngettext(
                             '{count} participant could not be added. Please check if the email address is correct.',
                             '{count} participants could not be added. Please check if the email addresses are correct.',
-                            result['failed']
-                        ).format(count=result['failed'])
+                            result['failed'],
+                        ).format(count=result['failed']),
                     )
             return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
 
@@ -553,11 +512,9 @@ class BulkAddMixin(object):
             'opts': self.model._meta,
             'activity': activity,
             'form': self.bulk_add_form(activity=activity),
-            'closed': settings.closed
+            'closed': settings.closed,
         }
-        return TemplateResponse(
-            request, self.bulk_add_template, context
-        )
+        return TemplateResponse(request, self.bulk_add_template, context)
 
 
 class ActivityAnswerInline(StackedPolymorphicInline):
@@ -591,7 +548,7 @@ class ActivityChildAdmin(
     RegionManagerAdminMixin,
     ActivitySegmentAdminMixin,
     BulkAddMixin,
-    StateMachineAdmin
+    StateMachineAdmin,
 ):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location', 'organization']
@@ -603,14 +560,11 @@ class ActivityChildAdmin(
     def get_formsets_with_inlines(self, request, obj=None):
         formsets = super().get_formsets_with_inlines(request, obj)
 
-        if "_saveasnew" in request.POST:
+        if '_saveasnew' in request.POST:
             formsets = [
                 (inline, formset)
                 for (inline, formset) in formsets
-                if not any(
-                    issubclass(formset.model, skipped_model)
-                    for skipped_model in self.skip_on_duplicate
-                )
+                if not any(issubclass(formset.model, skipped_model) for skipped_model in self.skip_on_duplicate)
             ]
 
         return formsets
@@ -655,12 +609,10 @@ class ActivityChildAdmin(
         'origin',
         'activity_pub',
         'event',
-        'host_organization'
+        'host_organization',
     ]
 
-    office_fields = (
-        'office_location',
-    )
+    office_fields = ('office_location',)
 
     detail_fields = (
         'title',
@@ -684,9 +636,7 @@ class ActivityChildAdmin(
         'states',
     )
 
-    activity_pub_fields = (
-        'activity_pub',
-    )
+    activity_pub_fields = ('activity_pub',)
 
     registration_fields = None
 
@@ -700,12 +650,10 @@ class ActivityChildAdmin(
             inlines.append(impact_goal_inline)
 
         if not obj or (
-                obj.team_activity != Activity.TeamActivityChoices.teams or
-                obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
+            obj.team_activity != Activity.TeamActivityChoices.teams
+            or obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
         ):
-            inlines = [
-                inline for inline in inlines if not isinstance(inline, TeamInline)
-            ]
+            inlines = [inline for inline in inlines if not isinstance(inline, TeamInline)]
 
         return inlines
 
@@ -713,13 +661,11 @@ class ActivityChildAdmin(
         filters = list(self.list_filter)
         settings = InitiativePlatformSettings.load()
         from bluebottle.geo.models import Location
+
         if Location.objects.count():
             filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
             if settings.enable_office_regions and not request.user.subregion_manager:
-                filters = filters + [
-                    'office_location__subregion',
-                    'office_location__subregion__region'
-                ]
+                filters = filters + ['office_location__subregion', 'office_location__subregion__region']
 
         if settings.team_activities and self.model in (Activity, ScheduleActivity):
             filters = filters + ['team_activity']
@@ -729,6 +675,7 @@ class ActivityChildAdmin(
     def get_list_display(self, request):
         fields = list(self.list_display)
         from bluebottle.geo.models import Location
+
         if Location.objects.count():
             fields = fields + ['office_location']
         return fields
@@ -752,7 +699,9 @@ class ActivityChildAdmin(
         return detail_fields
 
     list_display = [
-        '__str__', 'initiative_link', 'state_name',
+        '__str__',
+        'initiative_link',
+        'state_name',
     ]
 
     def initiative_link(self, obj):
@@ -760,7 +709,7 @@ class ActivityChildAdmin(
             return format_html(
                 '<a href="{}">{}</a>',
                 reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
-                obj.initiative
+                obj.initiative,
             )
 
     initiative_link.short_description = _('Initiative')
@@ -768,14 +717,12 @@ class ActivityChildAdmin(
     def event(self, obj):
         if obj.event:
             return format_html(
-                '<a href="{}">{}</a>',
-                reverse('admin:activity_pub_event_change', args=(obj.event.id,)),
-                obj.event
+                '<a href="{}">{}</a>', reverse('admin:activity_pub_event_change', args=(obj.event.id,)), obj.event
             )
 
     def event_url(self, obj):
         if obj.event:
-            return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
+            return get_current_host() + reverse('json-ld:event', args=(obj.event.id,))
 
     def activity_pub(self, obj):
 
@@ -783,14 +730,14 @@ class ActivityChildAdmin(
         try:
             event = obj.event
             if event:
-                publishes = event.create_set.all().prefetch_related("recipients__actor")
+                publishes = event.create_set.all().prefetch_related('recipients__actor')
                 for publish in publishes:
                     for recipient in publish.recipients.all():
                         actor = recipient.actor
                         recipients.append(
                             {
-                                "actor": actor,
-                                "adopted": event.accept_set.filter(actor=actor).exists(),
+                                'actor': actor,
+                                'adopted': event.accept_set.filter(actor=actor).exists(),
                             }
                         )
         except ObjectDoesNotExist:
@@ -802,21 +749,20 @@ class ActivityChildAdmin(
             accept__isnull=False,
         )
         if partners.count() > len(recipients):
-            share_link = reverse('admin:{}_{}_share_activity'.format(
-                obj._meta.app_label,
-                obj._meta.model_name
-            ), args=(obj.id,))
+            share_link = reverse(
+                'admin:{}_{}_share_activity'.format(obj._meta.app_label, obj._meta.model_name), args=(obj.id,)
+            )
 
         return render_to_string(
-            "admin/activity_pub/event/recipients_list.html",
-            {"recipients": recipients, "share_link": share_link},
+            'admin/activity_pub/event/recipients_list.html',
+            {'recipients': recipients, 'share_link': share_link},
         )
 
     activity_pub.short_description = _('Share activity')
 
     @admin_form(SharePublishForm, Activity, 'admin/activities/share_publish.html')
     def share_activity(self, request, activity, form):
-        if not request.user.has_perm("activity.add_activity"):
+        if not request.user.has_perm('activity.add_activity'):
             raise PermissionDenied
 
         if not hasattr(activity, 'event'):
@@ -830,11 +776,9 @@ class ActivityChildAdmin(
         self.message_user(
             request,
             f'Successfully shared activity "{activity.title}".',
-            level="success",
+            level='success',
         )
-        return HttpResponseRedirect(
-            reverse("admin:activities_activity_change", args=[activity.pk])
-        )
+        return HttpResponseRedirect(reverse('admin:activities_activity_change', args=[activity.pk]))
 
     def get_activity_pub_fields(self, request, obj=None):
         if obj:
@@ -844,70 +788,49 @@ class ActivityChildAdmin(
                     'host_organization',
                 )
             else:
-                return (
-                    'activity_pub',
-                )
+                return ('activity_pub',)
         return []
 
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.load()
         fieldsets = [
-            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
-            (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
+            (_('Management'), {'fields': self.get_status_fields(request, obj)}),
+            (_('Information'), {'fields': self.get_detail_fields(request, obj)}),
         ]
         site_settings = SitePlatformSettings.load()
         if (
-            site_settings.share_activities and
-            request.user.has_perm("activity_pub.add_event") and (
-                site_settings.is_publishing_activities or
-                (obj and obj.origin)
-            )
+            site_settings.share_activities
+            and request.user.has_perm('activity_pub.add_event')
+            and (site_settings.is_publishing_activities or (obj and obj.origin))
         ):
-            fieldsets.append(
-                (_("GoodUp Connect"), {"fields": self.get_activity_pub_fields(request, obj)})
-            )
+            fieldsets.append((_('GoodUp Connect'), {'fields': self.get_activity_pub_fields(request, obj)}))
 
         if self.get_registration_fields(request, obj):
             fieldsets.append(
                 (
-                    _("Participation"),
-                    {"fields": self.get_registration_fields(request, obj)},
+                    _('Participation'),
+                    {'fields': self.get_registration_fields(request, obj)},
                 )
             )
 
         if Location.objects.count():
             if settings.enable_office_restrictions:
                 if 'office_restriction' not in self.office_fields:
-                    self.office_fields += (
-                        'office_restriction',
-                    )
-                fieldsets.append((
-                    _('Work location'), {'fields': self.office_fields}
-                ))
+                    self.office_fields += ('office_restriction',)
+                fieldsets.append((_('Work location'), {'fields': self.office_fields}))
 
         if SegmentType.objects.exists():
-            fieldsets.append((
-                _('Segments'), {
-                    'fields': [
-                        segment_type.field_name
-                        for segment_type in SegmentType.objects.all()
-                    ]
-                }
-            ))
+            fieldsets.append(
+                (_('Segments'), {'fields': [segment_type.field_name for segment_type in SegmentType.objects.all()]})
+            )
 
         if request.user.is_superuser:
-            fieldsets.append(
-                (_('Super admin'), {'fields': (
-                    'force_status',
-                )})
-            )
+            fieldsets.append((_('Super admin'), {'fields': ('force_status',)}))
 
         return fieldsets
 
     def stats_data(self, obj):
-        template = loader.get_template(
-            'admin/activity_stats.html'
-        )
+        template = loader.get_template('admin/activity_stats.html')
 
         return template.render({'stats': obj.stats})
 
@@ -923,20 +846,14 @@ class ActivityChildAdmin(
             field = dotted_field.split('.')[0]
             if field == 'answers':
                 question = ActivityQuestion.objects.get(pk=dotted_field.split('.')[1])
-                errors.append(
-                    f'"{question.name}" is required'
-                )
+                errors.append(f'"{question.name}" is required')
             else:
-                errors.append(
-                    _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-                )
+                errors.append(_('{} is required').format(obj._meta.get_field(field).verbose_name.title()))
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
 
-        template = loader.get_template(
-            'admin/validation_steps.html'
-        )
+        template = loader.get_template('admin/validation_steps.html')
         return template.render({'errors': errors})
 
     valid.short_description = _('Validation')
@@ -949,37 +866,25 @@ class ActivityChildAdmin(
                 '<int:pk>/send-impact-reminder-message',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
-                    self.model._meta.app_label,
-                    self.model._meta.model_name
+                    self.model._meta.app_label, self.model._meta.model_name
                 ),
             ),
             path(
                 '<int:pk>/share_activity',
                 self.admin_site.admin_view(self.share_activity),
-                name='{}_{}_share_activity'.format(
-                    self.model._meta.app_label,
-                    self.model._meta.model_name
-                ),
+                name='{}_{}_share_activity'.format(self.model._meta.app_label, self.model._meta.model_name),
             ),
         ]
         return extra_urls + urls
 
-    @confirmation_form(
-        ImpactReminderConfirmationForm,
-        Activity,
-        'admin/activities/send_impact_reminder_message.html'
-    )
+    @confirmation_form(ImpactReminderConfirmationForm, Activity, 'admin/activities/send_impact_reminder_message.html')
     def send_impact_reminder_message(self, request, activity):
-        if not request.user.has_perm('{}.change_{}'.format(
-                self.model._meta.app_label,
-                self.model._meta.model_name
-        )):
+        if not request.user.has_perm('{}.change_{}'.format(self.model._meta.app_label, self.model._meta.model_name)):
             return HttpResponseForbidden('Not allowed to change user')
 
         ImpactReminderMessage(activity).compose_and_send()
 
-        message = _('User {name} will receive a message.').format(
-            name=activity.owner.full_name)
+        message = _('User {name} will receive a message.').format(name=activity.owner.full_name)
         self.message_user(request, message)
 
         return HttpResponseRedirect(reverse('admin:activities_activity_change', args=(activity.id,)))
@@ -988,37 +893,28 @@ class ActivityChildAdmin(
 
     def send_impact_reminder_message_link(self, obj):
         url = reverse(
-            'admin:{}_{}_send_impact_reminder_message'.format(
-                self.model._meta.app_label,
-                self.model._meta.model_name
-            ),
-            args=(obj.pk,)
+            'admin:{}_{}_send_impact_reminder_message'.format(self.model._meta.app_label, self.model._meta.model_name),
+            args=(obj.pk,),
         )
-        return format_html(
-            u"<a href='{}'>{}</a>",
-            url, _('Send reminder message')
-        )
+        return format_html("<a href='{}'>{}</a>", url, _('Send reminder message'))
 
     send_impact_reminder_message.short_description = _('Impact Reminder')
 
     def get_form(self, request, obj=None, **kwargs):
-        kwargs.update({
-            'help_texts': {
-                'send_impact_reminder_message_link': _(
-                    u"Request the activity manager to fill in the impact of this activity."
-                )
+        kwargs.update(
+            {
+                'help_texts': {
+                    'send_impact_reminder_message_link': _(
+                        'Request the activity manager to fill in the impact of this activity.'
+                    )
+                }
             }
-        })
+        )
         return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
 @admin.register(Activity)
-class ActivityAdmin(
-    PolymorphicParentModelAdmin,
-    RegionManagerAdminMixin,
-    ActivitySegmentAdminMixin,
-    StateMachineAdmin
-):
+class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, ActivitySegmentAdminMixin, StateMachineAdmin):
     base_model = Activity
     child_models = (
         Funding,
@@ -1029,10 +925,14 @@ class ActivityAdmin(
         DeadlineActivity,
         PeriodicActivity,
         ScheduleActivity,
-        RegisteredDateActivity
+        RegisteredDateActivity,
     )
     readonly_fields = ['link', 'review_status', 'activity_pub_url']
-    list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
+    list_filter = [
+        PolymorphicChildModelFilter,
+        StateMachineFilter,
+        'highlight',
+    ]
 
     def lookup_allowed(self, key, value):
         if key in [
@@ -1048,13 +948,11 @@ class ActivityAdmin(
         settings = InitiativePlatformSettings.load()
         filters = list(self.list_filter)
         from bluebottle.geo.models import Location
+
         if Location.objects.count():
             filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
             if settings.enable_office_regions and not request.user.subregion_manager.count():
-                filters = filters + [
-                    'office_location__subregion',
-                    'office_location__subregion__region'
-                ]
+                filters = filters + ['office_location__subregion', 'office_location__subregion__region']
 
         if settings.team_activities:
             filters = filters + ['team_activity']
@@ -1064,7 +962,7 @@ class ActivityAdmin(
 
     def location_link(self, obj):
         if not obj.office_location:
-            return "-"
+            return '-'
         url = reverse('admin:geo_location_change', args=(obj.office_location.id,))
         return format_html('<a href="{}">{}</a>', url, obj.office_location)
 
@@ -1073,17 +971,17 @@ class ActivityAdmin(
     def get_list_display(self, request):
         fields = list(self.list_display)
         from bluebottle.geo.models import Location
+
         if Location.objects.count():
             fields = fields + ['office_location']
         return fields
 
-    search_fields = ('title', 'description',
-                     'owner__first_name', 'owner__last_name')
+    search_fields = ('title', 'description', 'owner__first_name', 'owner__last_name')
 
     def link(self, obj):
-        return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)
 
-    link.short_description = _("Show on site")
+    link.short_description = _('Show on site')
 
     ordering = ('-created',)
 
@@ -1103,12 +1001,8 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
     state_name.short_description = _('status')
 
     def activity_link(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj._meta.app_label,
-            obj._meta.model_name),
-            args=(obj.id,)
-        )
-        return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
+        url = reverse('admin:{}_{}_change'.format(obj._meta.app_label, obj._meta.model_name), args=(obj.id,))
+        return format_html("<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
     activity_link.short_description = _('Edit')
 
@@ -1148,17 +1042,17 @@ class ActivityAdminInline(StackedPolymorphicInline):
         model = DeadlineActivity
 
     class PeriodicInline(ActivityInlineChild):
-        readonly_fields = ["activity_link", "start", "deadline", "state_name"]
+        readonly_fields = ['activity_link', 'start', 'deadline', 'state_name']
         fields = readonly_fields
         model = PeriodicActivity
 
     class ScheduleInline(ActivityInlineChild):
-        readonly_fields = ["activity_link", "start", "deadline", "state_name"]
+        readonly_fields = ['activity_link', 'start', 'deadline', 'state_name']
         fields = readonly_fields
         model = ScheduleActivity
 
     class RegisteredDateInline(ActivityInlineChild):
-        readonly_fields = ["activity_link", "start", "state_name"]
+        readonly_fields = ['activity_link', 'start', 'state_name']
         fields = readonly_fields
         model = RegisteredDateActivity
 
@@ -1170,7 +1064,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         DateInline,
         DeedInline,
         CollectActivityInline,
-        RegisteredDateInline
+        RegisteredDateInline,
     )
 
     pagination_key = 'page'
@@ -1192,7 +1086,10 @@ class ActivityAdminInline(StackedPolymorphicInline):
 class BaseContributionInline(admin.TabularInline):
     model = Contribution
     extra = 0
-    readonly_fields = ('status_label', 'start',)
+    readonly_fields = (
+        'status_label',
+        'start',
+    )
     fields = readonly_fields + ('value',)
 
     def has_change_permission(self, request, obj=None):
@@ -1206,12 +1103,7 @@ class BaseContributionInline(admin.TabularInline):
 class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
     base_form = TranslatableModelForm
     base_model = ActivityQuestion
-    child_models = (
-        TextQuestion,
-        ConfirmationQuestion,
-        SegmentQuestion,
-        FileUploadQuestion
-    )
+    child_models = (TextQuestion, ConfirmationQuestion, SegmentQuestion, FileUploadQuestion)
     list_display = ['name', 'question', 'visibility', 'activity_types']
 
 

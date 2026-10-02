@@ -14,8 +14,14 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import (
-    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer,
-    FileUploadAnswer, ActivityMessage,
+    Activity,
+    Contributor,
+    Invite,
+    Contribution,
+    ActivityQuestion,
+    ActivityAnswer,
+    FileUploadAnswer,
+    ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers.serializers import (
@@ -43,13 +49,16 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
-)
+from bluebottle.utils.permissions import OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 from bluebottle.utils.views import (
-    ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView, JsonApiElasticSearchPagination, JsonApiPagination,
-    PrivateFileView
+    ListAPIView,
+    JsonApiViewMixin,
+    RetrieveUpdateDestroyAPIView,
+    CreateAPIView,
+    RetrieveAPIView,
+    JsonApiElasticSearchPagination,
+    JsonApiPagination,
+    PrivateFileView,
 )
 
 
@@ -58,9 +67,7 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     pagination_class = None
     model = Activity
     queryset = Activity.objects.all()
-    permission_classes = (
-        TenantConditionalOpenClose,
-    )
+    permission_classes = (TenantConditionalOpenClose,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -68,84 +75,92 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
         if self.request.user:
             type_filter = self.request.query_params.get('filter[type]')
             if (
-                type_filter == 'office_subregion' and
-                self.request.user.location and
-                self.request.user.location.subregion
-
+                type_filter == 'office_subregion'
+                and self.request.user.location
+                and self.request.user.location.subregion
             ):
                 subregion = self.request.user.location.subregion
-                queryset = queryset.filter(
-                    office_location__subregion=subregion
-                )
+                queryset = queryset.filter(office_location__subregion=subregion)
             elif (
-                type_filter == 'office_region' and
-                self.request.user.location and
-                self.request.user.location.subregion and
-                self.request.user.location.subregion.region
+                type_filter == 'office_region'
+                and self.request.user.location
+                and self.request.user.location.subregion
+                and self.request.user.location.subregion.region
             ):
                 region = self.request.user.location.subregion.region
-                queryset = queryset.filter(
-                    office_location__subregion__region=region
-                )
+                queryset = queryset.filter(office_location__subregion__region=region)
 
-        queryset = queryset.filter(status__in=("succeeded", "open", "full", "running"))
+        queryset = queryset.filter(status__in=('succeeded', 'open', 'full', 'running'))
 
         collects = [
-            activity for activity
-            in queryset.annotate(
-                position=F('collectactivity__location__position'),
-                location_id=F('collectactivity__location__pk')
-            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+            activity
+            for activity in queryset.annotate(
+                position=F('collectactivity__location__position'), location_id=F('collectactivity__location__pk')
+            )
+            .exclude(position=Point(0, 0))
+            .filter(position__isnull=False)
         ]
 
         periodics = [
-            activity for activity
-            in queryset.annotate(
+            activity
+            for activity in queryset.annotate(
                 position=F('timebasedactivity__periodicactivity__location__position'),
-                location_id=F('timebasedactivity__periodicactivity__location__pk')
-            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+                location_id=F('timebasedactivity__periodicactivity__location__pk'),
+            )
+            .exclude(position=Point(0, 0))
+            .filter(position__isnull=False)
         ]
 
         deadlines = [
-            activity for activity
-            in queryset.annotate(
+            activity
+            for activity in queryset.annotate(
                 position=F('timebasedactivity__deadlineactivity__location__position'),
-                location_id=F('timebasedactivity__deadlineactivity__location__pk')
-            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+                location_id=F('timebasedactivity__deadlineactivity__location__pk'),
+            )
+            .exclude(position=Point(0, 0))
+            .filter(position__isnull=False)
         ]
 
         schedules = [
-            activity for activity
-            in queryset.annotate(
+            activity
+            for activity in queryset.annotate(
                 position=F('timebasedactivity__scheduleactivity__location__position'),
-                location_id=F('timebasedactivity__scheduleactivity__location__pk')
-            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+                location_id=F('timebasedactivity__scheduleactivity__location__pk'),
+            )
+            .exclude(position=Point(0, 0))
+            .filter(position__isnull=False)
         ]
 
         dates = [
-            activity for activity
-            in queryset.annotate(
+            activity
+            for activity in queryset.annotate(
                 position=F('timebasedactivity__dateactivity__slots__location__position'),
-                location_id=F('timebasedactivity__dateactivity__slots__location__pk')
-            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+                location_id=F('timebasedactivity__dateactivity__slots__location__pk'),
+            )
+            .exclude(position=Point(0, 0))
+            .filter(position__isnull=False)
         ]
 
         fundings = [
-            activity for activity
-            in queryset.annotate(
-                position=F('funding__initiative__place__position'),
-                location_id=F('funding__initiative__place__pk')
-            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+            activity
+            for activity in queryset.annotate(
+                position=F('funding__initiative__place__position'), location_id=F('funding__initiative__place__pk')
+            )
+            .exclude(position=Point(0, 0))
+            .filter(position__isnull=False)
         ]
 
-        locations = list(set(
-            ActivityLocation(
-                pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}-{model.location_id}',
-                created=model.created,
-                position=model.position,
-                activity=model,
-            ) for model in collects + dates + periodics + schedules + deadlines + fundings
-        ))
+        locations = list(
+            set(
+                ActivityLocation(
+                    pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}-{model.location_id}',
+                    created=model.created,
+                    position=model.position,
+                    activity=model,
+                )
+                for model in collects + dates + periodics + schedules + deadlines + fundings
+            )
+        )
 
         return sorted(locations, key=lambda location: location.created, reverse=True)
 
@@ -167,13 +182,9 @@ class ActivityPreviewList(JsonApiViewMixin, ListAPIView):
         serializer = self.get_serializer(result, many=True)
         return response.Response(serializer.data)
 
-    filter_backends = (
-        ActivitySearchFilter,
-    )
+    filter_backends = (ActivitySearchFilter,)
 
-    permission_classes = (
-        OneOf(ResourcePermission, ActivityOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ActivityOwnerPermission),)
 
 
 class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
@@ -181,15 +192,13 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     serializer_class = ActivitySerializer
     model = Activity
 
-    permission_classes = (
-        OneOf(ResourcePermission, ActivityOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ActivityOwnerPermission),)
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'contributors': ['contributors']
+        'contributors': ['contributors'],
     }
 
     def get_queryset(self):
@@ -197,16 +206,10 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
         user = self.request.user
         if not user or not user.is_authenticated:
             raise PermissionError()
-        return queryset.filter(
-            Q(owner=user) |
-            Q(initiative__owner=user) |
-            Q(initiative__activity_managers=user)
-        )
+        return queryset.filter(Q(owner=user) | Q(initiative__owner=user) | Q(initiative__activity_managers=user))
 
 
-class ActivityDetailView(
-    JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView
-):
+class ActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
     lookup_field = 'pk'
@@ -215,9 +218,7 @@ class ActivityDetailView(
     def model(self):
         return self.queryset.model
 
-    permission_classes = (
-        OneOf(ResourcePermission, ActivityOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ActivityOwnerPermission),)
 
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset(*args, **kwargs)
@@ -254,37 +255,44 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
     model = Contributor
 
     def get_queryset(self, *args, **kwargs):
-        upcoming = self.request.query_params.get("filter[upcoming]") == "1"
+        upcoming = self.request.query_params.get('filter[upcoming]') == '1'
 
-        queryset = Contribution.objects.filter(
-            contributor__user=self.request.user,
-        ).exclude(
-            contributor__status__in=['expired', 'failed'],
-        ).exclude(
-            effortcontribution__contribution_type='organizer',
-        ).exclude(
-            timecontribution__contribution_type='preparation',
-        ).prefetch_related(
-            'contributor',
-            'contributor__activity',
-            'contributor__activity__image',
-            'contributor__activity__initiative',
-            'contributor__activity__initiative__image',
+        queryset = (
+            Contribution.objects.filter(
+                contributor__user=self.request.user,
+            )
+            .exclude(
+                contributor__status__in=['expired', 'failed'],
+            )
+            .exclude(
+                effortcontribution__contribution_type='organizer',
+            )
+            .exclude(
+                timecontribution__contribution_type='preparation',
+            )
+            .prefetch_related(
+                'contributor',
+                'contributor__activity',
+                'contributor__activity__image',
+                'contributor__activity__initiative',
+                'contributor__activity__initiative__image',
+            )
         )
         if upcoming:
             queryset = queryset.filter(
                 Q(start__gte=now())
                 | Q(contributor__status__in=['new', 'accepted'])
                 | Q(contributor__participant__slot__status__in=['new', 'running'])
-            ).order_by("start")
+            ).order_by('start')
         else:
-            queryset = queryset.filter(
-                start__lte=now(),
-            ).exclude(
-                contributor__participant__slot__status__in=['new', 'running']
-            ).exclude(
-                contributor__status__in=['new', 'accepted']
-            ).order_by("-start")
+            queryset = (
+                queryset.filter(
+                    start__lte=now(),
+                )
+                .exclude(contributor__participant__slot__status__in=['new', 'running'])
+                .exclude(contributor__status__in=['new', 'accepted'])
+                .order_by('-start')
+            )
 
         return queryset
 
@@ -301,7 +309,6 @@ class ActivityImage(ImageContentView):
 
 
 class ActivityQrCode(RetrieveAPIView):
-
     queryset = Activity.objects
 
     def get(self, request, *args, **kwargs):
@@ -309,7 +316,7 @@ class ActivityQrCode(RetrieveAPIView):
         if 'qrcode' not in notification_settings.share_options:
             return HttpResponseBadRequest('QR code sharing not enabled')
         activity = self.get_object()
-        data = activity.get_absolute_url() + "?utm_source=qr_code"
+        data = activity.get_absolute_url() + '?utm_source=qr_code'
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_H,
@@ -319,7 +326,7 @@ class ActivityQrCode(RetrieveAPIView):
         qr.add_data(data)
         qr.make(fit=True)
 
-        img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+        img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
 
         try:
             settings = SitePlatformSettings.load()
@@ -332,8 +339,8 @@ class ActivityQrCode(RetrieveAPIView):
                     logo.thumbnail((logo_size, logo_size), Image.LANCZOS)
 
                     # Create a white background and paste the logo onto it
-                    if logo.mode in ("RGBA", "LA"):
-                        white_bg = Image.new("RGB", logo.size, (255, 255, 255))
+                    if logo.mode in ('RGBA', 'LA'):
+                        white_bg = Image.new('RGB', logo.size, (255, 255, 255))
                         white_bg.paste(logo, mask=logo.split()[-1])
                         logo = white_bg
 
@@ -347,17 +354,15 @@ class ActivityQrCode(RetrieveAPIView):
             pass
 
         buffer = io.BytesIO()
-        img.save(buffer, format="PNG")
+        img.save(buffer, format='PNG')
         buffer.seek(0)
 
-        return HttpResponse(buffer, content_type="image/png")
+        return HttpResponse(buffer, content_type='image/png')
 
 
 class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     def get_queryset(self):
-        return RelatedImage.objects.filter(
-            content_type=ContentType.objects.get_for_model(Activity)
-        )
+        return RelatedImage.objects.filter(content_type=ContentType.objects.get_for_model(Activity))
 
     serializer_class = RelatedActivityImageSerializer
 
@@ -404,9 +409,7 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
     search_fields = ['user__first_name', 'user__last_name']
     filter_backends = [filters.SearchFilter]
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
@@ -417,10 +420,10 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
         if activity.initiative:
             context['owners'] += list(activity.initiative.activity_managers.all())
 
-        if self.request.user and self.request.user.is_authenticated and (
-                self.request.user in context['owners'] or
-                self.request.user.is_staff or
-                self.request.user.is_superuser
+        if (
+            self.request.user
+            and self.request.user.is_authenticated
+            and (self.request.user in context['owners'] or self.request.user.is_staff or self.request.user.is_superuser)
         ):
             context['display_member_names'] = 'full_name'
 
@@ -435,50 +438,40 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
                     Q(user=self.request.user)
                     | Q(activity__owner=self.request.user)
                     | Q(activity__initiative__activity_manager=self.request.user)
-                    | Q(status__in=("accepted", "succeeded", "scheduled"))
-                ).order_by("-id")
+                    | Q(status__in=('accepted', 'succeeded', 'scheduled'))
+                ).order_by('-id')
         else:
-            queryset = self.queryset.filter(
-                status__in=("accepted", "succeeded", "scheduled")
-            ).order_by("-id")
+            queryset = self.queryset.filter(status__in=('accepted', 'succeeded', 'scheduled')).order_by('-id')
 
         status = self.request.query_params.get('filter[status]')
         if status:
-            queryset = queryset.filter(status__in=status.split(","))
+            queryset = queryset.filter(status__in=status.split(','))
 
-        my = self.request.query_params.get("filter[my]")
+        my = self.request.query_params.get('filter[my]')
         if my:
             if self.request.user.is_authenticated:
                 queryset = queryset.filter(user=self.request.user)
             else:
                 queryset = queryset.none()
 
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
+        return queryset.filter(activity_id=self.kwargs['activity_id'])
 
 
 class ActivityQuestionList(JsonApiViewMixin, ListAPIView):
     model = ActivityQuestion
     serializer_class = ActivityQuestionSerializer
 
-    permission_classes = (
-        TenantConditionalOpenClose,
-    )
+    permission_classes = (TenantConditionalOpenClose,)
 
     def get_queryset(self):
-        return ActivityQuestion.objects.filter(
-            activity_types__contains=self.kwargs['type']
-        )
+        return ActivityQuestion.objects.filter(activity_types__contains=self.kwargs['type'])
 
 
 class ActivityAnswerList(JsonApiViewMixin, CreateAPIView):
     queryset = ActivityAnswer.objects.all()
     serializer_class = ActivityAnswerSerializer
 
-    permission_classes = (
-        TenantConditionalOpenClose,
-    )
+    permission_classes = (TenantConditionalOpenClose,)
 
     related_permission_classes = {
         'activity': [
@@ -498,10 +491,7 @@ class ActivityMessageList(JsonApiViewMixin, CreateAPIView):
     queryset = ActivityMessage.objects.all()
     serializer_class = ActivityMessageSerializer
 
-    permission_classes = (
-        IsAuthenticated,
-        ContactActivityManagerPermission
-    )
+    permission_classes = (IsAuthenticated, ContactActivityManagerPermission)
     throttle_classes = [ActivityMessageThrottle]
 
     def perform_create(self, serializer):
@@ -513,9 +503,7 @@ class ActivityAnswerDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     queryset = ActivityAnswer.objects.all()
     serializer_class = ActivityAnswerSerializer
 
-    permission_classes = (
-        TenantConditionalOpenClose,
-    )
+    permission_classes = (TenantConditionalOpenClose,)
 
     related_permission_classes = {
         'activity': [

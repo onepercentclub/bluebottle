@@ -6,8 +6,7 @@ from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.deeds.models import Deed
 
 
-def api_create_deed(test, initiative, attributes,
-                    request_user=None, status_code=201, msg=None):
+def api_create_deed(test, initiative, attributes, request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = initiative.owner
     test.data = {
@@ -15,19 +14,9 @@ def api_create_deed(test, initiative, attributes,
             'type': 'activities/deeds',
             'attributes': attributes,
             'relationships': {
-                'initiative': {
-                    'data': {
-                        'type': 'initiatives',
-                        'id': initiative.pk
-                    }
-                },
-                'theme': {
-                    'data': {
-                        'type': 'themes',
-                        'id': ThemeFactory.create().pk
-                    }
-                }
-            }
+                'initiative': {'data': {'type': 'initiatives', 'id': initiative.pk}},
+                'theme': {'data': {'type': 'themes', 'id': ThemeFactory.create().pk}},
+            },
         }
     }
     url = reverse('deed-list')
@@ -37,8 +26,7 @@ def api_create_deed(test, initiative, attributes,
         return Deed.objects.get(id=response.data['id'])
 
 
-def api_update_deed(test, activity, attributes,
-                    request_user=None, status_code=200, msg=None):
+def api_update_deed(test, activity, attributes, request_user=None, status_code=200, msg=None):
     if not request_user:
         request_user = activity.owner
     test.data = {
@@ -46,14 +34,7 @@ def api_update_deed(test, activity, attributes,
             'type': 'activities/deeds',
             'id': activity.id,
             'attributes': attributes,
-            'relationships': {
-                'initiative': {
-                    'data': {
-                        'type': 'initiatives',
-                        'id': activity.initiative.pk
-                    }
-                }
-            }
+            'relationships': {'initiative': {'data': {'type': 'initiatives', 'id': activity.initiative.pk}}},
         }
     }
     url = reverse('deed-detail', args=(activity.id,))
@@ -63,24 +44,14 @@ def api_update_deed(test, activity, attributes,
         return Deed.objects.get(id=response.data['id'])
 
 
-def api_deed_transition(test, activity, transition,
-                        request_user=None, status_code=201, msg=None):
+def api_deed_transition(test, activity, transition, request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = activity.owner
     test.data = {
         'data': {
             'type': 'activities/deed-transitions',
-            'attributes': {
-                'transition': transition
-            },
-            'relationships': {
-                'resource': {
-                    'data': {
-                        'type': 'activities/deeds',
-                        'id': activity.pk
-                    }
-                }
-            }
+            'attributes': {'transition': transition},
+            'relationships': {'resource': {'data': {'type': 'activities/deeds', 'id': activity.pk}}},
         }
     }
     url = reverse('deed-transition-list')
@@ -88,8 +59,7 @@ def api_deed_transition(test, activity, transition,
     test.assertEqual(response.status_code, status_code, msg)
 
 
-def api_read_deed(test, activity,
-                  request_user=None, status_code=200, msg=None):
+def api_read_deed(test, activity, request_user=None, status_code=200, msg=None):
     if not request_user:
         request_user = activity.owner
     url = reverse('deed-detail', args=(activity.id,))

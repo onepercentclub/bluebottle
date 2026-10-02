@@ -11,27 +11,12 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
-success_response = {
-    'status': 'success',
-    'data': {
-        'status': 'successful',
-        'amount': 1000,
-        'currency': 'NGN'
-    }
-}
+success_response = {'status': 'success', 'data': {'status': 'successful', 'amount': 1000, 'currency': 'NGN'}}
 
-failed_response = {
-    'status': 'success',
-    'data': {
-        'status': 'failed',
-        'amount': 1000,
-        'currency': 'NGN'
-    }
-}
+failed_response = {'status': 'success', 'data': {'status': 'failed', 'amount': 1000, 'currency': 'NGN'}}
 
 
 class FlutterwavePaymentTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(FlutterwavePaymentTestCase, self).setUp()
         self.provider = FlutterwavePaymentProviderFactory.create()
@@ -46,14 +31,12 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
         self.payment_url = reverse('flutterwave-payment-list')
 
-        self.tx_ref = "{}-{}".format(self.provider.prefix, self.donation.id)
+        self.tx_ref = '{}-{}'.format(self.provider.prefix, self.donation.id)
 
         self.data = {
             'data': {
                 'type': 'payments/flutterwave-payments',
-                'attributes': {
-                    'tx-ref': self.tx_ref
-                },
+                'attributes': {'tx-ref': self.tx_ref},
                 'relationships': {
                     'donation': {
                         'data': {
@@ -61,7 +44,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
                             'id': self.donation.pk,
                         }
                     }
-                }
+                },
             }
         }
 
@@ -79,19 +62,14 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
     @patch('bluebottle.funding_flutterwave.utils.post', return_value=success_response)
     def test_create_anonymous_payment_success(self, flutterwave_post):
         donation = DonorFactory.create(
-            activity=self.funding,
-            amount=Money(1000, 'NGN'),
-            user=self.user,
-            client_secret='348576245976234597'
+            activity=self.funding, amount=Money(1000, 'NGN'), user=self.user, client_secret='348576245976234597'
         )
-        self.tx_ref = "{}-{}".format(self.provider.prefix, donation.id)
+        self.tx_ref = '{}-{}'.format(self.provider.prefix, donation.id)
 
         self.data = {
             'data': {
                 'type': 'payments/flutterwave-payments',
-                'attributes': {
-                    'tx-ref': self.tx_ref
-                },
+                'attributes': {'tx-ref': self.tx_ref},
                 'relationships': {
                     'donation': {
                         'data': {
@@ -99,14 +77,14 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
                             'id': donation.pk,
                         }
                     }
-                }
+                },
             }
         }
 
         response = self.client.post(
             self.payment_url,
             data=json.dumps(self.data),
-            HTTP_AUTHORIZATION='Donation {}'.format(donation.client_secret)
+            HTTP_AUTHORIZATION='Donation {}'.format(donation.client_secret),
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -143,7 +121,6 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
 
 class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(FlutterwavePayoutAccountTestCase, self).setUp()
 
@@ -154,10 +131,7 @@ class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.payout_account = PlainPayoutAccountFactory.create(
-            status='verified',
-            owner=self.user
-        )
+        self.payout_account = PlainPayoutAccountFactory.create(status='verified', owner=self.user)
 
         self.payout_account_url = reverse('payout-account-list')
         self.bank_account_url = reverse('flutterwave-external-account-list')
@@ -165,19 +139,10 @@ class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
         self.data = {
             'data': {
                 'type': 'payout-accounts/flutterwave-external-accounts',
-                'attributes': {
-                    'bank-code': '044',
-                    'account-number': '123456789',
-                    'account-holder-name': 'Jolof Rice'
-                },
+                'attributes': {'bank-code': '044', 'account-number': '123456789', 'account-holder-name': 'Jolof Rice'},
                 'relationships': {
-                    'connect-account': {
-                        'data': {
-                            'id': self.payout_account.id,
-                            'type': 'payout-accounts/plains'
-                        }
-                    }
-                }
+                    'connect-account': {'data': {'id': self.payout_account.id, 'type': 'payout-accounts/plains'}}
+                },
             }
         }
 

@@ -17,20 +17,18 @@ class ContactMessage(models.Model):
     """
 
     class ContactStatus(DjangoChoices):
-        new = ChoiceItem('new', label=_("New"))
-        in_progress = ChoiceItem('in progress', label=_("In progress"))
-        closed = ChoiceItem('closed', label=_("Closed"))
+        new = ChoiceItem('new', label=_('New'))
+        in_progress = ChoiceItem('in progress', label=_('In progress'))
+        closed = ChoiceItem('closed', label=_('Closed'))
 
-    status = models.CharField(_('status'), max_length=20,
-                              choices=ContactStatus.choices,
-                              default=ContactStatus.new)
+    status = models.CharField(_('status'), max_length=20, choices=ContactStatus.choices, default=ContactStatus.new)
 
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'), blank=True, null=True,
-                               on_delete=models.CASCADE)
-    name = models.CharField(_("Name"), max_length=200)
-    email = models.EmailField(_("Email"), max_length=200)
-    message = models.TextField(_("Message"))
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name=_('author'), blank=True, null=True, on_delete=models.CASCADE
+    )
+    name = models.CharField(_('Name'), max_length=200)
+    email = models.EmailField(_('Email'), max_length=200)
+    message = models.TextField(_('Message'))
 
     creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
     modification_date = models.DateTimeField(_('last modification'), auto_now=True)
@@ -40,7 +38,7 @@ class ContactMessage(models.Model):
 
 
 def mail_contact_message(sender, instance, **kwargs):
-    """ Send an e-mail with the contact message content """
+    """Send an e-mail with the contact message content"""
     if kwargs['created']:
         send_contact_email(instance, properties.CONTACT_EMAIL)
 

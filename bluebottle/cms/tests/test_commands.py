@@ -11,154 +11,165 @@ from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.models import Language
 
-PAGE_DUMP = [{
-    'model': 'HomePage',
-    'app': 'cms',
-    'properties': {},
-    'data': [
-        {
-            'model': 'SlidesContent',
-            'app': 'cms',
-            'fields': {
-                'language_code': 'en',
-                'sort_order': 1,
-                'title': None,
-                'sub_title': None,
+PAGE_DUMP = [
+    {
+        'model': 'HomePage',
+        'app': 'cms',
+        'properties': {},
+        'data': [
+            {
+                'model': 'SlidesContent',
+                'app': 'cms',
+                'fields': {
+                    'language_code': 'en',
+                    'sort_order': 1,
+                    'title': None,
+                    'sub_title': None,
+                },
+                'items': [],
             },
-            'items': [],
-        }, {
-            'model': 'StepsContent',
-            'app': 'cms',
-            'fields': {
-                'language_code': 'en',
-                'sort_order': 2,
-                'title': None,
-                'sub_title': None,
-                'action_text': 'Start your own project',
-                'action_link': '/start-project',
+            {
+                'model': 'StepsContent',
+                'app': 'cms',
+                'fields': {
+                    'language_code': 'en',
+                    'sort_order': 2,
+                    'title': None,
+                    'sub_title': None,
+                    'action_text': 'Start your own project',
+                    'action_link': '/start-project',
+                },
+                'items': [
+                    {
+                        'model': 'Step',
+                        'app': 'cms',
+                        'data': {
+                            'image': '',
+                            'header': 'First',
+                            'text': 'Go!',
+                            'link': None,
+                            'link_text': None,
+                            'external': False,
+                            'sequence': 1,
+                        },
+                    },
+                    {
+                        'model': 'Step',
+                        'app': 'cms',
+                        'data': {
+                            'image': '',
+                            'header': 'Second',
+                            'text': 'Go!',
+                            'link': None,
+                            'link_text': None,
+                            'external': False,
+                            'sequence': 2,
+                        },
+                    },
+                    {
+                        'model': 'Step',
+                        'app': 'cms',
+                        'data': {
+                            'image': '',
+                            'header': 'Third',
+                            'text': 'Go!',
+                            'link': None,
+                            'link_text': None,
+                            'external': False,
+                            'sequence': 3,
+                        },
+                    },
+                ],
             },
-            'items': [
-                {
-                    'model': 'Step',
-                    'app': 'cms',
-                    'data': {
-                        'image': '',
-                        'header': 'First',
-                        'text': 'Go!',
-                        'link': None,
-                        'link_text': None,
-                        'external': False,
-                        'sequence': 1,
-                    }
-                }, {
-                    'model': 'Step',
-                    'app': 'cms',
-                    'data': {
-                        'image': '',
-                        'header': 'Second',
-                        'text': 'Go!',
-                        'link': None,
-                        'link_text': None,
-                        'external': False,
-                        'sequence': 2,
-                    }
-                }, {
-                    'model': 'Step',
-                    'app': 'cms', 'data': {
-                        'image': '',
-                        'header': 'Third',
-                        'text': 'Go!',
-                        'link': None,
-                        'link_text': None,
-                        'external': False,
-                        'sequence': 3,
-                    }
-                }
-            ],
-        }
-    ],
-}, {
-    'model': 'Page',
-    'app': 'pages',
-    'properties': {
-        'title': 'About this platform',
-        'slug': 'about',
-        'status': 'published',
-        'language': 'en',
-        'full_page': False,
-        'publication_date': '2020-01-01 00:00',
+        ],
     },
-    'data': [
-        {
-            'model': 'TextItem',
-            'app': 'text',
-            'fields': {
-                'language_code': 'en',
-                'sort_order': 1,
-                'text': 'A really engaging text!',
-                'text_final': None,
-            },
-            'items': [],
-        }
-    ],
-}]
+    {
+        'model': 'Page',
+        'app': 'pages',
+        'properties': {
+            'title': 'About this platform',
+            'slug': 'about',
+            'status': 'published',
+            'language': 'en',
+            'full_page': False,
+            'publication_date': '2020-01-01 00:00',
+        },
+        'data': [
+            {
+                'model': 'TextItem',
+                'app': 'text',
+                'fields': {
+                    'language_code': 'en',
+                    'sort_order': 1,
+                    'text': 'A really engaging text!',
+                    'text_final': None,
+                },
+                'items': [],
+            }
+        ],
+    },
+]
 
 LINK_DUMP = [
     {
         'language': 'en',
-        'groups': [{
-            'title': 'Main',
-            'name': 'main',
-            'links': [
-                {
-                    'title': 'Start your initiative',
-                    'link': '/initiatives/start',
-                    'open_in_new_tab': False,
-                    'highlight': False,
-                    'link_order': 1
-                }, {
-                    'title': 'About this platform',
-                    'link': '/pages/about',
-                    'open_in_new_tab': False,
-                    'highlight': False,
-                    'link_order': 2
-                },
-                {
-                    'title': 'Example',
-                    'link': 'https://example.com',
-                    'open_in_new_tab': True,
-                    'highlight': False,
-                    'link_order': 3
-                }
-            ],
-            'group_order': 1
-        }, {
-            'title': 'Info',
-            'name': 'info',
-            'links': [
-                {
-                    'title': 'Our story',
-                    'link': '/pages/story',
-                    'open_in_new_tab': False,
-                    'highlight': False,
-                    'link_order': 4
-                }, {
-                    'title': 'How it works',
-                    'link': '/pages/how-it-works',
-                    'open_in_new_tab': False,
-                    'highlight': False,
-                    'link_order': 5
-                }
-            ],
-            'group_order': 2
-        }],
-        'has_copyright': True
+        'groups': [
+            {
+                'title': 'Main',
+                'name': 'main',
+                'links': [
+                    {
+                        'title': 'Start your initiative',
+                        'link': '/initiatives/start',
+                        'open_in_new_tab': False,
+                        'highlight': False,
+                        'link_order': 1,
+                    },
+                    {
+                        'title': 'About this platform',
+                        'link': '/pages/about',
+                        'open_in_new_tab': False,
+                        'highlight': False,
+                        'link_order': 2,
+                    },
+                    {
+                        'title': 'Example',
+                        'link': 'https://example.com',
+                        'open_in_new_tab': True,
+                        'highlight': False,
+                        'link_order': 3,
+                    },
+                ],
+                'group_order': 1,
+            },
+            {
+                'title': 'Info',
+                'name': 'info',
+                'links': [
+                    {
+                        'title': 'Our story',
+                        'link': '/pages/story',
+                        'open_in_new_tab': False,
+                        'highlight': False,
+                        'link_order': 4,
+                    },
+                    {
+                        'title': 'How it works',
+                        'link': '/pages/how-it-works',
+                        'open_in_new_tab': False,
+                        'highlight': False,
+                        'link_order': 5,
+                    },
+                ],
+                'group_order': 2,
+            },
+        ],
+        'has_copyright': True,
     }
 ]
 
 
 class PageDumpCommandsTestCase(BluebottleTestCase):
-
     def test_dumppages(self):
         HomePage.objects.all().delete()
         homepage = HomePage.objects.create(pk=1)
@@ -178,44 +189,26 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
             language_code='en',
         )
 
-        Step.objects.create(
-            block=steps,
-            header='First',
-            text='Go!',
-            sequence=1
-        )
+        Step.objects.create(block=steps, header='First', text='Go!', sequence=1)
 
-        Step.objects.create(
-            block=steps,
-            header='Second',
-            text='Go!',
-            sequence=2
-        )
+        Step.objects.create(block=steps, header='Second', text='Go!', sequence=2)
 
-        Step.objects.create(
-            block=steps,
-            header='Third',
-            text='Go!',
-            sequence=3
-        )
+        Step.objects.create(block=steps, header='Third', text='Go!', sequence=3)
 
         page = PageFactory.create(
-            slug='about',
-            title='About this platform',
-            language='en',
-            publication_date='2020-01-01 00:00+00:00'
+            slug='about', title='About this platform', language='en', publication_date='2020-01-01 00:00+00:00'
         )
         create_content_item(
             TextItem,
             create_placeholder(page=page, slot='blog_contents'),
             sort_order=1,
             language_code='en',
-            text='A really engaging text!'
+            text='A really engaging text!',
         )
 
         with override('en'):
             call_command('dumppages', '-f', 'test_pages.json')
-        with open("test_pages.json", "r") as json_file:
+        with open('test_pages.json', 'r') as json_file:
             test_output = json.load(json_file)
         self.assertEqual(test_output, PAGE_DUMP)
 
@@ -236,50 +229,20 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
 
 
 class LinkDumpCommandsTestCase(BluebottleTestCase):
-
     def test_dumplinks(self):
         en = Language.objects.get(code='en')
         sl = SiteLinks.objects.create(language=en)
-        lg = LinkGroup.objects.create(
-            name='main',
-            title='Main',
-            site_links=sl
-        )
-        Link.objects.create(
-            link='/initiatives/start',
-            title='Start your initiative',
-            link_group=lg
-        )
-        Link.objects.create(
-            link='/pages/about',
-            title='About this platform',
-            link_group=lg
-        )
-        Link.objects.create(
-            title='Example',
-            link='https://example.com',
-            open_in_new_tab=True,
-            link_group=lg
-        )
+        lg = LinkGroup.objects.create(name='main', title='Main', site_links=sl)
+        Link.objects.create(link='/initiatives/start', title='Start your initiative', link_group=lg)
+        Link.objects.create(link='/pages/about', title='About this platform', link_group=lg)
+        Link.objects.create(title='Example', link='https://example.com', open_in_new_tab=True, link_group=lg)
 
-        lg = LinkGroup.objects.create(
-            name='info',
-            title='Info',
-            site_links=sl
-        )
-        Link.objects.create(
-            link='/pages/story',
-            title='Our story',
-            link_group=lg
-        )
-        Link.objects.create(
-            link='/pages/how-it-works',
-            title='How it works',
-            link_group=lg
-        )
+        lg = LinkGroup.objects.create(name='info', title='Info', site_links=sl)
+        Link.objects.create(link='/pages/story', title='Our story', link_group=lg)
+        Link.objects.create(link='/pages/how-it-works', title='How it works', link_group=lg)
 
         call_command('dumplinks', '-f', 'test_links.json')
-        with open("test_links.json", "r") as json_file:
+        with open('test_links.json', 'r') as json_file:
             test_output = json.load(json_file)
         self.assertEqual(test_output, LINK_DUMP)
 

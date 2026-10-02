@@ -8,21 +8,35 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    ActivitySegmentPermission
+    ActivityOwnerPermission,
+    ActivityTypePermission,
+    ActivityStatusPermission,
+    ActivitySegmentPermission,
 )
 from bluebottle.activities.views import ActivityDetailView
 from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
-    Funding, Donor, Reward,
-    BudgetLine, PayoutAccount, PlainPayoutAccount,
-    Payout, IbanCheck
+    Funding,
+    Donor,
+    Reward,
+    BudgetLine,
+    PayoutAccount,
+    PlainPayoutAccount,
+    Payout,
+    IbanCheck,
 )
 from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSucceededPermission
 from bluebottle.funding.serializers import (
-    FundingSerializer, DonorSerializer, FundingTransitionSerializer,
-    RewardSerializer, BudgetLineSerializer,
-    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer, PayoutSerializer, IbanCheckSerializer,
+    FundingSerializer,
+    DonorSerializer,
+    FundingTransitionSerializer,
+    RewardSerializer,
+    BudgetLineSerializer,
+    DonorCreateSerializer,
+    PayoutAccountSerializer,
+    PlainPayoutAccountSerializer,
+    PayoutSerializer,
+    IbanCheckSerializer,
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
@@ -31,8 +45,13 @@ from bluebottle.utils.admin import prep_field
 from bluebottle.utils.filters import SearchFilterBackend
 from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission, IsActivityManager
 from bluebottle.utils.views import (
-    ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateAPIView,
+    JsonApiViewMixin,
+    CreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+    PrivateFileView,
 )
 from bluebottle.utils.xlsx import generate_xlsx_response
 
@@ -45,9 +64,7 @@ class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'activity': ['activity'],
     }
 
-    related_permission_classes = {
-        'activity': [IsActivityManager]
-    }
+    related_permission_classes = {'activity': [IsActivityManager]}
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -60,9 +77,7 @@ class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPI
         'activity': ['activity'],
     }
 
-    related_permission_classes = {
-        'activity': [IsActivityManager]
-    }
+    related_permission_classes = {'activity': [IsActivityManager]}
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -75,9 +90,7 @@ class BudgetLineList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'activity': ['activity'],
     }
 
-    related_permission_classes = {
-        'activity': [IsActivityManager]
-    }
+    related_permission_classes = {'activity': [IsActivityManager]}
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -90,9 +103,7 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestro
         'activity': ['activity'],
     }
 
-    related_permission_classes = {
-        'activity': [IsActivityManager]
-    }
+    related_permission_classes = {'activity': [IsActivityManager]}
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -155,10 +166,12 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
 class IbanCheckView(JsonApiViewMixin, CreateAPIView):
     serializer_class = IbanCheckSerializer
     queryset = IbanCheck.objects.all()
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     def hash_iban(self, iban):
-        normalized = iban.replace(" ", "").upper()
+        normalized = iban.replace(' ', '').upper()
         return hashlib.sha256(normalized.encode()).hexdigest()
 
     def perform_create(self, serializer):
@@ -184,9 +197,7 @@ class PayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     queryset = PayoutAccount.objects
     serializer_class = PayoutAccountSerializer
 
-    permission_classes = (
-        IsAuthenticated,
-    )
+    permission_classes = (IsAuthenticated,)
 
     prefetch_for_includes = {
         'owner': ['owner'],
@@ -200,9 +211,7 @@ class PlainPayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView)
     queryset = PlainPayoutAccount.objects.all()
     serializer_class = PlainPayoutAccountSerializer
 
-    permission_classes = (
-        IsAuthenticated,
-    )
+    permission_classes = (IsAuthenticated,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -218,7 +227,10 @@ class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpda
         'external_accounts': ['external_accounts'],
     }
 
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = (
+        IsAuthenticated,
+        IsOwner,
+    )
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
@@ -248,8 +260,7 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     queryset = Donor.objects.all()
     serializer_class = DonorCreateSerializer
 
-    permission_classes = (
-    )
+    permission_classes = ()
 
     prefetch_for_includes = {
         'activity': ['activity'],
@@ -282,28 +293,17 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
     queryset = Donor.objects.all()
     serializer_class = DonorSerializer
 
-    authentication_classes = (
-        ClientSecretAuthentication,
-        JSONWebTokenAuthentication
-    )
+    authentication_classes = (ClientSecretAuthentication, JSONWebTokenAuthentication)
 
-    permission_classes = (
-        DonorOwnerOrSucceededPermission,
-    )
+    permission_classes = (DonorOwnerOrSucceededPermission,)
 
-    prefetch_for_includes = {
-        'activity': ['activity'],
-        'user': ['user']
-    }
+    prefetch_for_includes = {'activity': ['activity'], 'user': ['user']}
 
 
 class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = (PaymentPermission,)
 
-    prefetch_for_includes = {
-        'donation': ['donation'],
-        'user': ['user']
-    }
+    prefetch_for_includes = {'donation': ['donation'], 'user': ['user']}
 
 
 class SupportersExportView(PrivateFileView):
@@ -322,7 +322,7 @@ class SupportersExportView(PrivateFileView):
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
-        filename = re.sub(r"[^\w\s\d]+", '-', activity.title)
+        filename = re.sub(r'[^\w\s\d]+', '-', activity.title)
         filename = 'participants for {}.xlsx'.format(filename)
 
         sheet = []
@@ -332,16 +332,12 @@ class SupportersExportView(PrivateFileView):
         sheet.append(title_row)
 
         for t, donor in enumerate(
-                activity.contributors.filter(status='succeeded').instance_of(Donor).prefetch_related('user__segments')
+            activity.contributors.filter(status='succeeded').instance_of(Donor).prefetch_related('user__segments')
         ):
             row = [prep_field(request, donor, field[0]) for field in self.fields]
             for segment_type in self.get_segment_types():
                 if donor.user:
-                    segments = ", ".join(
-                        [
-                            s.name for s in donor.user.segments.filter(segment_type=segment_type)
-                        ]
-                    )
+                    segments = ', '.join([s.name for s in donor.user.segments.filter(segment_type=segment_type)])
                     row.append(segments)
             sheet.append(row)
 

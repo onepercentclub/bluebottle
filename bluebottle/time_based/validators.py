@@ -13,23 +13,19 @@ class RegistrationDeadlineValidator(Validator):
 
     def is_valid(self):
         return (
-            not self.instance.registration_deadline or
-            not self.maxDate or (
-                self.maxDate and
-                self.instance.registration_deadline < self.maxDate
-            )
+            not self.instance.registration_deadline
+            or not self.maxDate
+            or (self.maxDate and self.instance.registration_deadline < self.maxDate)
         )
 
 
 class RegistrationLinkValidator(Validator):
-    field = "review_link"
-    code = "review-link"
-    message = _("Please use an full url starting with http:// or https://")
+    field = 'review_link'
+    code = 'review-link'
+    message = _('Please use an full url starting with http:// or https://')
 
     def is_valid(self):
-        return not self.instance.review_link or re.match(
-            "^http[s]?://", self.instance.review_link
-        )
+        return not self.instance.review_link or re.match('^http[s]?://', self.instance.review_link)
 
 
 class DateActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
@@ -51,11 +47,7 @@ class PeriodActivityStartDeadlineValidator(Validator):
     message = _('Deadline should be after start date')
 
     def is_valid(self):
-        return (
-            not self.instance.deadline or
-            not self.instance.start or
-            self.instance.deadline >= self.instance.start
-        )
+        return not self.instance.deadline or not self.instance.start or self.instance.deadline >= self.instance.start
 
 
 class CompletedSlotsValidator(Validator):

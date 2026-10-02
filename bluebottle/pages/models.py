@@ -27,7 +27,7 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 class DocumentItem(ContentItem):
     text = models.CharField(_('Link title'), max_length=100)
     document = models.FileField(
-        _("Document"),
+        _('Document'),
         upload_to='pages',
         validators=[
             FileMimetypeValidator(
@@ -38,11 +38,11 @@ class DocumentItem(ContentItem):
                     'image/png',
                     'image/gif',
                     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 ]
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     def __str__(self):
@@ -69,6 +69,7 @@ class ColumnsItem(ContentItem):
     """
     A snippet of HTML text to display on a page.
     """
+
     text1 = PluginHtmlField(_('text left'), blank=True)
     text1_final = models.TextField(editable=False, blank=True, null=True)
     text2 = PluginHtmlField(_('text right'), blank=True)
@@ -103,32 +104,33 @@ class ImageTextItem(ContentItem):
     """
     A snippet of HTML text to display on a page.
     """
+
     text = PluginHtmlField(_('text'), blank=True)
     text_final = models.TextField(editable=False, blank=True, null=True)
     image = PluginImageField(
-        _("Image"),
+        _('Image'),
         upload_to='pages',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     ALIGN_CHOICES = (
-        ('left', _("Left")),
-        ('right', _("Right")),
+        ('left', _('Left')),
+        ('right', _('Right')),
     )
 
     RATIO_CHOICES = (
-        (8, _("2:1 (Text twice as wide)")),
-        (6, _("1:1 (Equal width)")),
-        (4, _("1:2 (Image twice as wide)")),
+        (8, _('2:1 (Text twice as wide)')),
+        (6, _('1:1 (Equal width)')),
+        (4, _('1:2 (Image twice as wide)')),
     )
 
-    align = models.CharField(_("Picture placement"), max_length=10, choices=ALIGN_CHOICES, blank=True)
-    ratio = models.IntegerField(_("Picture / Text ratio"), choices=RATIO_CHOICES, default=6, blank=True)
+    align = models.CharField(_('Picture placement'), max_length=10, choices=ALIGN_CHOICES, blank=True)
+    ratio = models.IntegerField(_('Picture / Text ratio'), choices=RATIO_CHOICES, default=6, blank=True)
     objects = ContentItemManager()
 
     @property
@@ -164,14 +166,14 @@ class ImageTextRoundItem(ContentItem):
     text = PluginHtmlField(_('text'), blank=True)
     text_final = models.TextField(editable=False, blank=True, null=True)
     image = PluginImageField(
-        _("Image"),
+        _('Image'),
         upload_to='pages',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     objects = ContentItemManager()
@@ -197,21 +199,21 @@ class ImageTextRoundItem(ContentItem):
 class ScaledImageTextItem(ContentItem):
     text = PluginHtmlField(_('text'), blank=True)
     image = PluginImageField(
-        _("Image"),
+        _('Image'),
         upload_to='pages',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
     ALIGN_CHOICES = (
-        ('left', _("Left")),
-        ('right', _("Right")),
+        ('left', _('Left')),
+        ('right', _('Right')),
     )
 
-    align = models.CharField(_("Image placement"), max_length=10, choices=ALIGN_CHOICES, default='left')
+    align = models.CharField(_('Image placement'), max_length=10, choices=ALIGN_CHOICES, default='left')
 
     objects = ContentItemManager()
 
@@ -234,36 +236,32 @@ class Page(PublishableModel):
     full_page = models.BooleanField(
         _('Page without sub-navigation'),
         default=False,
-        help_text=_('Show this page in full width and hide the sub-navigation')
+        help_text=_('Show this page in full width and hide the sub-navigation'),
     )
 
-    show_title = models.BooleanField(
-        default=True,
-        help_text=_('Show the title of this page in the header')
-    )
+    show_title = models.BooleanField(default=True, help_text=_('Show the title of this page in the header'))
 
     # Contents
-    language = models.CharField(
-        _('language'),
-        max_length=7,
-        choices=lazy(get_language_choices, list)()
-    )
+    language = models.CharField(_('language'), max_length=7, choices=lazy(get_language_choices, list)())
 
-    body = PlaceholderField('blog_contents', plugins=[
-        'TextPlugin',
-        'ColumnsPlugin',
-        'ActionPlugin',
-        'ImageTextPlugin',
-        'ImageTextRoundPlugin',
-        'ScaledImageTextPlugin',
-        'OEmbedPlugin',
-        'RawHtmlPlugin',
-        'PicturePlugin',
-        'DocumentPlugin',
-        'PeopleBlockPlugin',
-        'ImagePlainTextBlockPlugin',
-        'PollBlockPlugin',
-    ])
+    body = PlaceholderField(
+        'blog_contents',
+        plugins=[
+            'TextPlugin',
+            'ColumnsPlugin',
+            'ActionPlugin',
+            'ImageTextPlugin',
+            'ImageTextRoundPlugin',
+            'ScaledImageTextPlugin',
+            'OEmbedPlugin',
+            'RawHtmlPlugin',
+            'PicturePlugin',
+            'DocumentPlugin',
+            'PeopleBlockPlugin',
+            'ImagePlainTextBlockPlugin',
+            'PollBlockPlugin',
+        ],
+    )
     # This should not be nessecary, but fixes deletion of some pages
     # See https://github.com/edoburu/django-fluent-contents/issues/19
     contentitem_set = ContentItemRelation()
@@ -297,9 +295,9 @@ class Page(PublishableModel):
 
 
 class PageTypeChoices(DjangoChoices):
-    start = ChoiceItem('start', label=_("Start an initiative"))
-    terms = ChoiceItem('terms', label=_("Terms of service"))
-    privacy = ChoiceItem('privacy', label=_("Privacy policy"))
+    start = ChoiceItem('start', label=_('Start an initiative'))
+    terms = ChoiceItem('terms', label=_('Terms of service'))
+    privacy = ChoiceItem('privacy', label=_('Privacy policy'))
 
 
 class PlatformPage(TranslatableModel):
@@ -319,7 +317,7 @@ class PlatformPage(TranslatableModel):
             'PeopleBlockPlugin',
             'ImagePlainTextBlockPlugin',
             'PollBlockPlugin',
-        ]
+        ],
     )
 
     translations = TranslatedFields(

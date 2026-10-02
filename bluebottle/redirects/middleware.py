@@ -34,10 +34,14 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
             # Always default to https if not on local machine.
             # This will hopefully fix Safari problems.
 
-            if http_host in ['test.localhost', 'localhost', 'localhost:8000',
-                             'localhost:8081',
-                             '127.0.0.1:8000', '127.0.0.1'] or \
-                    http_host.split(":", 1)[0].endswith("localhost"):
+            if http_host in [
+                'test.localhost',
+                'localhost',
+                'localhost:8000',
+                'localhost:8081',
+                '127.0.0.1:8000',
+                '127.0.0.1',
+            ] or http_host.split(':', 1)[0].endswith('localhost'):
                 http_host = 'http://' + http_host
             else:
                 http_host = 'https://' + http_host
@@ -49,7 +53,7 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
 
         language = get_default_language()
 
-        t = getattr(_active, "value", None)
+        t = getattr(_active, 'value', None)
         if t is not None:
             try:
                 lan = t.to_language()
@@ -59,7 +63,7 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
                 pass
 
         def redirect_target(new_path):
-            if new_path.startswith("http:") or new_path.startswith("https:"):
+            if new_path.startswith('http:') or new_path.startswith('https:'):
                 return new_path
             return http_host + '/' + language + new_path
 
@@ -67,8 +71,7 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
         for redirect in redirects:
             # Attempt a regular match
             if redirect.old_path == full_path:
-                return http.HttpResponsePermanentRedirect(
-                    redirect_target(redirect.new_path))
+                return http.HttpResponsePermanentRedirect(redirect_target(redirect.new_path))
 
             if settings.APPEND_SLASH and not request.path.endswith('/'):
                 # Try appending a trailing slash.
@@ -76,8 +79,7 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
                 slashed_full_path = full_path[:path_len] + '/' + full_path[path_len:]
 
                 if redirect.old_path == slashed_full_path:
-                    return http.HttpResponsePermanentRedirect(
-                        redirect_target(redirect.new_path))
+                    return http.HttpResponsePermanentRedirect(redirect_target(redirect.new_path))
 
         # No redirect was found. Return the response.
         return response

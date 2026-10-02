@@ -1,4 +1,3 @@
-
 import pyparsing as pp
 
 from bluebottle.scim.scim_data.schemas import SCHEMAS
@@ -8,12 +7,12 @@ schemas = pp.one_of([schema['id'] for schema in SCHEMAS])
 schema = (schemas + pp.Suppress(pp.Char(':'))).set_results_name('schema')
 
 filter = (
-    pp.Suppress('[') +
-    pp.Word(pp.alphas) +
-    pp.Suppress('eq') +
-    pp.Suppress('"') +
-    pp.Word(pp.alphas) +
-    pp.Suppress('"]')
+    pp.Suppress('[')
+    + pp.Word(pp.alphas)
+    + pp.Suppress('eq')
+    + pp.Suppress('"')
+    + pp.Word(pp.alphas)
+    + pp.Suppress('"]')
 )
 
 attr = pp.Word(pp.alphas).set_results_name('attrs', True)
@@ -24,7 +23,7 @@ attrs = pp.delimitedList(filtered_attr | attr, '.')
 scim_path = pp.Opt(schema) + attrs
 
 
-class SCIMPath():
+class SCIMPath:
     def __init__(self, path):
         self.original = path
         self.parsed = scim_path.parse_string(self.original)
@@ -37,7 +36,7 @@ class SCIMPath():
         self.schema = self.parsed.schema.as_list()[0] if self.parsed.schema else None
 
     def get(self, data):
-        " Get path from data. Returns None if not set"
+        "Get path from data. Returns None if not set"
         for part in self.parsed:
             if not isinstance(part, str) and part.as_list() in self.filters:
                 # Part is like `emails[type eq "work"]` which is parted to `["emails", "type", "work"]`

@@ -35,12 +35,18 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
     readonly_fields = ('online',)
 
     fieldsets = (
-        (None, {
-            'fields': ('title', 'slug', 'author', 'language', 'main_image', 'contents'),
-        }),
-        (_('Publication settings'), {
-            'fields': ('status', 'publication_date', 'publication_end_date', 'online'),
-        }),
+        (
+            None,
+            {
+                'fields': ('title', 'slug', 'author', 'language', 'main_image', 'contents'),
+            },
+        ),
+        (
+            _('Publication settings'),
+            {
+                'fields': ('status', 'publication_date', 'publication_end_date', 'online'),
+            },
+        ),
     )
 
     prepopulated_fields = {'slug': ('title',)}
@@ -56,33 +62,25 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         urlpatterns = [
             path(
                 '<int:pk>/export/',
-                self.admin_site.admin_view(
-                    self.export_news_item
-                ),
-                name="{0}_{1}_export".format(*info)
+                self.admin_site.admin_view(self.export_news_item),
+                name='{0}_{1}_export'.format(*info),
             ),
-            path(
-                'import/',
-                self.admin_site.admin_view(
-                    self.import_news_items
-                ),
-                name="{0}_{1}_import".format(*info)
-            ),
+            path('import/', self.admin_site.admin_view(self.import_news_items), name='{0}_{1}_import'.format(*info)),
         ]
 
         return urlpatterns + base_urls
 
     def online(self, obj):
         if (
-            obj.status == 'published' and
-            obj.publication_date and
-            obj.publication_date < now() and
-            (obj.publication_end_date is None or obj.publication_end_date > now())
+            obj.status == 'published'
+            and obj.publication_date
+            and obj.publication_date < now()
+            and (obj.publication_end_date is None or obj.publication_end_date > now())
         ):
-            return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
-        return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
+            return format_html('<span class="admin-label admin-label-green">{}</span>', _('Online'))
+        return format_html('<span class="admin-label admin-label-gray">{}</span>', _('Offline'))
 
-    online.help_text = _("Is this item currently visible online or not.")
+    online.help_text = _('Is this item currently visible online or not.')
 
     def get_base_object(self, pk):
         # Give a workable object, no matter whether it's a news or blogpost.
@@ -131,16 +129,15 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             obj.publication_date = now()
         obj.save()
 
-    def render_change_form(self, request, context, add=False, change=False,
-                           form_url='', obj=None):
+    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
         info = self.model._meta.app_label, self.model._meta.model_name
         if change and obj and request.user.is_superuser:
-            context.update({
-                'export_url': reverse('admin:{0}_{1}_export'.format(*info),
-                                      kwargs={'pk': obj.pk}),
-            })
-        return super(NewsItemAdmin, self).render_change_form(request, context, add,
-                                                             change, form_url, obj)
+            context.update(
+                {
+                    'export_url': reverse('admin:{0}_{1}_export'.format(*info), kwargs={'pk': obj.pk}),
+                }
+            )
+        return super(NewsItemAdmin, self).render_change_form(request, context, add, change, form_url, obj)
 
     STATUS_ICONS = {
         PublishedStatus.published: 'icon-yes.gif',
@@ -151,13 +148,12 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         rows_updated = queryset.update(status=PublishedStatus.published)
 
         if rows_updated == 1:
-            message = "1 entry was marked as published."
+            message = '1 entry was marked as published.'
         else:
-            message = "{0} entries were marked as published.".format(
-                rows_updated)
+            message = '{0} entries were marked as published.'.format(rows_updated)
         self.message_user(request, message)
 
-    make_published.short_description = _("Mark selected entries as published")
+    make_published.short_description = _('Mark selected entries as published')
 
     def export_selected(self, request, queryset):
         """Export selected news items to JSON file."""
@@ -166,36 +162,33 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             export_data.append(export_news_item_to_dict(news_item, request=request))
 
         if not export_data:
-            self.message_user(request, _("No news items were selected."), messages.WARNING)
+            self.message_user(request, _('No news items were selected.'), messages.WARNING)
             return
 
         # Create JSON response
         response = HttpResponse(
-            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
-            content_type='application/json'
+            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder), content_type='application/json'
         )
-        filename = f"news_items_export_{now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = f'news_items_export_{now().strftime("%Y%m%d_%H%M%S")}.json'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
-    export_selected.short_description = _("Export selected news items")
+    export_selected.short_description = _('Export selected news items')
 
     def export_news_item(self, request, pk):
         """Export a single news item to JSON file."""
         news_item = self.get_object(request, pk)
         if news_item is None:
             from django.contrib.admin.exceptions import DisallowedModelAdminToField
-            raise DisallowedModelAdminToField(
-                "NewsItem object with primary key '%s' does not exist." % pk
-            )
+
+            raise DisallowedModelAdminToField("NewsItem object with primary key '%s' does not exist." % pk)
 
         export_data = [export_news_item_to_dict(news_item)]
 
         response = HttpResponse(
-            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
-            content_type='application/json'
+            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder), content_type='application/json'
         )
-        filename = f"news_item_{news_item.slug}_{news_item.pk}.json"
+        filename = f'news_item_{news_item.slug}_{news_item.pk}.json'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
@@ -212,9 +205,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                     result = import_news_items_from_data(data)
 
                     message = render_to_string(
-                        'admin/news/newsitem/import_message.html',
-                        {'result': result},
-                        request=request
+                        'admin/news/newsitem/import_message.html', {'result': result}, request=request
                     ).strip()
 
                     if result['imported'] > 0 or result['updated'] > 0:
@@ -230,9 +221,9 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                     else:
                         return redirect('admin:news_newsitem_changelist')
                 except json.JSONDecodeError:
-                    messages.error(request, _("Invalid JSON file. Please check the file format."))
+                    messages.error(request, _('Invalid JSON file. Please check the file format.'))
                 except Exception as e:
-                    messages.error(request, _("Error importing news items: {0}").format(str(e)))
+                    messages.error(request, _('Error importing news items: {0}').format(str(e)))
         else:
             form = NewsItemImportForm()
 

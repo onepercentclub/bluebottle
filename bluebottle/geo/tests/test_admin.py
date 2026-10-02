@@ -16,14 +16,12 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 mapbox_response = MAPBOX_V6_ADDRESS_FEATURE
 
 
-@mock.patch(
-    'bluebottle.geo.mapbox.lookup_by_mapbox_id',
-    return_value={'features': [mapbox_response]}
-)
+@mock.patch('bluebottle.geo.mapbox.lookup_by_mapbox_id', return_value={'features': [mapbox_response]})
 class GeolocationAdminTest(BluebottleAdminTestCase):
     """
     Test Geolocation admin
     """
+
     extra_environ = {}
     csrf_checks = False
     setup_auth = True

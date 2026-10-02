@@ -17,7 +17,7 @@ from bluebottle.time_based.models import (
     ScheduleSlot,
     TeamScheduleSlot,
     ScheduleActivity,
-    RegisteredDateActivity
+    RegisteredDateActivity,
 )
 
 logger = logging.getLogger('bluebottle')
@@ -107,63 +107,26 @@ def registered_date_activity_tasks():
                 task.execute()
 
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    date_activity_tasks.s()
+app.add_periodic_task(crontab(minute='*/15'), date_activity_tasks.s())
 
-)
+app.add_periodic_task(crontab(minute='*/15'), date_participant_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    date_participant_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), registered_date_activity_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    registered_date_activity_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), time_contribution_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    time_contribution_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), deadline_activity_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    deadline_activity_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), periodic_activity_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    periodic_activity_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), schedule_activity_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    schedule_activity_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), periodic_slot_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    periodic_slot_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), schedule_slot_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    schedule_slot_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), team_schedule_slot_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    team_schedule_slot_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), team_schedule_slot_tasks.s())
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    team_schedule_slot_tasks.s()
-)
-
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    registered_date_activity_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), registered_date_activity_tasks.s())

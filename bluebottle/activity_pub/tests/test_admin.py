@@ -40,9 +40,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.country = CountryFactory.create()
 
         with LocalTenant(self.other_tenant):
-            CountryFactory.create(
-                alpha2_code=self.country.alpha2_code
-            )
+            CountryFactory.create(alpha2_code=self.country.alpha2_code)
             CountryFactory.create()
 
             site_settings = SitePlatformSettings.load()
@@ -75,19 +73,15 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         form = page.forms['following_form']
         form['platform_url'] = kwargs.get('platform_url', self.other_platform_url)
         form['adoption_type'] = kwargs.get('adoption_type', 'link')
-        form['automatic_adoption_activity_types'] = kwargs.get(
-            'activity_types', ['deed']
-        )
+        form['automatic_adoption_activity_types'] = kwargs.get('activity_types', ['deed'])
         default_owner = kwargs.get('default_owner')
         if default_owner is not None:
             form['default_owner'] = str(default_owner.id)
         actor = kwargs.get('actor') or self.create_remote_actor()
-        with mock.patch(
-            'bluebottle.activity_pub.admin.client.get',
-            return_value=self.other_platform_url
-        ), mock.patch(
-            'bluebottle.activity_pub.admin.adapter.follow'
-        ) as follow:
+        with (
+            mock.patch('bluebottle.activity_pub.admin.client.get', return_value=self.other_platform_url),
+            mock.patch('bluebottle.activity_pub.admin.adapter.follow') as follow,
+        ):
             follow.side_effect = lambda url, model=None: setattr(model, 'object', actor)
             return form.submit()
 
@@ -101,17 +95,12 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
     def test_following_admin_add_connection_with_link_settings(self):
         default_owner = BlueBottleUserFactory.create()
         self.submit_following_form(
-            adoption_type='link',
-            activity_types=['deed', 'dateactivity'],
-            default_owner=default_owner
+            adoption_type='link', activity_types=['deed', 'dateactivity'], default_owner=default_owner
         )
 
         follow = Following.objects.get()
         self.assertEqual(follow.adoption_type, 'link')
-        self.assertEqual(
-            set(follow.automatic_adoption_activity_types),
-            {'deed', 'dateactivity'}
-        )
+        self.assertEqual(set(follow.automatic_adoption_activity_types), {'deed', 'dateactivity'})
         self.assertEqual(follow.default_owner, default_owner)
         self.assertTrue(follow.object.organization)
 
@@ -123,16 +112,10 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         form['adoption_type'] = 'link'
         form['automatic_adoption_activity_types'] = ['deed']
 
-        with mock.patch(
-            'bluebottle.activity_pub.admin.client.get',
-            side_effect=requests.exceptions.HTTPError()
-        ):
+        with mock.patch('bluebottle.activity_pub.admin.client.get', side_effect=requests.exceptions.HTTPError()):
             response = form.submit()
 
-        self.assertIn(
-            'Could not determine platform information needed for subscribing',
-            response.text
-        )
+        self.assertIn('Could not determine platform information needed for subscribing', response.text)
         self.assertEqual(Following.objects.count(), 0)
 
     def test_follower_admin_publish_activities_button_counts_unpublished(self):
@@ -144,13 +127,8 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         DeedFactory.create(status='draft')
         self.create_published_activity(follower, status='open')
 
-        unpublished_ids = set(
-            follower.unpublished_activities.values_list('id', flat=True)
-        )
-        self.assertEqual(
-            unpublished_ids,
-            {open_activity.id, succeeded_activity.id, running_activity.id}
-        )
+        unpublished_ids = set(follower.unpublished_activities.values_list('id', flat=True))
+        self.assertEqual(unpublished_ids, {open_activity.id, succeeded_activity.id, running_activity.id})
 
         admin = FollowerAdmin(Follower, AdminSite())
         button = admin.publish_activities_button(follower)
@@ -159,14 +137,8 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.assertIn('There are 2 unpublished open activities', button)
         self.assertIn('Publish succeeded activities', button)
         self.assertIn('There is 1 unpublished succeeded activity', button)
-        self.assertIn(
-            reverse('admin:activity_pub_publish_open_activities', args=(follower.id,)),
-            button
-        )
-        self.assertIn(
-            reverse('admin:activity_pub_publish_succeeded_activities', args=(follower.id,)),
-            button
-        )
+        self.assertIn(reverse('admin:activity_pub_publish_open_activities', args=(follower.id,)), button)
+        self.assertIn(reverse('admin:activity_pub_publish_succeeded_activities', args=(follower.id,)), button)
 
     def test_follower_admin_publish_activities_triggers_task(self):
         follower = self.create_follower()
@@ -185,10 +157,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         called_actor, called_queryset, called_tenant = delay.call_args[0]
         self.assertEqual(called_actor, follower.actor)
         self.assertEqual(called_tenant, self.tenant)
-        self.assertEqual(
-            set(called_queryset.values_list('id', flat=True)),
-            {open_activity.id}
-        )
+        self.assertEqual(set(called_queryset.values_list('id', flat=True)), {open_activity.id})
 
     def test_follower_admin_accept_follow_request_sets_publish_mode(self):
         follower = self.create_follower(accepted=False)

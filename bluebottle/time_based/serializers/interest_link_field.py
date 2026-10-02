@@ -55,9 +55,7 @@ def omit_interests_if_unauthorized(fields, instance):
     if can_view_interests(request_from_fields(fields), instance):
         return fields
 
-    return OrderedDict(
-        (key, value) for key, value in fields.items() if key != 'interests'
-    )
+    return OrderedDict((key, value) for key, value in fields.items() if key != 'interests')
 
 
 def remove_interests_field_for_non_managers(serializer, instance):
@@ -86,9 +84,7 @@ class InterestLinkField(HyperlinkedRelatedField):
         super().__init__(**kwargs)
 
     def get_interests_queryset(self, obj):
-        return getattr(
-            obj, self.source or self.field_name or self.parent.field_name
-        )
+        return getattr(obj, self.source or self.field_name or self.parent.field_name)
 
     def get_count(self, queryset):
         if self.slot_level:
@@ -97,15 +93,13 @@ class InterestLinkField(HyperlinkedRelatedField):
             return queryset.filter(slot__isnull=True).count()
         return queryset.count()
 
-    def get_links(self, obj=None, lookup_field="pk"):
+    def get_links(self, obj=None, lookup_field='pk'):
         request = self.context.get('request')
         if obj is None or not can_view_interests(request, obj):
             return {}
 
         return_data = super().get_links(obj, lookup_field)
-        url = self.reverse(
-            self.related_link_view_name, args=(getattr(obj, lookup_field),)
-        )
+        url = self.reverse(self.related_link_view_name, args=(getattr(obj, lookup_field),))
         return_data['related'] = {
             'href': url,
             'meta': {'count': self.get_count(self.get_interests_queryset(obj))},

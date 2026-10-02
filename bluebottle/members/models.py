@@ -36,9 +36,7 @@ class SocialLoginSettings(models.Model):
         ('google', _('Google')),
     )
     settings = models.ForeignKey(
-        'members.MemberPlatformSettings',
-        on_delete=models.CASCADE,
-        related_name='social_login_methods'
+        'members.MemberPlatformSettings', on_delete=models.CASCADE, related_name='social_login_methods'
     )
 
     backend = models.CharField(_('Platform'), choices=LOGIN_BACKENDS)
@@ -72,7 +70,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         ('whitelist', _('Only people with a whitelisted domain can create an account')),
         (
             'whitelist_and_request',
-            _('People with a whitelisted domain can create an account; all others can request access')
+            _('People with a whitelisted domain can create an account; all others can request access'),
         ),
     )
 
@@ -82,17 +80,16 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     closed = CheckboxField(
-        _('Platform access'), default=False,
+        _('Platform access'),
+        default=False,
         inline_label=_('Require log in before accessing the platform'),
-        help_text=_('Only logged-in users can view the platform.')
+        help_text=_('Only logged-in users can view the platform.'),
     )
     create_initiatives = models.BooleanField(
         _('create initiatives'), default=True, help_text=_('Members can create initiatives')
     )
     do_good_hours = models.PositiveIntegerField(
-        _('Impact hours'),
-        null=True, blank=True,
-        help_text=_("Leave empty if this feature won't be used.")
+        _('Impact hours'), null=True, blank=True, help_text=_("Leave empty if this feature won't be used.")
     )
     fiscal_month_offset = models.IntegerField(
         _('Fiscal year offset'),
@@ -101,7 +98,8 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
             'For example, if your fiscal year starts in September (which is 4 months before '
             'January), enter 4. This also affects how impact metrics are displayed on the homepage.'
         ),
-        default=0)
+        default=0,
+    )
 
     reminder_q1 = models.BooleanField(
         _('Reminder Q1'),
@@ -128,7 +126,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         ),
         max_length=100,
         choices=LOGIN_METHODS,
-        default=['password']
+        default=['password'],
     )
     confirm_signup = CheckboxField(
         _('verify email on sign up'),
@@ -147,7 +145,8 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     email_domains = ArrayField(
         models.CharField(),
         verbose_name=_('Whitelisted email domains'),
-        blank=True, null=True,
+        blank=True,
+        null=True,
         default=list,
     )
 
@@ -159,15 +158,11 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     session_only = models.BooleanField(
-        _('session only'),
-        default=False,
-        help_text=_('Limit user session to browser session')
+        _('session only'), default=False, help_text=_('Limit user session to browser session')
     )
 
     explicit_terms = models.BooleanField(
-        _('Explicit terms'),
-        default=False,
-        help_text=_('Users have to explicitly accept terms when logging in')
+        _('Explicit terms'), default=False, help_text=_('Users have to explicitly accept terms when logging in')
     )
 
     request_access_method = models.CharField(
@@ -183,7 +178,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
             help_text=_('Explain how people can request access to the platform.'),
             max_length=2000,
             null=True,
-            blank=True
+            blank=True,
         ),
     )
 
@@ -191,7 +186,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         _('Request access mail to address'),
         help_text=_('Enter the email address where people should send their access request.'),
         null=True,
-        blank=True
+        blank=True,
     )
 
     request_access_code = models.CharField(
@@ -199,7 +194,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         help_text=_('With this code people can sign-up without a white-listed email address.'),
         max_length=255,
         null=True,
-        blank=True
+        blank=True,
     )
 
     required_questions_location = models.CharField(
@@ -207,111 +202,94 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         choices=REQUIRED_QUESTIONS_OPTIONS,
         max_length=12,
         default='login',
-        help_text=_(
-            'When should the user be asked to complete their required profile fields?'
-        )
+        help_text=_('When should the user be asked to complete their required profile fields?'),
     )
 
     consent_link = models.CharField(
         _('consent link'),
         default='"https://goodup.com/cookie-policy"',
         help_text=_('Link more information about the platforms cookie policy'),
-        max_length=255
+        max_length=255,
     )
 
     disable_cookie_consent = models.BooleanField(
         _('disable cookie consent'),
         default=False,
-        help_text=_(
-            'Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)'
-        )
+        help_text=_('Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)'),
     )
 
     gtm_code = models.CharField(
         _('gtm code'),
         help_text=_('Adding the GTM script to your platform allows you to manage and deploy third-party tools.'),
         max_length=255,
-        blank=True
+        blank=True,
     )
 
     background = models.ImageField(
         _('Sign up image'),
         help_text=_('This image will be displayed on the sign up and log in pages.'),
-        null=True, blank=True, upload_to='site_content/',
+        null=True,
+        blank=True,
+        upload_to='site_content/',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     translate_user_content = models.BooleanField(
         _('translate user content'),
         help_text=_('Give users the option to translate user generated content.'),
-        default=False
+        default=False,
     )
 
     enable_gender = models.BooleanField(
-        _('enable gender'),
-        default=False,
-        help_text=_('Show gender question in profile form')
+        _('enable gender'), default=False, help_text=_('Show gender question in profile form')
     )
 
     enable_birthdate = models.BooleanField(
-        _('enable birthday'),
-        default=False,
-        help_text=_('Show birthdate question in profile form')
+        _('enable birthday'), default=False, help_text=_('Show birthdate question in profile form')
     )
 
     enable_address = models.BooleanField(
-        _('email address'),
-        default=False,
-        help_text=_('Show address question in profile form')
+        _('email address'), default=False, help_text=_('Show address question in profile form')
     )
 
     create_segments = models.BooleanField(
         _('create segments'),
         default=False,
         help_text=_(
-            "Create new segments when a user logs in. "
-            "Leave unchecked if only priorly specified ones should be used."
+            'Create new segments when a user logs in. Leave unchecked if only priorly specified ones should be used.'
         ),
     )
     create_locations = models.BooleanField(
         _('create locations'),
         default=False,
         help_text=_(
-            "Create new work locations when a user logs in. "
-            "Leave unchecked if only priorly specified ones should be used."
+            'Create new work locations when a user logs in. '
+            'Leave unchecked if only priorly specified ones should be used.'
         ),
     )
 
     require_office = models.BooleanField(
-        _('Work location'),
-        default=False,
-        help_text=_('Require members to enter their work location.')
+        _('Work location'), default=False, help_text=_('Require members to enter their work location.')
     )
     require_address = models.BooleanField(
-        _('Address'),
-        default=False,
-        help_text=_('Require members to enter their address.')
+        _('Address'), default=False, help_text=_('Require members to enter their address.')
     )
     require_phone_number = models.BooleanField(
-        _('Phone number'),
-        default=False,
-        help_text=_('Require members to enter their phone number.')
+        _('Phone number'), default=False, help_text=_('Require members to enter their phone number.')
     )
     require_birthdate = models.BooleanField(
-        _('Birthdate'),
-        default=False,
-        help_text=_('Require members to enter their date of birth.')
+        _('Birthdate'), default=False, help_text=_('Require members to enter their date of birth.')
     )
 
     verify_office = models.BooleanField(
         _('Verify SSO data work location'),
         default=False,
-        help_text=_('Require members to verify their work location once if it is filled via SSO.')
+        help_text=_('Require members to verify their work location once if it is filled via SSO.'),
     )
 
     display_member_names = models.CharField(
@@ -324,7 +302,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
             'If first name is selected, then the names of initiators and activity manager '
             'will remain displayed in full and Activity managers and initiators will see '
             'the full names of their participants. And staff members will see all names in full.'
-        )
+        ),
     )
 
     retention_anonymize = models.PositiveIntegerField(
@@ -335,8 +313,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         help_text=_(
             'Set the number of months after which user data will be anonymised. '
             'Leave the field empty or with ‘0’ if you do not wish to anonymise user data.'
-        )
-
+        ),
     )
 
     retention_delete = models.PositiveIntegerField(
@@ -347,8 +324,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         help_text=_(
             'Set the number of months after which user data will be deleted. '
             'Leave the field empty or with ‘0’ if you do not wish to delete user data.'
-        )
-
+        ),
     )
 
     @property
@@ -380,40 +356,26 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
 @python_2_unicode_compatible
 class Member(BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
-    accepted = models.BooleanField(
-        _('Accepted'),
-        default=True,
-        help_text=_('Was approved by platform manager.')
-    )
+    accepted = models.BooleanField(_('Accepted'), default=True, help_text=_('Was approved by platform manager.'))
     subscribed = models.BooleanField(
-        _('Matching'),
-        default=False,
-        help_text=_("Monthly overview of activities that match this person's profile")
+        _('Matching'), default=False, help_text=_("Monthly overview of activities that match this person's profile")
     )
     receive_reminder_emails = models.BooleanField(
         _('Receive reminder emails'),
         default=True,
-        help_text=_("User receives emails reminding them about their do good hours")
+        help_text=_('User receives emails reminding them about their do good hours'),
     )
 
-    remote_id = models.CharField(_('remote_id'),
-                                 max_length=75,
-                                 blank=True,
-                                 null=True)
+    remote_id = models.CharField(_('remote_id'), max_length=75, blank=True, null=True)
     last_logout = models.DateTimeField(_('Last Logout'), blank=True, null=True)
 
-    scim_external_id = models.CharField(
-        _('external SCIM id'),
-        max_length=75,
-        blank=True,
-        null=True
-    )
+    scim_external_id = models.CharField(_('external SCIM id'), max_length=75, blank=True, null=True)
 
     place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
 
     subregion_manager = models.ManyToManyField(
         OfficeSubRegion,
-        verbose_name=_("Work location groups managed"),
+        verbose_name=_('Work location groups managed'),
         help_text=_(
             "Filter this user's view to one or more location groups. Leave empty to show data from all locations."
         ),
@@ -422,19 +384,17 @@ class Member(BlueBottleBaseUser):
 
     office_manager = models.ManyToManyField(
         Location,
-        verbose_name=_("Work locations managed"),
-        help_text=_(
-            "Filter this user's view to specific work locations. Leave empty to show data from all locations."
-        ),
+        verbose_name=_('Work locations managed'),
+        help_text=_("Filter this user's view to specific work locations. Leave empty to show data from all locations."),
         blank=True,
     )
 
     segment_manager = models.ManyToManyField(
         Segment,
-        verbose_name=_("Segments managed"),
+        verbose_name=_('Segments managed'),
         help_text=_(
-            "Select one or more segments to filter on. "
-            "The user will only get updates for activities with the selected segments."
+            'Select one or more segments to filter on. '
+            'The user will only get updates for activities with the selected segments.'
         ),
         blank=True,
     )
@@ -444,19 +404,13 @@ class Member(BlueBottleBaseUser):
     )
 
     segments = models.ManyToManyField(
-        'segments.segment',
-        verbose_name=_('Segment'),
-        related_name='users',
-        blank=True,
-        through='members.UserSegment'
+        'segments.segment', verbose_name=_('Segment'), related_name='users', blank=True, through='members.UserSegment'
     )
 
     avatar = ImageField(blank=True, null=True)
 
     terms_accepted = models.BooleanField(
-        _('Terms accepted'),
-        default=False,
-        help_text=_('User has explicitly accepted the terms')
+        _('Terms accepted'), default=False, help_text=_('User has explicitly accepted the terms')
     )
 
     @classmethod
@@ -486,9 +440,7 @@ class Member(BlueBottleBaseUser):
     class Analytics(object):
         type = 'member'
         tags = {}
-        fields = {
-            'user_id': 'id'
-        }
+        fields = {'user_id': 'id'}
 
         @staticmethod
         def extra_tags(obj, created):
@@ -528,16 +480,13 @@ class Member(BlueBottleBaseUser):
     def required(self):
         required = []
         for segment_type in SegmentType.objects.filter(required=True).all():
-            if not self.segments.filter(
-                usersegment__verified=True, segment_type=segment_type
-            ).count():
+            if not self.segments.filter(usersegment__verified=True, segment_type=segment_type).count():
                 required.append(f'segment_type.{segment_type.id}')
 
         platform_settings = MemberPlatformSettings.load()
 
         if platform_settings.require_office and (
-            not self.location or
-            (platform_settings.verify_office and not self.location_verified)
+            not self.location or (platform_settings.verify_office and not self.location_verified)
         ):
             required.append('location')
 
@@ -555,14 +504,12 @@ class Member(BlueBottleBaseUser):
 
     def get_hours(self, status):
         from ..time_based.models import TimeContribution
+
         platform_settings = MemberPlatformSettings.load()
         year_start = platform_settings.fiscal_year_start
         year_end = platform_settings.fiscal_year_end
         hours = TimeContribution.objects.filter(
-            contributor__user=self,
-            status=status,
-            start__gte=year_start,
-            start__lte=year_end
+            contributor__user=self, status=status, start__gte=year_start, start__lte=year_end
         ).aggregate(hours=Sum('value'))['hours']
         if hours:
             return hours.seconds / 3600 + hours.days * 24

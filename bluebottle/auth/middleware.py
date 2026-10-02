@@ -14,8 +14,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 from lockdown import settings as lockdown_settings
-from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
-                                 compile_url_exceptions, get_lockdown_form)
+from lockdown.middleware import LockdownMiddleware as BaseLockdownMiddleware, compile_url_exceptions, get_lockdown_form
 
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.middleware import OTPMiddleware as BaseOTPMiddleware, is_verified
@@ -47,7 +46,7 @@ class UserJwtTokenMiddleware(MiddlewareMixin):
     """
 
     def process_request(self, request):
-        """ Override only the request to add the user """
+        """Override only the request to add the user"""
         try:
             return request.user
         except AttributeError:
@@ -65,8 +64,9 @@ class UserJwtTokenMiddleware(MiddlewareMixin):
 
             # Set last_seen on the user record if it has been > 10 mins
             # since the record was set.
-            if not request.user.last_seen or (request.user.last_seen <
-               timezone.now() - timedelta(minutes=LAST_SEEN_DELTA)):
+            if not request.user.last_seen or (
+                request.user.last_seen < timezone.now() - timedelta(minutes=LAST_SEEN_DELTA)
+            ):
                 request.user.last_seen = timezone.now()
                 request.user.save()
             return
@@ -78,7 +78,7 @@ class SlidingJwtTokenMiddleware(MiddlewareMixin):
     """
 
     def process_response(self, request, response):
-        """ Override only the request to add the new token """
+        """Override only the request to add the new token"""
         obj = JSONWebTokenAuthentication()
 
         try:
@@ -98,18 +98,15 @@ class SlidingJwtTokenMiddleware(MiddlewareMixin):
             # Check whether we need to renew the token. This will happen if the token
             # hasn't been renewed in JWT_TOKEN_RENEWAL_DELTA
             exp = payload.get('exp')
-            created_timestamp = exp - int(
-                properties.JWT_EXPIRATION_DELTA.total_seconds())
-            renewal_timestamp = created_timestamp + int(
-                properties.JWT_TOKEN_RENEWAL_DELTA.total_seconds())
+            created_timestamp = exp - int(properties.JWT_EXPIRATION_DELTA.total_seconds())
+            renewal_timestamp = created_timestamp + int(properties.JWT_TOKEN_RENEWAL_DELTA.total_seconds())
             now_timestamp = timegm(datetime.utcnow().utctimetuple())
 
             # If it has been less than JWT_TOKEN_RENEWAL_DELTA time since the
             # token was created then we will pass on created a renewed token
             # and just return the response unchanged.
             if now_timestamp < renewal_timestamp:
-                logging.debug(
-                    'JWT_TOKEN_RENEWAL_DELTA not exceeded: returning response unchanged.')
+                logging.debug('JWT_TOKEN_RENEWAL_DELTA not exceeded: returning response unchanged.')
                 return response
 
             # Get and check orig_iat
@@ -117,22 +114,19 @@ class SlidingJwtTokenMiddleware(MiddlewareMixin):
 
             if orig_iat:
                 # verify expiration
-                expiration_timestamp = orig_iat + int(
-                    properties.JWT_TOKEN_RENEWAL_LIMIT.total_seconds())
+                expiration_timestamp = orig_iat + int(properties.JWT_TOKEN_RENEWAL_LIMIT.total_seconds())
                 if now_timestamp > expiration_timestamp:
                     # Token has passed renew time limit - just return existing
                     # response. We need to test this process because it is
                     # probably the case that the response has already been
                     # set to an unauthorized status
                     # now_timestamp > expiration_timestamp.
-                    logging.debug(
-                        'JWT token has expired: returning response unchanged.')
+                    logging.debug('JWT token has expired: returning response unchanged.')
                     return response
 
             else:
                 # orig_iat field is required - just return existing response
-                logging.debug(
-                    'JWT token orig_iat field not defined: returning response unchanged.')
+                logging.debug('JWT token orig_iat field not defined: returning response unchanged.')
                 return response
 
             jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -141,8 +135,7 @@ class SlidingJwtTokenMiddleware(MiddlewareMixin):
 
             # Attach the renewed token to the response
             jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-            response['Refresh-Token'] = "JWT {0}".format(
-                jwt_encode_handler(new_payload))
+            response['Refresh-Token'] = 'JWT {0}'.format(jwt_encode_handler(new_payload))
 
             logging.debug('JWT token has been renewed.')
 
@@ -150,8 +143,7 @@ class SlidingJwtTokenMiddleware(MiddlewareMixin):
 
         else:
             # No authenticated user - just return existing response
-            logging.debug(
-                'No JWT authenticated user: returning response unchanged.')
+            logging.debug('No JWT authenticated user: returning response unchanged.')
             return response
 
 
@@ -169,8 +161,7 @@ class AdminOnlySessionMiddleware(SessionMiddleware):
 
     def process_response(self, request, response):
         if isAdminRequest(request):
-            return super(AdminOnlySessionMiddleware, self).process_response(
-                request, response)
+            return super(AdminOnlySessionMiddleware, self).process_response(request, response)
         else:
             return response
 
@@ -209,8 +200,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         try:
             session = request.session
         except AttributeError:
-            raise ImproperlyConfigured('django-lockdown requires the Django '
-                                       'sessions framework')
+            raise ImproperlyConfigured('django-lockdown requires the Django sessions framework')
 
         # Don't lock down if the URL matches an exception pattern.
         if self.url_exceptions:
@@ -300,11 +290,11 @@ class LogAuthFailureMiddleWare(MiddlewareMixin):
             pass
 
     def process_response(self, request, response):
-        """ Log a message for each failed login attempt. """
+        """Log a message for each failed login attempt."""
         if (
-            reverse('admin:login') == request.path and
-            request.method == 'POST' and
-            response.status_code not in (302, 429)
+            reverse('admin:login') == request.path
+            and request.method == 'POST'
+            and response.status_code not in (302, 429)
         ):
             error = 'Authorization failed: {username} {ip}'.format(
                 ip=get_client_ip(request), username=request.POST.get('username')
@@ -312,9 +302,9 @@ class LogAuthFailureMiddleWare(MiddlewareMixin):
             authorization_logger.error(error)
 
         if (
-            reverse('token-auth') == request.path and
-            request.method == 'POST' and
-            response.status_code not in (201, 429)
+            reverse('token-auth') == request.path
+            and request.method == 'POST'
+            and response.status_code not in (201, 429)
         ):
             try:
                 data = json.loads(request.body)
@@ -343,11 +333,7 @@ class OTPMiddleware(BaseOTPMiddleware):
 
         if user.is_authenticated:
             persistent_id = request.session.get(DEVICE_ID_SESSION_KEY)
-            device = (
-                self._device_from_persistent_id(persistent_id)
-                if persistent_id
-                else None
-            )
+            device = self._device_from_persistent_id(persistent_id) if persistent_id else None
 
             if (device is not None) and (device.user_id != user.pk):
                 device = None

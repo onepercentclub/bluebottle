@@ -7,15 +7,19 @@ from bluebottle.utils.views import ListAPIView, JsonApiViewMixin
 
 class OldStatisticList(JsonApiViewMixin, ListAPIView):
     serializer_class = OldStatisticSerializer
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
     queryset = BaseStatistic.objects.filter(active=True)
 
-    renderer_classes = (StatisticsRenderer, )
+    renderer_classes = (StatisticsRenderer,)
 
 
 class StatisticList(JsonApiViewMixin, ListAPIView):
     serializer_class = StatisticSerializer
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
     queryset = BaseStatistic.objects.filter(active=True)
 
     def get_queryset(self, *args, **kwargs):
@@ -27,13 +31,15 @@ class StatisticList(JsonApiViewMixin, ListAPIView):
 
         return queryset
 
-    renderer_classes = (StatisticsRenderer, )
+    renderer_classes = (StatisticsRenderer,)
 
 
 class UserStatisticList(JsonApiViewMixin, ListAPIView):
     serializer_class = UserStatisticSerializer
-    permission_classes = [TenantConditionalOpenClose, ]
-    renderer_classes = (StatisticsRenderer, )
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
+    renderer_classes = (StatisticsRenderer,)
 
     def get_queryset(self, *args, **kwargs):
         return [

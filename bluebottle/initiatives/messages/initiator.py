@@ -4,9 +4,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class InitiativeInitiatorMessage(TransitionMessage):
-    context = {
-        'title': 'title'
-    }
+    context = {'title': 'title'}
 
     @property
     def action_link(self):

@@ -23,21 +23,13 @@ class Command(BaseCommand):
     )
 
     option_list = BaseCommand.options + (
-        make_option(
-            '--processes',
-            default=8,
-            help='How many processes run in parallel'
-        ),
-        make_option(
-            '-s',
-            default=None,
-            help='Only run for specified tenant schema'
-        ),
+        make_option('--processes', default=8, help='How many processes run in parallel'),
+        make_option('-s', default=None, help='Only run for specified tenant schema'),
         make_option(
             '--rebuild',
             action='store_true',
             default=False,
-            help='Drop and recreate indices (full rebuild). Default is populate-only.'
+            help='Drop and recreate indices (full rebuild). Default is populate-only.',
         ),
     )
 

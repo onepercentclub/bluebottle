@@ -29,21 +29,17 @@ def duplicate_slot(slot, interval, end):
             dates.append(date)
         if interval == 'monthday' and date.day == start.day:
             dates.append(date)
-        if interval == 'month' \
-                and date.weekday() == start.weekday() \
-                and nth_weekday(date) == nth_weekday(start):
+        if interval == 'month' and date.weekday() == start.weekday() and nth_weekday(date) == nth_weekday(start):
             dates.append(date)
 
     fields = dict(
-        (field.name, getattr(slot, field.name)) for field in slot._meta.fields
+        (field.name, getattr(slot, field.name))
+        for field in slot._meta.fields
         if field.name not in ['created', 'updated', 'start', 'id', 'status']
     )
 
     for date in dates:
-        start = make_aware(
-            start.replace(tzinfo=None, day=date.day, month=date.month, year=date.year),
-            tz
-        )
+        start = make_aware(start.replace(tzinfo=None, day=date.day, month=date.month, year=date.year), tz)
 
         slot = DateActivitySlot(start=start, **fields)
         slot.save()
@@ -57,13 +53,8 @@ def bulk_add_slot_participants(slot, emails):
     for email in emails:
         try:
             user = Member.objects.get(email__iexact=email.strip())
-            registration, _created = DateRegistration.objects.get_or_create(
-                user=user, activity=activity
-            )
-            participant, created = DateParticipant.objects.get_or_create(
-                registration=registration,
-                slot=slot
-            )
+            registration, _created = DateRegistration.objects.get_or_create(user=user, activity=activity)
+            participant, created = DateParticipant.objects.get_or_create(registration=registration, slot=slot)
             if created:
                 count += 1
         except Member.DoesNotExist:

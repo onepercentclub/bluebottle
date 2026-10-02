@@ -11,7 +11,7 @@ from bluebottle.updates.models import Update
 
 class RecentUpdates(DashboardModule):
     title = _('Recent wall updates')
-    title_url = "{}".format(reverse('admin:updates_update_changelist'))
+    title_url = '{}'.format(reverse('admin:updates_update_changelist'))
     template = 'dashboard/recent_updates.html'
     limit = 5
     column = 0
@@ -21,11 +21,10 @@ class RecentUpdates(DashboardModule):
         user = context['request'].user
         updates = region_manager_filter(updates, user)
         updates = segment_filter(updates, user)
-        self.children = updates[:self.limit]
+        self.children = updates[: self.limit]
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):
-
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
         self.children.append(RecentUpdates())

@@ -13,8 +13,7 @@ def transform(data, func, *args, **kwargs):
 
     if isinstance(data, dict):
         return dict(
-            (func(key, *args, **kwargs), transform(value, func, *args, **kwargs))
-            for key, value in data.items()
+            (func(key, *args, **kwargs), transform(value, func, *args, **kwargs)) for key, value in data.items()
         )
     elif isinstance(data, (tuple, list)):
         return type(data)(transform(item, func, *args, **kwargs) for item in data)

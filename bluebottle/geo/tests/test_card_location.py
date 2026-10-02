@@ -3,7 +3,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class CardLocationFormatTestCase(BluebottleTestCase):
-
     def _geofeature(self, feature_type, name, language='en', **extra):
         defaults = {
             'language': language,
@@ -33,9 +32,7 @@ class CardLocationFormatTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            location_serializers.format_card_location(
-                activity, 'city_country', 'en'
-            ),
+            location_serializers.format_card_location(activity, 'city_country', 'en'),
             'Ouddorp, NL',
         )
 
@@ -44,9 +41,7 @@ class CardLocationFormatTestCase(BluebottleTestCase):
             self._geofeature(
                 'address',
                 'Brouwersdam Buitenzijde 20',
-                place_name=(
-                    'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'
-                ),
+                place_name=('Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'),
                 is_primary=True,
             ),
             self._geofeature('place', 'Ouddorp'),
@@ -55,43 +50,49 @@ class CardLocationFormatTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            location_serializers.format_card_location(
-                activity, 'city_country', 'en', geofeatures=geofeatures
-            ),
+            location_serializers.format_card_location(activity, 'city_country', 'en', geofeatures=geofeatures),
             'Ouddorp, NL',
         )
 
     def test_neighbourhood(self):
-        activity = type('Activity', (), {
-            'geofeature': self._full_hierarchy(),
-            'country': [],
-        })()
+        activity = type(
+            'Activity',
+            (),
+            {
+                'geofeature': self._full_hierarchy(),
+                'country': [],
+            },
+        )()
 
         self.assertEqual(
-            location_serializers.format_card_location(
-                activity, 'neighbourhood', 'en'
-            ),
+            location_serializers.format_card_location(activity, 'neighbourhood', 'en'),
             'Scheveningen',
         )
 
     def test_neighbourhood_city(self):
-        activity = type('Activity', (), {
-            'geofeature': self._full_hierarchy(),
-            'country': [],
-        })()
+        activity = type(
+            'Activity',
+            (),
+            {
+                'geofeature': self._full_hierarchy(),
+                'country': [],
+            },
+        )()
 
         self.assertEqual(
-            location_serializers.format_card_location(
-                activity, 'neighbourhood_city', 'en'
-            ),
+            location_serializers.format_card_location(activity, 'neighbourhood_city', 'en'),
             'Scheveningen, The Hague',
         )
 
     def test_city(self):
-        activity = type('Activity', (), {
-            'geofeature': self._full_hierarchy(),
-            'country': [],
-        })()
+        activity = type(
+            'Activity',
+            (),
+            {
+                'geofeature': self._full_hierarchy(),
+                'country': [],
+            },
+        )()
 
         self.assertEqual(
             location_serializers.format_card_location(activity, 'city', 'en'),
@@ -99,15 +100,17 @@ class CardLocationFormatTestCase(BluebottleTestCase):
         )
 
     def test_city_region(self):
-        activity = type('Activity', (), {
-            'geofeature': self._full_hierarchy(),
-            'country': [],
-        })()
+        activity = type(
+            'Activity',
+            (),
+            {
+                'geofeature': self._full_hierarchy(),
+                'country': [],
+            },
+        )()
 
         self.assertEqual(
-            location_serializers.format_card_location(
-                activity, 'city_region', 'en'
-            ),
+            location_serializers.format_card_location(activity, 'city_region', 'en'),
             'The Hague, South Holland',
         )
 
@@ -119,14 +122,10 @@ class CardLocationFormatTestCase(BluebottleTestCase):
         ]
 
         self.assertIsNone(
-            location_serializers.format_card_location(
-                activity, 'city_country', 'en', geofeatures=geofeatures
-            )
+            location_serializers.format_card_location(activity, 'city_country', 'en', geofeatures=geofeatures)
         )
         self.assertEqual(
-            location_serializers.format_card_location(
-                activity, 'city_country', 'nl', geofeatures=geofeatures
-            ),
+            location_serializers.format_card_location(activity, 'city_country', 'nl', geofeatures=geofeatures),
             'Berlijn, DE',
         )
 
@@ -144,8 +143,4 @@ class CardLocationFormatTestCase(BluebottleTestCase):
             None,
         ]
 
-        self.assertIsNone(
-            location_serializers.format_common_card_location(
-                activity, 'city_country', 'en', parts
-            )
-        )
+        self.assertIsNone(location_serializers.format_common_card_location(activity, 'city_country', 'en', parts))

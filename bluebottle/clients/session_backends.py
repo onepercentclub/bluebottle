@@ -25,7 +25,7 @@ class SessionStore(DBSessionStore):
         except KeyError:
             expiry = self.get('_session_expiry')
 
-        if not expiry:   # Checks both None and 0 cases
+        if not expiry:  # Checks both None and 0 cases
             return properties.SESSION_COOKIE_AGE
         if not isinstance(expiry, datetime):
             return expiry
@@ -50,6 +50,6 @@ class SessionStore(DBSessionStore):
 
         if isinstance(expiry, datetime):
             return expiry
-        if not expiry:   # Checks both None and 0 cases
+        if not expiry:  # Checks both None and 0 cases
             expiry = properties.SESSION_COOKIE_AGE
         return modification + timedelta(seconds=expiry)

@@ -22,11 +22,8 @@ class ParserTestCase(BluebottleTestCase):
             'inbox': 'https://example.com/person/inbox',
             'outbox': 'https://example.com/person/outbox',
             'name': 'Tester',
-            'publicKey': {
-                'id': 'https://example.com/person/public-key',
-                'publicKeyPem': 'some-public-key'
-            },
-            'type': 'Person'
+            'publicKey': {'id': 'https://example.com/person/public-key', 'publicKeyPem': 'some-public-key'},
+            'type': 'Person',
         }
         result = self.parse(data)
 
@@ -39,7 +36,7 @@ class ParserTestCase(BluebottleTestCase):
             'id': 'https://example.com/follow',
             'object': 'https://example.com/object',
             'actor': 'https://example.com/actor',
-            'type': 'Follow'
+            'type': 'Follow',
         }
         result = self.parse(data)
 

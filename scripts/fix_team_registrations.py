@@ -19,12 +19,14 @@ def get_clients(args):
 
 
 def get_registrations_without_team():
-    return TeamScheduleRegistration.objects.filter(
-        activity__team_activity='teams',
-    ).annotate(
-        team_count=Count('teams')
-    ).filter(
-        team_count=0,
+    return (
+        TeamScheduleRegistration.objects.filter(
+            activity__team_activity='teams',
+        )
+        .annotate(team_count=Count('teams'))
+        .filter(
+            team_count=0,
+        )
     )
 
 
@@ -61,24 +63,21 @@ def run(*args):
                 continue
 
             total_issues += len(registrations)
-            print(f"{client.client_name}: {len(registrations)} team registrations without team.")
+            print(f'{client.client_name}: {len(registrations)} team registrations without team.')
             for registration in registrations:
                 print(
-                    f"  Registration {registration.id} "
-                    f"(activity={registration.activity_id}, "
-                    f"user={registration.user_id}, status={registration.status}, "
+                    f'  Registration {registration.id} '
+                    f'(activity={registration.activity_id}, '
+                    f'user={registration.user_id}, status={registration.status}, '
                 )
 
             if fix:
-                fixed = sum(
-                    1 for registration in registrations
-                    if fix_registration(registration, fix)
-                )
+                fixed = sum(1 for registration in registrations if fix_registration(registration, fix))
                 if fixed:
-                    print(f"  Linked {fixed} registrations to existing teams.")
+                    print(f'  Linked {fixed} registrations to existing teams.')
 
     if total_issues:
         if not fix:
             print("☝️ Add '--script-args=fix' to the command to link registrations to existing teams.")
     else:
-        print("No team registrations without team found.")
+        print('No team registrations without team found.')

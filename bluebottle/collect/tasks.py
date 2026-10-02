@@ -18,7 +18,4 @@ def collect_tasks():
                 task.execute()
 
 
-app.add_periodic_task(
-    crontab(minute='*/15'),
-    collect_tasks.s()
-)
+app.add_periodic_task(crontab(minute='*/15'), collect_tasks.s())

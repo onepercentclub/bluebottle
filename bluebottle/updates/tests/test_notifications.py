@@ -1,9 +1,7 @@
 from bluebottle.deeds.tests.factories import DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.utils import NotificationTestCase
-from bluebottle.updates.messages import (
-    OwnerNotification, FollowersNotification, ParentNotification
-)
+from bluebottle.updates.messages import OwnerNotification, FollowersNotification, ParentNotification
 from bluebottle.updates.models import UpdateImage
 from bluebottle.updates.tests.factories import UpdateFactory
 

@@ -7,9 +7,18 @@ from bluebottle.activities.documents import (
     activity,
     locality_from_geolocation,
 )
-from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity, \
-    LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity, \
-    LinkedGrantApplication, LinkedDateSlot
+from bluebottle.activity_links.models import (
+    LinkedDeed,
+    LinkedFunding,
+    LinkedActivity,
+    LinkedDateActivity,
+    LinkedCollectCampaign,
+    LinkedDeadlineActivity,
+    LinkedPeriodicActivity,
+    LinkedScheduleActivity,
+    LinkedGrantApplication,
+    LinkedDateSlot,
+)
 from bluebottle.initiatives.documents import deduplicate, get_translated_country_list
 from bluebottle.time_based.documents import (
     deduplicate_locations,
@@ -46,7 +55,7 @@ class LinkedActivityDocument(ActivityDocument):
 
     @classmethod
     def generate_id(cls, instance):
-        return f"linked_{instance.pk}"
+        return f'linked_{instance.pk}'
 
     def prepare_archived(self, instance):
         return instance.archived
@@ -78,10 +87,12 @@ class LinkedActivityDocument(ActivityDocument):
         return 'individuals'
 
     def prepare_dates(self, instance):
-        return [{
-            'start': instance.start,
-            'end': instance.end,
-        }]
+        return [
+            {
+                'start': instance.start,
+                'end': instance.end,
+            }
+        ]
 
     # Override methods that don't apply to LinkedDeed
     def prepare_manager(self, instance):
@@ -110,11 +121,7 @@ class LinkedActivityDocument(ActivityDocument):
 
     def prepare_image(self, instance):
         if instance.image:
-            return {
-                'id': instance.pk,
-                'file': instance.image.file.name,
-                'type': 'link'
-            }
+            return {'id': instance.pk, 'file': instance.image.file.name, 'type': 'link'}
         return {}
 
     def prepare_owner(self, instance):
@@ -142,10 +149,12 @@ class LinkedActivityDocument(ActivityDocument):
         location = getattr(instance, 'location', None)
         if not location:
             return []
-        return [slot_location_entry(
-            location,
-            location_hint=getattr(instance, 'location_hint', None),
-        )]
+        return [
+            slot_location_entry(
+                location,
+                location_hint=getattr(instance, 'location_hint', None),
+            )
+        ]
 
     def prepare_geofeature(self, instance):
         return []
@@ -216,7 +225,7 @@ class LinkedCollectCampaignDocument(LinkedActivityDocument):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
-        }
+        },
     )
 
     realized = fields.IntegerField()
@@ -243,9 +252,7 @@ class LinkedCollectCampaignDocument(LinkedActivityDocument):
     def prepare_collect_type(self, instance):
         if not instance.collect_type:
             return []
-        return [
-            {'name': instance.collect_type, 'language': get_default_language()}
-        ]
+        return [{'name': instance.collect_type, 'language': get_default_language()}]
 
 
 @registry.register_document
@@ -255,14 +262,18 @@ class LinkedFundingDocument(LinkedActivityDocument):
         model = LinkedFunding
         related_models = ()
 
-    target = fields.NestedField(properties={
-        'currency': fields.KeywordField(),
-        'amount': fields.FloatField(),
-    })
-    amount_raised = fields.NestedField(properties={
-        'currency': fields.KeywordField(),
-        'amount': fields.FloatField(),
-    })
+    target = fields.NestedField(
+        properties={
+            'currency': fields.KeywordField(),
+            'amount': fields.FloatField(),
+        }
+    )
+    amount_raised = fields.NestedField(
+        properties={
+            'currency': fields.KeywordField(),
+            'amount': fields.FloatField(),
+        }
+    )
 
     def prepare_end(self, instance):
         return [instance.end]
@@ -301,10 +312,12 @@ class LinkedGrantApplicationDocument(LinkedActivityDocument):
         model = LinkedGrantApplication
         related_models = ()
 
-    target = fields.NestedField(properties={
-        'currency': fields.KeywordField(),
-        'amount': fields.FloatField(),
-    })
+    target = fields.NestedField(
+        properties={
+            'currency': fields.KeywordField(),
+            'amount': fields.FloatField(),
+        }
+    )
 
     def prepare_end(self, instance):
         return [instance.end]
@@ -338,29 +351,35 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
         model = LinkedDateActivity
         related_models = (LinkedDateSlot,)
 
-    slots = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'status': fields.KeywordField(),
-        'title': TextField(),
-        'start': fields.DateField(),
-        'end': fields.DateField(),
-        'location_hint': fields.KeywordField(),
-        'locality': fields.KeywordField(),
-        'formatted_address': fields.KeywordField(),
-        'country_code': fields.KeywordField(),
-        'country': fields.KeywordField(),
-        'is_online': fields.BooleanField(),
-        'location_id': fields.LongField(),
-    })
+    slots = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'status': fields.KeywordField(),
+            'title': TextField(),
+            'start': fields.DateField(),
+            'end': fields.DateField(),
+            'location_hint': fields.KeywordField(),
+            'locality': fields.KeywordField(),
+            'formatted_address': fields.KeywordField(),
+            'country_code': fields.KeywordField(),
+            'country': fields.KeywordField(),
+            'is_online': fields.BooleanField(),
+            'location_id': fields.LongField(),
+        }
+    )
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related(
-            'slots',
-            'slots__location',
-            'slots__location__country',
-            'slots__location__geofeature',
-            'slots__location__geofeatures',
-            'slots__location__geofeatures__translations',
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                'slots',
+                'slots__location',
+                'slots__location__country',
+                'slots__location__geofeature',
+                'slots__location__geofeatures',
+                'slots__location__geofeatures__translations',
+            )
         )
 
     def get_instances_from_related(self, related_instance):
@@ -378,8 +397,7 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
                 country = location.country
                 locality = locality_from_geolocation(location)
                 formatted_address = (
-                    location.geofeature.place_name
-                    if location.geofeature else location.formatted_address
+                    location.geofeature.place_name if location.geofeature else location.formatted_address
                 )
                 location_id = location.id
             else:
@@ -387,27 +405,26 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
                 locality = None
                 formatted_address = None
                 location_id = None
-            slots.append({
-                'id': str(slot.pk),
-                'status': slot.status,
-                'title': '',
-                'start': slot.start,
-                'end': slot.end,
-                'location_hint': None,
-                'locality': locality,
-                'formatted_address': formatted_address,
-                'country': country.name if country else None,
-                'country_code': country.alpha2_code if country else None,
-                'is_online': False,
-                'location_id': location_id,
-            })
+            slots.append(
+                {
+                    'id': str(slot.pk),
+                    'status': slot.status,
+                    'title': '',
+                    'start': slot.start,
+                    'end': slot.end,
+                    'location_hint': None,
+                    'locality': locality,
+                    'formatted_address': formatted_address,
+                    'country': country.name if country else None,
+                    'country_code': country.alpha2_code if country else None,
+                    'is_online': False,
+                    'location_id': location_id,
+                }
+            )
         return slots
 
     def prepare_location(self, instance):
-        locations = [
-            slot_location_entry(geolocation)
-            for geolocation in unique_slot_geolocations(instance.slots.all())
-        ]
+        locations = [slot_location_entry(geolocation) for geolocation in unique_slot_geolocations(instance.slots.all())]
         return deduplicate_locations(locations)
 
     def prepare_country(self, instance):
@@ -442,18 +459,14 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
         ]
 
     def prepare_duration(self, instance):
-        return [
-            {'gte': slot.start, 'lte': slot.end}
-            for slot in instance.slots.all()
-            if slot.start and slot.duration
-        ]
+        return [{'gte': slot.start, 'lte': slot.end} for slot in instance.slots.all() if slot.start and slot.duration]
 
     def prepare_contribution_duration(self, instance):
         return [
             {
                 'period': 'slot',
                 'start': slot.start,
-                'value': slot.duration.seconds / (60 * 60) + slot.duration.days * 24
+                'value': slot.duration.seconds / (60 * 60) + slot.duration.days * 24,
             }
             for slot in instance.slots.all()
             if slot.start and slot.duration
@@ -475,10 +488,9 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
 @registry.register_document
 @activity.doc_type
 class LinkedDeadlineActivityDocument(LinkedActivityDocument):
-    contribution_duration = fields.NestedField(properties={
-        'period': fields.KeywordField(),
-        'value': fields.FloatField()
-    })
+    contribution_duration = fields.NestedField(
+        properties={'period': fields.KeywordField(), 'value': fields.FloatField()}
+    )
 
     class Django:
         model = LinkedDeadlineActivity
@@ -501,20 +513,24 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:
             return {}
-        return {"gte": instance.start, "lte": instance.end}
+        return {'gte': instance.start, 'lte': instance.end}
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
-            return [{
-                'period': 'once',
+            return [
+                {
+                    'period': 'once',
+                    'start': instance.start,
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24,
+                }
+            ]
+        return [
+            {
                 'start': instance.start,
-                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-            }]
-        return [{
-            'start': instance.start,
-            'value': 0,
-            'period': 0,
-        }]
+                'value': 0,
+                'period': 0,
+            }
+        ]
 
     def prepare_slug(self, instance):
         return f'linked-deadline-{instance.id}'
@@ -532,10 +548,9 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
 @registry.register_document
 @activity.doc_type
 class LinkedScheduleActivityDocument(LinkedActivityDocument):
-    contribution_duration = fields.NestedField(properties={
-        'period': fields.KeywordField(),
-        'value': fields.FloatField()
-    })
+    contribution_duration = fields.NestedField(
+        properties={'period': fields.KeywordField(), 'value': fields.FloatField()}
+    )
 
     class Django:
         model = LinkedScheduleActivity
@@ -558,20 +573,24 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:
             return {}
-        return {"gte": instance.start, "lte": instance.end}
+        return {'gte': instance.start, 'lte': instance.end}
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
-            return [{
-                'period': 'once',
+            return [
+                {
+                    'period': 'once',
+                    'start': instance.start,
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24,
+                }
+            ]
+        return [
+            {
                 'start': instance.start,
-                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-            }]
-        return [{
-            'start': instance.start,
-            'value': 0,
-            'period': 0,
-        }]
+                'value': 0,
+                'period': 0,
+            }
+        ]
 
     def prepare_slug(self, instance):
         return f'linked-schedule-{instance.id}'
@@ -589,10 +608,9 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
 @registry.register_document
 @activity.doc_type
 class LinkedPeriodicActivityDocument(LinkedActivityDocument):
-    contribution_duration = fields.NestedField(properties={
-        'period': fields.KeywordField(),
-        'value': fields.FloatField()
-    })
+    contribution_duration = fields.NestedField(
+        properties={'period': fields.KeywordField(), 'value': fields.FloatField()}
+    )
 
     class Django:
         model = LinkedPeriodicActivity
@@ -615,14 +633,14 @@ class LinkedPeriodicActivityDocument(LinkedActivityDocument):
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:
             return {}
-        return {"gte": instance.start, "lte": instance.end}
+        return {'gte': instance.start, 'lte': instance.end}
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
             return [
                 {
                     'period': instance.period,
-                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24,
                 }
             ]
 

@@ -43,20 +43,18 @@ class RestrictedImageField(serializers.ImageField):
 
 
 class SorlImageField(RestrictedImageField):
-    def __init__(
-        self, geometry_string, crop="center", colorspace="RGB", upscale=True, **kwargs
-    ):
+    def __init__(self, geometry_string, crop='center', colorspace='RGB', upscale=True, **kwargs):
         self.geometry_string = geometry_string
-        self.sorl_options = {"crop": crop, "colorspace": colorspace, "upscale": upscale}
+        self.sorl_options = {'crop': crop, 'colorspace': colorspace, 'upscale': upscale}
 
         super(SorlImageField, self).__init__(**kwargs)
 
     def to_representation(self, value):
         if not value:
-            return ""
+            return ''
 
         if not value.name:
-            return ""
+            return ''
 
         if not os.path.exists(value.path):
             if settings.DEBUG and settings.RANDOM_IMAGE_PROVIDER:
@@ -64,7 +62,7 @@ class SorlImageField(RestrictedImageField):
                 width = parts[0]
                 height = parts[1] if len(parts) > 1 else parts[0]
                 return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
-            return ""
+            return ''
 
         _, ext = os.path.splitext(value.path)
         if ext == '.svg':
@@ -78,12 +76,12 @@ class SorlImageField(RestrictedImageField):
         try:
             thumbnail = get_thumbnail(value, self.geometry_string, **self.sorl_options)
         except IOError:
-            return ""
+            return ''
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise
             logger.error('Thumbnail failed:', exc_info=sys.exc_info())
-            return ""
+            return ''
         relative_url = settings.MEDIA_URL + thumbnail.name
         return relative_url
 
@@ -105,25 +103,26 @@ class OEmbedField(serializers.Field):
 
     def to_representation(self, value):
         if not value or not standalone_url_re.match(value):
-            return ""
+            return ''
         url = value.strip()
         if value == 'https://vimeo.com/85425318':
-            return "<iframe src=\"//player.vimeo.com/video/85425318\" " \
-                   "hard=\"code\" width=\"1024\" height=\"576\" " \
-                   "frameborder=\"0\" title=\"How it works - Cares\" " \
-                   "webkitallowfullscreen mozallowfullscreen " \
-                   "allowfullscreen></iframe>"
+            return (
+                '<iframe src="//player.vimeo.com/video/85425318" '
+                'hard="code" width="1024" height="576" '
+                'frameborder="0" title="How it works - Cares" '
+                'webkitallowfullscreen mozallowfullscreen '
+                'allowfullscreen></iframe>'
+            )
         try:
             response = providers.request(url, **self.params)
         except ProviderException:
-            return ""
+            return ''
         except URLError:
-            return ""
+            return ''
         else:
             html = full_handler(url, response, **self.params)
             # Tweak for youtube to hide controls and info bars.
-            html = html.replace('feature=oembed',
-                                'feature=oembed&showinfo=0&controls=0')
+            html = html.replace('feature=oembed', 'feature=oembed&showinfo=0&controls=0')
             return html
 
 
@@ -131,18 +130,16 @@ class FileSerializer(serializers.FileField):
     def to_representation(self, value):
         if value:
             try:
-                return {'name': os.path.basename(value.name),
-                        'url': value.url,
-                        'size': defaultfilters.filesizeformat(value.size)}
+                return {
+                    'name': os.path.basename(value.name),
+                    'url': value.url,
+                    'size': defaultfilters.filesizeformat(value.size),
+                }
             except OSError:
-                return {'name': '',
-                        'url': '',
-                        'size': ''}
+                return {'name': '', 'url': '', 'size': ''}
 
         else:
-            return {'name': '',
-                    'url': '',
-                    'size': ''}
+            return {'name': '', 'url': '', 'size': ''}
 
 
 class ImageSerializer(RestrictedImageField):
@@ -209,10 +206,7 @@ class PhotoSerializer(RestrictedImageField):
 
 
 class PrivateFileSerializer(FileSerializer):
-    def __init__(
-        self, url_name, file_attr=None, filename=None, url_args=None,
-        permission=None, *args, **kwargs
-    ):
+    def __init__(self, url_name, file_attr=None, filename=None, url_args=None, permission=None, *args, **kwargs):
         self.url_name = url_name
         self.url_args = url_args or []
         self.permission = permission
@@ -235,11 +229,8 @@ class PrivateFileSerializer(FileSerializer):
         permission = self.permission()
 
         if not (
-            permission.has_object_action_permission(
-                'GET', self.context['request'].user, value
-            ) and permission.has_action_permission(
-                'GET', self.context['request'].user, value.__class__
-            )
+            permission.has_object_action_permission('GET', self.context['request'].user, value)
+            and permission.has_action_permission('GET', self.context['request'].user, value.__class__)
         ):
             return None
 
@@ -257,22 +248,16 @@ class PrivateFileSerializer(FileSerializer):
         else:
             filename = '---'
 
-        return {
-            'url': url,
-            'name': filename
-        }
+        return {'url': url, 'name': filename}
 
 
 class CustomHyperlinkRelatedSerializer(HyperlinkedRelatedField):
-
     def __init__(self, link=None, **kwargs):
         self.link = link
         super(CustomHyperlinkRelatedSerializer, self).__init__(source='parent', read_only=True, **kwargs)
 
     def get_links(self, *args, **kwargs):
-        return {
-            'related': self.link
-        }
+        return {'related': self.link}
 
 
 class RelativeHyperlinkedRelatedField(HyperlinkedRelatedField):
@@ -283,8 +268,5 @@ class RelativeHyperlinkedRelatedField(HyperlinkedRelatedField):
         try:
             return self.reverse(view_name, kwargs=kwargs)
         except NoReverseMatch:
-            msg = (
-                "Could not resolve URL for hyperlinked relationship using "
-                'view name "%s".'
-            )
+            msg = 'Could not resolve URL for hyperlinked relationship using view name "%s".'
             raise ImproperlyConfigured(msg % view_name)

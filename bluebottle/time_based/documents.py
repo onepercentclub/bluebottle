@@ -19,7 +19,7 @@ from bluebottle.time_based.models import (
     DateParticipant,
     DateActivitySlot,
     RegisteredDateActivity,
-    RegisteredDateParticipant
+    RegisteredDateParticipant,
 )
 from bluebottle.utils.documents import TextField
 
@@ -35,7 +35,6 @@ INDEXABLE_SLOT_STATUSES = ('open', 'full', 'registration_closed', 'finished')
 
 
 class TimeBasedActivityDocument(ActivityDocument):
-
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
 
@@ -101,24 +100,24 @@ def slot_location_entry(geolocation, location_hint=None):
 @registry.register_document
 @activity.document
 class DateActivityDocument(TimeBasedActivityDocument):
-    contribution_duration = fields.NestedField(properties={
-        'value': fields.FloatField()
-    })
+    contribution_duration = fields.NestedField(properties={'value': fields.FloatField()})
 
-    slots = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'status': fields.KeywordField(),
-        'title': TextField(),
-        'start': fields.DateField(),
-        'end': fields.DateField(),
-        'location_hint': fields.KeywordField(),
-        'locality': fields.KeywordField(),
-        'formatted_address': fields.KeywordField(),
-        'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
-        'country': fields.KeywordField(attr='location.country.name'),
-        'is_online': fields.BooleanField(),
-        'location_id': fields.LongField(),
-    })
+    slots = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'status': fields.KeywordField(),
+            'title': TextField(),
+            'start': fields.DateField(),
+            'end': fields.DateField(),
+            'location_hint': fields.KeywordField(),
+            'locality': fields.KeywordField(),
+            'formatted_address': fields.KeywordField(),
+            'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
+            'country': fields.KeywordField(attr='location.country.name'),
+            'is_online': fields.BooleanField(),
+            'location_id': fields.LongField(),
+        }
+    )
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -167,30 +166,28 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 continue
 
             country = location.country
-            slots.append({
-                'id': str(slot.pk),
-                'status': slot.status,
-                'title': slot.title,
-                'start': slot.start,
-                'end': slot.end,
-                'location_hint': slot.location_hint,
-                'locality': locality_from_geolocation(location),
-                'formatted_address': (
-                    location.geofeature.place_name
-                    if location.geofeature else location.formatted_address
-                ),
-                'country': country.name if country else None,
-                'country_code': country.alpha2_code if country else None,
-                'is_online': slot.is_online,
-                'location_id': location.id,
-            })
+            slots.append(
+                {
+                    'id': str(slot.pk),
+                    'status': slot.status,
+                    'title': slot.title,
+                    'start': slot.start,
+                    'end': slot.end,
+                    'location_hint': slot.location_hint,
+                    'locality': locality_from_geolocation(location),
+                    'formatted_address': (
+                        location.geofeature.place_name if location.geofeature else location.formatted_address
+                    ),
+                    'country': country.name if country else None,
+                    'country_code': country.alpha2_code if country else None,
+                    'is_online': slot.is_online,
+                    'location_id': location.id,
+                }
+            )
         return slots
 
     def prepare_start(self, instance):
-        return [
-            slot.start for slot in instance.slots.all()
-            if slot.status in INDEXABLE_SLOT_STATUSES
-        ]
+        return [slot.start for slot in instance.slots.all() if slot.status in INDEXABLE_SLOT_STATUSES]
 
     def prepare_end(self, instance):
         return [
@@ -201,11 +198,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
     def prepare_dates(self, instance):
         return [
-            {
-                'start': slot.start,
-                'end': slot.start + slot.duration,
-                'status': slot.status
-            }
+            {'start': slot.start, 'end': slot.start + slot.duration, 'status': slot.status}
             for slot in instance.slots.all()
             if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
@@ -222,7 +215,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
             {
                 'period': 'slot',
                 'start': slot.start,
-                'value': slot.duration.seconds / (60 * 60) + slot.duration.days * 24
+                'value': slot.duration.seconds / (60 * 60) + slot.duration.days * 24,
             }
             for slot in instance.slots.all()
             if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
@@ -248,11 +241,9 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
 
 class RegistrationActivityDocument(TimeBasedActivityDocument):
-
-    contribution_duration = fields.NestedField(properties={
-        'period': fields.KeywordField(),
-        'value': fields.FloatField()
-    })
+    contribution_duration = fields.NestedField(
+        properties={'period': fields.KeywordField(), 'value': fields.FloatField()}
+    )
 
     def get_instances_from_related(self, related_instance):
         result = super().get_instances_from_related(related_instance)
@@ -266,16 +257,20 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
     def prepare_contribution_duration(self, instance):
 
         if instance.duration:
-            return [{
-                'period': 0,
+            return [
+                {
+                    'period': 0,
+                    'start': instance.start,
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24,
+                }
+            ]
+        return [
+            {
                 'start': instance.start,
-                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-            }]
-        return [{
-            'start': instance.start,
-            'value': 0,
-            'period': 0,
-        }]
+                'value': 0,
+                'period': 0,
+            }
+        ]
 
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
@@ -296,15 +291,12 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
         return [instance.deadline]
 
     def prepare_dates(self, instance):
-        return [{
-            'start': instance.start,
-            'end': instance.deadline
-        }]
+        return [{'start': instance.start, 'end': instance.deadline}]
 
     def prepare_duration(self, instance):
         if instance.start and instance.deadline and instance.start > instance.deadline:
             return {}
-        return {"gte": instance.start, "lte": instance.deadline}
+        return {'gte': instance.start, 'lte': instance.deadline}
 
 
 @registry.register_document
@@ -314,12 +306,7 @@ class DeadlineActivityDocument(RegistrationActivityDocument):
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
-            return [
-                {
-                    'period': 'once',
-                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-                }
-            ]
+            return [{'period': 'once', 'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24}]
 
     class Django:
         related_models = ActivityDocument.Django.related_models + (DeadlineParticipant,)
@@ -336,12 +323,11 @@ class PeriodicActivityDocument(RegistrationActivityDocument):
             return [
                 {
                     'period': instance.period,
-                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24,
                 }
             ]
 
     class Django:
-
         related_models = ActivityDocument.Django.related_models + (PeriodicParticipant,)
         model = PeriodicActivity
 
@@ -360,15 +346,9 @@ class ScheduleActivityDocument(RegistrationActivityDocument):
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
-            return [
-                {
-                    'period': 'once',
-                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-                }
-            ]
+            return [{'period': 'once', 'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24}]
 
     class Django:
-
         related_models = ActivityDocument.Django.related_models + (ScheduleParticipant,)
         model = ScheduleActivity
 
@@ -380,12 +360,7 @@ class RegisteredActivityDocument(RegistrationActivityDocument):
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
-            return [
-                {
-                    'period': 'once',
-                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-                }
-            ]
+            return [{'period': 'once', 'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24}]
 
     class Django:
         related_models = ActivityDocument.Django.related_models + (RegisteredDateParticipant,)
@@ -401,10 +376,7 @@ class RegisteredActivityDocument(RegistrationActivityDocument):
         return [instance.start]
 
     def prepare_dates(self, instance):
-        return [{
-            'start': instance.start,
-            'end': instance.start
-        }]
+        return [{'start': instance.start, 'end': instance.start}]
 
     def prepare_duration(self, instance):
-        return {"gte": instance.start, "lte": instance.start}
+        return {'gte': instance.start, 'lte': instance.start}

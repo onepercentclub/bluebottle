@@ -6,8 +6,7 @@ from django.http import HttpResponse
 # Django snippets: http://djangosnippets.org/snippets/2369/
 
 
-def export_as_csv_action(description="Export selected objects as CSV file",
-                         fields=None, exclude=None, header=True):
+def export_as_csv_action(description='Export selected objects as CSV file', fields=None, exclude=None, header=True):
     """
     This function returns an export csv action
     'fields' and 'exclude' work like in django ModelForm
@@ -28,17 +27,13 @@ def export_as_csv_action(description="Export selected objects as CSV file",
             field_names = field_names - excludeset
 
         response = HttpResponse(mimetype='text/csv')
-        response[
-            'Content-Disposition'] = 'attachment; filename="%s.csv"' % str(
-            opts).replace('.', '_')
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % str(opts).replace('.', '_')
 
         writer = csv.writer(response)
         if header:
             writer.writerow(list(field_names))
         for obj in queryset:
-            writer.writerow(
-                [str(getattr(obj, field)).encode("utf-8", "replace") for
-                 field in field_names])
+            writer.writerow([str(getattr(obj, field)).encode('utf-8', 'replace') for field in field_names])
         return response
 
     export_as_csv.short_description = description

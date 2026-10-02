@@ -9,9 +9,8 @@ class UniqueTitleValidator(Validator):
     message = _('The title must be unique')
 
     def is_valid(self):
-        return not self.instance.__class__.objects.exclude(
-            pk=self.instance.pk
-        ).filter(
-            status='approved',
-            title=self.instance.title
-        ).count()
+        return (
+            not self.instance.__class__.objects.exclude(pk=self.instance.pk)
+            .filter(status='approved', title=self.instance.title)
+            .count()
+        )

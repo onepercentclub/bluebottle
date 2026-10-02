@@ -28,17 +28,16 @@ class CheckboxWithInlineLabelWidget(forms.CheckboxInput):
     def render(self, name, value, attrs=None, renderer=None):
         checkbox_html = super().render(name, value, attrs, renderer)
         if self.inline_label:
-            return format_html(
-                '{} <span class="checkbox_help">{}</span>',
-                checkbox_html,
-                self.inline_label
-            )
+            return format_html('{} <span class="checkbox_help">{}</span>', checkbox_html, self.inline_label)
         return checkbox_html
 
 
 class SecureAdminURLFieldWidget(AdminURLFieldWidget):
     def render(self, name, value, attrs=None, renderer=None):
-        if value and urlparse(value).scheme not in ('http', 'https',):
+        if value and urlparse(value).scheme not in (
+            'http',
+            'https',
+        ):
             return super(AdminURLFieldWidget, self).render(name, value, attrs)
         else:
             return super(SecureAdminURLFieldWidget, self).render(name, value, attrs, renderer)
@@ -56,7 +55,7 @@ def get_time_factors(td):
         td.days,  # returns number of days
         td.seconds // 3600,  # returns number of hours
         (td.seconds // 60) % 60,  # returns number of minutes
-        td.seconds % 60  # returns number of seconds
+        td.seconds % 60,  # returns number of seconds
     )
 
 
@@ -67,16 +66,16 @@ def get_human_readable_duration(value):
     if days > 0:
         hours += 24 * days
     if hours > 0:
-        format_list.append("{0} {1}".format(hours, ngettext("Hour", "Hours", hours)))
+        format_list.append('{0} {1}'.format(hours, ngettext('Hour', 'Hours', hours)))
     if minutes > 0:
-        format_list.append("{0} {1}".format(minutes, ngettext("Minute", "Minutes", minutes)))
+        format_list.append('{0} {1}'.format(minutes, ngettext('Minute', 'Minutes', minutes)))
     if seconds > 0:
-        format_list.append("{0} {1}".format(seconds, ngettext("Second", "Seconds", seconds)))
-    return " ".join(format_list)
+        format_list.append('{0} {1}'.format(seconds, ngettext('Second', 'Seconds', seconds)))
+    return ' '.join(format_list)
 
 
 class LabeledNumberInput(Input):
-    input_type = "number"
+    input_type = 'number'
     template_name = 'widgets/labeled_number_input.html'
 
     def __init__(self, label=None, attrs=None, type=None):
@@ -99,11 +98,11 @@ class TimeDurationWidget(MultiWidget):
     Time duration selector widget
     """
 
-    template_name = "widgets/duration_multiple_input.html"
+    template_name = 'widgets/duration_multiple_input.html'
 
     def get_context(self, name, value, attrs):
         context = super(TimeDurationWidget, self).get_context(name, value, attrs)
-        duration_readable = ""
+        duration_readable = ''
         if not isinstance(value, list) and value:
             duration_readable = get_human_readable_duration(value)
         context['duration_readable'] = duration_readable
@@ -115,9 +114,9 @@ class TimeDurationWidget(MultiWidget):
         self.show_minutes = show_minutes
         self.show_seconds = show_seconds
         _widgets = []
-        _widgets.append(LabeledNumberInput(label="Hours", type="hours")) if show_hours else None,  # Hour
-        _widgets.append(LabeledNumberInput(label="Minutes", type="minutes")) if show_minutes else None,  # Minute
-        _widgets.append(LabeledNumberInput(label="Seconds", type="seconds")) if show_seconds else None,  # Seconds
+        (_widgets.append(LabeledNumberInput(label='Hours', type='hours')) if show_hours else None,)  # Hour
+        (_widgets.append(LabeledNumberInput(label='Minutes', type='minutes')) if show_minutes else None,)  # Minute
+        (_widgets.append(LabeledNumberInput(label='Seconds', type='seconds')) if show_seconds else None,)  # Seconds
         super().__init__(_widgets, attrs)
 
     def decompress(self, value):
@@ -134,29 +133,26 @@ class TimeDurationWidget(MultiWidget):
             return []
 
     def value_from_datadict(self, data, files, name):
-        data_list = {widget.type: widget.value_from_datadict(data, files, name + '_{0}'.format(i)) for i, widget in
-                     enumerate(self.widgets)}
+        data_list = {
+            widget.type: widget.value_from_datadict(data, files, name + '_{0}'.format(i))
+            for i, widget in enumerate(self.widgets)
+        }
         for key, val in data_list.items():
             try:
                 data_list[key] = int(val)
             except (ValueError, TypeError):
                 data_list[key] = 0
 
-        days = 0 if not self.show_days else data_list.get("days")
-        hours = 0 if not self.show_hours else data_list.get("hours")
-        minutes = 0 if not self.show_minutes else data_list.get("minutes")
-        seconds = 0 if not self.show_seconds else data_list.get("seconds")
+        days = 0 if not self.show_days else data_list.get('days')
+        hours = 0 if not self.show_hours else data_list.get('hours')
+        minutes = 0 if not self.show_minutes else data_list.get('minutes')
+        seconds = 0 if not self.show_seconds else data_list.get('seconds')
 
         if self.is_required and days == 0 and hours == 0 and minutes == 0 and seconds == 0:
             return ''
 
         try:
-            D = timedelta(
-                days=int(days),
-                hours=int(hours),
-                minutes=int(minutes),
-                seconds=int(seconds)
-            )
+            D = timedelta(days=int(days), hours=int(hours), minutes=int(minutes), seconds=int(seconds))
         except ValueError:
             return ''
         else:

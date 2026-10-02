@@ -1,29 +1,45 @@
 from bluebottle.activities.effects import (
-    CreateOrganizer, CopyCategories, SetPublishedDateEffect,
-    DeleteRelatedContributionsEffect, CreateOrganizerContribution,
-    SetContributionDateEffect
+    CreateOrganizer,
+    CopyCategories,
+    SetPublishedDateEffect,
+    DeleteRelatedContributionsEffect,
+    CreateOrganizerContribution,
+    SetContributionDateEffect,
 )
 from bluebottle.activities.messages.activity_manager import (
-    ActivityPublishedNotification, ActivitySubmittedNotification,
-    ActivityApprovedNotification, ActivityNeedsWorkNotification, TermsOfServiceNotification,
-    ActivityCancelledNotification
+    ActivityPublishedNotification,
+    ActivitySubmittedNotification,
+    ActivityApprovedNotification,
+    ActivityNeedsWorkNotification,
+    TermsOfServiceNotification,
+    ActivityCancelledNotification,
 )
 from bluebottle.activities.messages.reviewer import (
     ActivitySubmittedReviewerNotification,
-    ActivityPublishedReviewerNotification
+    ActivityPublishedReviewerNotification,
 )
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.activities.states import (
-    ActivityStateMachine, OrganizerStateMachine,
-    EffortContributionStateMachine, ContributorStateMachine
+    ActivityStateMachine,
+    OrganizerStateMachine,
+    EffortContributionStateMachine,
+    ContributorStateMachine,
 )
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CreateEffect, UpdateEventEffect,
-    CancelEffect, DeletedEffect, StartEffect
+    PublishAdoptionEffect,
+    CreateEffect,
+    UpdateEventEffect,
+    CancelEffect,
+    DeletedEffect,
+    StartEffect,
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
-    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register, ModelChangedTrigger
+    TriggerManager,
+    TransitionTrigger,
+    ModelDeletedTrigger,
+    register,
+    ModelChangedTrigger,
 )
 from bluebottle.funding.models import Funding
 from bluebottle.impact.effects import UpdateImpactGoalEffect
@@ -75,203 +91,107 @@ def should_mail_tos(effect):
 
 class ActivityTriggers(TriggerManager):
     triggers = [
-        ModelDeletedTrigger(
-            effects=[DeletedEffect]
-        ),
-        TransitionTrigger(
-            ActivityStateMachine.initiate,
-            effects=[
-                CreateOrganizer,
-                CopyCategories
-            ]
-        ),
-
+        ModelDeletedTrigger(effects=[DeletedEffect]),
+        TransitionTrigger(ActivityStateMachine.initiate, effects=[CreateOrganizer, CopyCategories]),
         TransitionTrigger(
             ActivityStateMachine.submit,
             effects=[
-                TransitionEffect(
-                    ActivityStateMachine.auto_approve,
-                    conditions=[should_approve_instantly]
-                ),
-                NotificationEffect(
-                    ActivitySubmittedReviewerNotification,
-                    conditions=[should_review]
-                ),
-                NotificationEffect(
-                    ActivitySubmittedNotification,
-                    conditions=[
-                        should_review,
-                        is_not_funding
-                    ]
-                )
-            ]
+                TransitionEffect(ActivityStateMachine.auto_approve, conditions=[should_approve_instantly]),
+                NotificationEffect(ActivitySubmittedReviewerNotification, conditions=[should_review]),
+                NotificationEffect(ActivitySubmittedNotification, conditions=[should_review, is_not_funding]),
+            ],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.auto_submit,
-            effects=[
-                TransitionEffect(
-                    ActivityStateMachine.auto_approve,
-                    conditions=[should_approve_instantly]
-                )
-            ]
+            effects=[TransitionEffect(ActivityStateMachine.auto_approve, conditions=[should_approve_instantly])],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.approve,
             effects=[
                 CreateEffect,
                 PublishAdoptionEffect,
-                NotificationEffect(
-                    ActivityApprovedNotification,
-                    conditions=[is_not_funding]
-                ),
-                NotificationEffect(
-                    TermsOfServiceNotification,
-                    conditions=[should_mail_tos]
-                ),
-                StartEffect
-            ]
+                NotificationEffect(ActivityApprovedNotification, conditions=[is_not_funding]),
+                NotificationEffect(TermsOfServiceNotification, conditions=[should_mail_tos]),
+                StartEffect,
+            ],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.request_changes,
-            effects=[
-                NotificationEffect(
-                    ActivityNeedsWorkNotification,
-                    conditions=[is_not_funding]
-                )
-            ]
+            effects=[NotificationEffect(ActivityNeedsWorkNotification, conditions=[is_not_funding])],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.reject,
             effects=[
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.fail,
-                    conditions=[has_organizer]
-                ),
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail, conditions=[has_organizer]),
                 CancelEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.auto_approve,
             effects=[
                 SetPublishedDateEffect,
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.succeed,
-                    conditions=[has_organizer]
-                ),
-            ]
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed, conditions=[has_organizer]),
+            ],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.publish,
             effects=[
                 SetPublishedDateEffect,
                 PublishAdoptionEffect,
                 CreateEffect,
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.succeed,
-                    conditions=[has_organizer]
-                ),
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed, conditions=[has_organizer]),
                 NotificationEffect(ActivityPublishedReviewerNotification),
                 NotificationEffect(ActivityPublishedNotification),
-                StartEffect
-            ]
+                StartEffect,
+            ],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.fail,
-                    conditions=[has_organizer]
-                ),
-                CancelEffect
-            ]
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail, conditions=[has_organizer]),
+                CancelEffect,
+            ],
         ),
         TransitionTrigger(
             ActivityStateMachine.auto_cancel,
             effects=[
                 NotificationEffect(ActivityCancelledNotification),
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.fail,
-                    conditions=[has_organizer]
-                ),
-                RelatedTransitionEffect(
-                    'contributors',
-                    ContributorStateMachine.fail
-                ),
-                RelatedTransitionEffect(
-                    'slots',
-                    SlotStateMachine.auto_cancel
-                ),
-                RelatedTransitionEffect(
-                    'slots',
-                    DateActivitySlotStateMachine.auto_cancel
-                ),
-                CancelEffect
-            ]
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail, conditions=[has_organizer]),
+                RelatedTransitionEffect('contributors', ContributorStateMachine.fail),
+                RelatedTransitionEffect('slots', SlotStateMachine.auto_cancel),
+                RelatedTransitionEffect('slots', DateActivitySlotStateMachine.auto_cancel),
+                CancelEffect,
+            ],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.expire,
             effects=[
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.fail,
-                    conditions=[has_organizer]
-                ),
-                CancelEffect
-            ]
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail, conditions=[has_organizer]),
+                CancelEffect,
+            ],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.restore,
-            effects=[
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.reset,
-                    conditions=[has_organizer]
-                )
-            ]
+            effects=[RelatedTransitionEffect('organizer', OrganizerStateMachine.reset, conditions=[has_organizer])],
         ),
-
         TransitionTrigger(
             ActivityStateMachine.delete,
             effects=[
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.fail,
-                    conditions=[has_organizer]
-                ),
-                CancelEffect
-            ]
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail, conditions=[has_organizer]),
+                CancelEffect,
+            ],
         ),
         ModelChangedTrigger(
             ['title', 'description', 'status'],
             effects=[
                 UpdateEventEffect,
-            ]
-        )
+            ],
+        ),
     ]
 
 
 class ContributorTriggers(TriggerManager):
-    triggers = [
-        ModelDeletedTrigger(
-            effects=[
-                DeleteRelatedContributionsEffect
-            ]
-        )
-    ]
+    triggers = [ModelDeletedTrigger(effects=[DeleteRelatedContributionsEffect])]
 
 
 class ContributionTriggers(TriggerManager):
@@ -281,35 +201,20 @@ class ContributionTriggers(TriggerManager):
 @register(Organizer)
 class OrganizerTriggers(TriggerManager):
     triggers = [
-        TransitionTrigger(
-            OrganizerStateMachine.initiate,
-            effects=[
-                CreateOrganizerContribution
-            ]
-        ),
+        TransitionTrigger(OrganizerStateMachine.initiate, effects=[CreateOrganizerContribution]),
         TransitionTrigger(
             OrganizerStateMachine.fail,
-            effects=[
-                RelatedTransitionEffect(
-                    'contributions', EffortContributionStateMachine.fail, display=False
-                )
-            ]
+            effects=[RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail, display=False)],
         ),
         TransitionTrigger(
             OrganizerStateMachine.reset,
-            effects=[
-                RelatedTransitionEffect(
-                    'contributions', EffortContributionStateMachine.reset, display=True
-                )
-            ]
+            effects=[RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset, display=True)],
         ),
         TransitionTrigger(
             OrganizerStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect(
-                    'contributions', EffortContributionStateMachine.succeed, display=True
-                ),
-            ]
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed, display=True),
+            ],
         ),
     ]
 
@@ -325,39 +230,15 @@ class EffortContributionTriggers(TriggerManager):
             EffortContributionStateMachine.initiate,
             effects=[
                 UpdateImpactGoalEffect,
-                TransitionEffect(
-                    EffortContributionStateMachine.succeed,
-                    conditions=[contributor_is_succeeded]
-                )
-            ]
+                TransitionEffect(EffortContributionStateMachine.succeed, conditions=[contributor_is_succeeded]),
+            ],
         ),
         TransitionTrigger(
-            EffortContributionStateMachine.succeed,
-            effects=[
-                SetContributionDateEffect,
-                UpdateImpactGoalEffect
-            ]
+            EffortContributionStateMachine.succeed, effects=[SetContributionDateEffect, UpdateImpactGoalEffect]
         ),
-
-        TransitionTrigger(
-            EffortContributionStateMachine.reset,
-            effects=[
-                UpdateImpactGoalEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            EffortContributionStateMachine.fail,
-            effects=[
-                UpdateImpactGoalEffect
-            ]
-        ),
-
-        ModelDeletedTrigger(
-            effects=[
-                UpdateImpactGoalEffect
-            ]
-        ),
+        TransitionTrigger(EffortContributionStateMachine.reset, effects=[UpdateImpactGoalEffect]),
+        TransitionTrigger(EffortContributionStateMachine.fail, effects=[UpdateImpactGoalEffect]),
+        ModelDeletedTrigger(effects=[UpdateImpactGoalEffect]),
     ]
 
 
@@ -366,15 +247,13 @@ def activity_is_active(contribution):
     return contribution.contributor.activity.status not in [
         ActivityStateMachine.cancelled.value,
         ActivityStateMachine.expired.value,
-        ActivityStateMachine.rejected.value
+        ActivityStateMachine.rejected.value,
     ]
 
 
 def contributor_is_active(contribution):
     """contributor is accepted"""
-    return contribution.contributor.status in [
-        ParticipantStateMachine.accepted.value
-    ]
+    return contribution.contributor.status in [ParticipantStateMachine.accepted.value]
 
 
 def needs_review(effect):

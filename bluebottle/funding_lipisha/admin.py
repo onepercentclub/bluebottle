@@ -30,7 +30,7 @@ class LipishaBankAccountAdmin(BankAccountChildAdmin):
         'branch_name',
         'branch_code',
         'address',
-        'swift'
+        'swift',
     ) + BankAccountChildAdmin.fields
     list_filter = ['reviewed']
     search_fields = ['mpesa_code', 'account_number', 'account_name']

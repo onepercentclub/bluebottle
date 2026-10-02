@@ -1,8 +1,4 @@
-from bluebottle.activities.models import (
-    EffortContribution,
-    Contribution,
-    Organizer
-)
+from bluebottle.activities.models import EffortContribution, Contribution, Organizer
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.collect.models import CollectContributor
@@ -93,8 +89,6 @@ def run(*args):
                         fix_contribution(contribution, contributor.created, fix)
                         total += 1
 
-            print(
-                f'Checking {client.client_name} {total} {Contribution.objects.count()}'
-            )
+            print(f'Checking {client.client_name} {total} {Contribution.objects.count()}')
     if not fix:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

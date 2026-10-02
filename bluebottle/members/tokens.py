@@ -6,10 +6,7 @@ from bluebottle.clients import properties
 
 class LoginTokenGenerator(PasswordResetTokenGenerator):
     def make_token(self, user):
-        data = {
-            'user_id': user.pk,
-            'last_login': user.last_login.strftime('%s') if user.last_login else None
-        }
+        data = {'user_id': user.pk, 'last_login': user.last_login.strftime('%s') if user.last_login else None}
         return signing.dumps(data)
 
     def check_token(self, user, token):
@@ -24,12 +21,9 @@ class LoginTokenGenerator(PasswordResetTokenGenerator):
             return False
 
         return (
-            (
-                (data['last_login'] is None and user.last_login is None) or
-                data['last_login'] == user.last_login.strftime('%s')
-            ) and
-            data['user_id'] == user.pk
-        )
+            (data['last_login'] is None and user.last_login is None)
+            or data['last_login'] == user.last_login.strftime('%s')
+        ) and data['user_id'] == user.pk
 
 
 login_token_generator = LoginTokenGenerator()

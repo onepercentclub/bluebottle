@@ -17,11 +17,7 @@ class AudienceChoices(models.TextChoices):
 
 class Update(TriggerMixin, models.Model):
     author = models.ForeignKey(
-        Member,
-        verbose_name=_('Author'),
-        null=True,
-        blank=True,
-        on_delete=models.deletion.CASCADE
+        Member, verbose_name=_('Author'), null=True, blank=True, on_delete=models.deletion.CASCADE
     )
     activity = models.ForeignKey(
         Activity,
@@ -29,7 +25,7 @@ class Update(TriggerMixin, models.Model):
         null=True,
         blank=True,
         on_delete=models.deletion.CASCADE,
-        related_name='updates'
+        related_name='updates',
     )
     parent = models.ForeignKey(
         'self',
@@ -37,7 +33,7 @@ class Update(TriggerMixin, models.Model):
         on_delete=models.deletion.CASCADE,
         related_name='replies',
         blank=True,
-        null=True
+        null=True,
     )
 
     contribution = models.ForeignKey(
@@ -47,7 +43,7 @@ class Update(TriggerMixin, models.Model):
         help_text=_('The contribution this update is related to, e.g. the donation'),
         on_delete=models.deletion.CASCADE,
         blank=True,
-        null=True
+        null=True,
     )
 
     message = QuillField(_('Message'), blank=True, null=True)
@@ -56,7 +52,7 @@ class Update(TriggerMixin, models.Model):
 
     pinned = models.BooleanField(_('Pinned'), default=False)
 
-    created = models.DateTimeField(_("created"), default=now)
+    created = models.DateTimeField(_('created'), default=now)
 
     notify = models.BooleanField(_('notify supporters'), default=False)
 
@@ -104,34 +100,26 @@ class Update(TriggerMixin, models.Model):
         verbose_name = _('Update')
         ordering = ('-created',)
 
-    class JSONAPIMeta():
+    class JSONAPIMeta:
         resource_name = 'updates'
 
     def __str__(self):
         if self.author:
             return f'{self.author} - {self.created.strftime("%x %X")}'
-        return _('Anonymous - {time}').format(time=self.created.strftime("%x %X"))
+        return _('Anonymous - {time}').format(time=self.created.strftime('%x %X'))
 
 
 class UpdateImage(models.Model):
     image = ImageField(null=True)
-    update = models.ForeignKey(
-        Update,
-        related_name='images',
-        on_delete=models.CASCADE
-    )
+    update = models.ForeignKey(Update, related_name='images', on_delete=models.CASCADE)
 
-    class JSONAPIMeta():
+    class JSONAPIMeta:
         resource_name = 'updates/images'
 
 
 class UpdateDocument(models.Model):
     document = DocumentField(null=True)
-    update = models.ForeignKey(
-        Update,
-        related_name='documents',
-        on_delete=models.CASCADE
-    )
+    update = models.ForeignKey(Update, related_name='documents', on_delete=models.CASCADE)
 
-    class JSONAPIMeta():
+    class JSONAPIMeta:
         resource_name = 'updates/documents'

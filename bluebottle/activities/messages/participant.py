@@ -7,7 +7,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class InactiveParticipantAddedNotification(TransitionMessage):
-    subject = pgettext('platform-email', "You have been added to the activity {title}")
+    subject = pgettext('platform-email', 'You have been added to the activity {title}')
     template = 'messages/participant/inactive_participant_added'
 
     context = {
@@ -33,6 +33,7 @@ class ParticipantWithdrewConfirmationNotification(TransitionMessage):
     """
     The participant withdrew from the activity
     """
+
     context = {
         'title': 'activity.title',
     }

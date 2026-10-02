@@ -18,7 +18,10 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
-    TeamScheduleRegistrationFactory, DateActivityFactory, DateRegistrationFactory, DateParticipantFactory,
+    TeamScheduleRegistrationFactory,
+    DateActivityFactory,
+    DateRegistrationFactory,
+    DateParticipantFactory,
     DateActivitySlotFactory,
 )
 
@@ -54,13 +57,11 @@ class RegistrationTriggerTestCase:
 
     def test_initial(self):
         self.create()
-        self.assertEqual(self.registration.status, "accepted")
+        self.assertEqual(self.registration.status, 'accepted')
 
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have a new participant for your activity "{}" 🎉'.format(
-                self.activity.title
-            ),
+            'You have a new participant for your activity "{}" 🎉'.format(self.activity.title),
         )
         self.assertEqual(
             mail.outbox[1].subject,
@@ -73,7 +74,7 @@ class RegistrationTriggerTestCase:
 
         self.create()
 
-        self.assertEqual(self.registration.status, "new")
+        self.assertEqual(self.registration.status, 'new')
 
         self.assertEqual(
             len(mail.outbox),
@@ -100,29 +101,24 @@ class RegistrationTriggerTestCase:
 
     def test_fill(self):
         self.factory.create_batch(
-            self.activity.capacity - 1,
-            activity=self.activity,
-            user=BlueBottleUserFactory(),
-            as_relation='user'
+            self.activity.capacity - 1, activity=self.activity, user=BlueBottleUserFactory(), as_relation='user'
         )
         self.create()
-        self.assertEqual(self.registration.status, "accepted")
-        self.assertEqual(self.registration.activity.status, "full")
+        self.assertEqual(self.registration.status, 'accepted')
+        self.assertEqual(self.registration.activity.status, 'full')
 
     def test_fill_accept(self):
         self.activity.review = True
         self.activity.save()
 
-        for registration in self.factory.create_batch(
-            self.activity.capacity - 1, activity=self.activity
-        ):
+        for registration in self.factory.create_batch(self.activity.capacity - 1, activity=self.activity):
             registration.states.accept(save=True)
 
         self.create()
         self.registration.states.accept(save=True)
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
     def test_reject(self):
         self.activity.review = True
@@ -133,24 +129,17 @@ class RegistrationTriggerTestCase:
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'You have not been selected for the activity "{}"'.format(
-                self.activity.title
-            ),
+            'You have not been selected for the activity "{}"'.format(self.activity.title),
         )
 
 
-class DateRegistrationTriggerTestCase(
-    RegistrationTriggerTestCase, BluebottleTestCase
-):
+class DateRegistrationTriggerTestCase(RegistrationTriggerTestCase, BluebottleTestCase):
     activity_factory = DateActivityFactory
     factory = DateRegistrationFactory
 
     def setUp(self):
         super().setUp()
-        self.slot = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=now() + timedelta(days=2)
-        )
+        self.slot = DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=2))
 
     def create(self):
         self.registration = self.factory.create(
@@ -172,8 +161,8 @@ class DateRegistrationTriggerTestCase(
         self.create()
 
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertStatus(self.registration, "accepted")
-        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.registration, 'accepted')
+        self.assertStatus(self.participant, 'accepted')
 
         self.assertEqual(
             mail.outbox[0].subject,
@@ -187,18 +176,18 @@ class DateRegistrationTriggerTestCase(
     def test_initial_review(self):
         super().test_initial_review()
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertStatus(self.registration, "new")
-        self.assertStatus(self.participant, "new")
+        self.assertStatus(self.registration, 'new')
+        self.assertStatus(self.participant, 'new')
 
     def test_initial_past(self):
         self.test_initial()
         self.slot.start = now() - timedelta(days=3)
         self.slot.save()
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertStatus(self.slot, "finished")
-        self.assertStatus(self.registration, "accepted")
-        self.assertStatus(self.participant, "succeeded")
-        self.assertStatus(self.contribution, "succeeded")
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.registration, 'accepted')
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.contribution, 'succeeded')
 
     def test_initial_review_past(self):
         super().test_initial_review()
@@ -206,53 +195,53 @@ class DateRegistrationTriggerTestCase(
 
         self.slot.save()
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertStatus(self.registration, "new")
-        self.assertStatus(self.participant, "succeeded")
-        self.assertStatus(self.contribution, "succeeded")
+        self.assertStatus(self.registration, 'new')
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.contribution, 'succeeded')
 
     def test_accept_past(self):
         super().test_accept()
         self.slot.start = now() - timedelta(days=3)
         self.slot.save()
-        self.assertStatus(self.registration, "accepted")
-        self.assertStatus(self.participant, "succeeded")
-        self.assertStatus(self.contribution, "succeeded")
+        self.assertStatus(self.registration, 'accepted')
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.contribution, 'succeeded')
 
     def test_withdraw(self):
         super().test_accept()
         self.registration.states.withdraw(save=True)
-        self.assertStatus(self.registration, "withdrawn")
-        self.assertStatus(self.participant, "withdrawn")
-        self.assertStatus(self.contribution, "failed")
+        self.assertStatus(self.registration, 'withdrawn')
+        self.assertStatus(self.participant, 'withdrawn')
+        self.assertStatus(self.contribution, 'failed')
 
     def test_withdraw_after_past(self):
         super().test_accept()
         self.slot.start = now() - timedelta(days=3)
         self.slot.save()
-        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.participant, 'succeeded')
         self.registration.states.withdraw(save=True)
-        self.assertStatus(self.registration, "withdrawn")
+        self.assertStatus(self.registration, 'withdrawn')
         # Past participation remains succeeded; hours stay counted.
-        self.assertStatus(self.participant, "succeeded")
-        self.assertStatus(self.contribution, "succeeded")
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.contribution, 'succeeded')
 
     def test_withdraw_past(self):
         super().test_accept()
         self.registration.states.withdraw(save=True)
-        self.assertStatus(self.registration, "withdrawn")
-        self.assertStatus(self.participant, "withdrawn")
+        self.assertStatus(self.registration, 'withdrawn')
+        self.assertStatus(self.participant, 'withdrawn')
         self.slot.start = now() - timedelta(days=3)
         self.slot.save()
-        self.assertStatus(self.registration, "withdrawn")
-        self.assertStatus(self.participant, "withdrawn")
-        self.assertStatus(self.contribution, "failed")
+        self.assertStatus(self.registration, 'withdrawn')
+        self.assertStatus(self.participant, 'withdrawn')
+        self.assertStatus(self.contribution, 'failed')
 
     def test_reject(self):
         super().test_reject()
-        self.assertStatus(self.registration, "rejected")
-        self.assertStatus(self.participant, "rejected")
-        self.assertStatus(self.participant.contributions.first(), "failed")
-        self.assertStatus(self.contribution, "failed")
+        self.assertStatus(self.registration, 'rejected')
+        self.assertStatus(self.participant, 'rejected')
+        self.assertStatus(self.participant.contributions.first(), 'failed')
+        self.assertStatus(self.contribution, 'failed')
 
     def test_reject_after_succeed(self):
         super().test_accept()
@@ -268,9 +257,9 @@ class DateRegistrationTriggerTestCase(
         self.assertEqual(len(mail.outbox), 0)
         self.create()
 
-        self.assertStatus(self.registration, "accepted")
-        self.assertStatus(self.participant, "accepted")
-        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.registration, 'accepted')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.slot, 'full')
 
     def test_fill_accept(self):
         super().test_initial_review()
@@ -280,20 +269,18 @@ class DateRegistrationTriggerTestCase(
 
         self.registration.states.accept(save=True)
 
-        self.assertStatus(self.registration, "accepted")
-        self.assertStatus(self.participant, "accepted")
-        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.registration, 'accepted')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.slot, 'full')
 
     def test_reject_then_accept(self):
         super().test_reject()
         self.registration.states.accept(save=True)
 
-        self.assertEqual(self.registration.participants.get().status, "accepted")
+        self.assertEqual(self.registration.participants.get().status, 'accepted')
 
 
-class DeadlineRegistrationTriggerTestCase(
-    RegistrationTriggerTestCase, BluebottleTestCase
-):
+class DeadlineRegistrationTriggerTestCase(RegistrationTriggerTestCase, BluebottleTestCase):
     activity_factory = DeadlineActivityFactory
     factory = DeadlineRegistrationFactory
 
@@ -302,49 +289,47 @@ class DeadlineRegistrationTriggerTestCase(
         self.assertEqual(len(self.registration.participants.all()), 1)
 
         participant = self.registration.participants.get()
-        self.assertEqual(participant.status, "succeeded")
+        self.assertEqual(participant.status, 'succeeded')
 
     def test_initial_review(self):
         super().test_initial_review()
         self.assertEqual(len(self.registration.participants.all()), 1)
-        self.assertEqual(self.registration.participants.get().status, "new")
+        self.assertEqual(self.registration.participants.get().status, 'new')
 
     def test_accept(self):
         super().test_accept()
-        self.assertEqual(self.registration.participants.get().status, "succeeded")
+        self.assertEqual(self.registration.participants.get().status, 'succeeded')
 
     def test_reject(self):
         super().test_reject()
-        self.assertEqual(self.registration.participants.get().status, "rejected")
+        self.assertEqual(self.registration.participants.get().status, 'rejected')
 
     def test_reject_then_accept(self):
         super().test_reject()
         self.registration.states.accept(save=True)
 
-        self.assertEqual(self.registration.participants.get().status, "succeeded")
+        self.assertEqual(self.registration.participants.get().status, 'succeeded')
 
 
-class PeriodicRegistrationTriggerTestCase(
-    RegistrationTriggerTestCase, BluebottleTestCase
-):
+class PeriodicRegistrationTriggerTestCase(RegistrationTriggerTestCase, BluebottleTestCase):
     activity_factory = PeriodicActivityFactory
     factory = PeriodicRegistrationFactory
 
     def test_initial(self):
         super().test_initial()
-        self.assertEqual(self.registration.status, "accepted")
+        self.assertEqual(self.registration.status, 'accepted')
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertEqual(self.registration.participants.get().status, "new")
+        self.assertEqual(self.registration.participants.get().status, 'new')
 
     def test_initial_review(self):
         super().test_initial_review()
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertEqual(self.registration.participants.get().status, "new")
+        self.assertEqual(self.registration.participants.get().status, 'new')
 
     def test_accept(self):
         super().test_accept()
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertEqual(self.registration.participants.get().status, "accepted")
+        self.assertEqual(self.registration.participants.get().status, 'accepted')
 
     def test_remove(self):
         self.test_accept()
@@ -354,19 +339,16 @@ class PeriodicRegistrationTriggerTestCase(
         self.registration.states.remove(save=True)
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'You have been removed from the activity "{self.activity.title}"'
-        )
+        self.assertEqual(mail.outbox[0].subject, f'You have been removed from the activity "{self.activity.title}"')
 
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertEqual(self.registration.participants.get().status, "removed")
+        self.assertEqual(self.registration.participants.get().status, 'removed')
 
     def test_stop(self):
         self.test_initial()
         mail.outbox = []
         self.registration.states.stop(save=True)
-        self.assertEqual(self.registration.participants.get().status, "new")
+        self.assertEqual(self.registration.participants.get().status, 'new')
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[0].subject,
@@ -382,7 +364,7 @@ class PeriodicRegistrationTriggerTestCase(
         self.registration.states.stop(save=True)
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.activity.status, 'open')
 
     def test_start(self):
         self.test_initial()
@@ -405,12 +387,10 @@ class PeriodicRegistrationTriggerTestCase(
         self.registration.states.start(save=True)
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, 'full')
 
 
-class ScheduleRegistationTriggerTestCase(
-    RegistrationTriggerTestCase, BluebottleTestCase
-):
+class ScheduleRegistationTriggerTestCase(RegistrationTriggerTestCase, BluebottleTestCase):
     activity_factory = ScheduleActivityFactory
     factory = ScheduleRegistrationFactory
 
@@ -419,31 +399,29 @@ class ScheduleRegistationTriggerTestCase(
         self.assertEqual(len(self.registration.participants.all()), 1)
 
         participant = self.registration.participants.get()
-        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(participant.status, 'accepted')
 
     def test_initial_review(self):
         super().test_initial_review()
         self.assertEqual(len(self.registration.participants.all()), 1)
-        self.assertEqual(self.registration.participants.get().status, "new")
+        self.assertEqual(self.registration.participants.get().status, 'new')
 
     def test_accept(self):
         super().test_accept()
-        self.assertEqual(self.registration.participants.get().status, "accepted")
+        self.assertEqual(self.registration.participants.get().status, 'accepted')
 
     def test_reject(self):
         super().test_reject()
-        self.assertEqual(self.registration.participants.get().status, "rejected")
+        self.assertEqual(self.registration.participants.get().status, 'rejected')
 
     def test_reject_then_accept(self):
         super().test_reject()
         self.registration.states.accept(save=True)
 
-        self.assertEqual(self.registration.participants.get().status, "accepted")
+        self.assertEqual(self.registration.participants.get().status, 'accepted')
 
 
-class TeamScheduleRegistrationTriggerTestCase(
-    RegistrationTriggerTestCase, BluebottleTestCase
-):
+class TeamScheduleRegistrationTriggerTestCase(RegistrationTriggerTestCase, BluebottleTestCase):
     activity_factory = ScheduleActivityFactory
     factory = TeamScheduleRegistrationFactory
 
@@ -459,19 +437,17 @@ class TeamScheduleRegistrationTriggerTestCase(
             as_user=self.user,
         )
         self.team = TeamFactory.create(
-            registration=self.registration,
-            activity=self.activity,
-            user=self.registration.user
+            registration=self.registration, activity=self.activity, user=self.registration.user
         )
 
     def test_initial(self):
         self.create()
-        self.assertEqual(self.registration.status, "accepted")
-        self.assertEqual(self.team.status, "accepted")
-        self.assertEqual(self.team.team_members.get().status, "active")
+        self.assertEqual(self.registration.status, 'accepted')
+        self.assertEqual(self.team.status, 'accepted')
+        self.assertEqual(self.team.team_members.get().status, 'active')
         self.assertEqual(
             self.team.team_members.get().participants.get().status,
-            "accepted",
+            'accepted',
         )
 
         self.assertEqual(len(mail.outbox), 2)
@@ -490,7 +466,7 @@ class TeamScheduleRegistrationTriggerTestCase(
         self.activity.save()
 
         self.create()
-        self.assertEqual(self.registration.status, "new")
+        self.assertEqual(self.registration.status, 'new')
 
         self.assertEqual(len(mail.outbox), 2)
 
@@ -498,15 +474,10 @@ class TeamScheduleRegistrationTriggerTestCase(
             mail.outbox[0].subject,
             f'A new team has applied to your activity "{self.activity.title}" 🎉',
         )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            'You have registered your team on "Test"'
-        )
-        self.assertEqual(self.team.status, "new")
-        self.assertEqual(self.team.team_members.get().status, "active")
-        self.assertEqual(
-            self.team.team_members.get().participants.get().status, "new"
-        )
+        self.assertEqual(mail.outbox[1].subject, 'You have registered your team on "Test"')
+        self.assertEqual(self.team.status, 'new')
+        self.assertEqual(self.team.team_members.get().status, 'active')
+        self.assertEqual(self.team.team_members.get().participants.get().status, 'new')
 
     def test_reject(self):
         self.activity.review = True
@@ -517,19 +488,17 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has not been selected for the activity "{}"'.format(
-                self.activity.title
-            ),
+            'Your team has not been selected for the activity "{}"'.format(self.activity.title),
         )
 
         self.team.refresh_from_db()
 
-        self.assertEqual(self.team.status, "rejected")
-        self.assertEqual(self.team.team_members.get().status, "rejected")
+        self.assertEqual(self.team.status, 'rejected')
+        self.assertEqual(self.team.team_members.get().status, 'rejected')
 
         self.assertEqual(
             self.team.team_members.get().participants.get().status,
-            "rejected",
+            'rejected',
         )
 
     def test_accept(self):
@@ -538,16 +507,14 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has been selected for the activity "{}"'.format(
-                self.activity.title
-            ),
+            'Your team has been selected for the activity "{}"'.format(self.activity.title),
         )
 
         self.team.refresh_from_db()
-        self.assertEqual(self.team.status, "accepted")
-        self.assertEqual(self.team.team_members.get().status, "active")
+        self.assertEqual(self.team.status, 'accepted')
+        self.assertEqual(self.team.team_members.get().status, 'active')
 
         self.assertEqual(
             self.team.team_members.get().participants.get().status,
-            "accepted",
+            'accepted',
         )

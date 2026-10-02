@@ -5,9 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 
 def get_settings():
-    properties_path = getattr(settings,
-                              'TOKEN_AUTH_SETTINGS',
-                              'django.conf.settings')
+    properties_path = getattr(settings, 'TOKEN_AUTH_SETTINGS', 'django.conf.settings')
 
     try:
         properties = import_string(properties_path)
@@ -17,6 +15,4 @@ def get_settings():
     try:
         return properties.TOKEN_AUTH
     except AttributeError:
-        raise ImproperlyConfigured(
-            'Missing TOKEN_AUTH attribute in {}'.format(properties_path)
-        )
+        raise ImproperlyConfigured('Missing TOKEN_AUTH attribute in {}'.format(properties_path))

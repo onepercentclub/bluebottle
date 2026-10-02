@@ -23,10 +23,7 @@ class SegmentTypeSerializer(ModelSerializer):
 
     class Meta(object):
         model = SegmentType
-        fields = (
-            'id', 'name', 'slug', 'inherit', 'required',
-            'enable_search', 'user_editable', 'segments'
-        )
+        fields = ('id', 'name', 'slug', 'inherit', 'required', 'enable_search', 'user_editable', 'segments')
 
     class JSONAPIMeta(object):
         resource_name = 'segment-types'
@@ -48,14 +45,26 @@ class SegmentListSerializer(ModelSerializer):
     class Meta(object):
         model = Segment
         fields = (
-            'id', 'name', 'segment_type', 'email_domains', 'slug', 'tag_line',
-            'background_color', 'text_color',
-            'button_color', 'button_text_color',
-            'logo', 'cover_image', 'story', 'closed',
+            'id',
+            'name',
+            'segment_type',
+            'email_domains',
+            'slug',
+            'tag_line',
+            'background_color',
+            'text_color',
+            'button_color',
+            'button_text_color',
+            'logo',
+            'cover_image',
+            'story',
+            'closed',
         )
 
     class JSONAPIMeta(object):
-        included_resources = ['segment_type', ]
+        included_resources = [
+            'segment_type',
+        ]
         resource_name = 'segments'
 
 
@@ -68,19 +77,14 @@ class SegmentDetailSerializer(SegmentListSerializer):
         return len(Initiative.objects.filter(status='approved', activities__segments=obj).distinct())
 
     def get_activities_count(self, obj):
-        total = Activity.objects.filter(
-            segments=obj,
-            status__in=['open', 'full']
-        ).count()
+        total = Activity.objects.filter(segments=obj, status__in=['open', 'full']).count()
         return total
 
     def get_stats(self, obj):
         return get_stats_for_activities(obj.activities.all())
 
     class Meta(SegmentListSerializer.Meta):
-        fields = SegmentListSerializer.Meta.fields + (
-            'initiatives_count', 'activities_count', 'stats'
-        )
+        fields = SegmentListSerializer.Meta.fields + ('initiatives_count', 'activities_count', 'stats')
         meta_fields = ['initiatives_count', 'activities_count', 'stats']
 
 
@@ -91,10 +95,7 @@ class SegmentPublicDetailSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Segment
-        fields = (
-            'id', 'name', 'logo', 'cover_image', 'email_domains', 'background_color', 'closed',
-            'text_color'
-        )
+        fields = ('id', 'name', 'logo', 'cover_image', 'email_domains', 'background_color', 'closed', 'text_color')
 
     class JSONAPIMeta(object):
         resource_name = 'segment-previews'

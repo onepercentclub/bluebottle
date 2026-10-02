@@ -15,6 +15,7 @@ class Deed(Activity):
     """
     A good deed.
     """
+
     include_in_documentation = True
 
     start = models.DateField(blank=True, null=True)
@@ -22,10 +23,7 @@ class Deed(Activity):
 
     enable_impact = models.BooleanField(default=False)
 
-    target = models.IntegerField(
-        blank=True, null=True,
-        help_text=_('The number of users you want to participate.')
-    )
+    target = models.IntegerField(blank=True, null=True, help_text=_('The number of users you want to participate.'))
 
     activity_type = _('Deed')
 
@@ -34,14 +32,13 @@ class Deed(Activity):
         return self.start
 
     class Meta(object):
-        verbose_name = _("Deed")
-        verbose_name_plural = _("Deeds")
+        verbose_name = _('Deed')
+        verbose_name_plural = _('Deeds')
         permissions = (
             ('api_read_deed', 'Can view deed through the API'),
             ('api_add_deed', 'Can add deed through the API'),
             ('api_change_deed', 'Can change deed through the API'),
             ('api_delete_deed', 'Can delete deed through the API'),
-
             ('api_read_own_deed', 'Can view own deed through the API'),
             ('api_add_own_deed', 'Can add own deed through the API'),
             ('api_change_own_deed', 'Can change own deed through the API'),
@@ -51,10 +48,7 @@ class Deed(Activity):
     class JSONAPIMeta(object):
         resource_name = 'activities/deeds'
 
-    validators = [
-        EndDateValidator,
-        TosAcceptedValidator
-    ]
+    validators = [EndDateValidator, TosAcceptedValidator]
 
     @property
     def required_fields(self):
@@ -73,24 +67,27 @@ class Deed(Activity):
     def google_calendar_link(self):
         details = self.description.html
         end = self.end + datetime.timedelta(days=1)
-        dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+        dates = '{}/{}'.format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
 
-        url = u'https://calendar.google.com/calendar/render'
+        url = 'https://calendar.google.com/calendar/render'
         params = {
-            'action': u'TEMPLATE',
+            'action': 'TEMPLATE',
             'text': self.title,
             'dates': dates,
             'details': details,
             'uid': self.uid,
         }
 
-        return u'{}?{}'.format(url, urlencode(params))
+        return '{}?{}'.format(url, urlencode(params))
 
     @property
     def participants(self):
         if self.pk:
             return self.contributors.instance_of(DeedParticipant).filter(
-                status__in=('accepted', 'succeeded', )
+                status__in=(
+                    'accepted',
+                    'succeeded',
+                )
             )
         else:
             return []
@@ -105,10 +102,7 @@ class Deed(Activity):
     @property
     def efforts(self):
         if self.pk:
-            return EffortContribution.objects.filter(
-                contributor__activity=self,
-                contribution_type='deed'
-            )
+            return EffortContribution.objects.filter(contributor__activity=self, contribution_type='deed')
         else:
             return []
 
@@ -120,7 +114,10 @@ class Deed(Activity):
                     contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
                 ).filter(
                     contributor__activity=self,
-                    status__in=['succeeded', 'new', ]
+                    status__in=[
+                        'succeeded',
+                        'new',
+                    ],
                 )
             )
         else:
@@ -131,18 +128,18 @@ class DeedParticipant(Contributor):
     """
     A participant in a deed.
     """
+
     include_in_documentation = True
 
     class Meta(object):
-        verbose_name = _("Deed participant")
-        verbose_name_plural = _("Deed participants")
+        verbose_name = _('Deed participant')
+        verbose_name_plural = _('Deed participants')
 
         permissions = (
             ('api_read_deedparticipant', 'Can view deed through the API'),
             ('api_add_deedparticipant', 'Can add deed through the API'),
             ('api_change_deedparticipant', 'Can change deed through the API'),
             ('api_delete_deedparticipant', 'Can delete deed through the API'),
-
             ('api_read_own_deedparticipant', 'Can view own deed through the API'),
             ('api_add_own_deedparticipant', 'Can add own deed through the API'),
             ('api_change_own_deedparticipant', 'Can change own deed through the API'),

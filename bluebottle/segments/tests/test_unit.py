@@ -7,8 +7,8 @@ from bluebottle.test.utils import BluebottleTestCase
 
 class TestSegmentModel(BluebottleTestCase):
     """
-        save() automatically updates some fields, specifically
-        the status field. Make sure it picks the right one
+    save() automatically updates some fields, specifically
+    the status field. Make sure it picks the right one
     """
 
     def setUp(self):
@@ -35,9 +35,9 @@ class TestSegmentModel(BluebottleTestCase):
         )
 
         for color, text_color in [
-            ("#ffffff", "text"),
-            ("#000000", "white"),
-            ("#ff4422", "white"),
+            ('#ffffff', 'text'),
+            ('#000000', 'white'),
+            ('#ff4422', 'white'),
         ]:
             segment.background_color = color
             self.assertEqual(segment.text_color, text_color)
@@ -46,68 +46,47 @@ class TestSegmentModel(BluebottleTestCase):
         segment = SegmentFactory.create()
 
         self.assertEqual(
-            segment.get_absolute_url(),
-            f'http://test.localhost/en/segments/{segment.id}/{segment.slug}/activities/list'
+            segment.get_absolute_url(), f'http://test.localhost/en/segments/{segment.id}/{segment.slug}/activities/list'
         )
 
 
 class MemberSegmentTestCase(BluebottleTestCase):
-
     def setUp(self):
         self.segment_type = SegmentTypeFactory.create()
 
     def test_new_user_no_segments(self):
-        SegmentFactory.create(
-            segment_type=self.segment_type,
-            closed=True
-        )
+        SegmentFactory.create(segment_type=self.segment_type, closed=True)
 
-        mart = BlueBottleUserFactory.create(
-            email='mart.hoogkamer@leidse-zangers.nl'
-        )
+        mart = BlueBottleUserFactory.create(email='mart.hoogkamer@leidse-zangers.nl')
         self.assertEqual(mart.segments.first(), None)
 
     def test_new_user_added_to_segment(self):
         segment = SegmentFactory.create(
-            segment_type=self.segment_type,
-            email_domains=['leidse-zangers.nl'],
-            closed=True
+            segment_type=self.segment_type, email_domains=['leidse-zangers.nl'], closed=True
         )
 
-        mart = BlueBottleUserFactory.create(
-            email='mart.hoogkamer@leidse-zangers.nl'
-        )
+        mart = BlueBottleUserFactory.create(email='mart.hoogkamer@leidse-zangers.nl')
 
         self.assertEqual(mart.segments.first(), segment)
 
-        jan = BlueBottleUserFactory.create(
-            email='jan.keizer@paling-sound.nl'
-        )
+        jan = BlueBottleUserFactory.create(email='jan.keizer@paling-sound.nl')
         self.assertEqual(jan.segments.first(), None)
 
     def test_new_user_added_to_segment_case_insensitive(self):
         segment = SegmentFactory.create(
-            segment_type=self.segment_type,
-            email_domains=['leidse-ZANGERS.nl', 'wijngaarden.nl'],
-            closed=True
+            segment_type=self.segment_type, email_domains=['leidse-ZANGERS.nl', 'wijngaarden.nl'], closed=True
         )
 
-        mart = BlueBottleUserFactory.create(
-            email='mart.hoogkamer@LEIDSE-zangers.nl'
-        )
+        mart = BlueBottleUserFactory.create(email='mart.hoogkamer@LEIDSE-zangers.nl')
 
         self.assertEqual(mart.segments.first(), segment)
 
     def test_changing_user_added_to_segment(self):
         segment = SegmentFactory.create(
-            segment_type=self.segment_type,
-            email_domains=['leidse-zangers.nl'],
-            closed=True
+            segment_type=self.segment_type, email_domains=['leidse-zangers.nl'], closed=True
         )
 
-        mart = BlueBottleUserFactory.create(
-            email='mart.hoogkamer@dds.nl'
-        )
+        mart = BlueBottleUserFactory.create(email='mart.hoogkamer@dds.nl')
 
         self.assertEqual(mart.segments.first(), None)
 
@@ -117,16 +96,10 @@ class MemberSegmentTestCase(BluebottleTestCase):
         self.assertEqual(mart.segments.first(), segment)
 
     def test_user_added_to_segment_when_setting_email_domain(self):
-        robbie = BlueBottleUserFactory.create(
-            email='rubberen.robbie@leidse-zangers.nl'
-        )
-        jan = BlueBottleUserFactory.create(
-            email='jan.keizer@paling-sound.nl'
-        )
+        robbie = BlueBottleUserFactory.create(email='rubberen.robbie@leidse-zangers.nl')
+        jan = BlueBottleUserFactory.create(email='jan.keizer@paling-sound.nl')
         segment = SegmentFactory.create(
-            segment_type=self.segment_type,
-            email_domains=['leidse-zangers.nl'],
-            closed=True
+            segment_type=self.segment_type, email_domains=['leidse-zangers.nl'], closed=True
         )
 
         self.assertEqual(robbie.segments.first(), segment)
@@ -134,10 +107,7 @@ class MemberSegmentTestCase(BluebottleTestCase):
 
     def test_new_user_added_to_segment_with_inherit(self):
         type = SegmentTypeFactory.create(inherit=True)
-        segment = SegmentFactory.create(
-            segment_type=type,
-            email_domains=[]
-        )
+        segment = SegmentFactory.create(segment_type=type, email_domains=[])
 
         user = BlueBottleUserFactory.create()
         user.segments.add(segment)
@@ -146,10 +116,7 @@ class MemberSegmentTestCase(BluebottleTestCase):
 
         self.assertEqual(list(activity.segments.all()), list(user.segments.all()))
 
-        new_segment = SegmentFactory.create(
-            segment_type=type,
-            email_domains=[]
-        )
+        new_segment = SegmentFactory.create(segment_type=type, email_domains=[])
         user.segments.add(new_segment)
         self.assertTrue(new_segment in activity.segments.all())
 
@@ -158,10 +125,7 @@ class MemberSegmentTestCase(BluebottleTestCase):
 
     def test_new_user_added_to_segment_with_inherit_closed(self):
         type = SegmentTypeFactory.create(inherit=True)
-        segment = SegmentFactory.create(
-            segment_type=type,
-            email_domains=[]
-        )
+        segment = SegmentFactory.create(segment_type=type, email_domains=[])
 
         user = BlueBottleUserFactory.create()
         user.segments.add(segment)
@@ -170,10 +134,7 @@ class MemberSegmentTestCase(BluebottleTestCase):
 
         self.assertEqual(list(activity.segments.all()), list(user.segments.all()))
 
-        new_segment = SegmentFactory.create(
-            segment_type=type,
-            email_domains=[]
-        )
+        new_segment = SegmentFactory.create(segment_type=type, email_domains=[])
         user.segments.add(new_segment)
         self.assertFalse(new_segment in activity.segments.all())
         user.segments.remove(new_segment)
@@ -181,9 +142,7 @@ class MemberSegmentTestCase(BluebottleTestCase):
 
     def test_new_user_added_to_segment_without_inherit(self):
         type = SegmentTypeFactory.create(inherit=False)
-        segment = SegmentFactory.create(
-            segment_type=type
-        )
+        segment = SegmentFactory.create(segment_type=type)
 
         user = BlueBottleUserFactory.create()
         user.segments.add(segment)
@@ -192,10 +151,7 @@ class MemberSegmentTestCase(BluebottleTestCase):
 
         self.assertEqual(len(activity.segments.all()), 0)
 
-        new_segment = SegmentFactory.create(
-            segment_type=type,
-            email_domains=[]
-        )
+        new_segment = SegmentFactory.create(segment_type=type, email_domains=[])
         user.segments.add(new_segment)
         self.assertEqual(len(activity.segments.all()), 0)
 

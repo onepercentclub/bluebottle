@@ -56,10 +56,7 @@ def is_full(effect):
     if isinstance(effect.instance, DateActivity) and effect.instance.slots.count() > 1:
         return False
 
-    return (
-        effect.instance.capacity and
-        effect.instance.capacity <= len(effect.instance.accepted_participants)
-    )
+    return effect.instance.capacity and effect.instance.capacity <= len(effect.instance.accepted_participants)
 
 
 def activity_has_status_full(effect):
@@ -70,12 +67,12 @@ def activity_has_status_full(effect):
 
 
 def has_participants(effect):
-    """ has participants"""
+    """has participants"""
     return len(effect.instance.active_participants) > 0
 
 
 def has_accepted_participants(effect):
-    """ has accepted participants"""
+    """has accepted participants"""
     return len(effect.instance.accepted_participants) > 0
 
 
@@ -108,12 +105,7 @@ def is_finished(effect):
         slot = effect.instance
     else:
         slot = effect.instance.slots.order_by('start').last()
-    return (
-        slot and
-        slot.start and
-        slot.duration and
-        slot.start + slot.duration < now()
-    )
+    return slot and slot.start and slot.duration and slot.start + slot.duration < now()
 
 
 def is_not_finished(effect):
@@ -124,12 +116,7 @@ def is_not_finished(effect):
         slot = effect.instance
     else:
         slot = effect.instance.slots.order_by('start').last()
-    return (
-        slot and
-        slot.start and
-        slot.duration and
-        slot.start + slot.duration > now()
-    )
+    return slot and slot.start and slot.duration and slot.start + slot.duration > now()
 
 
 def automatically_accept(effect):
@@ -193,8 +180,7 @@ def slot_is_full(effect):
     Slot is full. Capacity is filled by participants.
     """
     participant_count = effect.instance.participants.filter(
-        registration__status='accepted',
-        status__in=['registered', 'succeeded']
+        registration__status='accepted', status__in=['registered', 'succeeded']
     ).count()
     if effect.instance.capacity and participant_count >= effect.instance.capacity:
         return True
@@ -213,14 +199,13 @@ def participant_slot_will_be_full(effect):
     the slot will be filled
     """
     participant_count = effect.instance.slot.participants.filter(
-        status="registered",
-        registration__status="accepted"
+        status='registered', registration__status='accepted'
     ).count()
     if (
-        effect.instance.slot.capacity and
-        effect.instance.status == 'registered' and
-        effect.instance.registration.status == 'accepted' and
-        participant_count + 1 >= effect.instance.slot.capacity
+        effect.instance.slot.capacity
+        and effect.instance.status == 'registered'
+        and effect.instance.registration.status == 'accepted'
+        and participant_count + 1 >= effect.instance.slot.capacity
     ):
         return True
     return False
@@ -231,8 +216,7 @@ def participant_slot_will_be_not_full(effect):
     the slot will be unfilled
     """
     participant_count = effect.instance.slot.participants.filter(
-        status='registered',
-        registration__status='accepted'
+        status='registered', registration__status='accepted'
     ).count()
     if effect.instance.slot.capacity and participant_count - 1 < effect.instance.slot.capacity:
         return True
@@ -243,11 +227,12 @@ def all_slots_finished(effect):
     """
     all slots have finished
     """
-    return effect.instance.activity.slots.exclude(
-        status__in=['finished', 'cancelled', 'deleted']
-    ).exclude(
-        id=effect.instance.id
-    ).count() == 0
+    return (
+        effect.instance.activity.slots.exclude(status__in=['finished', 'cancelled', 'deleted'])
+        .exclude(id=effect.instance.id)
+        .count()
+        == 0
+    )
 
 
 def not_all_slots_finished(effect):
@@ -261,11 +246,14 @@ def all_slots_cancelled(effect):
     """
     all slots are cancelled
     """
-    return effect.instance.activity.slots.exclude(
-        status__in=['cancelled', 'deleted', 'expired']
-    ).exclude(
-        id=effect.instance.id,
-    ).count() == 0
+    return (
+        effect.instance.activity.slots.exclude(status__in=['cancelled', 'deleted', 'expired'])
+        .exclude(
+            id=effect.instance.id,
+        )
+        .count()
+        == 0
+    )
 
 
 def all_slots_will_be_full(effect):
@@ -344,15 +332,9 @@ def activity_will_be_full(effect):
 
     if activity.team_activity == 'teams':
         accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count()
-        return (
-            activity.capacity and
-            activity.capacity <= accepted_teams
-        )
+        return activity.capacity and activity.capacity <= accepted_teams
 
-    return (
-        activity.capacity and
-        activity.capacity == len(activity.accepted_participants) + 1
-    )
+    return activity.capacity and activity.capacity == len(activity.accepted_participants) + 1
 
 
 def activity_will_not_be_full(effect):
@@ -370,11 +352,8 @@ def activity_will_not_be_full(effect):
         # Don't trigger 'full' effects on DateActivity, slots will trigger them
         return False
 
-    return (
-        not activity.capacity or
-        activity.capacity > spots_taken_after_release(
-            activity.accepted_participants, effect.instance
-        )
+    return not activity.capacity or activity.capacity > spots_taken_after_release(
+        activity.accepted_participants, effect.instance
     )
 
 
@@ -385,12 +364,7 @@ def activity_is_finished(effect):
     activity = effect.instance.activity
 
     last_slot = activity.slots.order_by('start').last()
-    return (
-        last_slot and
-        last_slot.start and
-        last_slot.duration and
-        last_slot.start + last_slot.duration < now()
-    )
+    return last_slot and last_slot.start and last_slot.duration and last_slot.start + last_slot.duration < now()
 
 
 class ParticipantTriggers(ContributorTriggers):
@@ -398,38 +372,14 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                NotificationEffect(
-                    ParticipantAppliedNotification,
-                    conditions=[
-                        needs_review,
-                        is_user
-                    ]
-                ),
-                NotificationEffect(
-                    ParticipantCreatedNotification,
-                    conditions=[
-                        needs_review,
-                        is_user
-                    ]
-                ),
-                TransitionEffect(
-                    ParticipantStateMachine.add,
-                    conditions=[
-                        is_not_user
-                    ]
-                ),
-                TransitionEffect(
-                    ParticipantStateMachine.accept,
-                    conditions=[
-                        automatically_accept,
-                        is_user
-                    ]
-                ),
+                NotificationEffect(ParticipantAppliedNotification, conditions=[needs_review, is_user]),
+                NotificationEffect(ParticipantCreatedNotification, conditions=[needs_review, is_user]),
+                TransitionEffect(ParticipantStateMachine.add, conditions=[is_not_user]),
+                TransitionEffect(ParticipantStateMachine.accept, conditions=[automatically_accept, is_user]),
                 FollowActivityEffect,
                 CreatePreparationTimeContributionEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             ParticipantStateMachine.reapply,
             effects=[
@@ -438,49 +388,20 @@ class ParticipantTriggers(ContributorTriggers):
                     conditions=[
                         needs_review,
                         is_user,
-                    ]
+                    ],
                 ),
-                NotificationEffect(
-                    ParticipantCreatedNotification,
-                    conditions=[
-                        needs_review,
-                        is_user
-                    ]
-                ),
-                TransitionEffect(
-                    ParticipantStateMachine.accept,
-                    conditions=[
-                        automatically_accept
-                    ]
-                ),
+                NotificationEffect(ParticipantCreatedNotification, conditions=[needs_review, is_user]),
+                TransitionEffect(ParticipantStateMachine.accept, conditions=[automatically_accept]),
                 FollowActivityEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             ParticipantStateMachine.add,
             effects=[
-                NotificationEffect(
-                    ParticipantAddedNotification,
-                    conditions=[participant_is_active]
-                ),
-                NotificationEffect(
-                    InactiveParticipantAddedNotification,
-                    conditions=[participant_is_inactive]
-                ),
-                RelatedTransitionEffect(
-                    'activity',
-                    TimeBasedStateMachine.lock,
-                    conditions=[
-                        activity_will_be_full
-                    ]
-                ),
-                RelatedTransitionEffect(
-                    'activity',
-                    TimeBasedStateMachine.succeed,
-                    conditions=[activity_is_finished]
-                ),
-
+                NotificationEffect(ParticipantAddedNotification, conditions=[participant_is_active]),
+                NotificationEffect(InactiveParticipantAddedNotification, conditions=[participant_is_inactive]),
+                RelatedTransitionEffect('activity', TimeBasedStateMachine.lock, conditions=[activity_will_be_full]),
+                RelatedTransitionEffect('activity', TimeBasedStateMachine.succeed, conditions=[activity_is_finished]),
                 RelatedTransitionEffect(
                     'upcoming_contributions',
                     TimeContributionStateMachine.reset,
@@ -497,9 +418,8 @@ class ParticipantTriggers(ContributorTriggers):
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
-            ]
+            ],
         ),
-
         TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[
@@ -507,80 +427,58 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantAcceptedNotification,
                     conditions=[
                         needs_review,
-                    ]
+                    ],
                 ),
-                RelatedTransitionEffect(
-                    'activity',
-                    TimeBasedStateMachine.lock,
-                    conditions=[
-                        activity_will_be_full
-                    ]
-                ),
-                RelatedTransitionEffect(
-                    'activity',
-                    TimeBasedStateMachine.succeed,
-                    conditions=[activity_is_finished]
-                ),
+                RelatedTransitionEffect('activity', TimeBasedStateMachine.lock, conditions=[activity_will_be_full]),
+                RelatedTransitionEffect('activity', TimeBasedStateMachine.succeed, conditions=[activity_is_finished]),
                 RelatedTransitionEffect(
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
                 FollowActivityEffect,
-            ]
+            ],
         ),
-
         TransitionTrigger(
             ParticipantStateMachine.reject,
             effects=[
                 NotificationEffect(
                     ParticipantRejectedNotification,
                 ),
-
                 RelatedTransitionEffect(
-                    'activity',
-                    TimeBasedStateMachine.unlock,
-                    conditions=[activity_will_not_be_full]
+                    'activity', TimeBasedStateMachine.unlock, conditions=[activity_will_not_be_full]
                 ),
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-                UnFollowActivityEffect
-            ]
+                UnFollowActivityEffect,
+            ],
         ),
-
         TransitionTrigger(
             ParticipantStateMachine.remove,
             effects=[
-                NotificationEffect(
-                    ParticipantRemovedNotification
-                ),
+                NotificationEffect(ParticipantRemovedNotification),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,
                     conditions=[
                         is_not_owner,
-                    ]
+                    ],
                 ),
                 RelatedTransitionEffect(
-                    'activity',
-                    TimeBasedStateMachine.unlock,
-                    conditions=[activity_will_not_be_full]
+                    'activity', TimeBasedStateMachine.unlock, conditions=[activity_will_not_be_full]
                 ),
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-                UnFollowActivityEffect
-            ]
+                UnFollowActivityEffect,
+            ],
         ),
-
         TransitionTrigger(
             ParticipantStateMachine.withdraw,
             effects=[
                 RelatedTransitionEffect(
-                    'activity',
-                    TimeBasedStateMachine.unlock,
-                    conditions=[activity_will_not_be_full]
+                    'activity', TimeBasedStateMachine.unlock, conditions=[activity_will_not_be_full]
                 ),
                 RelatedTransitionEffect(
                     'contributions',
@@ -590,9 +488,7 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantWithdrewNotification,
                 ),
-                NotificationEffect(
-                    ParticipantWithdrewConfirmationNotification
-                ),
-            ]
+                NotificationEffect(ParticipantWithdrewConfirmationNotification),
+            ],
         ),
     ]

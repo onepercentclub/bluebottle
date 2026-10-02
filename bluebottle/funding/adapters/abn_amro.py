@@ -4,7 +4,6 @@ from django.conf import settings
 
 
 class AbnAmroAdapter:
-
     def __init__(self):
 
         self.client_id = settings.IBAN_CHECK_API['client_id']
@@ -22,20 +21,16 @@ class AbnAmroAdapter:
     def _refresh_token(self):
         response = requests.post(
             self.token_url,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": self.client_id,
-                "scope": self.scope
-            },
+            data={'grant_type': 'client_credentials', 'client_id': self.client_id, 'scope': self.scope},
             cert=(self.public_cert, self.private_key),
             headers={
-                "Content-Type": "application/x-www-form-urlencoded",
-            }
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
         )
         response.raise_for_status()
         data = response.json()
-        self.access_token = data["access_token"]
-        self.token_expiry = int(time.time()) + int(data.get("expires_in", 1800))
+        self.access_token = data['access_token']
+        self.token_expiry = int(time.time()) + int(data.get('expires_in', 1800))
 
     def _get_token(self):
         if not self.access_token or (self.token_expiry and time.time() > self.token_expiry - 60):
@@ -44,19 +39,13 @@ class AbnAmroAdapter:
 
     def check_iban_name(self, iban, name):
 
-        url = f"{self.base_url}/third-party-api/surepay/iban-name-check/v3"
+        url = f'{self.base_url}/third-party-api/surepay/iban-name-check/v3'
         headers = {
-            "Authorization": f"Bearer {self._get_token()}",
-            "API-Key": self.api_key,
-            "Content-Type": "application/json"
+            'Authorization': f'Bearer {self._get_token()}',
+            'API-Key': self.api_key,
+            'Content-Type': 'application/json',
         }
-        payload = {
-            "accountId": {
-                "value": iban,
-                "type": "IBAN"
-            },
-            "name": name
-        }
+        payload = {'accountId': {'value': iban, 'type': 'IBAN'}, 'name': name}
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         return response.json()

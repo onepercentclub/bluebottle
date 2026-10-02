@@ -29,23 +29,26 @@ class CategoryContentInline(SortableStackedInline, TranslatableStackedInline):
 
 class CategoryInitiativesInline(TabularInline):
     model = Initiative.categories.through
-    raw_id_fields = ('initiative', )
+    raw_id_fields = ('initiative',)
     extra = 0
 
 
 @admin.register(Category)
-class CategoryAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin, AdminImageMixin,
-                    NonSortableParentAdmin):
+class CategoryAdmin(
+    TranslatableLabelAdminMixin,
+    TranslatableAdminOrderingMixin,
+    TranslatableAdmin,
+    AdminImageMixin,
+    NonSortableParentAdmin,
+):
     model = Category
     list_display = ('title', 'slug', 'initiatives')
     inlines = (CategoryContentInline, CategoryInitiativesInline)
     translatable_ordering = 'translations__title'
-    search_fields = ('title', )
+    search_fields = ('title',)
     fields = ['title', 'slug', 'image', 'image_logo', 'description']
 
     def initiatives(self, obj):
         url = reverse('admin:initiatives_initiative_changelist')
         count = Initiative.objects.filter(categories__id=obj.id).count()
-        return format_html(
-            '<a href="{}?categories__id={}">{} {}</a>',
-            url, obj.id, count, _('initiatives'))
+        return format_html('<a href="{}?categories__id={}">{} {}</a>', url, obj.id, count, _('initiatives'))

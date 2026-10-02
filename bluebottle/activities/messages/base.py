@@ -13,9 +13,7 @@ class BaseParticipantNotification(TransitionMessage):
             if self.link_to_overview:
                 domain = get_current_host()
                 language = get_current_language()
-                return "{}/{}/activities/list".format(
-                    domain, language
-                )
+                return '{}/{}/activities/list'.format(domain, language)
         return self.obj.activity.get_absolute_url()
 
     @property

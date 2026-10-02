@@ -3,7 +3,6 @@ from rest_framework_json_api.renderers import JSONRenderer
 
 
 class StatisticsRenderer(JSONRenderer):
-
     @classmethod
     def build_json_resource_obj(cls, *args, **kwargs):
         obj = super(StatisticsRenderer, cls).build_json_resource_obj(*args, **kwargs)

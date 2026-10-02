@@ -19,10 +19,7 @@ class TestPayoutAdapter(BluebottleTestCase):
     def setUp(self):
         super(TestPayoutAdapter, self).setUp()
         self.funding = FundingFactory.create(target=Money(500, 'EUR'), status='open')
-        donations = DonorFactory.create_batch(
-            7,
-            activity=self.funding,
-            amount=Money(100, 'EUR'))
+        donations = DonorFactory.create_batch(7, activity=self.funding, amount=Money(100, 'EUR'))
         for donation in donations:
             PledgePaymentFactory.create(donation=donation)
         yesterday = now() - timedelta(days=1)

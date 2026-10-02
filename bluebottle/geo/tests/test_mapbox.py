@@ -21,7 +21,6 @@ migrate_mapbox = SourceFileLoader(
 
 
 class MapboxUtilsTestCase(BluebottleTestCase):
-
     def test_is_v6_mapbox_id(self):
         self.assertTrue(mapbox_utils.is_v6_mapbox_id('dXJuOm1ieGFkcjox'))
         self.assertTrue(mapbox_utils.is_v6_mapbox_id('dXJuOm1ieHBsYzp4Y2lv'))
@@ -154,11 +153,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             migrate_mapbox.clean_street_name('Hansenstraat', '30'),
             'Hansenstraat',
         )
-        self.assertIsNone(
-            migrate_mapbox.clean_place_name(
-                'Buurbuik De Pijp, Tweede van der Helststraat 66 Amsterdam'
-            )
-        )
+        self.assertIsNone(migrate_mapbox.clean_place_name('Buurbuik De Pijp, Tweede van der Helststraat 66 Amsterdam'))
         self.assertEqual(migrate_mapbox.clean_place_name('Amsterdam'), 'Amsterdam')
         self.assertIsNone(
             migrate_mapbox.clean_region_name(
@@ -218,9 +213,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
 
     @mock.patch('migrate_mapbox.reverse_geocode_feature')
     @mock.patch('migrate_mapbox.forward_v6')
-    def test_resolve_prefers_reverse_when_position_exists(
-        self, mock_forward, mock_reverse
-    ):
+    def test_resolve_prefers_reverse_when_position_exists(self, mock_forward, mock_reverse):
         mock_reverse.return_value = MAPBOX_V6_ADDRESS_FEATURE
         geolocation = Geolocation(
             mapbox_id='address.123',
@@ -478,12 +471,8 @@ class MapboxUtilsTestCase(BluebottleTestCase):
 
     def test_sync_keeps_name_and_place_name_language_consistent(self):
         """Avoid mixed labels like name=Den Haag with place_name=..., Netherlands."""
-        LanguageFactory.create(
-            code='en', language_name='English', native_name='English', default=True
-        )
-        LanguageFactory.create(
-            code='nl', language_name='Dutch', native_name='Nederlands'
-        )
+        LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
+        LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
         country = CountryFactory.create(alpha2_code='NL')
         geolocation = Geolocation.objects.create(
             position=Point(4.3, 52.07),
@@ -497,9 +486,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
                 'feature_type': 'address',
                 'name': 'Hildebrandstraat 62',
                 # Default full_address is Dutch — must not be copied into en.
-                'full_address': (
-                    'Hildebrandstraat 62, 2524 VK Den Haag, Nederland'
-                ),
+                'full_address': ('Hildebrandstraat 62, 2524 VK Den Haag, Nederland'),
                 'translations': {
                     'en': {'language': 'en', 'name': 'Hildebrandstraat 62'},
                     'nl': {'language': 'nl', 'name': 'Hildebrandstraat 62'},
@@ -616,9 +603,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertEqual(translations[0]['feature_type'], 'place')
 
     def test_get_translated_geofeature_list_skips_missing_translations(self):
-        LanguageFactory.create(
-            code='en', language_name='English', native_name='English', default=True
-        )
+        LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
         LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
         geofeature = GeoFeature.objects.create(
             mapbox_id='dXJuOm1ieGFkcjpuZWdjb2VudHJ5',

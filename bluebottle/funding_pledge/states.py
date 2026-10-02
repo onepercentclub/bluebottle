@@ -12,10 +12,7 @@ class PledgePaymentStateMachine(BasePaymentStateMachine):
     pending = None
 
     request_refund = Transition(
-        BasePaymentStateMachine.succeeded,
-        BasePaymentStateMachine.refunded,
-        name=_('Request refund'),
-        automatic=False
+        BasePaymentStateMachine.succeeded, BasePaymentStateMachine.refunded, name=_('Request refund'), automatic=False
     )
 
 

@@ -22,7 +22,6 @@ class VitepayPaymentSerializer(PaymentSerializer):
 
 
 class VitepayBankAccountSerializer(BaseBankAccountSerializer):
-
     class Meta(BaseBankAccountSerializer.Meta):
         model = VitepayBankAccount
 
@@ -30,6 +29,7 @@ class VitepayBankAccountSerializer(BaseBankAccountSerializer):
             'account_name',
             'mobile_number',
         )
+
     included_serializers = {
         'connect_account': 'bluebottle.funding.serializers.PlainPayoutAccountSerializer',
     }

@@ -43,11 +43,7 @@ class ActivityTypePermission(ResourcePermission):
 class ActivityStatusPermission(ResourcePermission):
     def has_object_action_permission(self, action, user, obj):
         can_review = user_can_review_activity(user, obj)
-        if (
-            action in ('PATCH', 'PUT') and
-            obj.status in ('rejected', 'deleted', 'submitted') and
-            not can_review
-        ):
+        if action in ('PATCH', 'PUT') and obj.status in ('rejected', 'deleted', 'submitted') and not can_review:
             return False
         else:
             return True
@@ -57,7 +53,6 @@ class ActivityStatusPermission(ResourcePermission):
 
 
 class ActivitySegmentPermission(BasePermission):
-
     def has_object_action_permission(self, action, user, obj):
         activity_segments = obj.segments.filter(closed=True)
         if activity_segments:
@@ -65,9 +60,7 @@ class ActivitySegmentPermission(BasePermission):
                 return False
             elif user.is_staff:
                 return True
-            elif any(
-                    segment in activity_segments for segment in user.segments.filter(closed=True)
-            ):
+            elif any(segment in activity_segments for segment in user.segments.filter(closed=True)):
                 return True
             else:
                 return False
@@ -79,7 +72,6 @@ class ActivitySegmentPermission(BasePermission):
 
 
 class ContributorPermission(ResourcePermission):
-
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],
         'OPTIONS': [],
@@ -99,7 +91,6 @@ class ContributorPermission(ResourcePermission):
 
 
 class ContributionPermission(ResourcePermission):
-
     def has_action_permission(self, action, user, model_cls):
         return True
 
@@ -108,7 +99,6 @@ class ContributionPermission(ResourcePermission):
 
 
 class ActivityManagerPermission(ResourcePermission):
-
     def has_action_permission(self, action, user, model_cls):
         return True
 
@@ -117,7 +107,6 @@ class ActivityManagerPermission(ResourcePermission):
 
 
 class IsAdminPermission(ResourcePermission):
-
     def has_action_permission(self, action, user, model_cls):
         return user.is_staff or user.is_superuser
 
@@ -127,9 +116,9 @@ class IsAdminPermission(ResourcePermission):
 
 class DeleteActivityPermission(ResourcePermission):
     def has_object_action_permission(self, action, user, obj):
-        if (
-            action == 'DELETE' and
-            obj.status not in ('draft', 'needs_work', )
+        if action == 'DELETE' and obj.status not in (
+            'draft',
+            'needs_work',
         ):
             return False
         else:
@@ -140,12 +129,12 @@ class DeleteActivityPermission(ResourcePermission):
 
 
 class CanExportTeamParticipantsPermission(IsOwner):
-    """ Allows access only to team owner or activity manager. """
+    """Allows access only to team owner or activity manager."""
+
     def has_object_action_permission(self, action, user, obj):
         return (
-            (user in obj.activity.owner or obj.owner == user) and
-            InitiativePlatformSettings.load().enable_participant_exports
-        )
+            user in obj.activity.owner or obj.owner == user
+        ) and InitiativePlatformSettings.load().enable_participant_exports
 
     def has_action_permission(self, action, user, model_cls):
         return True
@@ -162,8 +151,8 @@ def user_can_review_activity(user, activity):
         return True
 
     if has_subregions:
-        office_location = getattr(activity, "office_location", None)
-        activity_subregion = getattr(office_location, "subregion", None) if office_location else None
+        office_location = getattr(activity, 'office_location', None)
+        activity_subregion = getattr(office_location, 'subregion', None) if office_location else None
 
         if not activity_subregion:
             return False
@@ -172,14 +161,12 @@ def user_can_review_activity(user, activity):
             return True
 
     if has_segments:
-        activity_segments = getattr(activity, "segments", None)
+        activity_segments = getattr(activity, 'segments', None)
 
         if not activity_segments:
             return False
 
-        if activity_segments.filter(
-            id__in=user.segment_manager.values_list("id", flat=True)
-        ).exists():
+        if activity_segments.filter(id__in=user.segment_manager.values_list('id', flat=True)).exists():
             return True
 
     return False

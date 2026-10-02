@@ -25,4 +25,4 @@ class AlterBaseOperation(Operation):
         pass
 
     def describe(self):
-        return "Update %s bases to %s" % (self.model_name, self.bases)
+        return 'Update %s bases to %s' % (self.model_name, self.bases)

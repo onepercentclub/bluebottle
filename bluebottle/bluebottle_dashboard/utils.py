@@ -51,51 +51,49 @@ def get_menu_items(context):
             if properties and 'enabled' in properties and properties['enabled']:
                 prop = get_feature_flag(properties['enabled'])
                 if not prop:
-                    item["hide"] = True
-        if group["app_label"] != "looker" and is_region_manager:
-            group["hide"] = True
+                    item['hide'] = True
+        if group['app_label'] != 'looker' and is_region_manager:
+            group['hide'] = True
 
-        if group["app_label"] == "looker":
+        if group['app_label'] == 'looker':
             analytics_settings = AnalyticsPlatformSettings.load()
 
             if analytics_settings.plausible_embed_link:
-                group["items"] = [
+                group['items'] = [
                     {
-                        "url": reverse("jet-dashboard:plausible-embed"),
-                        "url_blank": False,
-                        "object_name": "LookerEmbed",
-                        "name": "plausible",
-                        "label": "Analytics",
-                        "has_perms": True,
-                        "current": False,
+                        'url': reverse('jet-dashboard:plausible-embed'),
+                        'url_blank': False,
+                        'object_name': 'LookerEmbed',
+                        'name': 'plausible',
+                        'label': 'Analytics',
+                        'has_perms': True,
+                        'current': False,
                     }
                 ]
 
-            group["items"] += [
+            group['items'] += [
                 {
-                    "url": reverse("jet-dashboard:looker-embed", args=(look.id,)),
-                    "url_blank": False,
-                    "name": "lookerembed",
-                    "object_name": "LookerEmbed",
-                    "label": look.title,
-                    "has_perms": True,
-                    "current": False,
+                    'url': reverse('jet-dashboard:looker-embed', args=(look.id,)),
+                    'url_blank': False,
+                    'name': 'lookerembed',
+                    'object_name': 'LookerEmbed',
+                    'label': look.title,
+                    'has_perms': True,
+                    'current': False,
                 }
                 for look in LookerEmbed.objects.all()
             ]
 
-        if group["app_label"] == "segments":
-            group["items"] += [
+        if group['app_label'] == 'segments':
+            group['items'] += [
                 {
-                    "url": reverse(
-                        "admin:segments_segmenttype_change", args=(segment_type.id,)
-                    ),
-                    "url_blank": False,
-                    "name": "segmenttype",
-                    "object_name": "SegmentType",
-                    "label": segment_type.name,
-                    "has_perms": True,
-                    "current": False,
+                    'url': reverse('admin:segments_segmenttype_change', args=(segment_type.id,)),
+                    'url_blank': False,
+                    'name': 'segmenttype',
+                    'object_name': 'SegmentType',
+                    'label': segment_type.name,
+                    'has_perms': True,
+                    'current': False,
                 }
                 for segment_type in SegmentType.objects.prefetch_related('translations')
             ]
@@ -116,8 +114,6 @@ def recent_log_entries(polymorphic=True):
         object_id=functions.Cast(OuterRef('id'), output_field=CharField()),
     )
     if polymorphic:
-        log_entries = log_entries.filter(
-            content_type=OuterRef('polymorphic_ctype')
-        )
+        log_entries = log_entries.filter(content_type=OuterRef('polymorphic_ctype'))
 
     return log_entries.order_by('-action_time').values('action_time')[:1]

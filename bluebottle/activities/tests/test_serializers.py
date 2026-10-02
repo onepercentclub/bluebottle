@@ -12,7 +12,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class ActivityPreviewLocationTestCase(BluebottleTestCase):
-
     def setUp(self):
         super().setUp()
         settings = InitiativePlatformSettings.load()
@@ -38,9 +37,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
             'start': '2026-08-01T10:00:00+00:00',
             'end': '2026-08-01T12:00:00+00:00',
             'locality': 'Brouwersdam Buitenzijde 20',
-            'formatted_address': (
-                'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'
-            ),
+            'formatted_address': ('Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'),
             'country': 'Netherlands',
             'country_code': 'NL',
             'is_online': False,
@@ -241,9 +238,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
                 self._geofeature(
                     'address',
                     'Brouwersdam Buitenzijde 20',
-                    place_name=(
-                        'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'
-                    ),
+                    place_name=('Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'),
                     is_primary=True,
                 ),
                 self._geofeature('place', 'Ouddorp'),
@@ -275,12 +270,8 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
                     country='Germany',
                     country_code='DE',
                     geofeatures=[
-                        self._geofeature(
-                            'place', 'Berlin', country='Germany', country_code='DE'
-                        ),
-                        self._geofeature(
-                            'country', 'Germany', country='Germany', country_code='DE'
-                        ),
+                        self._geofeature('place', 'Berlin', country='Germany', country_code='DE'),
+                        self._geofeature('country', 'Germany', country='Germany', country_code='DE'),
                     ],
                 ),
             ],

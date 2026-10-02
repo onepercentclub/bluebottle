@@ -67,8 +67,10 @@ def detect_soft_applied(self, project_state, migration):
                     found_add_field_migration = True
                     continue
 
-            column_names = [column.name for column in
-                            self.connection.introspection.get_table_description(self.connection.cursor(), table)]
+            column_names = [
+                column.name
+                for column in self.connection.introspection.get_table_description(self.connection.cursor(), table)
+            ]
             if field.column not in column_names:
                 return False, project_state
             found_add_field_migration = True

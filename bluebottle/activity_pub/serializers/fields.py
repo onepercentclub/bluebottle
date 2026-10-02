@@ -14,9 +14,7 @@ class ActivityPubIdField(serializers.CharField):
         if instance.iri:
             return instance.iri
         else:
-            return connection.tenant.build_absolute_url(
-                reverse(self.url_name, args=(instance.pk, ))
-            )
+            return connection.tenant.build_absolute_url(reverse(self.url_name, args=(instance.pk,)))
 
     def to_internal_value(self, data):
         result = super().to_internal_value(data)
@@ -81,17 +79,16 @@ class IdentifierField(serializers.Field):
             mapbox_id = geofeature.mapbox_id
         if not mapbox_id:
             return []
-        return [{
-            'type': 'PropertyValue',
-            'propertyID': 'mapbox-feature-id',
-            'value': mapbox_id,
-        }]
+        return [
+            {
+                'type': 'PropertyValue',
+                'propertyID': 'mapbox-feature-id',
+                'value': mapbox_id,
+            }
+        ]
 
     def to_representation(self, value):
-        return [
-            item for item in (normalize_identifier(entry) for entry in (value or []))
-            if item
-        ]
+        return [item for item in (normalize_identifier(entry) for entry in (value or [])) if item]
 
     def to_internal_value(self, data):
         if not data:
@@ -100,10 +97,7 @@ class IdentifierField(serializers.Field):
             data = [data]
         if not isinstance(data, list):
             raise serializers.ValidationError('Expected a list of identifiers')
-        return [
-            item for item in (normalize_identifier(entry) for entry in data)
-            if item
-        ]
+        return [item for item in (normalize_identifier(entry) for entry in data) if item]
 
 
 def normalize_identifier(item):

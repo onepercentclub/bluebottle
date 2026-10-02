@@ -5,9 +5,7 @@ from celery.schedules import crontab
 from dateutil.relativedelta import relativedelta
 from django.db.models import Case, Count, When
 from django.utils.timezone import now
-from elasticsearch_dsl.query import (
-    Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
-)
+from elasticsearch_dsl.query import Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
 
 from bluebottle.celery import app
 from bluebottle.activities.messages.matching import (
@@ -15,7 +13,7 @@ from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ1Notification,
     DoGoodHoursReminderQ4Notification,
     DoGoodHoursReminderQ3Notification,
-    DoGoodHoursReminderQ2Notification
+    DoGoodHoursReminderQ2Notification,
 )
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.clients.models import Client
@@ -30,40 +28,31 @@ logger = logging.getLogger('bluebottle')
 def get_matching_activities(user):
     settings = InitiativePlatformSettings.load()
 
-    query = ConstantScore(
-        filter=Nested(
-            path='expertise',
-            query=Q('terms', expertise__id=[skill.pk for skill in user.skills.all()])
+    query = (
+        ConstantScore(
+            filter=Nested(path='expertise', query=Q('terms', expertise__id=[skill.pk for skill in user.skills.all()]))
         )
-    ) | ConstantScore(
-        boost=1.5,
-        filter=Nested(
-            path='theme',
-            query=Q('terms', theme__id=[theme.pk for theme in user.favourite_themes.all()])
+        | ConstantScore(
+            boost=1.5,
+            filter=Nested(
+                path='theme', query=Q('terms', theme__id=[theme.pk for theme in user.favourite_themes.all()])
+            ),
         )
-    ) | ConstantScore(boost=0.5, filter=MatchAll())
+        | ConstantScore(boost=0.5, filter=MatchAll())
+    )
 
     from bluebottle.activities.documents import activity
+
     search = activity.search().filter(
-        Q('terms', status=['open', 'running']) &
-        (
-            ~Nested(
+        Q('terms', status=['open', 'running'])
+        & (
+            ~Nested(path='segments', query=(Term(segments__closed=True)))
+            | Nested(
                 path='segments',
-                query=(
-                    Term(segments__closed=True)
-                )
-            ) | Nested(
-                path='segments',
-                query=(
-                    Terms(
-                        segments__id=[
-                            segment.id for segment in user.segments.filter(closed=True)
-                        ]
-                    )
-                )
+                query=(Terms(segments__id=[segment.id for segment in user.segments.filter(closed=True)])),
             )
-        ) &
-        ~Term(contributors=user.pk)
+        )
+        & ~Term(contributors=user.pk)
     )
 
     if settings.enable_office_restrictions:
@@ -71,57 +60,41 @@ def get_matching_activities(user):
             search = search.filter(
                 Nested(
                     path='office_restriction',
-                    query=Term(
-                        office_restriction__restriction='all'
-                    ) | (
-                        Term(office_restriction__office=user.location.id) &
-                        Term(office_restriction__restriction='office')
-                    ) | (
+                    query=Term(office_restriction__restriction='all')
+                    | (
+                        Term(office_restriction__office=user.location.id)
+                        & Term(office_restriction__restriction='office')
+                    )
+                    | (
                         Term(
-                            office_restriction__subregion=user.location.subregion.id
-                            if user.location.subregion else ''
-                        ) &
-                        Term(office_restriction__restriction='office_subregion')
-                    ) | (
+                            office_restriction__subregion=user.location.subregion.id if user.location.subregion else ''
+                        )
+                        & Term(office_restriction__restriction='office_subregion')
+                    )
+                    | (
                         Term(
                             office_restriction__region=user.location.subregion.region.id
-                            if user.location.subregion and user.location.subregion.region else ''
-                        ) &
-                        Term(office_restriction__restriction='office_region')
-                    )
+                            if user.location.subregion and user.location.subregion.region
+                            else ''
+                        )
+                        & Term(office_restriction__restriction='office_region')
+                    ),
                 )
             )
         else:
-            search = search.filter(
-                Nested(
-                    path='office_restriction',
-                    query=Term(
-                        office_restriction__restriction='all'
-                    )
-                )
-            )
+            search = search.filter(Nested(path='office_restriction', query=Term(office_restriction__restriction='all')))
 
     if user.exclude_online:
-        search = search.filter(
-            Term(is_online=True)
-        )
+        search = search.filter(Term(is_online=True))
 
-    if user.search_distance and user.search_distance != "0km" and user.place:
+    if user.search_distance and user.search_distance != '0km' and user.place:
         position = {
             'lat': float(user.place.position[1]),
             'lon': float(user.place.position[0]),
         }
-        search = search.filter(
-            GeoDistance(distance=user.search_distance, position=position) |
-            Term(is_online=True)
-        )
+        search = search.filter(GeoDistance(distance=user.search_distance, position=position) | Term(is_online=True))
         query = query | ConstantScore(
-            boost=0.001,
-            filter=Q(
-                'geo_distance',
-                distance=user.search_distance,
-                position=position
-            )
+            boost=0.001, filter=Q('geo_distance', distance=user.search_distance, position=position)
         )
 
     result = search.query(query).extra(explain=True).execute()
@@ -129,9 +102,7 @@ def get_matching_activities(user):
     pks = [int(match.meta.id) for match in result]
     preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pks)])
 
-    return Activity.objects.filter(
-        pk__in=[int(match.meta.id) for match in result]
-    ).order_by(preserved)
+    return Activity.objects.filter(pk__in=[int(match.meta.id) for match in result]).order_by(preserved)
 
 
 @app.task(ack_late=False)
@@ -216,13 +187,9 @@ def data_retention_contribution_task():
                         user=None,
                     )
 
-                team_members = TeamMember.objects.filter(
-                    created__lt=history, user__isnull=False
-                )
+                team_members = TeamMember.objects.filter(created__lt=history, user__isnull=False)
                 if team_members.count():
-                    logger.info(
-                        f"DATA RETENTION: {tenant.schema_name} anonymizing {team_members.count()} team members"
-                    )
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {team_members.count()} team members')
                     team_members.update(
                         user=None,
                     )
@@ -231,11 +198,13 @@ def data_retention_contribution_task():
                 history = now() - relativedelta(months=settings.retention_delete)
                 contributors = Contributor.objects.filter(created__lt=history)
                 if contributors.count():
-                    logger.info(
-                        f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count()} contributors'
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count()} contributors')
+                    successful = (
+                        contributors.filter(contributions__status='succeeded')
+                        .values('activity_id')
+                        .annotate(total=Count('activity_id'))
+                        .order_by('activity_id')
                     )
-                    successful = contributors.filter(contributions__status='succeeded').values('activity_id').\
-                        annotate(total=Count('activity_id')).order_by('activity_id')
                     for success in successful:
                         activity = Activity.objects.filter(id=success['activity_id']).get()
                         activity.deleted_successful_contributors = success['total']
@@ -247,9 +216,7 @@ def data_retention_contribution_task():
 
                 team_members = TeamMember.objects.filter(created__lt=history)
                 if team_members.count():
-                    logger.info(
-                        f"DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members"
-                    )
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members')
                     team_members.delete()
 
 
@@ -278,22 +245,11 @@ def send_activity_message_notification_email(activity_message_id, tenant):
         try:
             ContactActivityManagerNotification(instance).compose_and_send()
         except Exception:
-            logger.exception(
-                'Failed to send activity message notification to activity owner'
-            )
+            logger.exception('Failed to send activity message notification to activity owner')
 
 
-app.add_periodic_task(
-    crontab(0, 0, day_of_month='2'),
-    recommend.s()
-)
+app.add_periodic_task(crontab(0, 0, day_of_month='2'), recommend.s())
 
-app.add_periodic_task(
-    crontab(minute=0, hour=10),
-    do_good_hours_reminder.s()
-)
+app.add_periodic_task(crontab(minute=0, hour=10), do_good_hours_reminder.s())
 
-app.add_periodic_task(
-    crontab(minute=0, hour=10),
-    data_retention_contribution_task.s()
-)
+app.add_periodic_task(crontab(minute=0, hour=10), data_retention_contribution_task.s())

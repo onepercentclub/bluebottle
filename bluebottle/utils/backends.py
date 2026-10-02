@@ -9,6 +9,7 @@ class AnonymousAuthenticationBackend(object):
     If users are not authenticated, we assume that they are part of a permission
     group `group_name` ('Anonymous' by default)
     """
+
     group_name = 'Anonymous'
 
     def get_user(self, user_id):

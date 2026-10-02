@@ -19,7 +19,7 @@ class CollectDocument(ActivityDocument):
         properties={
             'language': fields.KeywordField(),
             'name': fields.KeywordField(),
-        }
+        },
     )
 
     realized = fields.IntegerField()
@@ -44,7 +44,9 @@ class CollectDocument(ActivityDocument):
 
     class Django:
         related_models = ActivityDocument.Django.related_models + (
-            CollectContributor, CollectType, CollectType.translations.field.model
+            CollectContributor,
+            CollectType,
+            CollectType.translations.field.model,
         )
         model = CollectActivity
 
@@ -55,10 +57,7 @@ class CollectDocument(ActivityDocument):
         return [instance.end]
 
     def prepare_dates(self, instance):
-        return [{
-            'start': instance.start,
-            'end': instance.end
-        }]
+        return [{'start': instance.start, 'end': instance.end}]
 
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:

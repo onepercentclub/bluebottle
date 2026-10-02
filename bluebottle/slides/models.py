@@ -21,57 +21,54 @@ class Slide(PublishableModel):
     """
 
     class SlideStatus(DjangoChoices):
-        published = ChoiceItem('published', label=_("Published"))
-        draft = ChoiceItem('draft', label=_("Draft"))
+        published = ChoiceItem('published', label=_('Published'))
+        draft = ChoiceItem('draft', label=_('Draft'))
 
-    slug = models.SlugField(_("Slug"))
+    slug = models.SlugField(_('Slug'))
     sub_regions = models.ManyToManyField(
         'offices.OfficeSubRegion',
         blank=True,
         related_name='slides',
-        verbose_name=_("Work location groups"),
+        verbose_name=_('Work location groups'),
         help_text=_(
-            "Select work location groups to make the slide only visible to visitors from those "
-            "regions or leave empty to make the slide visible for everyone."
-        )
+            'Select work location groups to make the slide only visible to visitors from those '
+            'regions or leave empty to make the slide visible for everyone.'
+        ),
     )
-    language = models.CharField(
-        _("language"), max_length=7,
-        choices=lazy(get_language_choices, list)())
-    tab_text = models.CharField(
-        _("Tab text"), max_length=100,
-        help_text=_("This is shown on tabs beneath the banner."))
+    language = models.CharField(_('language'), max_length=7, choices=lazy(get_language_choices, list)())
+    tab_text = models.CharField(_('Tab text'), max_length=100, help_text=_('This is shown on tabs beneath the banner.'))
 
     # Contents
-    title = models.CharField(_("Title"), max_length=72, blank=True)
+    title = models.CharField(_('Title'), max_length=72, blank=True)
     body = models.TextField(
-        _("Body text"), max_length=225, blank=True,
-        help_text=_('Body text has a limit of 140 characters.')
+        _('Body text'), max_length=225, blank=True, help_text=_('Body text has a limit of 140 characters.')
     )
     background_image = ImageField(
-        _("Background image"), max_length=255,
-        blank=True, null=True,
+        _('Background image'),
+        max_length=255,
+        blank=True,
+        null=True,
         help_text=_(
-            "The ideal image will have an aspect ratio of 21:9 on large screens and 4:3 on mobile "
-            "(Sides of the image maybe slightly cropped on mobile screens). "
-            "Image should be no larger than 2Mb."
+            'The ideal image will have an aspect ratio of 21:9 on large screens and 4:3 on mobile '
+            '(Sides of the image maybe slightly cropped on mobile screens). '
+            'Image should be no larger than 2Mb.'
         ),
         upload_to='banner_slides/',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
     video = models.FileField(
-        _("Background video"), max_length=255,
-        blank=True, null=True,
+        _('Background video'),
+        max_length=255,
+        blank=True,
+        null=True,
         validators=[
             validate_video_file_size,
-            FileMimetypeValidator(
-                allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
-            )
+            FileMimetypeValidator(allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES),
         ],
         help_text=_(
             'This video will autoplay and loop in the background, '
@@ -79,29 +76,32 @@ class Slide(PublishableModel):
             'The file should be smaller than 10 MB. Adding a background video will '
             'replace the background image.'
         ),
-        upload_to='banner_slides/')
+        upload_to='banner_slides/',
+    )
     video_url = models.URLField(
-        _("Video"),
-        max_length=100, blank=True,
+        _('Video'),
+        max_length=100,
+        blank=True,
         help_text=_(
-            "YouTube and Vimeo videos are supported, add the video by pasting their URL above. "
+            'YouTube and Vimeo videos are supported, add the video by pasting their URL above. '
             "This will add a 'play' button to the slider. "
             "The video will play after the 'Play' button is selected."
         ),
-        default='')
+        default='',
+    )
     link_text = models.CharField(
-        _("Button label"), max_length=400, blank=True,
-        help_text=_("This is the text displayed on the button."))
+        _('Button label'), max_length=400, blank=True, help_text=_('This is the text displayed on the button.')
+    )
     link_url = models.CharField(
-        _("Button URL"), max_length=400, blank=True,
-        help_text=_("This is the URL to which the button links."))
+        _('Button URL'), max_length=400, blank=True, help_text=_('This is the URL to which the button links.')
+    )
 
     # Metadata
     sequence = models.IntegerField()
 
     @property
     def background_image_full_path(self):
-        return "{0}{1}".format(settings.MEDIA_URL, str(self.background_image))
+        return '{0}{1}'.format(settings.MEDIA_URL, str(self.background_image))
 
     def __str__(self):
         return self.title or str(_('-empty-'))

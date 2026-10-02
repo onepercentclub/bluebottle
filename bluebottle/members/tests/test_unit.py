@@ -14,8 +14,10 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.utils import override_properties
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
-    DateRegistrationFactory
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DateParticipantFactory,
+    DateRegistrationFactory,
 )
 
 
@@ -25,7 +27,7 @@ class TestMonkeyPatchPasswordValidators(BluebottleTestCase):
             'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
             'OPTIONS': {
                 'min_length': 15,
-            }
+            },
         },
     ]
 
@@ -49,67 +51,37 @@ class TestMonkeyPatchPasswordValidators(BluebottleTestCase):
 
 
 class MemberTestCase(BluebottleTestCase):
-
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
 
     def test_no_hours_spent(self):
-        self.assertEqual(
-            self.user.hours_spent,
-            0
-        )
-        self.assertEqual(
-            self.user.hours_planned,
-            0
-        )
+        self.assertEqual(self.user.hours_spent, 0)
+        self.assertEqual(self.user.hours_planned, 0)
 
     def test_hours_spent(self):
-        activity = DateActivityFactory.create(
-            initiative=InitiativeFactory.create(status="approved")
-        )
+        activity = DateActivityFactory.create(initiative=InitiativeFactory.create(status='approved'))
         activity.states.publish(save=True)
         slot1 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=now() - timedelta(days=1),
-            duration=timedelta(hours=3)
+            activity=activity, start=now() - timedelta(days=1), duration=timedelta(hours=3)
         )
         slot2 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=now() + timedelta(days=1),
-            duration=timedelta(hours=2)
+            activity=activity, start=now() + timedelta(days=1), duration=timedelta(hours=2)
         )
 
-        registration = DateRegistrationFactory.create(
-            activity=activity,
-            user=self.user
-        )
+        registration = DateRegistrationFactory.create(activity=activity, user=self.user)
 
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot1
-        )
+        DateParticipantFactory.create(registration=registration, slot=slot1)
 
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot2
-        )
+        DateParticipantFactory.create(registration=registration, slot=slot2)
 
-        self.assertEqual(
-            self.user.hours_planned,
-            2
-        )
-        self.assertEqual(
-            self.user.hours_spent,
-            3
-        )
+        self.assertEqual(self.user.hours_planned, 2)
+        self.assertEqual(self.user.hours_spent, 3)
 
     def asserTimeSpent(self, when, expected):
         from bluebottle.members import models
+
         with mock.patch.object(models, 'now', return_value=when):
-            self.assertEqual(
-                self.user.hours_spent,
-                expected
-            )
+            self.assertEqual(self.user.hours_spent, expected)
 
     def test_hours_spent_fiscal_year(self):
 
@@ -119,66 +91,26 @@ class MemberTestCase(BluebottleTestCase):
         nov20 = datetime.datetime(2020, 11, 3, tzinfo=UTC)
         nov19 = datetime.datetime(2019, 11, 3, tzinfo=UTC)
 
-        activity = DateActivityFactory.create(
-            initiative=InitiativeFactory.create(status="approved")
-        )
+        activity = DateActivityFactory.create(initiative=InitiativeFactory.create(status='approved'))
         activity.states.publish(save=True)
 
-        slot1 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=jan20,
-            duration=timedelta(hours=1)
-        )
-        slot2 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=feb20,
-            duration=timedelta(hours=2)
-        )
-        slot3 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=aug20,
-            duration=timedelta(hours=4)
-        )
-        slot4 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=nov20,
-            duration=timedelta(hours=8)
-        )
-        slot5 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=nov19,
-            duration=timedelta(hours=20)
-        )
+        slot1 = DateActivitySlotFactory.create(activity=activity, start=jan20, duration=timedelta(hours=1))
+        slot2 = DateActivitySlotFactory.create(activity=activity, start=feb20, duration=timedelta(hours=2))
+        slot3 = DateActivitySlotFactory.create(activity=activity, start=aug20, duration=timedelta(hours=4))
+        slot4 = DateActivitySlotFactory.create(activity=activity, start=nov20, duration=timedelta(hours=8))
+        slot5 = DateActivitySlotFactory.create(activity=activity, start=nov19, duration=timedelta(hours=20))
 
-        registration = DateRegistrationFactory.create(
-            activity=activity,
-            user=self.user
-        )
+        registration = DateRegistrationFactory.create(activity=activity, user=self.user)
 
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot1
-        )
+        DateParticipantFactory.create(registration=registration, slot=slot1)
 
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot2
-        )
+        DateParticipantFactory.create(registration=registration, slot=slot2)
 
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot3
-        )
+        DateParticipantFactory.create(registration=registration, slot=slot3)
 
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot4
-        )
+        DateParticipantFactory.create(registration=registration, slot=slot4)
 
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot5
-        )
+        DateParticipantFactory.create(registration=registration, slot=slot5)
 
         platform_settings = MemberPlatformSettings.load()
         platform_settings.fiscal_month_offset = 0

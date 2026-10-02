@@ -31,9 +31,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
         fields = omit_interests_if_unauthorized(fields, resource_instance)
         return super().extract_relationships(fields, resource, resource_instance)
 
-    def extract_included(
-        cls, fields, resource, resource_instance, included_resources, included_cache
-    ):
+    def extract_included(cls, fields, resource, resource_instance, included_resources, included_cache):
         """
         Adds related data to the top level included key when the request includes
         ?include=example,example_field2
@@ -51,13 +49,9 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
         fields = omit_interests_if_unauthorized(fields, resource_instance)
 
-        included_serializers = getattr(
-            current_serializer, "included_serializers", dict()
-        )
+        included_serializers = getattr(current_serializer, 'included_serializers', dict())
         included_resources = copy.copy(included_resources)
-        included_resources = [
-            inflection.underscore(value) for value in included_resources
-        ]
+        included_resources = [inflection.underscore(value) for value in included_resources]
 
         for field_name, field in iter(fields.items()):
             # Skip URL field
@@ -65,9 +59,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                 continue
 
             # Skip fields without relations
-            if not isinstance(
-                field, (relations.RelatedField, relations.ManyRelatedField)
-            ):
+            if not isinstance(field, (relations.RelatedField, relations.ManyRelatedField)):
                 continue
 
             try:
@@ -75,9 +67,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
             except ValueError:
                 # Skip fields not in requested included resources
                 # If no child field, directly continue with the next field
-                if field_name not in [
-                    node.split(".")[0] for node in included_resources
-                ]:
+                if field_name not in [node.split('.')[0] for node in included_resources]:
                     continue
 
             relation_instance = cls.extract_relation_instance(field, resource_instance)
@@ -95,16 +85,13 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                 if relation_instance is None or not serializer_data:
                     continue
 
-                many = field._kwargs.get("child_relation", None) is not None
+                many = field._kwargs.get('child_relation', None) is not None
 
                 if isinstance(field, ResourceRelatedField) and not many:
                     already_included = (
-                        serializer_data["type"] in included_cache
-                        and serializer_data["id"]
-                        in included_cache[serializer_data["type"]]
-                        and not [
-                            field for field in included_resources if field.startswith(f'{field_name}.')
-                        ]
+                        serializer_data['type'] in included_cache
+                        and serializer_data['id'] in included_cache[serializer_data['type']]
+                        and not [field for field in included_resources if field.startswith(f'{field_name}.')]
                     )
 
                     if already_included:
@@ -115,9 +102,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                 serializer_data = field.data
 
             new_included_resources = [
-                key.replace("%s." % field_name, "", 1)
-                for key in included_resources
-                if field_name == key.split(".")[0]
+                key.replace('%s.' % field_name, '', 1) for key in included_resources if field_name == key.split('.')[0]
             ]
 
             if isinstance(field, ListSerializer):
@@ -132,15 +117,11 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                         resource_type = (
                             serializer_resource.get('block_type')
                             or serializer_resource.get('type')
-                            or utils.get_resource_type_from_instance(
-                                nested_resource_instance
-                            )
+                            or utils.get_resource_type_from_instance(nested_resource_instance)
                             or relation_type
                         )
                         serializer_fields = utils.get_serializer_fields(
-                            serializer.__class__(
-                                nested_resource_instance, context=serializer.context
-                            )
+                            serializer.__class__(nested_resource_instance, context=serializer.context)
                         )
 
                         new_item = cls.build_json_resource_obj(
@@ -149,11 +130,11 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                             nested_resource_instance,
                             resource_type,
                             serializer,
-                            getattr(serializer, "_poly_force_type_resolution", False),
+                            getattr(serializer, '_poly_force_type_resolution', False),
                         )
 
                         try:
-                            included_cache[new_item["type"]][new_item["id"]] = new_item
+                            included_cache[new_item['type']][new_item['id']] = new_item
                         except TypeError:
                             pass
 
@@ -177,9 +158,9 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                         relation_instance,
                         relation_type,
                         field,
-                        getattr(field, "_poly_force_type_resolution", False),
+                        getattr(field, '_poly_force_type_resolution', False),
                     )
-                    included_cache[new_item["type"]][new_item["id"]] = new_item
+                    included_cache[new_item['type']][new_item['id']] = new_item
 
                     cls.extract_included(
                         serializer_fields,
@@ -190,26 +171,10 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                     )
 
     @classmethod
-    def build_json_resource_obj(
-        cls,
-        fields,
-        resource,
-        resource_instance,
-        resource_name,
-        *args,
-        **kwargs
-    ):
+    def build_json_resource_obj(cls, fields, resource, resource_instance, resource_name, *args, **kwargs):
         if isinstance(resource_instance, AnonymousUser):
-            return {
-                'id': resource['id'],
-                'type': resource_name,
-                'attributes': {
-                    'is-anonymous': True
-                }
-            }
-        return super().build_json_resource_obj(
-            fields, resource, resource_instance, resource_name, *args, **kwargs
-        )
+            return {'id': resource['id'], 'type': resource_name, 'attributes': {'is-anonymous': True}}
+        return super().build_json_resource_obj(fields, resource, resource_instance, resource_name, *args, **kwargs)
 
 
 class ElasticSearchJSONAPIRenderer(BluebottleJSONAPIRenderer):
@@ -233,18 +198,14 @@ class ElasticSearchJSONAPIRenderer(BluebottleJSONAPIRenderer):
             resource_name = utils.get_resource_type_from_instance(resource_instance)
 
         resource_data = [
-            ("type", resource_name),
-            (
-                "id",
-                encoding.force_str(resource_instance.meta.id)
-            ),
-            ("attributes", cls.extract_attributes(fields, resource)),
-            ("relationships", cls.extract_relationships(fields, resource, resource_instance))
-
+            ('type', resource_name),
+            ('id', encoding.force_str(resource_instance.meta.id)),
+            ('attributes', cls.extract_attributes(fields, resource)),
+            ('relationships', cls.extract_relationships(fields, resource, resource_instance)),
         ]
 
         meta = cls.extract_meta(serializer, resource)
         if meta:
-            resource_data.append(("meta", utils.format_field_names(meta)))
+            resource_data.append(('meta', utils.format_field_names(meta)))
 
         return OrderedDict(resource_data)

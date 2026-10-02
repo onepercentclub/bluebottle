@@ -22,11 +22,10 @@ class RecentMembersDashboard(DashboardModule):
         user = context.request.user
         members = region_manager_filter(members, user)
         members = segment_filter(members, user)
-        self.children = members[:self.limit]
+        self.children = members[: self.limit]
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):
-
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
         self.children.append(RecentMembersDashboard())

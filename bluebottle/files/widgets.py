@@ -9,6 +9,7 @@ class ImageWidget(Select):
         context = super(ImageWidget, self).get_context(name, value, attrs)
         if value:
             from bluebottle.files.models import Image
+
             context['file'] = Image.objects.get(pk=value).file
         else:
             context['file'] = None
@@ -22,6 +23,7 @@ class DocumentWidget(Select):
         context = super(DocumentWidget, self).get_context(name, value, attrs)
         if value:
             from bluebottle.files.models import Document
+
             context['file'] = Document.objects.get(pk=value).file
         else:
             context['file'] = None
@@ -36,10 +38,10 @@ class PrivateDocumentWidget(Select):
 
         if value:
             from bluebottle.files.models import PrivateDocument
+
             document = PrivateDocument.objects.get(pk=value)
             context['download_link'] = reverse_signed(
-                self.attrs['view_name'],
-                args=(getattr(document, f"{self.attrs['related_field']}_set").first().pk, )
+                self.attrs['view_name'], args=(getattr(document, f'{self.attrs["related_field"]}_set').first().pk,)
             )
         else:
             context['download_link'] = None

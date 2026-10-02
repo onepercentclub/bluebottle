@@ -23,6 +23,7 @@ class PrivateDocumentField(DocumentField):
     """
     Only users with right permissions can view these documents.
     """
+
     queryset = PrivateDocument.objects
     permissions = []
     model = PrivateDocument
@@ -68,11 +69,18 @@ class FileSerializer(ModelSerializer):
 
     class Meta(object):
         model = Document
-        fields = ('id', 'file', 'filename', 'owner',)
+        fields = (
+            'id',
+            'file',
+            'filename',
+            'owner',
+        )
         meta_fields = ['filename']
 
     class JSONAPIMeta(object):
-        included_resources = ['owner', ]
+        included_resources = [
+            'owner',
+        ]
 
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)
@@ -81,7 +89,12 @@ class FileSerializer(ModelSerializer):
 class PrivateFileSerializer(FileSerializer):
     class Meta(object):
         model = PrivateDocument
-        fields = ('id', 'file', 'filename', 'owner',)
+        fields = (
+            'id',
+            'file',
+            'filename',
+            'owner',
+        )
         meta_fields = ['filename']
 
 
@@ -110,11 +123,19 @@ class DocumentSerializer(ModelSerializer):
 
     class Meta(object):
         model = Document
-        fields = ('id', 'file', 'filename', 'owner', 'link',)
+        fields = (
+            'id',
+            'file',
+            'filename',
+            'owner',
+            'link',
+        )
         meta_fields = ['filename']
 
     class JSONAPIMeta(object):
-        included_resources = ['owner', ]
+        included_resources = [
+            'owner',
+        ]
 
 
 class PrivateDocumentSerializer(DocumentSerializer):
@@ -126,7 +147,13 @@ class PrivateDocumentSerializer(DocumentSerializer):
 
     class Meta(object):
         model = PrivateDocument
-        fields = ('id', 'file', 'filename', 'owner', 'link',)
+        fields = (
+            'id',
+            'file',
+            'filename',
+            'owner',
+            'link',
+        )
         meta_fields = ['filename']
 
 
@@ -136,12 +163,12 @@ class ImageField(ResourceRelatedField):
 
 ORIGINAL_SIZE = '1500'
 IMAGE_SIZES = {
-    "email": "200x200",
-    "avatar": "200x200",
-    "preview": "292x164",
-    "small": "320x180",
-    "large": "600x337",
-    "cover": "1568x882",
+    'email': '200x200',
+    'avatar': '200x200',
+    'preview': '292x164',
+    'small': '320x180',
+    'large': '600x337',
+    'cover': '1568x882',
 }
 
 
@@ -155,9 +182,7 @@ class ImageSerializer(DocumentSerializer):
         try:
             obj.file.seek(0)
             try:
-                image_file = ImageOps.exif_transpose(
-                    default.engine.get_image(obj.file)
-                )
+                image_file = ImageOps.exif_transpose(default.engine.get_image(obj.file))
 
                 return {'width': image_file.width, 'height': image_file.height}
             except UnidentifiedImageError:
@@ -174,15 +199,21 @@ class ImageSerializer(DocumentSerializer):
                 return dict(
                     (
                         key,
-                        reverse(self.content_view_name, args=(parent.pk, size,)) + '?_={}'.format(hash)
-                    ) for key, size in list(sizes.items())
+                        reverse(
+                            self.content_view_name,
+                            args=(
+                                parent.pk,
+                                size,
+                            ),
+                        )
+                        + '?_={}'.format(hash),
+                    )
+                    for key, size in list(sizes.items())
                 )
         else:
             return dict(
-                (
-                    key,
-                    reverse('upload-image-preview', args=(obj.id, size)) + '?_={}'.format(hash)
-                ) for key, size in list(sizes.items())
+                (key, reverse('upload-image-preview', args=(obj.id, size)) + '?_={}'.format(hash))
+                for key, size in list(sizes.items())
             )
 
     class Meta(object):

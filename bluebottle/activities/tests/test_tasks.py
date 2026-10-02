@@ -8,9 +8,7 @@ from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 
 from bluebottle.activities.models import Contributor, Contribution
-from bluebottle.activities.tasks import (
-    recommend, get_matching_activities, data_retention_contribution_task
-)
+from bluebottle.activities.tasks import recommend, get_matching_activities, data_retention_contribution_task
 from bluebottle.notifications.models import Message
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
@@ -34,10 +32,7 @@ from bluebottle.time_based.tests.factories import (
 )
 
 
-@override_settings(
-    ELASTICSEARCH_DSL_AUTOSYNC=True,
-    ELASTICSEARCH_DSL_AUTO_REFRESH=True
-)
+@override_settings(ELASTICSEARCH_DSL_AUTOSYNC=True, ELASTICSEARCH_DSL_AUTO_REFRESH=True)
 @tag('elasticsearch')
 class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
@@ -50,14 +45,9 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         self.rotterdam = Point(x=4.4207882, y=51.9280712)
 
         self.user = BlueBottleUserFactory.create(
-            subscribed=True,
-            search_distance='50km',
-            any_search_distance=False,
-            exclude_online=False
+            subscribed=True, search_distance='50km', any_search_distance=False, exclude_online=False
         )
-        self.user.place = PlaceFactory.create(
-            position=self.amsterdam
-        )
+        self.user.place = PlaceFactory.create(position=self.amsterdam)
 
         for theme in ThemeFactory.create_batch(3):
             self.user.favourite_themes.add(theme)
@@ -70,54 +60,45 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         self.matching = [
             # Online
             DeadlineActivityFactory.create(
-                status="open",
+                status='open',
                 is_online=True,
                 location=None,
             ),
-
             # Matching skill, matching place
             DeadlineActivityFactory.create(
-                status="open",
+                status='open',
                 expertise=self.user.skills.first(),
                 is_online=False,
-                location=GeolocationFactory.create(position=self.close_to_amsterdam)
+                location=GeolocationFactory.create(position=self.close_to_amsterdam),
             ),
-
             # Matching theme, online
             DeadlineActivityFactory.create(
-                status="open",
-                location=None,
-                is_online=True,
-                theme=self.user.favourite_themes.first()
+                status='open', location=None, is_online=True, theme=self.user.favourite_themes.first()
             ),
-
             # Matching place, theme and no skill
             DeadlineActivityFactory.create(
-                status="open",
+                status='open',
                 expertise=None,
                 is_online=False,
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
-                theme=self.user.favourite_themes.first()
+                theme=self.user.favourite_themes.first(),
             ),
-
             # Matching theme, skill, online
             DeadlineActivityFactory.create(
-                status="open",
+                status='open',
                 expertise=self.user.skills.first(),
                 location=None,
                 is_online=True,
-                theme=self.user.favourite_themes.first()
+                theme=self.user.favourite_themes.first(),
             ),
-
             # Matching place, theme and skill
             DeadlineActivityFactory.create(
-                status="open",
+                status='open',
                 is_online=False,
                 expertise=self.user.skills.first(),
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
-                theme=self.user.favourite_themes.first()
+                theme=self.user.favourite_themes.first(),
             ),
-
         ]
 
     def test_recommend(self):
@@ -164,16 +145,12 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def test_include_matching(self):
         activities = get_matching_activities(self.user)
 
-        self.assertEqual(
-            set(activity.pk for activity in activities),
-            set(match.pk for match in self.matching)
-        )
+        self.assertEqual(set(activity.pk for activity in activities), set(match.pk for match in self.matching))
 
     def test_order_matching(self):
         activities = get_matching_activities(self.user)
         self.assertEqual(
-            [activity.pk for activity in activities],
-            list(reversed([match.pk for match in self.matching]))
+            [activity.pk for activity in activities], list(reversed([match.pk for match in self.matching]))
         )
 
     def test_not_including_closed_segment(self):
@@ -235,9 +212,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def test_include_office(self):
         activity = self.matching[-1]
 
-        activity.office_location = LocationFactory.create(
-            subregion=OfficeSubRegionFactory.create()
-        )
+        activity.office_location = LocationFactory.create(subregion=OfficeSubRegionFactory.create())
         activity.office_restriction = 'office'
         activity.save()
 
@@ -253,9 +228,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         activity = self.matching[-1]
 
-        activity.office_location = LocationFactory.create(
-            subregion=OfficeSubRegionFactory.create()
-        )
+        activity.office_location = LocationFactory.create(subregion=OfficeSubRegionFactory.create())
         activity.office_restriction = 'office_subregion'
         activity.save()
 
@@ -266,16 +239,12 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def test_include_office_sub_region(self):
         activity = self.matching[-1]
 
-        activity.office_location = LocationFactory.create(
-            subregion=OfficeSubRegionFactory.create()
-        )
+        activity.office_location = LocationFactory.create(subregion=OfficeSubRegionFactory.create())
 
         activity.office_restriction = 'office_subregion'
         activity.save()
 
-        self.user.location = LocationFactory.create(
-            subregion=activity.office_location.subregion
-        )
+        self.user.location = LocationFactory.create(subregion=activity.office_location.subregion)
         self.user.save()
 
         activities = get_matching_activities(self.user)
@@ -287,9 +256,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         activity = self.matching[-1]
         activity.office_location = LocationFactory.create(
-            subregion=OfficeSubRegionFactory.create(
-                region=OfficeRegionFactory.create()
-            )
+            subregion=OfficeSubRegionFactory.create(region=OfficeRegionFactory.create())
         )
         activity.office_restriction = 'office_region'
         activity.save()
@@ -301,17 +268,13 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         activity = self.matching[-1]
 
         activity.office_location = LocationFactory.create(
-            subregion=OfficeSubRegionFactory.create(
-                region=OfficeRegionFactory.create()
-            )
+            subregion=OfficeSubRegionFactory.create(region=OfficeRegionFactory.create())
         )
         activity.office_restriction = 'office_region'
         activity.save()
 
         self.user.location = LocationFactory.create(
-            subregion=OfficeSubRegionFactory.create(
-                region=activity.office_location.subregion.region
-            )
+            subregion=OfficeSubRegionFactory.create(region=activity.office_location.subregion.region)
         )
         self.user.save()
 
@@ -320,7 +283,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
     def test_exclude_contributed_to(self):
         activity = self.matching[-1]
-        DeadlineParticipantFactory.create(activity=activity, user=self.user, status="succeeded")
+        DeadlineParticipantFactory.create(activity=activity, user=self.user, status='succeeded')
 
         activities = get_matching_activities(self.user)
         self.assertFalse(activity in activities)
@@ -375,16 +338,12 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
 
 class ContributorDataRetentionTest(BluebottleTestCase):
-
     def create_contributors(self, factory, activity, dates):
         for date in dates:
             contributor = factory.create(activity=activity)
             contributor.created = date
             if isinstance(contributor, DateParticipant):
-                contributor.slot = DateActivitySlotFactory.create(
-                    activity=activity,
-                    start=date
-                )
+                contributor.slot = DateActivitySlotFactory.create(activity=activity, start=date)
             contributor.save()
             if isinstance(contributor, ScheduleParticipant):
                 contributor.slot.start = date
@@ -408,20 +367,12 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         DateActivitySlotFactory.create(activity=self.activity1, start=now() - relativedelta(months=1))
         self.activity2 = DeadlineActivityFactory.create()
         self.activity3 = DeedFactory.create()
-        self.activity4 = ScheduleActivityFactory.create(team_activity="teams")
+        self.activity4 = ScheduleActivityFactory.create(team_activity='teams')
 
-        self.create_contributors(
-            DateParticipantFactory, self.activity1, [months_ago_12, months_ago_8]
-        )
-        self.create_contributors(
-            DeadlineParticipantFactory, self.activity2, [months_ago_12, months_ago_2]
-        )
-        self.create_contributors(
-            DeedParticipantFactory, self.activity3, [months_ago_8, months_ago_2]
-        )
-        self.create_contributors(
-            ScheduleParticipantFactory, self.activity4, [months_ago_12, months_ago_8]
-        )
+        self.create_contributors(DateParticipantFactory, self.activity1, [months_ago_12, months_ago_8])
+        self.create_contributors(DeadlineParticipantFactory, self.activity2, [months_ago_12, months_ago_2])
+        self.create_contributors(DeedParticipantFactory, self.activity3, [months_ago_8, months_ago_2])
+        self.create_contributors(ScheduleParticipantFactory, self.activity4, [months_ago_12, months_ago_8])
 
         self.task = data_retention_contribution_task
 

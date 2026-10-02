@@ -53,9 +53,8 @@ class TransitionSerializer(serializers.Serializer):
         self.instance = Transition(resource, transition)
 
         getattr(getattr(resource, self.field), transition)(
-            message=message,
-            send_messages=True,
-            user=self.context['request'].user)
+            message=message, send_messages=True, user=self.context['request'].user
+        )
         resource.save()
 
     class Meta(object):

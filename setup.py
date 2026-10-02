@@ -132,7 +132,6 @@ install_requires = [
     'xlrd==1.2.0',
     'xlsxwriter==0.9.8',
     'xmlsec==1.3.14',
-
     # Github requirements
     'django-exportdb@git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
     'django-tenant-extras@git+https://github.com/onepercentclub/django-tenant-extras.git@ae234877e24e9dbccfab8a758a3ca4d6bbef1cb3#egg=django-tenant-extras-2.0.17-ae23487',
@@ -171,11 +170,9 @@ setup(
     name='bluebottle',
     version=bluebottle.__version__,
     license='BSD',
-
     # Packaging.
     packages=find_packages(exclude=('tests', 'tests.*')),
     install_requires=install_requires,
-
     # You can install these using the following syntax, for example:
     # $ pip install -e .[dev,test]
     extras_require={
@@ -184,7 +181,6 @@ setup(
     },
     include_package_data=True,
     zip_safe=False,
-
     # Metadata for PyPI.
     description='Bluebottle, the crowdsourcing framework initiated by the 1%Club.',
     long_description='\n\n'.join([readme, changes]),
@@ -199,6 +195,6 @@ setup(
         'Operating System :: Unix',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Topic :: Software Development :: Libraries :: Application Frameworks'
-    ]
+        'Topic :: Software Development :: Libraries :: Application Frameworks',
+    ],
 )

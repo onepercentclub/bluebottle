@@ -22,7 +22,8 @@ class LipishaPaymentList(PaymentList):
     serializer_class = LipishaPaymentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
+        JSONWebTokenAuthentication,
+        DonorAuthentication,
     )
 
     def perform_create(self, serializer):
@@ -37,7 +38,6 @@ class LipishaPaymentList(PaymentList):
 
 
 class LipishaWebHookView(View):
-
     permanent = False
     query_string = True
 
@@ -48,14 +48,18 @@ class LipishaWebHookView(View):
                 data = payment_response
                 return JsonResponse(data)
             else:
-                logger.error('Could not parse Lipisha Paymnent update: '
-                             'Unknown transaction_type {}'.format(request.POST['transaction_type']))
+                logger.error(
+                    'Could not parse Lipisha Paymnent update: Unknown transaction_type {}'.format(
+                        request.POST['transaction_type']
+                    )
+                )
         if request.POST['api_type'] == 'Acknowledge':
             payment_response = acknowledge_payment(request.POST)
             return JsonResponse(payment_response)
         else:
-            logger.error('Could not parse Lipisha Paymnent update: '
-                         'Unknown api_type {}'.format(request.POST['api_type']))
+            logger.error(
+                'Could not parse Lipisha Paymnent update: Unknown api_type {}'.format(request.POST['api_type'])
+            )
 
 
 class LipishaBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -63,9 +67,7 @@ class LipishaBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCre
     serializer_class = LipishaBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}
 
 
 class LipishaBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -73,6 +75,4 @@ class LipishaBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, Retri
     serializer_class = LipishaBankAccountSerializer
     permission_classes = []
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
+    related_permission_classes = {'connect_account': [IsOwner]}

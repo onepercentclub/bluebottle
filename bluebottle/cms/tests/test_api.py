@@ -11,10 +11,20 @@ from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 
 from bluebottle.cms.models import (
-    QuotesContent, PeopleContent, PollContent,
-    HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent, StepsContent, HomepageStatisticsContent, LogosContent,
-    CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
+    QuotesContent,
+    PeopleContent,
+    PollContent,
+    HomePage,
+    SlidesContent,
+    SitePlatformSettings,
+    LinksContent,
+    StepsContent,
+    HomepageStatisticsContent,
+    LogosContent,
+    CategoriesContent,
+    PlainTextItem,
+    ImagePlainTextItem,
+    ImageItem,
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
@@ -23,10 +33,7 @@ from bluebottle.pages.models import DocumentItem, ImageTextItem, PlatformPage
 from bluebottle.statistics.tests.factories import ManualStatisticFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.test.factory_models.cms import (
-    HomePageFactory, StepFactory,
-    SlideFactory
-)
+from bluebottle.test.factory_models.cms import HomePageFactory, StepFactory, SlideFactory
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory, PlatformPageFactory
 from bluebottle.test.utils import BluebottleTestCase, APITestCase
@@ -40,7 +47,7 @@ class PageAdminUrlApiTestsMixin(object):
     def _page_meta(self, user=None):
         extra = {}
         if user:
-            extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
+            extra['HTTP_AUTHORIZATION'] = 'JWT {0}'.format(user.get_jwt_token())
         response = self.client.get(self.url, **extra)
         self.assertEqual(response.status_code, 200)
         return response.json()['data'].get('meta') or {}
@@ -73,13 +80,10 @@ class NewsItemTestCase(BluebottleTestCase):
         self.init_projects()
         self.news_item = NewsItemFactory.create(slug='new-news', language='en')
         self.placeholder = self.news_item.contents
-        self.url = reverse('news-detail', args=(self.news_item.slug, ))
+        self.url = reverse('news-detail', args=(self.news_item.slug,))
 
     def test_news_item(self):
-        html = RawHtmlItem.objects.create_for_placeholder(
-            self.placeholder,
-            html='<p>Test content</p>'
-        )
+        html = RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
         self.assertEqual(self.news_item.language, 'en')
         self.assertEqual(self.news_item.status, 'published')
         self.assertGreaterEqual(now(), self.news_item.publication_date)
@@ -89,19 +93,16 @@ class NewsItemTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()['data']
         self.assertEqual(data['attributes']['title'], self.news_item.title)
-        self.assertEqual(
-            data['relationships']['author']['data']['id'], str(self.news_item.author.pk)
-        )
+        self.assertEqual(data['relationships']['author']['data']['id'], str(self.news_item.author.pk))
         self.assertTrue(data['attributes']['main-image'].startswith('/media/cache'))
-        self.assertEqual(
-            data['relationships']['blocks']['data'][0]['type'], 'pages/blocks/raw-html'
-        )
+        self.assertEqual(data['relationships']['blocks']['data'][0]['type'], 'pages/blocks/raw-html')
 
 
 class HomeTestCase(APITestCase):
     """
     Integration tests for the Home API.
     """
+
     model = HomePage
 
     def setUp(self):
@@ -121,14 +122,11 @@ class HomeTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': str(stat.pk), 'type': 'pages/blocks/stats'}
+            {'id': str(stat.pk), 'type': 'pages/blocks/stats'},
         )
 
         stats_block = get_include(response, 'pages/blocks/stats')
-        self.assertEqual(
-            stats_block['attributes']['links']['all'],
-            '/api/statistics/list?filter[type]=all'
-        )
+        self.assertEqual(stats_block['attributes']['links']['all'], '/api/statistics/list?filter[type]=all')
 
     def test_stats_with_year(self):
         block = HomepageStatisticsContent.objects.create_for_placeholder(self.placeholder)
@@ -142,13 +140,12 @@ class HomeTestCase(APITestCase):
 
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': str(block.pk), 'type': 'pages/blocks/stats'}
+            {'id': str(block.pk), 'type': 'pages/blocks/stats'},
         )
 
         stats_block = get_include(response, 'pages/blocks/stats')
         self.assertEqual(
-            stats_block['attributes']['links']['all'],
-            '/api/statistics/list?filter[type]=all&filter[year]=2023'
+            stats_block['attributes']['links']['all'], '/api/statistics/list?filter[type]=all&filter[year]=2023'
         )
 
     def test_steps(self):
@@ -160,10 +157,7 @@ class HomeTestCase(APITestCase):
 
             for i in range(0, 4):
                 StepFactory.create(
-                    block=block,
-                    header='test header',
-                    text='<a href="http://example.com">link</a>',
-                    image=image
+                    block=block, header='test header', text='<a href="http://example.com">link</a>', image=image
                 )
 
         response = self.client.get(self.url)
@@ -171,7 +165,7 @@ class HomeTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': str(block.pk), 'type': 'pages/blocks/steps'}
+            {'id': str(block.pk), 'type': 'pages/blocks/steps'},
         )
 
         step_block = get_include(response, 'pages/blocks/steps')
@@ -191,27 +185,24 @@ class HomeTestCase(APITestCase):
                 block=block,
                 header='test header',
                 text='<script src="http://example.com"></script>Some text',
-                image=image
+                image=image,
             )
 
         response = self.client.get(self.url)
 
         step = get_include(response, 'pages/blocks/steps/steps')
-        self.assertEqual(
-            step['attributes']['text'],
-            'Some text'
-        )
+        self.assertEqual(step['attributes']['text'], 'Some text')
 
     def test_quotes(self):
         block = QuotesContent.objects.create_for_placeholder(self.placeholder)
-        block.quotes.create(name='Ik zelf', quote="Leuk! Al zeg ik het zelf.")
+        block.quotes.create(name='Ik zelf', quote='Leuk! Al zeg ik het zelf.')
         block.save()
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': str(block.pk), 'type': 'pages/blocks/quotes'}
+            {'id': str(block.pk), 'type': 'pages/blocks/quotes'},
         )
 
         quotes_block = get_include(response, 'pages/blocks/quotes')
@@ -219,25 +210,19 @@ class HomeTestCase(APITestCase):
 
         quote = get_include(response, 'pages/blocks/quotes/quotes')
 
-        self.assertEqual(
-            quote['attributes']['name'],
-            'Ik zelf'
-        )
-        self.assertEqual(
-            quote['attributes']['quote'],
-            'Leuk! Al zeg ik het zelf.'
-        )
+        self.assertEqual(quote['attributes']['name'], 'Ik zelf')
+        self.assertEqual(quote['attributes']['quote'], 'Leuk! Al zeg ik het zelf.')
 
     def test_people(self):
         block = PeopleContent.objects.create_for_placeholder(self.placeholder)
-        block.persons.create(name='Ik zelf', email="test@example.com", role="developer")
+        block.persons.create(name='Ik zelf', email='test@example.com', role='developer')
         block.save()
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': str(block.pk), 'type': 'pages/blocks/people'}
+            {'id': str(block.pk), 'type': 'pages/blocks/people'},
         )
 
         quotes_block = get_include(response, 'pages/blocks/people')
@@ -245,18 +230,9 @@ class HomeTestCase(APITestCase):
 
         quote = get_include(response, 'pages/blocks/people/persons')
 
-        self.assertEqual(
-            quote['attributes']['name'],
-            'Ik zelf'
-        )
-        self.assertEqual(
-            quote['attributes']['role'],
-            'developer'
-        )
-        self.assertEqual(
-            quote['attributes']['email'],
-            'test@example.com'
-        )
+        self.assertEqual(quote['attributes']['name'], 'Ik zelf')
+        self.assertEqual(quote['attributes']['role'], 'developer')
+        self.assertEqual(quote['attributes']['email'], 'test@example.com')
 
     def test_poll(self):
         poll = Poll()
@@ -264,25 +240,20 @@ class HomeTestCase(APITestCase):
         poll.title = 'Favourite colour'
         poll.subtitle = 'Pick one'
         poll.save()
-        block = PollContent.objects.create_for_placeholder(
-            self.placeholder, poll=poll
-        )
+        block = PollContent.objects.create_for_placeholder(self.placeholder, poll=poll)
 
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': str(block.pk), 'type': 'pages/blocks/poll'}
+            {'id': str(block.pk), 'type': 'pages/blocks/poll'},
         )
 
         poll_block = get_include(response, 'pages/blocks/poll')
         self.assertNotIn('title', poll_block['attributes'])
         self.assertNotIn('sub-title', poll_block['attributes'])
-        self.assertEqual(
-            poll_block['relationships']['poll']['data'],
-            {'id': str(poll.pk), 'type': 'polls'}
-        )
+        self.assertEqual(poll_block['relationships']['poll']['data'], {'id': str(poll.pk), 'type': 'polls'})
 
         included_poll = get_include(response, 'polls')
         self.assertEqual(included_poll['attributes']['title'], 'Favourite colour')
@@ -301,9 +272,7 @@ class HomeTestCase(APITestCase):
         other = PollOptionFactory.create(poll=poll, title='Green')
         PollVoteFactory.create_batch(2, poll=poll, option=winner)
         PollVoteFactory.create(poll=poll, option=other)
-        PollContent.objects.create_for_placeholder(
-            self.placeholder, poll=poll
-        )
+        PollContent.objects.create_for_placeholder(self.placeholder, poll=poll)
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
@@ -337,14 +306,8 @@ class HomeTestCase(APITestCase):
 
         logo = get_include(response, 'pages/blocks/logos/logos')
 
-        self.assertEqual(
-            logo['attributes']['link'],
-            'http://google.com'
-        )
-        self.assertEqual(
-            logo['attributes']['open-in-new-tab'],
-            True
-        )
+        self.assertEqual(logo['attributes']['link'], 'http://google.com')
+        self.assertEqual(logo['attributes']['open-in-new-tab'], True)
 
     def test_links(self):
         block = LinksContent.objects.create_for_placeholder(self.placeholder)
@@ -361,29 +324,18 @@ class HomeTestCase(APITestCase):
 
         link = get_include(response, 'pages/blocks/links/links')
 
-        self.assertEqual(
-            link['attributes']['action-link'],
-            '/iniitiatives/overview'
-        )
-        self.assertEqual(
-            link['attributes']['open-in-new-tab'],
-            False
-        )
+        self.assertEqual(link['attributes']['action-link'], '/iniitiatives/overview')
+        self.assertEqual(link['attributes']['open-in-new-tab'], False)
 
     def test_categories(self):
         categories = CategoryFactory.create_batch(3)
-        block = CategoriesContent.objects.create_for_placeholder(
-            self.placeholder, language_code='en'
-        )
+        block = CategoriesContent.objects.create_for_placeholder(self.placeholder, language_code='en')
         block.categories.set(categories)
         block.save()
         response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
 
         self.assertEqual(response.status_code, 200)
-        block_types = [
-            item['type']
-            for item in response.json()['data']['relationships']['blocks']['data']
-        ]
+        block_types = [item['type'] for item in response.json()['data']['relationships']['blocks']['data']]
         self.assertIn('pages/blocks/categories', block_types)
 
         categories_block = get_include(response, 'pages/blocks/categories')
@@ -393,12 +345,7 @@ class HomeTestCase(APITestCase):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
 
         for i in range(0, 3):
-            SlideFactory(
-                sequence=i,
-                publication_date=now(),
-                status='published',
-                language='en'
-            )
+            SlideFactory(sequence=i, publication_date=now(), status='published', language='en')
 
         response = self.client.get(self.url)
 
@@ -410,48 +357,33 @@ class HomeTestCase(APITestCase):
 
     def test_plain_text(self):
         block = PlainTextItem.objects.create_for_placeholder(self.placeholder)
-        block.text = "To <b>boldly</b> go were no man has gone before!"
+        block.text = 'To <b>boldly</b> go were no man has gone before!'
         block.save()
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         text_block = get_include(response, 'pages/blocks/plain-text')
 
-        self.assertEqual(
-            text_block['type'],
-            'pages/blocks/plain-text'
-        )
+        self.assertEqual(text_block['type'], 'pages/blocks/plain-text')
 
-        self.assertEqual(
-            text_block['attributes']['text'],
-            "To <b>boldly</b> go were no man has gone before!"
-        )
+        self.assertEqual(text_block['attributes']['text'], 'To <b>boldly</b> go were no man has gone before!')
 
     def test_plain_text_link(self):
         block = PlainTextItem.objects.create_for_placeholder(self.placeholder)
-        block.text = "To <a href='javascript:alert(\"Owned!\")'>link</a> to the dark side!"
+        block.text = 'To <a href=\'javascript:alert("Owned!")\'>link</a> to the dark side!'
         block.save()
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         text_block = get_include(response, 'pages/blocks/plain-text')
 
-        self.assertEqual(
-            text_block['type'],
-            'pages/blocks/plain-text'
-        )
+        self.assertEqual(text_block['type'], 'pages/blocks/plain-text')
 
-        self.assertEqual(
-            text_block['attributes']['text'],
-            'To <a href="#">link</a> to the dark side!'
-        )
+        self.assertEqual(text_block['attributes']['text'], 'To <a href="#">link</a> to the dark side!')
 
     def test_plain_text_image(self):
         block = ImagePlainTextItem.objects.create_for_placeholder(self.placeholder)
-        block.text = json.dumps({
-            'html': "To <b>boldly</b> go were no man has gone before!",
-            'delta': ''
-        })
+        block.text = json.dumps({'html': 'To <b>boldly</b> go were no man has gone before!', 'delta': ''})
 
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             block.image = File(f)
@@ -461,26 +393,12 @@ class HomeTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         text_block = get_include(response, 'pages/blocks/plain-text-image')
 
-        self.assertEqual(
-            text_block['type'],
-            'pages/blocks/plain-text-image'
-        )
+        self.assertEqual(text_block['type'], 'pages/blocks/plain-text-image')
 
-        self.assertEqual(
-            text_block['attributes']['text'],
-            "To <b>boldly</b> go were no man has gone before!"
-        )
-        self.assertIsNotNone(
-            text_block['attributes']['image']['full']
-        )
-        self.assertEqual(
-            text_block['attributes']['ratio'],
-            "0.5"
-        )
-        self.assertEqual(
-            text_block['attributes']['align'],
-            "right"
-        )
+        self.assertEqual(text_block['attributes']['text'], 'To <b>boldly</b> go were no man has gone before!')
+        self.assertIsNotNone(text_block['attributes']['image']['full'])
+        self.assertEqual(text_block['attributes']['ratio'], '0.5')
+        self.assertEqual(text_block['attributes']['align'], 'right')
 
     def test_image(self):
         block = ImageItem.objects.create_for_placeholder(self.placeholder)
@@ -493,14 +411,9 @@ class HomeTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         text_block = get_include(response, 'pages/blocks/image')
 
-        self.assertEqual(
-            text_block['type'],
-            'pages/blocks/image'
-        )
+        self.assertEqual(text_block['type'], 'pages/blocks/image')
 
-        self.assertIsNotNone(
-            text_block['attributes']['image']['full']
-        )
+        self.assertIsNotNone(text_block['attributes']['image']['full'])
 
     def test_closed(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -519,12 +432,8 @@ class HomeTestCase(APITestCase):
     def test_closed_partner(self):
         group = Group.objects.get(name='Authenticated')
         try:
-            for permission in Permission.objects.filter(
-                codename='api_read_{}'.format(self.model._meta.model_name)
-            ):
-                group.permissions.remove(
-                    permission
-                )
+            for permission in Permission.objects.filter(codename='api_read_{}'.format(self.model._meta.model_name)):
+                group.permissions.remove(permission)
         except Permission.DoesNotExist:
             pass
         MemberPlatformSettings.objects.update(closed=True)
@@ -538,6 +447,7 @@ class PageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
     """
     Test the page cms endpoint.
     """
+
     admin_change_url_name = 'admin:pages_page_change'
 
     def setUp(self):
@@ -545,7 +455,7 @@ class PageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
         self.init_projects()
         self.page = PageFactory.create(language='en', slug='about', title='About us')
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
-        self.url = reverse('page-detail', args=(self.page.slug, ))
+        self.url = reverse('page-detail', args=(self.page.slug,))
 
     def test_page_without_placeholder(self):
         """
@@ -568,27 +478,16 @@ class PageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
 
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             image = File(f)
-            DocumentItem.objects.create_for_placeholder(
-                self.placeholder,
-                document=image,
-                text='Some file upload'
-            )
+            DocumentItem.objects.create_for_placeholder(self.placeholder, document=image, text='Some file upload')
 
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             image = File(f)
-            PictureItem.objects.create_for_placeholder(
-                self.placeholder,
-                image=image,
-                align='center'
-            )
+            PictureItem.objects.create_for_placeholder(self.placeholder, image=image, align='center')
 
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             image = File(f)
             ImageTextItem.objects.create_for_placeholder(
-                self.placeholder,
-                image=image,
-                text='some text',
-                align='center'
+                self.placeholder, image=image, text='some text', align='center'
             )
 
         response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
@@ -600,21 +499,11 @@ class PageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
         self.assertEqual(data['attributes']['title'], self.page.title)
         self.assertEqual(data['attributes']['full-page'], self.page.full_page)
 
-        self.assertEqual(
-            data['relationships']['blocks']['data'][0]['type'], 'pages/blocks/raw-html'
-        )
-        self.assertEqual(
-            data['relationships']['blocks']['data'][1]['type'], 'pages/blocks/text'
-        )
-        self.assertEqual(
-            data['relationships']['blocks']['data'][2]['type'], 'pages/blocks/document'
-        )
-        self.assertEqual(
-            data['relationships']['blocks']['data'][3]['type'], 'pages/blocks/picture'
-        )
-        self.assertEqual(
-            data['relationships']['blocks']['data'][4]['type'], 'pages/blocks/image-text'
-        )
+        self.assertEqual(data['relationships']['blocks']['data'][0]['type'], 'pages/blocks/raw-html')
+        self.assertEqual(data['relationships']['blocks']['data'][1]['type'], 'pages/blocks/text')
+        self.assertEqual(data['relationships']['blocks']['data'][2]['type'], 'pages/blocks/document')
+        self.assertEqual(data['relationships']['blocks']['data'][3]['type'], 'pages/blocks/picture')
+        self.assertEqual(data['relationships']['blocks']['data'][4]['type'], 'pages/blocks/image-text')
 
     def test_multi_language_page(self):
         # Should default to main language
@@ -641,7 +530,7 @@ class PlatformPageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
         PlatformPage.objects.all().delete()
         self.page = PlatformPageFactory.create(title='Start your activity')
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
-        self.url = reverse('platform-page-detail', args=(self.page.slug, ))
+        self.url = reverse('platform-page-detail', args=(self.page.slug,))
 
     def test_page_without_placeholder(self):
         """
@@ -664,27 +553,16 @@ class PlatformPageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
 
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             image = File(f)
-            DocumentItem.objects.create_for_placeholder(
-                self.placeholder,
-                document=image,
-                text='Some file upload'
-            )
+            DocumentItem.objects.create_for_placeholder(self.placeholder, document=image, text='Some file upload')
 
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             image = File(f)
-            PictureItem.objects.create_for_placeholder(
-                self.placeholder,
-                image=image,
-                align='center'
-            )
+            PictureItem.objects.create_for_placeholder(self.placeholder, image=image, align='center')
 
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             image = File(f)
             ImageTextItem.objects.create_for_placeholder(
-                self.placeholder,
-                image=image,
-                text='some text',
-                align='center'
+                self.placeholder, image=image, text='some text', align='center'
             )
 
         response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
@@ -696,21 +574,11 @@ class PlatformPageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
         self.assertEqual(data['attributes']['title'], self.page.title)
         self.assertEqual(data['attributes']['full-page'], self.page.full_page)
 
-        self.assertEqual(
-            data['relationships']['blocks']['data'][0]['type'], 'pages/blocks/raw-html'
-        )
-        self.assertEqual(
-            data['relationships']['blocks']['data'][1]['type'], 'pages/blocks/text'
-        )
-        self.assertEqual(
-            data['relationships']['blocks']['data'][2]['type'], 'pages/blocks/document'
-        )
-        self.assertEqual(
-            data['relationships']['blocks']['data'][3]['type'], 'pages/blocks/picture'
-        )
-        self.assertEqual(
-            data['relationships']['blocks']['data'][4]['type'], 'pages/blocks/image-text'
-        )
+        self.assertEqual(data['relationships']['blocks']['data'][0]['type'], 'pages/blocks/raw-html')
+        self.assertEqual(data['relationships']['blocks']['data'][1]['type'], 'pages/blocks/text')
+        self.assertEqual(data['relationships']['blocks']['data'][2]['type'], 'pages/blocks/document')
+        self.assertEqual(data['relationships']['blocks']['data'][3]['type'], 'pages/blocks/picture')
+        self.assertEqual(data['relationships']['blocks']['data'][4]['type'], 'pages/blocks/image-text')
 
     def test_get_start_closed(self):
         settings = MemberPlatformSettings.load()
@@ -720,15 +588,14 @@ class PlatformPageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
         self.assertEqual(response.status_code, 401)
         user = BlueBottleUserFactory.create()
         response = self.client.get(
-            self.url, HTTP_ACCEPT_LANGUAGE='en',
-            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            self.url, HTTP_ACCEPT_LANGUAGE='en', HTTP_AUTHORIZATION='JWT {0}'.format(user.get_jwt_token())
         )
         self.assertEqual(response.status_code, 200)
 
     def test_get_privacy_closed(self):
         self.page.slug = 'privacy'
         self.page.save()
-        self.url = reverse('platform-page-detail', args=(self.page.slug, ))
+        self.url = reverse('platform-page-detail', args=(self.page.slug,))
         settings = MemberPlatformSettings.load()
         settings.closed = True
         settings.save()
@@ -738,7 +605,7 @@ class PlatformPageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
     def test_get_terms_closed(self):
         self.page.slug = 'terms'
         self.page.save()
-        self.url = reverse('platform-page-detail', args=(self.page.slug, ))
+        self.url = reverse('platform-page-detail', args=(self.page.slug,))
         settings = MemberPlatformSettings.load()
         settings.closed = True
         settings.save()
@@ -761,14 +628,14 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
             contact_phone='+31207158980',
             copyright='GoodUp',
             powered_by_text='Powered by',
-            powered_by_link='https://goodup.com'
+            powered_by_link='https://goodup.com',
         )
         settings.set_current_language('en')
         settings.metadata_title = "Let's do some good!"
-        settings.metadata_description = "Join our platform and start fulfilling your purpose!"
-        settings.metadata_keywords = "Do-good, Awesome, Purpose"
+        settings.metadata_description = 'Join our platform and start fulfilling your purpose!'
+        settings.metadata_keywords = 'Do-good, Awesome, Purpose'
         settings.set_current_language('nl')
-        settings.metadata_title = "Doe es iets goeds!"
+        settings.metadata_title = 'Doe es iets goeds!'
         settings.save()
 
         response = self.client.get(reverse('settings'))
@@ -780,11 +647,11 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['metadata_title'], "Let's do some good!")
         self.assertEqual(
             response.data['platform']['content']['metadata_description'],
-            "Join our platform and start fulfilling your purpose!"
+            'Join our platform and start fulfilling your purpose!',
         )
 
         response = self.client.get(reverse('settings'), HTTP_X_APPLICATION_LANGUAGE='nl')
-        self.assertEqual(response.data['platform']['content']['metadata_title'], "Doe es iets goeds!")
+        self.assertEqual(response.data['platform']['content']['metadata_title'], 'Doe es iets goeds!')
         self.assertEqual(response.data['platform']['content']['metadata_description'], None)
 
     def test_site_platform_settings_favicons(self):
@@ -794,16 +661,8 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
 
         response = self.client.get(reverse('settings'))
 
-        self.assertTrue(
-            response.data['platform']['content']['favicons']['large'].startswith(
-                '/media/cache'
-            )
-        )
-        self.assertTrue(
-            response.data['platform']['content']['favicons']['small'].startswith(
-                '/media/cache'
-            )
-        )
+        self.assertTrue(response.data['platform']['content']['favicons']['large'].startswith('/media/cache'))
+        self.assertTrue(response.data['platform']['content']['favicons']['small'].startswith('/media/cache'))
 
     def test_site_platform_settings_logo(self):
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
@@ -812,13 +671,5 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
 
         response = self.client.get(reverse('settings'))
 
-        self.assertTrue(
-            response.data['platform']['content']['favicons']['large'].startswith(
-                '/media/cache'
-            )
-        )
-        self.assertTrue(
-            response.data['platform']['content']['favicons']['small'].startswith(
-                '/media/cache'
-            )
-        )
+        self.assertTrue(response.data['platform']['content']['favicons']['large'].startswith('/media/cache'))
+        self.assertTrue(response.data['platform']['content']['favicons']['small'].startswith('/media/cache'))

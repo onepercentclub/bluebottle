@@ -11,25 +11,21 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.base import FundingStripeMixin
-from bluebottle.funding_stripe.tests.factories import (
-    StripePaymentFactory
-)
+from bluebottle.funding_stripe.tests.factories import StripePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 
 
 class FundingTestCase(BluebottleTestCase):
-
     def test_absolute_url(self):
         funding = FundingFactory()
-        expected = 'http://test.localhost/en/activities/details' \
-                   '/funding/{}/{}'.format(funding.id, funding.slug)
+        expected = 'http://test.localhost/en/activities/details/funding/{}/{}'.format(funding.id, funding.slug)
         self.assertEqual(funding.get_absolute_url(), expected)
 
     def test_amount_donated(self):
         funding = FundingFactory.create(target=Money(100, 'EUR'))
-        DonorFactory.create_batch(3, activity=funding, amount=Money(30, 'EUR'), status="succeeded")
+        DonorFactory.create_batch(3, activity=funding, amount=Money(30, 'EUR'), status='succeeded')
 
         funding.refresh_from_db()
 
@@ -43,7 +39,7 @@ class FundingTestCase(BluebottleTestCase):
         pledge = DonorFactory.create(activity=funding, amount=Money(30, 'EUR'))
         PledgePaymentFactory.create(donation=pledge)
 
-        DonorFactory.create_batch(3, activity=funding, amount=Money(30, 'EUR'), status="succeeded")
+        DonorFactory.create_batch(3, activity=funding, amount=Money(30, 'EUR'), status='succeeded')
 
         funding.refresh_from_db()
 
@@ -98,7 +94,7 @@ class FundingTestCase(BluebottleTestCase):
         errors = list(funding.errors)
 
         self.assertEqual(len(errors), 2)
-        self.assertEqual(errors[0].message, "Please specify a budget")
+        self.assertEqual(errors[0].message, 'Please specify a budget')
 
         BudgetLineFactory.create_batch(5, activity=funding, amount=Money(20, 'EUR'))
 
@@ -124,14 +120,11 @@ class FundingTestCase(BluebottleTestCase):
         errors = list(funding.errors)
         self.assertEqual(len(errors), 3)
 
-        self.assertEqual(errors[0].message, "Make sure the deadline is in the future.")
+        self.assertEqual(errors[0].message, 'Make sure the deadline is in the future.')
 
     def test_deadline_in_past_with_duration(self):
         funding = FundingFactory.create(
-            target=Money(100, 'EUR'),
-            deadline=now() - timedelta(days=10),
-            duration=10,
-            status='in_review'
+            target=Money(100, 'EUR'), deadline=now() - timedelta(days=10), duration=10, status='in_review'
         )
 
         errors = list(funding.errors)
@@ -145,22 +138,17 @@ class FundingTestCase(BluebottleTestCase):
         errors = [error.message for error in list(funding.errors)]
         self.assertEqual(
             errors,
-            ["Please specify a budget", "Make sure your payout account is verified"],
+            ['Please specify a budget', 'Make sure your payout account is verified'],
         )
 
 
 class PayoutTestCase(FundingStripeMixin, BluebottleTestCase):
-
     def setUp(self):
         super(PayoutTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        self.funding = FundingFactory.create(
-            initiative=self.initiative,
-            duration=30,
-            target=Money(1000, 'EUR')
-        )
+        self.funding = FundingFactory.create(initiative=self.initiative, duration=30, target=Money(1000, 'EUR'))
         BudgetLineFactory.create(activity=self.funding)
         self.bank_account = generate_mock_bank_account()
         self.funding.bank_account = self.bank_account
@@ -168,47 +156,33 @@ class PayoutTestCase(FundingStripeMixin, BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for donation in DonorFactory.create_batch(
-                3,
-                amount=Money(150, 'EUR'),
-                activity=self.funding,
-                status='succeeded'):
+            3, amount=Money(150, 'EUR'), activity=self.funding, status='succeeded'
+        ):
             StripePaymentFactory.create(donation=donation)
 
         for donation in DonorFactory.create_batch(
-                2,
-                amount=Money(200, 'USD'),
-                payout_amount=(150, 'EUR'),
-                activity=self.funding,
-                status='succeeded'):
+            2, amount=Money(200, 'USD'), payout_amount=(150, 'EUR'), activity=self.funding, status='succeeded'
+        ):
             StripePaymentFactory.create(donation=donation)
 
         for donation in DonorFactory.create_batch(
-                5,
-                amount=Money(100, 'USD'),
-                activity=self.funding,
-                status='succeeded'):
+            5, amount=Money(100, 'USD'), activity=self.funding, status='succeeded'
+        ):
             StripePaymentFactory.create(donation=donation)
 
-        donation = DonorFactory.create(
-            amount=Money(750, 'EUR'),
-            activity=self.funding,
-            status='succeeded')
+        donation = DonorFactory.create(amount=Money(750, 'EUR'), activity=self.funding, status='succeeded')
         PledgePaymentFactory.create(donation=donation)
 
         self.donation = donation
 
         for donation in DonorFactory.create_batch(
-                5,
-                amount=Money(150, 'EUR'),
-                activity=self.funding,
-                status='succeeded'):
+            5, amount=Money(150, 'EUR'), activity=self.funding, status='succeeded'
+        ):
             StripePaymentFactory.create(donation=donation)
 
         for donation in DonorFactory.create_batch(
-                5,
-                amount=Money(100, 'USD'),
-                activity=self.funding,
-                status='succeeded'):
+            5, amount=Money(100, 'USD'), activity=self.funding, status='succeeded'
+        ):
             StripePaymentFactory.create(donation=donation)
 
     def test_auto_generate_payouts(self):
@@ -225,12 +199,7 @@ class PayoutTestCase(FundingStripeMixin, BluebottleTestCase):
         self.assertTrue(Money(750, 'EUR') in payout_amounts)
 
         # More donations
-        donations = DonorFactory.create_batch(
-            5,
-            amount=Money(150, 'EUR'),
-            activity=self.funding,
-            status='succeeded'
-        )
+        donations = DonorFactory.create_batch(5, amount=Money(150, 'EUR'), activity=self.funding, status='succeeded')
         for donation in donations:
             StripePaymentFactory.create(donation=donation)
 
@@ -248,12 +217,7 @@ class PayoutTestCase(FundingStripeMixin, BluebottleTestCase):
                 payout.save()
 
         # More donations after approved payouts
-        donations = DonorFactory.create_batch(
-            8,
-            amount=Money(250, 'EUR'),
-            activity=self.funding,
-            status='succeeded'
-        )
+        donations = DonorFactory.create_batch(8, amount=Money(250, 'EUR'), activity=self.funding, status='succeeded')
         for donation in donations:
             StripePaymentFactory.create(donation=donation)
 

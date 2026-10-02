@@ -14,7 +14,7 @@ from bluebottle.segments.filters import segment_filter
 
 class UnPublishedActivities(DashboardModule):
     title = _('Unpublished activities')
-    title_url = "{}?status[]=draft&status[]=needs_work".format(reverse('admin:activities_activity_changelist'))
+    title_url = '{}?status[]=draft&status[]=needs_work'.format(reverse('admin:activities_activity_changelist'))
     template = 'dashboard/unpublished_activities.html'
     limit = 5
     column = 0
@@ -24,50 +24,50 @@ class UnPublishedActivities(DashboardModule):
         user = context.request.user
         activities = region_manager_filter(activities, user)
         activities = segment_filter(activities, user)
-        self.children = activities[:self.limit]
+        self.children = activities[: self.limit]
 
 
 class RecentlySubmittedActivities(DashboardModule):
     title = _('Activities that need to be reviewed')
-    title_url = "{}?status[]=draft&status[]=open".format(reverse('admin:activities_activity_changelist'))
+    title_url = '{}?status[]=draft&status[]=open'.format(reverse('admin:activities_activity_changelist'))
     template = 'dashboard/recent_activities.html'
     limit = 5
     column = 0
 
     def init_with_context(self, context):
-        activities = Activity.objects.filter(
-            status='submitted'
-        ).annotate(
-            transition_date=Coalesce(Subquery(recent_log_entries()), 'created')
-        ).order_by('-transition_date')
+        activities = (
+            Activity.objects.filter(status='submitted')
+            .annotate(transition_date=Coalesce(Subquery(recent_log_entries()), 'created'))
+            .order_by('-transition_date')
+        )
         user = context.request.user
         activities = region_manager_filter(activities, user)
         activities = segment_filter(activities, user)
-        self.children = activities[:self.limit]
+        self.children = activities[: self.limit]
 
 
 class RecentlyPublishedActivities(DashboardModule):
     title = _('Recently published activities')
-    title_url = "{}?status[]=open".format(reverse('admin:activities_activity_changelist'))
+    title_url = '{}?status[]=open'.format(reverse('admin:activities_activity_changelist'))
     template = 'dashboard/recent_activities.html'
     limit = 5
     column = 0
 
     def init_with_context(self, context):
-        activities = Activity.objects.filter(
-            status='open'
-        ).annotate(
-            transition_date=Coalesce(Subquery(recent_log_entries()), 'created')
-        ).order_by('-transition_date')
+        activities = (
+            Activity.objects.filter(status='open')
+            .annotate(transition_date=Coalesce(Subquery(recent_log_entries()), 'created'))
+            .order_by('-transition_date')
+        )
         user = context.request.user
         activities = region_manager_filter(activities, user)
         activities = segment_filter(activities, user)
-        self.children = activities[:self.limit]
+        self.children = activities[: self.limit]
 
 
 class RecentContributors(DashboardModule):
     title = _('Recent contributions')
-    title_url = "{}".format(reverse('admin:activities_contributor_changelist'))
+    title_url = '{}'.format(reverse('admin:activities_contributor_changelist'))
     template = 'dashboard/recent_contributors.html'
     limit = 5
     column = 0
@@ -77,11 +77,10 @@ class RecentContributors(DashboardModule):
         user = context.request.user
         contributors = region_manager_filter(contributors, user)
         contributors = segment_filter(contributors, user)
-        self.children = contributors[:self.limit]
+        self.children = contributors[: self.limit]
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):
-
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
         self.children.append(RecentlySubmittedActivities())

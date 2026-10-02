@@ -3,9 +3,7 @@ import munch
 import stripe
 from django.test.utils import override_settings
 
-from bluebottle.funding_stripe.models import (
-    StripePayoutAccount, ExternalAccount, StripePaymentProvider
-)
+from bluebottle.funding_stripe.models import StripePayoutAccount, ExternalAccount, StripePaymentProvider
 from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
 from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -25,59 +23,62 @@ class ConnectAccountTestCase(FundingStripeTestCase):
         if not StripePaymentProvider.objects.exists():
             StripePaymentProviderFactory.create()
         self.check = StripePayoutAccount(
-            owner=BlueBottleUserFactory.create(),
-            country='NL',
-            account_id=account_id,
-            status='new'
+            owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id, status='new'
         )
 
         self.connect_account = stripe.Account(account_id)
         self.connect_account.update(
             {
-                "country": self.check.country,
-                "charges_enabled": True,
-                "payouts_enabled": True,
-                "business_type": "individual",
-                "individual": munch.munchify(
+                'country': self.check.country,
+                'charges_enabled': True,
+                'payouts_enabled': True,
+                'business_type': 'individual',
+                'individual': munch.munchify(
                     {
-                        "first_name": "Jhon",
-                        "last_name": "Example",
-                        "email": "jhon@example.com",
-                        "requirements": munch.munchify(
+                        'first_name': 'Jhon',
+                        'last_name': 'Example',
+                        'email': 'jhon@example.com',
+                        'requirements': munch.munchify(
                             {
-                                "eventually_due": [
-                                    "external_accounts",
-                                    "individual.verification.document",
-                                    "document_type",
+                                'eventually_due': [
+                                    'external_accounts',
+                                    'individual.verification.document',
+                                    'document_type',
                                 ]
                             }
                         ),
-                        "verification": munch.munchify({"status": "verified"}),
+                        'verification': munch.munchify({'status': 'verified'}),
                     }
                 ),
-                "requirements": munch.munchify(
+                'requirements': munch.munchify(
                     {
-                        "eventually_due": [
-                            "external_accounts",
-                            "individual.verification.document.front",
-                            "document_type",
+                        'eventually_due': [
+                            'external_accounts',
+                            'individual.verification.document.front',
+                            'document_type',
                         ],
-                        "disabled": False,
+                        'disabled': False,
                     }
                 ),
-                "external_accounts": munch.munchify({"total_count": 0, "data": []}),
+                'external_accounts': munch.munchify({'total_count': 0, 'data': []}),
             }
         )
 
         self.country_spec = stripe.CountrySpec(self.check.country)
-        self.country_spec.update({
-            'verification_fields': munch.munchify({
-                'individual': munch.munchify({
-                    'additional': ['individual.verification.document'],
-                    'minimum': ['individual.first_name'],
-                })
-            })
-        })
+        self.country_spec.update(
+            {
+                'verification_fields': munch.munchify(
+                    {
+                        'individual': munch.munchify(
+                            {
+                                'additional': ['individual.verification.document'],
+                                'minimum': ['individual.first_name'],
+                            }
+                        )
+                    }
+                )
+            }
+        )
 
     def test_update(self):
         self.check.update(self.connect_account)
@@ -87,9 +88,7 @@ class ConnectAccountTestCase(FundingStripeTestCase):
         self.assertEqual(self.check.payments_enabled, True)
 
     def test_account(self):
-        with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
-        ) as retrieve:
+        with mock.patch('stripe.Account.retrieve', return_value=self.connect_account) as retrieve:
             self.assertTrue(isinstance(self.check.account, stripe.Account))
             self.assertEqual(self.check.account.id, self.connect_account.id)
 
@@ -107,23 +106,22 @@ class StripeExternalAccountTestCase(FundingStripeTestCase):
 
         self.connect_account = stripe.Account(account_id)
 
-        self.connect_account.update({
-            'country': country,
-            'individual': munch.munchify({
-                'first_name': 'Jhon',
-                'last_name': 'Example',
-                'email': 'jhon@example.com',
-            }),
-            'requirements': munch.munchify({
-                'eventually_due': ['external_accounts'],
-                'disabled': False
-            }),
-            'external_accounts': stripe.ListObject([])
-        })
+        self.connect_account.update(
+            {
+                'country': country,
+                'individual': munch.munchify(
+                    {
+                        'first_name': 'Jhon',
+                        'last_name': 'Example',
+                        'email': 'jhon@example.com',
+                    }
+                ),
+                'requirements': munch.munchify({'eventually_due': ['external_accounts'], 'disabled': False}),
+                'external_accounts': stripe.ListObject([]),
+            }
+        )
 
-        with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
-        ):
+        with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
             self.check = StripePayoutAccount(
                 owner=BlueBottleUserFactory.create(), country=country, account_id=account_id
             )
@@ -133,38 +131,30 @@ class StripeExternalAccountTestCase(FundingStripeTestCase):
 
         self.connect_external_account = stripe.BankAccount(external_account_id)
 
-        self.connect_external_account.update({
-            'object': 'bank_account',
-            'account_holder_name': 'Jane Austen',
-            'account_holder_type': 'individual',
-            'bank_name': 'STRIPE TEST BANK',
-            'country': 'US',
-            'currency': 'usd',
-            'fingerprint': '1JWtPxqbdX5Gamtc',
-            'last4': '6789',
-            'metadata': {
-                'order_id': '6735'
-            },
-            'routing_number': '110000000',
-            'status': 'new',
-            'account': 'acct_1032D82eZvKYlo2C'
-        })
+        self.connect_external_account.update(
+            {
+                'object': 'bank_account',
+                'account_holder_name': 'Jane Austen',
+                'account_holder_type': 'individual',
+                'bank_name': 'STRIPE TEST BANK',
+                'country': 'US',
+                'currency': 'usd',
+                'fingerprint': '1JWtPxqbdX5Gamtc',
+                'last4': '6789',
+                'metadata': {'order_id': '6735'},
+                'routing_number': '110000000',
+                'status': 'new',
+                'account': 'acct_1032D82eZvKYlo2C',
+            }
+        )
 
     def test_retrieve(self):
-        with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
-        ):
+        with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
             with mock.patch(
                 'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
-                self.assertEqual(
-                    self.external_account.account.id,
-                    self.connect_external_account.id
-                )
-                self.assertEqual(
-                    self.external_account.account.last4,
-                    self.connect_external_account.last4
-                )
+                self.assertEqual(self.external_account.account.id, self.connect_external_account.id)
+                self.assertEqual(self.external_account.account.last4, self.connect_external_account.last4)
 
                 retrieve_external_account.assert_called_with(self.external_account.account_id)
 
@@ -174,19 +164,11 @@ class StripeExternalAccountTestCase(FundingStripeTestCase):
 
         self.connect_account.external_accounts = list_object
 
-        with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
-        ):
+        with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
             with mock.patch(
                 'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
-                self.assertEqual(
-                    self.external_account.account.id,
-                    self.connect_external_account.id
-                )
-                self.assertEqual(
-                    self.external_account.account.last4,
-                    self.connect_external_account.last4
-                )
+                self.assertEqual(self.external_account.account.id, self.connect_external_account.id)
+                self.assertEqual(self.external_account.account.last4, self.connect_external_account.last4)
 
                 self.assertEqual(retrieve_external_account.call_count, 0)

@@ -22,11 +22,7 @@ def init_client():
     else:
         env = lipisha.SANDBOX_ENV
     credentials = get_credentials()
-    lip = Lipisha(
-        credentials['api_key'],
-        credentials['api_signature'],
-        api_environment=env
-    )
+    lip = Lipisha(credentials['api_key'], credentials['api_signature'], api_environment=env)
     if live_mode:
         lip.api_base_url = 'https://api.lypa.io/v2/api/'
         # lip.api_base_url = 'https://lipisha.com/payments/accounts/index.php/v2/api'
@@ -48,7 +44,7 @@ def initiate_push_payment(payment):
         method=payment.method,
         amount=int(payment.donation.amount.amount),
         currency=payment.donation.amount.currency,
-        reference=payment.unique_id
+        reference=payment.unique_id,
     )
 
     if response['status']['status'] == 'SUCCESS':
@@ -65,15 +61,9 @@ def check_payment_status(payment):
 
     # If we have a transaction reference, then use that
     if payment.transaction:
-        response = client.get_transactions(
-            transaction_type='Payment',
-            transaction=payment.transaction
-        )
+        response = client.get_transactions(transaction_type='Payment', transaction=payment.transaction)
     else:
-        response = client.get_transactions(
-            transaction_type='Payment',
-            transaction_reference=payment.unique_id
-        )
+        response = client.get_transactions(transaction_type='Payment', transaction_reference=payment.unique_id)
 
     payment.update_response = json.dumps(response)
     data = response['content']
@@ -83,13 +73,9 @@ def check_payment_status(payment):
         except TransitionNotPossible:
             pass
         payment.save()
-        raise PaymentException(
-            'Payment could not be verified yet. Payment not found.'
-        )
+        raise PaymentException('Payment could not be verified yet. Payment not found.')
     elif len(data) > 1:
-        raise PaymentException(
-            'Found multiple payments with code {}.'.format(payment.transaction or payment.unique_id)
-        )
+        raise PaymentException('Found multiple payments with code {}.'.format(payment.transaction or payment.unique_id))
     else:
         data = data[0]
         if data['transaction_amount'] != payment.donation.amount.amount:
@@ -122,43 +108,39 @@ def check_payment_status(payment):
 
 def generate_success_response(payment):
     donation = payment.donation
-    message = "Dear {}, thanks for your donation {} of {} {} to {}!".format(
-        donation.name,
-        payment.transaction,
-        donation.amount.currency,
-        donation.amount.amount,
-        donation.activity.title
+    message = 'Dear {}, thanks for your donation {} of {} {} to {}!'.format(
+        donation.name, payment.transaction, donation.amount.currency, donation.amount.amount, donation.activity.title
     )
     credentials = get_credentials()
 
     return {
-        "api_key": credentials['api_key'],
+        'api_key': credentials['api_key'],
         # "api_signature": credentials['api_signature'],
-        "api_version": "1.0.4",
-        "api_type": "Receipt",
-        "transaction_reference": payment.transaction,
-        "transaction_status_code": "001",
-        "transaction_status": "SUCCESS",
-        "transaction_status_description": "Transaction received successfully.",
-        "transaction_status_action": "ACCEPT",
-        "transaction_status_reason": "VALID_TRANSACTION",
-        "transaction_custom_sms": message
+        'api_version': '1.0.4',
+        'api_type': 'Receipt',
+        'transaction_reference': payment.transaction,
+        'transaction_status_code': '001',
+        'transaction_status': 'SUCCESS',
+        'transaction_status_description': 'Transaction received successfully.',
+        'transaction_status_action': 'ACCEPT',
+        'transaction_status_reason': 'VALID_TRANSACTION',
+        'transaction_custom_sms': message,
     }
 
 
 def generate_error_response(reference):
     credentials = get_credentials()
     return {
-        "api_key": credentials['api_key'],
+        'api_key': credentials['api_key'],
         # "api_signature": credentials['api_signature'],
-        "api_version": "1.0.4",
-        "api_type": "Receipt",
-        "transaction_reference": reference,
-        "transaction_status_code": "002",
-        "transaction_status": "FAIL",
-        "transaction_status_description": "Transaction has a problem and we reject.",
-        "transaction_status_action": "REJECT",
-        "transaction_status_reason": "INVALID_TRANSACTION"
+        'api_version': '1.0.4',
+        'api_type': 'Receipt',
+        'transaction_reference': reference,
+        'transaction_status_code': '002',
+        'transaction_status': 'FAIL',
+        'transaction_status_description': 'Transaction has a problem and we reject.',
+        'transaction_status_action': 'REJECT',
+        'transaction_status_reason': 'INVALID_TRANSACTION',
     }
 
 
@@ -204,9 +186,8 @@ def initiate_payment(data):
         name = data['transaction_name'].replace('+', ' ').title()
 
         donation = Donor.objects.create(
-            amount=Money(data['transaction_amount'], data['transaction_currency']),
-            name=name,
-            activity=funding)
+            amount=Money(data['transaction_amount'], data['transaction_currency']), name=name, activity=funding
+        )
 
         payment = LipishaPayment.objects.create(
             donation=donation,
@@ -250,20 +231,18 @@ def acknowledge_payment(data):
     return generate_success_response(payment)
 
 
-def generate_payout_account(
-    name, number, bank_name, bank_branch, bank_address, swift_code
-):
+def generate_payout_account(name, number, bank_name, bank_branch, bank_address, swift_code):
     credentials = get_credentials()
     client = init_client()
     data = client.create_withdrawal_account(
-        transaction_account_type="1",
+        transaction_account_type='1',
         transaction_account_name=name,
         transaction_account_number=number,
         transaction_account_bank_name=bank_name,
         transaction_account_bank_branch=bank_branch,
         transaction_account_bank_address=bank_address,
         transaction_account_swift_code=swift_code,
-        transaction_account_manager=credentials['prefix']
+        transaction_account_manager=credentials['prefix'],
     )
     if data['status']['status'] == 'FAIL':
         raise PaymentException(data['status']['status_description'])
@@ -274,9 +253,7 @@ def generate_mpesa_account(name):
     credentials = get_credentials()
     client = init_client()
     data = client.create_payment_account(
-        transaction_account_type=1,
-        transaction_account_name=name,
-        transaction_account_manager=credentials['prefix']
+        transaction_account_type=1, transaction_account_name=name, transaction_account_manager=credentials['prefix']
     )
     if data['status']['status'] == 'FAIL':
         raise PaymentException(data['status']['status_description'])

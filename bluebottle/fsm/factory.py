@@ -2,7 +2,6 @@ from factory import DjangoModelFactory
 
 
 class FSMModelFactory(DjangoModelFactory):
-
     @classmethod
     def create(cls, as_user=None, as_relation=None, **kwargs):
         if as_user:

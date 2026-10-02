@@ -8,10 +8,9 @@ class Follow(models.Model):
     Generic Follow class. A Follow object is a generic reference between a
     user and another Django model.
     """
+
     user = models.ForeignKey('members.Member', related_name='follows', on_delete=models.CASCADE)
-    content_type = models.ForeignKey(
-        ContentType, related_name='follow_object', on_delete=models.CASCADE
-    )
+    content_type = models.ForeignKey(ContentType, related_name='follow_object', on_delete=models.CASCADE)
     instance_id = models.PositiveIntegerField()
     instance = fields.GenericForeignKey('content_type', 'instance_id')
 
@@ -21,32 +20,24 @@ class Follow(models.Model):
 def follow(user, instance):
     try:
         Follow.objects.get_or_create(
-            user=user,
-            instance_id=instance.pk,
-            content_type=ContentType.objects.get_for_model(instance)
+            user=user, instance_id=instance.pk, content_type=ContentType.objects.get_for_model(instance)
         )
     except Follow.MultipleObjectsReturned:
         # Fix accidental double follows.
         first = Follow.objects.filter(
-            user=user,
-            instance_id=instance.pk,
-            content_type=ContentType.objects.get_for_model(instance)
+            user=user, instance_id=instance.pk, content_type=ContentType.objects.get_for_model(instance)
         ).first()
         Follow.objects.filter(
             user=user,
             instance_id=instance.pk,
             content_type=ContentType.objects.get_for_model(instance),
-        ).exclude(
-            id=first.id
-        ).all().delete()
+        ).exclude(id=first.id).all().delete()
 
 
 def unfollow(user, instance):
     try:
         Follow.objects.get(
-            user=user,
-            instance_id=instance.pk,
-            content_type=ContentType.objects.get_for_model(instance)
+            user=user, instance_id=instance.pk, content_type=ContentType.objects.get_for_model(instance)
         ).delete()
     except Follow.DoesNotExist:
         pass

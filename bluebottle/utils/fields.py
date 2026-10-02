@@ -82,6 +82,7 @@ class MoneyFormField(DjangoMoneyFormField):
     def __init__(self, **kwargs):
         # Get currency choices and default currency from PaymentProvider
         from bluebottle.funding.models import PaymentProvider
+
         kwargs.pop('currency_choices', None)
         kwargs.pop('default_currency', None)
         default_currency = PaymentProvider.get_default_currency()
@@ -102,26 +103,38 @@ class MoneyFormField(DjangoMoneyFormField):
 
 
 class MoneyField(DjangoMoneyField):
-    def __init__(self, verbose_name=None, name=None,
-                 max_digits=12, decimal_places=2, default=None,
-                 default_currency=None,
-                 currency_choices=None,
-                 **kwargs):
+    def __init__(
+        self,
+        verbose_name=None,
+        name=None,
+        max_digits=12,
+        decimal_places=2,
+        default=None,
+        default_currency=None,
+        currency_choices=None,
+        **kwargs,
+    ):
         default_currency = 'EUR'
         currency_choices = self.get_currency_choices()
         super(MoneyField, self).__init__(
-            verbose_name=verbose_name, name=name,
-            max_digits=max_digits, decimal_places=decimal_places, default=default,
+            verbose_name=verbose_name,
+            name=name,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            default=default,
             default_currency=default_currency,
             currency_choices=currency_choices,
-            **kwargs)
+            **kwargs,
+        )
 
     def get_default_currency(self):
         from bluebottle.funding.models import PaymentProvider
+
         return PaymentProvider.get_default_currency()
 
     def get_currency_choices(self):
         from bluebottle.funding.models import PaymentProvider
+
         return PaymentProvider.get_currency_choices()
 
     def deconstruct(self):
@@ -137,9 +150,9 @@ class MoneyField(DjangoMoneyField):
 
     def formfield(self, **kwargs):
         # Use the new reusable form field
-        defaults = {"form_class": MoneyFormField}
-        defaults["currency_choices"] = self.get_currency_choices()
-        defaults["default_currency"] = self.get_default_currency()
+        defaults = {'form_class': MoneyFormField}
+        defaults['currency_choices'] = self.get_currency_choices()
+        defaults['default_currency'] = self.get_default_currency()
         defaults.update(kwargs)
         return super(MoneyField, self).formfield(**defaults)
 
@@ -160,8 +173,8 @@ class CurrencyFormField(forms.ChoiceField):
         initial = PaymentProvider.get_default_currency()
 
         # Set up the field with currency choices
-        kwargs.setdefault("choices", choices)
-        kwargs.setdefault("initial", initial)
+        kwargs.setdefault('choices', choices)
+        kwargs.setdefault('initial', initial)
 
         super().__init__(**kwargs)
 
@@ -179,42 +192,41 @@ class CurrencyFormField(forms.ChoiceField):
 
 
 class CurrencyField(models.CharField):
-    currency_choices = [("EUR", "Euro")]
+    currency_choices = [('EUR', 'Euro')]
 
     def __init__(self, verbose_name=None, name=None, max_length=3, **kwargs):
-        super(CurrencyField, self).__init__(
-            verbose_name=verbose_name, name=name, max_length=max_length, **kwargs
-        )
+        super(CurrencyField, self).__init__(verbose_name=verbose_name, name=name, max_length=max_length, **kwargs)
 
     def get_default_currency(self):
         from bluebottle.funding.models import PaymentProvider
+
         return PaymentProvider.get_default_currency()
 
     def get_currency_choices(self):
         from bluebottle.funding.models import PaymentProvider
+
         return PaymentProvider.get_currency_choices()
 
     def deconstruct(self):
         name, path, args, kwargs = super(CurrencyField, self).deconstruct()
 
         if self.default != self.get_default_currency():
-            kwargs["default"] = str(self.default)
+            kwargs['default'] = str(self.default)
         if self.currency_choices != self.get_currency_choices():
-            kwargs["currency_choices"] = self.currency_choices
+            kwargs['currency_choices'] = self.currency_choices
         return name, path, args, kwargs
 
     def formfield(self, **kwargs):
         defaults = {
-            "form_class": forms.ChoiceField,
-            "choices": self.get_currency_choices(),
-            "initial": self.get_default_currency(),
+            'form_class': forms.ChoiceField,
+            'choices': self.get_currency_choices(),
+            'initial': self.get_default_currency(),
         }
         defaults.update(kwargs)
         return super(models.CharField, self).formfield(**defaults)
 
 
 class LegacyMoneyField(MoneyField):
-
     def get_default_currency(self):
         return 'EUR'
 
@@ -223,7 +235,7 @@ class LegacyMoneyField(MoneyField):
 
 
 class ImageField(sorl.thumbnail.fields.ImageField):
-    """ Image field that only allow certain mime-types.
+    """Image field that only allow certain mime-types.
 
     Overriden from sorl.thumbnail.fields.ImageField.
 
@@ -237,7 +249,7 @@ class ImageField(sorl.thumbnail.fields.ImageField):
 
 
 class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
-    """ Actual FormField that does the validation of the mime-types."""
+    """Actual FormField that does the validation of the mime-types."""
 
     def to_python(self, data):
         """
@@ -287,7 +299,7 @@ class RichTextField(serializers.CharField):
 
 class SafeField(serializers.CharField):
     def to_representation(self, value):
-        """ Reading / Loading the story field """
+        """Reading / Loading the story field"""
         return clean_html(value)
 
     def to_internal_value(self, data):
@@ -298,13 +310,12 @@ class SafeField(serializers.CharField):
         unwanted tags. Script tags are sent by redactor as
         "&lt;;script&gt;;", Iframe tags have just one semicolon.
         """
-        data = data.replace("&lt;;", "<").replace("&gt;;", ">")
-        data = data.replace("&lt;", "<").replace("&gt;", ">")
+        data = data.replace('&lt;;', '<').replace('&gt;;', '>')
+        data = data.replace('&lt;', '<').replace('&gt;', '>')
         return str(clean_html(data))
 
 
 class PrivateFileField(models.FileField):
-
     def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
         # Check if upload_to already has private path
         # This fixes loops and randomly added migrations
@@ -319,21 +330,18 @@ class FSMStatusValidator(object):
     requires_context = True
 
     def __call__(self, value, serializer_field):
-        available_transitions = getattr(
-            self.instance,
-            'get_available_{}_transitions'.format(serializer_field.source)
-        )()
+        available_transitions = getattr(self.instance, 'get_available_{}_transitions'.format(serializer_field.source))()
 
         transitions = [
-            transition for transition in available_transitions if
-            transition.target == value and not transition.options.get('automatic')
+            transition
+            for transition in available_transitions
+            if transition.target == value and not transition.options.get('automatic')
         ]
 
         if len(transitions) != 1:
             raise ValidationError(
                 'Cannot transition from {} to {}'.format(
-                    getattr(serializer_field.instance, serializer_field.source),
-                    value
+                    getattr(serializer_field.instance, serializer_field.source), value
                 )
             )
 
@@ -353,12 +361,10 @@ class ValidationErrorsField(serializers.ReadOnlyField):
     def to_representation(self, value):
         return [
             {
-                "title": str(error),
-                "code": error.code,
-                "source": {
-                    "pointer": "/data/attributes/{}".format(
-                        inflection.dasherize(error.field).replace(".", "/")
-                    )
+                'title': str(error),
+                'code': error.code,
+                'source': {
+                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(error.field).replace('.', '/'))
                 },
             }
             for error in value
@@ -373,23 +379,22 @@ class RequiredErrorsField(serializers.ReadOnlyField):
                 'title': _('This field is required'),
                 'code': 'required',
                 'source': {
-                    'pointer': '/data/attributes/{}'.format(
-                        inflection.dasherize(field.split('.')[0]).replace('.', '/')
-                    )
-                }
-            } for field in value
+                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(field.split('.')[0]).replace('.', '/'))
+                },
+            }
+            for field in value
         ]
 
 
 class PolymorhpicSerializerMethodFieldBase(Field):
     def __init__(self, serializer_class, method_name=None, *args, **kwargs):
         self.method_name = method_name
-        kwargs["source"] = "*"
-        kwargs["read_only"] = True
+        kwargs['source'] = '*'
+        kwargs['read_only'] = True
         super().__init__(serializer_class, **kwargs)
 
     def bind(self, field_name, parent):
-        default_method_name = "get_{field_name}".format(field_name=field_name)
+        default_method_name = 'get_{field_name}'.format(field_name=field_name)
         if self.method_name is None:
             self.method_name = default_method_name
         super().bind(field_name, parent)
@@ -403,7 +408,7 @@ class PolymorphicManySerializerMethodResourceRelatedField(
     PolymorhpicSerializerMethodFieldBase, PolymorphicResourceRelatedField
 ):
     def __init__(self, polymorphic_serializer, child_relation=None, **kwargs):
-        assert child_relation is not None, "`child_relation` is a required argument."
+        assert child_relation is not None, '`child_relation` is a required argument.'
         self.child_relation = child_relation
         super().__init__(polymorphic_serializer, **kwargs)
         # self.child_relation.bind(field_name="", parent=self)
@@ -413,10 +418,8 @@ class PolymorphicManySerializerMethodResourceRelatedField(
 
         return [
             {
-                'type': parent.get_polymorphic_serializer_for_instance(
-                    item
-                ).JSONAPIMeta.resource_name,
-                'id': force_str(item.pk)
+                'type': parent.get_polymorphic_serializer_for_instance(item).JSONAPIMeta.resource_name,
+                'id': force_str(item.pk),
             }
             for item in value
         ]
@@ -431,13 +434,16 @@ class PolymorphicSerializerMethodResourceRelatedField(
     """
 
     many_kwargs = [
-        *MANY_RELATION_KWARGS, *LINKS_PARAMS, "method_name", "model",
+        *MANY_RELATION_KWARGS,
+        *LINKS_PARAMS,
+        'method_name',
+        'model',
     ]
     many_cls = PolymorphicManySerializerMethodResourceRelatedField
 
     @classmethod
     def many_init(cls, *args, **kwargs):
-        list_kwargs = {"child_relation": cls(*args, **kwargs)}
+        list_kwargs = {'child_relation': cls(*args, **kwargs)}
         for key in kwargs:
             if key in cls.many_kwargs:
                 list_kwargs[key] = kwargs[key]

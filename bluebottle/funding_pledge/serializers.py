@@ -29,9 +29,8 @@ class PledgeBankAccountSerializer(BaseBankAccountSerializer):
             'account_holder_city',
             'account_number',
             'account_details',
-
             'account_holder_country',
-            'account_bank_country'
+            'account_bank_country',
         )
 
     included_serializers = {
@@ -59,7 +58,6 @@ class PayoutPledgeBankAccountSerializer(serializers.ModelSerializer):
             'account_holder_city',
             'account_number',
             'account_details',
-
             'account_holder_country',
-            'account_bank_country'
+            'account_bank_country',
         )

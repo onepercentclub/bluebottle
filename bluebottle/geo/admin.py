@@ -11,9 +11,7 @@ from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Activity
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
-from bluebottle.geo.models import (
-    Location, Country, Place,
-    Geolocation, GeoFeature)
+from bluebottle.geo.models import Location, Country, Place, Geolocation, GeoFeature
 from bluebottle.geo.serializers import StaticMapsField
 from bluebottle.geo.widgets import (
     CustomMapboxPointFieldWidget,
@@ -27,15 +25,17 @@ class LocationFilter(admin.SimpleListFilter):
     parameter_name = 'location'
 
     def lookups(self, request, model_admin):
-        locations = [obj.location for obj in model_admin.model.objects.order_by(
-            'location__name').distinct('location__name').exclude(
-            location__isnull=True).all()]
+        locations = [
+            obj.location
+            for obj in model_admin.model.objects.order_by('location__name')
+            .distinct('location__name')
+            .exclude(location__isnull=True)
+            .all()
+        ]
         lookups = [(loc.id, loc.name) for loc in locations]
 
         try:
-            lookups.insert(
-                0, (request.user.location.id, _('My location ({})').format(request.user.location))
-            )
+            lookups.insert(0, (request.user.location.id, _('My location ({})').format(request.user.location)))
         except AttributeError:
             pass
 
@@ -71,23 +71,23 @@ class CountryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
 
 class LocationMergeForm(forms.Form):
     to = forms.ModelChoiceField(
-        label=_("Merge with"),
-        help_text=_("Choose location to merge with"),
+        label=_('Merge with'),
+        help_text=_('Choose location to merge with'),
         queryset=Location.objects.all(),
     )
 
-    title = _("Merge")
+    title = _('Merge')
 
     def __init__(self, obj, *args, **kwargs):
         super(LocationMergeForm, self).__init__(*args, **kwargs)
 
-        self.fields["to"].queryset = self.fields["to"].queryset.exclude(pk=obj.pk)
+        self.fields['to'].queryset = self.fields['to'].queryset.exclude(pk=obj.pk)
 
 
 @admin.register(Location)
 class LocationAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
     formfield_overrides = {
-        PointField: {"widget": CustomMapboxPointFieldWidget},
+        PointField: {'widget': CustomMapboxPointFieldWidget},
     }
 
     def get_queryset(self, request):
@@ -110,15 +110,15 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
 
     def activities(self, obj):
         return format_html(
-            u'<a href="{}?office_location__id__exact={}">{}</a>',
+            '<a href="{}?office_location__id__exact={}">{}</a>',
             reverse('admin:activities_activity_changelist'),
             obj.id,
-            len(Activity.objects.filter(office_location=obj))
+            len(Activity.objects.filter(office_location=obj)),
         )
 
     def subregion_link(self, obj):
         if not obj.subregion_id:
-            return "-"
+            return '-'
         url = reverse('admin:offices_officesubregion_change', args=(obj.subregion_id,))
         return format_html('<a href="{}">{}</a>', url, obj.subregion)
 
@@ -126,7 +126,7 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
 
     def region_link(self, obj):
         if not obj.subregion_id or not obj.subregion.region_id:
-            return "-"
+            return '-'
         url = reverse('admin:offices_officeregion_change', args=(obj.subregion.region_id,))
         return format_html('<a href="{}">{}</a>', url, obj.subregion.region)
 
@@ -134,20 +134,20 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
 
     fieldsets = (
         (
-            _("Info"),
+            _('Info'),
             {
-                "fields": (
-                    "name",
-                    "slug",
-                    "subregion",
-                    "description",
-                    "city",
-                    "country",
-                    "image",
+                'fields': (
+                    'name',
+                    'slug',
+                    'subregion',
+                    'description',
+                    'city',
+                    'country',
+                    'image',
                 )
             },
         ),
-        (_("SSO"), {"fields": ("alternate_names",)}),
+        (_('SSO'), {'fields': ('alternate_names',)}),
     )
 
     merge_form = LocationMergeForm
@@ -156,18 +156,10 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
 @admin.register(Place)
 class PlaceInline(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": CustomMapboxPointFieldWidget},
+        PointField: {'widget': CustomMapboxPointFieldWidget},
     }
     model = Place
-    fields = [
-        'street',
-        'locality',
-        'postal_code',
-        'country',
-        'formatted_address',
-        'position',
-        'mapbox_id'
-    ]
+    fields = ['street', 'locality', 'postal_code', 'country', 'formatted_address', 'position', 'mapbox_id']
 
 
 class GeolocationGeoFeatureInline(admin.TabularInline):
@@ -184,9 +176,11 @@ class GeolocationGeoFeatureInline(admin.TabularInline):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        return queryset.select_related('geofeature').prefetch_related(
-            'geofeature__translations'
-        ).order_by(GeoFeature.type_order('geofeature__feature_type'), 'geofeature__id')
+        return (
+            queryset.select_related('geofeature')
+            .prefetch_related('geofeature__translations')
+            .order_by(GeoFeature.type_order('geofeature__feature_type'), 'geofeature__id')
+        )
 
     @admin.display(description=_('Type'), ordering='geofeature__feature_type')
     def feature_type(self, obj):
@@ -204,7 +198,7 @@ class GeolocationGeoFeatureInline(admin.TabularInline):
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": GeolocationMapboxPointFieldWidget},
+        PointField: {'widget': GeolocationMapboxPointFieldWidget},
     }
     list_display = ('geolocation_label', 'country')
 
@@ -212,7 +206,7 @@ class GeolocationAdmin(admin.ModelAdmin):
     def geolocation_label(self, obj):
         return str(obj)
 
-    list_filter = ('country', )
+    list_filter = ('country',)
     search_fields = (
         'formatted_address',
         'locality',
@@ -226,13 +220,17 @@ class GeolocationAdmin(admin.ModelAdmin):
     )
     inlines = (GeolocationGeoFeatureInline,)
 
-    fieldsets = (
-        (_('Location'), {'fields': ('position', 'place_name', 'mapbox_id', 'country')}),
-    )
+    fieldsets = ((_('Location'), {'fields': ('position', 'place_name', 'mapbox_id', 'country')}),)
 
     readonly_fields = (
-        'place_name', 'locality', 'street', 'street_number', 'postal_code',
-        'province', 'formatted_address', 'map'
+        'place_name',
+        'locality',
+        'street',
+        'street_number',
+        'postal_code',
+        'province',
+        'formatted_address',
+        'map',
     )
 
     def force_edit(self, request):
@@ -264,22 +262,25 @@ class GeolocationAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
         if obj and obj.pk and not self.force_edit(request):
-            fieldsets = (
-                (_('Location'), {'fields': ('map', 'place_name', 'mapbox_id', 'country')}),
-            )
+            fieldsets = ((_('Location'), {'fields': ('map', 'place_name', 'mapbox_id', 'country')}),)
 
         if obj and obj.pk:
-            fieldsets = fieldsets + (
-                (_('Related objects'), {'fields': ('related_objects_display',)}),
-            )
+            fieldsets = fieldsets + ((_('Related objects'), {'fields': ('related_objects_display',)}),)
         if request.user.is_superuser and self.force_edit(request):
             fieldsets = fieldsets + (
-                (_('Old info'), {
-                    'fields': (
-                        'locality', 'street', 'street_number', 'postal_code',
-                        'province', 'formatted_address',
-                    )
-                }),
+                (
+                    _('Old info'),
+                    {
+                        'fields': (
+                            'locality',
+                            'street',
+                            'street_number',
+                            'postal_code',
+                            'province',
+                            'formatted_address',
+                        )
+                    },
+                ),
             )
         return fieldsets
 
@@ -310,22 +311,24 @@ class GeolocationAdmin(admin.ModelAdmin):
                 continue
 
             meta = related_model._meta
-            related.append({
-                'count': count,
-                'label': str(meta.verbose_name_plural),
-                'url': reverse(
-                    'admin:{}_{}_changelist'.format(meta.app_label, meta.model_name)
-                ),
-                'filter_param': '{}__id__exact'.format(relation.field.name),
-            })
+            related.append(
+                {
+                    'count': count,
+                    'label': str(meta.verbose_name_plural),
+                    'url': reverse('admin:{}_{}_changelist'.format(meta.app_label, meta.model_name)),
+                    'filter_param': '{}__id__exact'.format(relation.field.name),
+                }
+            )
 
         if not related:
             return '-'
 
-        return mark_safe(render_to_string(
-            'admin/geo/geolocation_related_objects.html',
-            {
-                'related': related,
-                'object_id': obj.pk,
-            },
-        ))
+        return mark_safe(
+            render_to_string(
+                'admin/geo/geolocation_related_objects.html',
+                {
+                    'related': related,
+                    'object_id': obj.pk,
+                },
+            )
+        )

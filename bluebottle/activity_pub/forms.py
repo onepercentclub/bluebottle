@@ -39,12 +39,14 @@ class SharePublishForm(forms.Form):
 
         self.fields['old_recipients'].initial = old_recipients
 
-        accepted_follow_ids = Follow.objects.exclude(
-            actor__id__in=old_recipient_ids
-        ).filter(
-            object=get_platform_actor(),
-            accept__isnull=False,
-        ).values_list('actor_id', flat=True)
+        accepted_follow_ids = (
+            Follow.objects.exclude(actor__id__in=old_recipient_ids)
+            .filter(
+                object=get_platform_actor(),
+                accept__isnull=False,
+            )
+            .values_list('actor_id', flat=True)
+        )
 
         accepted_follow_ids = list(accepted_follow_ids)
 
@@ -53,9 +55,7 @@ class SharePublishForm(forms.Form):
         self.initial['recipients'].initial = accepted_follow_ids
 
         if not accepted_follow_ids:
-            self.fields['recipients'].help_text = _(
-                'No additional partners available to share with.'
-            )
+            self.fields['recipients'].help_text = _('No additional partners available to share with.')
 
 
 class AcceptFollowPublishModeForm(forms.Form):
@@ -66,7 +66,7 @@ class AcceptFollowPublishModeForm(forms.Form):
         choices=PublishModeChoices.choices,
         required=True,
         help_text=_('Select how you would like to share activities with this consumer'),
-        widget=forms.RadioSelect()
+        widget=forms.RadioSelect(),
     )
 
     def __init__(self, *args, obj=None, **kwargs):

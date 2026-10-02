@@ -12,34 +12,25 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 initiate_response_fail = {
-    "status": {
-        "status": "FAIL",
-        "status_code": "3000",
-        "status_description": "Invalid API Credentials"
-    },
-    "content": []
+    'status': {'status': 'FAIL', 'status_code': '3000', 'status_description': 'Invalid API Credentials'},
+    'content': [],
 }
 
 initiate_response_success = {
-    "status": {
-        "status_code": "0000",
-        "status_description": "Payment Requested",
-        "status": "SUCCESS"
+    'status': {'status_code': '0000', 'status_description': 'Payment Requested', 'status': 'SUCCESS'},
+    'content': {
+        'transaction': 'ABC12345QR',
+        'method': 'Paybill (M-Pesa)',
+        'account_number': '00100',
+        'mobile_number': '254712345678',
+        'amount': '1000',
+        'currency': 'KES',
+        'reference': 'INV000001',
     },
-    "content": {
-        "transaction": "ABC12345QR",
-        "method": "Paybill (M-Pesa)",
-        "account_number": "00100",
-        "mobile_number": "254712345678",
-        "amount": "1000",
-        "currency": "KES",
-        "reference": "INV000001"
-    }
 }
 
 
 class LipishaPaymentTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(LipishaPaymentTestCase, self).setUp()
         LipishaPaymentProvider.objects.all().delete()
@@ -61,8 +52,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         self.data = {
             'data': {
                 'type': 'payments/lipisha-payments',
-                'attributes': {
-                },
+                'attributes': {},
                 'relationships': {
                     'donation': {
                         'data': {
@@ -70,7 +60,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
                             'id': self.donation.pk,
                         }
                     }
-                }
+                },
             }
         }
 
@@ -81,20 +71,19 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data["data"]["attributes"]["status"], "new")
-        self.assertEqual(data["data"]["attributes"]["transaction"], "ABC12345QR")
-        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
+        self.assertEqual(data['data']['attributes']['status'], 'new')
+        self.assertEqual(data['data']['attributes']['transaction'], 'ABC12345QR')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'draft')
 
     @patch('lipisha.Lipisha._make_api_call', return_value=initiate_response_fail)
     def test_create_payment_fail(self, lipisha_post):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.content, b"Error creating payment: Invalid API Credentials")
+        self.assertEqual(response.content, b'Error creating payment: Invalid API Credentials')
 
 
 class LipishaPayoutAccountTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(LipishaPayoutAccountTestCase, self).setUp()
 
@@ -105,10 +94,7 @@ class LipishaPayoutAccountTestCase(BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.payout_account = PlainPayoutAccountFactory.create(
-            status='verified',
-            owner=self.user
-        )
+        self.payout_account = PlainPayoutAccountFactory.create(status='verified', owner=self.user)
 
         self.payout_account_url = reverse('payout-account-list')
         self.bank_account_url = reverse('lipisha-external-account-list')
@@ -116,18 +102,10 @@ class LipishaPayoutAccountTestCase(BluebottleTestCase):
         self.data = {
             'data': {
                 'type': 'payout-accounts/lipisha-external-accounts',
-                'attributes': {
-                    'account-number': '123456789',
-                    'account-holder-name': 'Habari Gani'
-                },
+                'attributes': {'account-number': '123456789', 'account-holder-name': 'Habari Gani'},
                 'relationships': {
-                    'connect-account': {
-                        'data': {
-                            'id': self.payout_account.id,
-                            'type': 'payout-accounts/plains'
-                        }
-                    }
-                }
+                    'connect-account': {'data': {'id': self.payout_account.id, 'type': 'payout-accounts/plains'}}
+                },
             }
         }
 

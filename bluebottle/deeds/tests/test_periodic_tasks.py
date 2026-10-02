@@ -8,12 +8,8 @@ from django.utils.timezone import now, get_current_timezone
 from bluebottle.activities.periodic_tasks import timezone
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.deeds.tasks import deed_tasks
-from bluebottle.deeds.tests.factories import (
-    DeedFactory, DeedParticipantFactory
-)
-from bluebottle.initiatives.tests.factories import (
-    InitiativeFactory
-)
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -35,9 +31,7 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
 
     def run_tasks(self, when):
         with mock.patch('bluebottle.deeds.periodic_tasks.date') as mock_date:
-            now_return_value = datetime.combine(
-                when, datetime.min.time()
-            ).astimezone(get_current_timezone())
+            now_return_value = datetime.combine(when, datetime.min.time()).astimezone(get_current_timezone())
 
             with mock.patch.object(timezone, 'now', return_value=now_return_value):
                 mock_date.today.return_value = when

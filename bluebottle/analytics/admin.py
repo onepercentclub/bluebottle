@@ -12,19 +12,21 @@ class AnalyticsPlatformSettingsAdmin(BasePlatformSettingsAdmin):
             _('General'),
             {
                 'fields': [
-                    'platform_type', 'plausible_embed_link',
-
+                    'platform_type',
+                    'plausible_embed_link',
                 ]
-            }
+            },
         ),
         (
             _('Targets'),
             {
                 'fields': [
-                    'user_base', 'engagement_target', 'acts_of_impact_target',
-                    'hours_spent_target', 'amount_raised_target'
+                    'user_base',
+                    'engagement_target',
+                    'acts_of_impact_target',
+                    'hours_spent_target',
+                    'amount_raised_target',
                 ]
-            }
+            },
         ),
-
     )

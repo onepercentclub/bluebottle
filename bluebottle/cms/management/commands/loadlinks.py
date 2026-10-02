@@ -22,19 +22,13 @@ class Command(BaseCommand):
                 lang = Language.objects.filter(code=site_links['language']).first()
                 if lang:
                     sl, _created = SiteLinks.objects.update_or_create(
-                        language=lang,
-                        defaults={
-                            'has_copyright': site_links['has_copyright']
-                        }
+                        language=lang, defaults={'has_copyright': site_links['has_copyright']}
                     )
                     for group in site_links['groups']:
                         lg, _created = LinkGroup.objects.update_or_create(
                             site_links=sl,
                             name=group['name'],
-                            defaults={
-                                'title': group['title'],
-                                'group_order': group['group_order']
-                            }
+                            defaults={'title': group['title'], 'group_order': group['group_order']},
                         )
                         for link in group['links']:
                             Link.objects.update_or_create(
@@ -44,8 +38,8 @@ class Command(BaseCommand):
                                     'open_in_new_tab': link['open_in_new_tab'],
                                     'title': link['title'],
                                     'link_order': link['link_order'],
-                                    'highlight': link['highlight']
-                                }
+                                    'highlight': link['highlight'],
+                                },
                             )
         except FileNotFoundError:
-            print(f"File not found {options['file']}")
+            print(f'File not found {options["file"]}')

@@ -34,7 +34,6 @@ from bluebottle.time_based.tests.factories import (
 
 
 class SegmentTypeListAPITestCase(BluebottleTestCase):
-
     def setUp(self):
         super(SegmentTypeListAPITestCase, self).setUp()
 
@@ -45,23 +44,14 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
 
         for i in range(5):
             segment_type = SegmentTypeFactory.create()
-            SegmentFactory.create_batch(
-                3,
-                segment_type=segment_type
-            )
+            SegmentFactory.create_batch(3, segment_type=segment_type)
 
     def test_list(self):
-        response = self.client.get(
-            self.url,
-            user=self.user,
-            HTTP_ACCEPT_LANGUAGE='en'
-        )
+        response = self.client.get(self.url, user=self.user, HTTP_ACCEPT_LANGUAGE='en')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(
-            len(response.json()['data']), 5
-        )
+        self.assertEqual(len(response.json()['data']), 5)
         result = response.json()['data'][0]
 
         segment_type = SegmentType.objects.get(pk=result['id'])
@@ -70,7 +60,7 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
 
         self.assertTrue(
             result['relationships']['segments']['links']['related'].endswith(
-                reverse('related-segment-detail', args=(segment_type.pk, ))
+                reverse('related-segment-detail', args=(segment_type.pk,))
             )
         )
 
@@ -79,9 +69,7 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(
-            len(response.json()['data']), 5
-        )
+        self.assertEqual(len(response.json()['data']), 5)
 
     def test_list_closed(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -97,13 +85,10 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(
-            len(response.json()['data']), 5
-        )
+        self.assertEqual(len(response.json()['data']), 5)
 
 
 class SegmentListAPITestCase(BluebottleTestCase):
-
     def setUp(self):
         super(SegmentListAPITestCase, self).setUp()
 
@@ -114,10 +99,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.segment_type = SegmentTypeFactory.create()
         # Use a process-unique name so parallel workers don't overwrite or share cache
         self.expected_segment_name = 'Segment list test segment {}'.format(os.getpid())
-        self.named_segment = SegmentFactory.create(
-            segment_type=self.segment_type,
-            name=self.expected_segment_name
-        )
+        self.named_segment = SegmentFactory.create(segment_type=self.segment_type, name=self.expected_segment_name)
         self.named_segment.set_current_language('en')
         self.named_segment.name = self.expected_segment_name
         self.named_segment.save()
@@ -134,48 +116,30 @@ class SegmentListAPITestCase(BluebottleTestCase):
                 lang.code,
             )
             cache.delete(cache_key)
-        self.segments = [self.named_segment] + list(
-            SegmentFactory.create_batch(
-                19,
-                segment_type=self.segment_type
-            )
-        )
+        self.segments = [self.named_segment] + list(SegmentFactory.create_batch(19, segment_type=self.segment_type))
 
     def test_list(self):
-        response = self.client.get(
-            self.url, user=self.user,
-            HTTP_ACCEPT_LANGUAGE='en'
-        )
+        response = self.client.get(self.url, user=self.user, HTTP_ACCEPT_LANGUAGE='en')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(
-            len(response.json()['data']), 20
-        )
+        self.assertEqual(len(response.json()['data']), 20)
         expected = self.named_segment
-        result = next(
-            item for item in response.json()['data']
-            if item['id'] == str(expected.pk)
-        )
+        result = next(item for item in response.json()['data'] if item['id'] == str(expected.pk))
 
         self.assertEqual(
             result['attributes']['name'],
             self.expected_segment_name,
             'Segment list API should return the segment name we set (parallel-safe)',
         )
-        self.assertEqual(
-            str(expected.segment_type_id),
-            result['relationships']['segment-type']['data']['id']
-        )
+        self.assertEqual(str(expected.segment_type_id), result['relationships']['segment-type']['data']['id'])
 
     def test_list_anonymous(self):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(
-            len(response.json()['data']), 20
-        )
+        self.assertEqual(len(response.json()['data']), 20)
 
     def test_list_closed(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -192,13 +156,10 @@ class SegmentListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(
-            len(response.json()['data']), 20
-        )
+        self.assertEqual(len(response.json()['data']), 20)
 
 
 class SegmentDetailAPITestCase(APITestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -210,7 +171,7 @@ class SegmentDetailAPITestCase(APITestCase):
 
         self.fields = []
 
-        self.url = reverse('segment-detail', args=(self.model.pk, ))
+        self.url = reverse('segment-detail', args=(self.model.pk,))
 
     def test_retrieve(self):
         self.perform_get()
@@ -266,7 +227,7 @@ class SegmentDetailAPITestCase(APITestCase):
             status='succeeded',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
-            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3),
         )
         deadline_activity.segments.set([self.model])
         DeadlineParticipantFactory.create_batch(3, activity=deadline_activity)
@@ -287,9 +248,7 @@ class SegmentDetailAPITestCase(APITestCase):
             DateParticipantFactory.create(slot=slot, registration=registration)
 
         funding = FundingFactory.create(
-            initiative=initiative,
-            deadline=now() + datetime.timedelta(weeks=1),
-            status='open'
+            initiative=initiative, deadline=now() + datetime.timedelta(weeks=1), status='open'
         )
         funding.segments.set([self.model])
         for donor in DonorFactory.create_batch(3, activity=funding, user=None, amount=Money(10, 'USD')):
@@ -301,7 +260,7 @@ class SegmentDetailAPITestCase(APITestCase):
             initiative=initiative,
             status='open',
             start=datetime.date.today() - datetime.timedelta(days=10),
-            end=datetime.date.today() + datetime.timedelta(days=5)
+            end=datetime.date.today() + datetime.timedelta(days=5),
         )
         deed_activity.segments.set([self.model])
 
@@ -325,7 +284,7 @@ class SegmentDetailAPITestCase(APITestCase):
             status='open',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() + datetime.timedelta(weeks=1),
-            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3),
         )
         DeadlineParticipantFactory.create_batch(3, activity=unrelated_activity)
 
@@ -338,27 +297,21 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertEqual(response.json()['data']['meta']['activities-count'], 4)
         self.assertEqual(response.json()['data']['meta']['initiatives-count'], 1)
 
-        stats = response.json()["data"]["meta"]["stats"]
-        self.assertEqual(stats["hours"], 18.0)
-        self.assertEqual(stats["amount"], {"amount": 75.0, "currency": "EUR"})
-        self.assertEqual(stats["contributors"], 18)
-        self.assertEqual(stats["effort"], 3)
+        stats = response.json()['data']['meta']['stats']
+        self.assertEqual(stats['hours'], 18.0)
+        self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
+        self.assertEqual(stats['contributors'], 18)
+        self.assertEqual(stats['effort'], 3)
 
     def test_retrieve_closed_segment(self):
-        closed_segment = SegmentFactory.create(
-            segment_type=self.segment_type,
-            closed=True
-        )
+        closed_segment = SegmentFactory.create(segment_type=self.segment_type, closed=True)
         self.url = reverse('segment-detail', args=(closed_segment.id,))
         user = BlueBottleUserFactory()
         self.perform_get(user=user)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_retrieve_closed_segment_user(self):
-        closed_segment = SegmentFactory.create(
-            segment_type=self.segment_type,
-            closed=True
-        )
+        closed_segment = SegmentFactory.create(segment_type=self.segment_type, closed=True)
         self.url = reverse('segment-detail', args=(closed_segment.id,))
         user = BlueBottleUserFactory()
         user.segments.add(closed_segment)
@@ -366,10 +319,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
     def test_retrieve_closed_segment_staff(self):
-        closed_segment = SegmentFactory.create(
-            segment_type=self.segment_type,
-            closed=True
-        )
+        closed_segment = SegmentFactory.create(segment_type=self.segment_type, closed=True)
         self.url = reverse('segment-detail', args=(closed_segment.id,))
         user = BlueBottleUserFactory(is_staff=True)
         self.perform_get(user=user)
@@ -414,7 +364,6 @@ class SegmentPublicDetailAPITestCase(APITestCase):
 
 
 class SegmentActivityDetailAPITestCase(APITestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -425,7 +374,7 @@ class SegmentActivityDetailAPITestCase(APITestCase):
         self.closed_segment = SegmentFactory.create(segment_type=self.segment_type, closed=True)
         self.model = DeedFactory.create(status='open')
         self.model.segments.add(self.closed_segment)
-        self.url = reverse('deed-detail', args=(self.model.pk, ))
+        self.url = reverse('deed-detail', args=(self.model.pk,))
 
     def test_retrieve_anonymous(self):
         self.perform_get()
@@ -463,10 +412,7 @@ class SegmentActivityDetailAPITestCase(APITestCase):
         user = BlueBottleUserFactory.create()
         self.perform_get(user=user)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertEqual(
-            len(self.response.data["segments"]),
-            1
-        )
+        self.assertEqual(len(self.response.data['segments']), 1)
 
     def test_retrieve_activity_with_invisible_segment(self):
         self.model = DeedFactory.create()
@@ -478,14 +424,10 @@ class SegmentActivityDetailAPITestCase(APITestCase):
         self.segment_type.save()
         self.perform_get(user=user)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertEqual(
-            len(self.response.data["segments"]),
-            0
-        )
+        self.assertEqual(len(self.response.data['segments']), 0)
 
 
 class RelatedSegmentListAPITestCase(APITestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -494,7 +436,7 @@ class RelatedSegmentListAPITestCase(APITestCase):
         self.segment_type = SegmentTypeFactory.create()
         self.segments = SegmentFactory.create_batch(10, segment_type=self.segment_type)
 
-        self.url = reverse('related-segment-detail', args=(self.segment_type.pk, ))
+        self.url = reverse('related-segment-detail', args=(self.segment_type.pk,))
 
     def test_get(self):
         self.perform_get()

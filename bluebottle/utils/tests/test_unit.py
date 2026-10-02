@@ -31,8 +31,10 @@ from bluebottle.time_based.models import DateActivity
 from bluebottle.utils.fields import RestrictedImageFormField
 from bluebottle.utils.models import Language, get_current_language
 from bluebottle.utils.permissions import (
-    ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
-    OneOf
+    ResourcePermission,
+    ResourceOwnerPermission,
+    RelatedResourceOwnerPermission,
+    OneOf,
 )
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.storage import TenantFileSystemStorage
@@ -51,11 +53,7 @@ def generate_random_email():
 def mock_attr(self, k):
     if k == 'TOKEN_AUTH':
         return {
-            'assertion_mapping': {
-                'email': 'email_attr',
-                'first_name': 'first_name_attr',
-                'last_name': 'last_name_attr'
-            }
+            'assertion_mapping': {'email': 'email_attr', 'first_name': 'first_name_attr', 'last_name': 'last_name_attr'}
         }
     else:
         return getattr(settings, k)
@@ -67,6 +65,7 @@ class CustomSettingsTestCase(TestCase):
     for testing.
     Based on http://djangosnippets.org/snippets/1011/ in Django 1.4 style.
     """
+
     new_settings = {}
     _override = None
 
@@ -106,10 +105,10 @@ class HashTagTestCase(unittest.TestCase):
 
 
 class UserTestsMixin(object):
-    """ Mixin base class for tests requiring users. """
+    """Mixin base class for tests requiring users."""
 
     def create_user(self, email=None, password=None, **extra_fields):
-        """ Create, save and return a new user. """
+        """Create, save and return a new user."""
 
         email = generate_random_email()
         user, created = Member.objects.get_or_create(email=email, **extra_fields)
@@ -138,9 +137,7 @@ class TenantAwareStorageTest(unittest.TestCase):
             res = storage.path(name=name)
 
             self.assertEqual(res.split('/')[-1], name)
-            self.assertEqual(
-                res.split('/')[-4:-1],
-                ['static', 'media', 'dummy_schema_name'])
+            self.assertEqual(res.split('/')[-4:-1], ['static', 'media', 'dummy_schema_name'])
 
     def test_location_without_tenant(self):
         """
@@ -154,8 +151,8 @@ class TenantAwareStorageTest(unittest.TestCase):
 
         res = storage.path(name=name)
 
-        self.assertEqual(res.split("/")[-1], name)
-        self.assertEqual(res.split("/")[-3:-1], ['static', 'media'])
+        self.assertEqual(res.split('/')[-1], name)
+        self.assertEqual(res.split('/')[-3:-1], ['static', 'media'])
 
     def test_raise_suspicious_error(self):
         """
@@ -170,14 +167,13 @@ class TenantAwareStorageTest(unittest.TestCase):
 
 class SendMailTestCase(BluebottleTestCase):
     def setUp(self):
-        self.user = BlueBottleUserFactory.create(email="testuser@example.com")
+        self.user = BlueBottleUserFactory.create(email='testuser@example.com')
 
     @mock.patch('bluebottle.utils.email_backend.logger')
     def test_no_recipient(self, logger):
         send_mail()
         self.assertTrue(logger.error.called)
-        self.assertEqual(logger.error.call_args[0][0],
-                         'No recipient specified')
+        self.assertEqual(logger.error.call_args[0][0], 'No recipient specified')
 
     @mock.patch('bluebottle.utils.email_backend.logger')
     def test_invalid_email(self, logger):
@@ -185,9 +181,9 @@ class SendMailTestCase(BluebottleTestCase):
         self.user.save()
         send_mail(to=self.user)
         self.assertTrue(logger.error.called)
-        self.assertEqual(logger.error.call_args[0][0],
-                         'Trying to send email to invalid email address: {0}'.
-                         format(self.user.email))
+        self.assertEqual(
+            logger.error.call_args[0][0], 'Trying to send email to invalid email address: {0}'.format(self.user.email)
+        )
 
     @mock.patch('bluebottle.utils.email_backend.logger')
     @mock.patch('bluebottle.utils.email_backend.create_message')
@@ -199,14 +195,12 @@ class SendMailTestCase(BluebottleTestCase):
         send_mail(to=self.user, template_name='utils/test')
         self.assertTrue(logger.error.called)
         self.assertEqual(
-            logger.error.call_args[0][0],
-            'Trying to send email on terminated platform: testuser@example.com'
+            logger.error.call_args[0][0], 'Trying to send email on terminated platform: testuser@example.com'
         )
         self.assertFalse(create_message.called)
 
     @mock.patch('bluebottle.common.tasks._send_celery_mail')
-    @override_settings(LANGUAGE_CODE='nl',
-                       CELERY_MAIL=True)
+    @override_settings(LANGUAGE_CODE='nl', CELERY_MAIL=True)
     def test_celery_mail(self, celery_mail):
         send_mail(to=self.user, template_name='utils/test')
         self.assertTrue(celery_mail.delay.called)
@@ -218,8 +212,7 @@ class SendMailTestCase(BluebottleTestCase):
         self.assertEqual(create_message.call_count, 1)
         # Bit of a hack to check if our instance of the Mock class actually
         # does a call to .send()
-        self.assertEqual(str(create_message.mock_calls[-1]),
-                         'call().send()')
+        self.assertEqual(str(create_message.mock_calls[-1]), 'call().send()')
 
     @override_settings(LANGUAGE_CODE='nl')
     def test_activated_language_no_primary_language(self):
@@ -262,21 +255,17 @@ nGIqOjhR2zLfswkVaXQ+89QIDAQAB"""
 
 
 class TestTenantAwareMailserver(BluebottleTestCase):
-
     @override_settings(
-        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
-        EMAIL_HOST='somehost',
-        EMAIL_PORT=1337)
-    @mock.patch("smtplib.SMTP")
+        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend', EMAIL_HOST='somehost', EMAIL_PORT=1337
+    )
+    @mock.patch('smtplib.SMTP')
     def test_settings_config(self, smtp):
-        """ Test simple / traditional case where config comes from settings """
-        with mock.patch("bluebottle.utils.email_backend.properties",
-                        new=mock.Mock([])) as properties:
+        """Test simple / traditional case where config comes from settings"""
+        with mock.patch('bluebottle.utils.email_backend.properties', new=mock.Mock([])) as properties:
             # Mock properties without DKIM settings to test non-DKIM case
             properties.MAIL_CONFIG = None
             be = TenantAwareBackend()
-            msg = EmailMultiAlternatives(subject="test", body="test",
-                                         to=["test@example.com"])
+            msg = EmailMultiAlternatives(subject='test', body='test', to=['test@example.com'])
 
             # open the connection explicitly so we can get the
             # connection reference. It will be cleared once closed
@@ -291,24 +280,21 @@ class TestTenantAwareMailserver(BluebottleTestCase):
             self.assertTrue(connection.sendmail.called)
 
     @override_settings(
-        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
-        EMAIL_HOST='somehost',
-        EMAIL_PORT=1337)
-    @mock.patch("smtplib.SMTP")
+        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend', EMAIL_HOST='somehost', EMAIL_PORT=1337
+    )
+    @mock.patch('smtplib.SMTP')
     def test_tenant_dkim_settings(self, smtp):
-        """ test setup where tenant config differs from global settings """
+        """test setup where tenant config differs from global settings"""
 
-        with mock.patch("bluebottle.utils.email_backend.properties",
-                        new=mock.Mock([])) as properties:
+        with mock.patch('bluebottle.utils.email_backend.properties', new=mock.Mock([])) as properties:
             properties.MAIL_CONFIG = {'HOST': 'tenanthost', 'PORT': 4242}
 
-            properties.DKIM_SELECTOR = b"key2"
-            properties.DKIM_DOMAIN = b"test.localhost"
+            properties.DKIM_SELECTOR = b'key2'
+            properties.DKIM_DOMAIN = b'test.localhost'
             properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
 
             be = TenantAwareBackend()
-            msg = EmailMultiAlternatives(subject=u"test€", body=u"test€",
-                                         to=["test@example.com"])
+            msg = EmailMultiAlternatives(subject='test€', body='test€', to=['test@example.com'])
 
             be.open()
             connection = be.connection
@@ -317,35 +303,30 @@ class TestTenantAwareMailserver(BluebottleTestCase):
             to_bytes = lambda s: force_bytes(s, 'utf-8')
 
             def _plain_key(s):
-                return b"".join([part for part in s.split(b'\n') if not part.startswith(b'---')])
+                return b''.join([part for part in s.split(b'\n') if not part.startswith(b'---')])
 
             signed_msg = connection.sendmail.call_args[0][2]
             dkim_message = dkim.DKIM(message=to_bytes(signed_msg))
             dkim_check = dkim_message.verify(
-                dnsfunc=lambda name, timeout=0: b"".join(
-                    [b"v=DKIM1; p=", _plain_key(DKIM_PUBLIC_KEY)]
-                )
+                dnsfunc=lambda name, timeout=0: b''.join([b'v=DKIM1; p=', _plain_key(DKIM_PUBLIC_KEY)])
             )
 
-            self.assertTrue(signed_msg.find(b"d=test.localhost") >= 0)
-            self.assertTrue(signed_msg.find(b"s=key2") >= 0)
-            self.assertTrue(dkim_check, "Email should be signed by tenant")
+            self.assertTrue(signed_msg.find(b'd=test.localhost') >= 0)
+            self.assertTrue(signed_msg.find(b's=key2') >= 0)
+            self.assertTrue(dkim_check, 'Email should be signed by tenant')
 
     @override_settings(
-        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
-        EMAIL_HOST='somehost',
-        EMAIL_PORT=1337)
-    @mock.patch("smtplib.SMTP")
+        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend', EMAIL_HOST='somehost', EMAIL_PORT=1337
+    )
+    @mock.patch('smtplib.SMTP')
     def test_tenant_config(self, smtp):
-        """ test setup where tenant config differs from global settings """
+        """test setup where tenant config differs from global settings"""
 
-        with mock.patch("bluebottle.utils.email_backend.properties",
-                        new=mock.Mock([])) as properties:
+        with mock.patch('bluebottle.utils.email_backend.properties', new=mock.Mock([])) as properties:
             properties.MAIL_CONFIG = {'HOST': 'tenanthost', 'PORT': 4242}
 
             be = TenantAwareBackend()
-            msg = EmailMultiAlternatives(subject="test", body="test",
-                                         to=["test@example.com"])
+            msg = EmailMultiAlternatives(subject='test', body='test', to=['test@example.com'])
 
             # open the connection explicitly so we can get the
             # connection reference. It will be cleared once closed
@@ -360,7 +341,7 @@ class TestTenantAwareMailserver(BluebottleTestCase):
             self.assertTrue(connection.sendmail.called)
 
     def test_reply_to(self):
-        """ Test simple / traditional case where config comes from settings """
+        """Test simple / traditional case where config comes from settings"""
         reply_to = 'info@test.example.com'
 
         mail_settings = MailPlatformSettings.load()
@@ -369,10 +350,7 @@ class TestTenantAwareMailserver(BluebottleTestCase):
         mail_settings.reply_to = reply_to
         mail_settings.save()
 
-        msg = EmailMultiAlternatives(
-            subject="test", body="test",
-            to=["test@example.com"]
-        )
+        msg = EmailMultiAlternatives(subject='test', body='test', to=['test@example.com'])
         self.assertEqual(msg.extra_headers['Reply-To'], reply_to)
         self.assertEqual(msg.from_email, 'Info Tester <info@example.com>')
 
@@ -384,26 +362,17 @@ class MoneySerializerTestCase(BluebottleTestCase):
     def test_amount_to_money(self):
         data = 10
 
-        self.assertEqual(
-            self.serializer.to_internal_value(data),
-            Money(10, 'EUR')
-        )
+        self.assertEqual(self.serializer.to_internal_value(data), Money(10, 'EUR'))
 
     def test_float_to_money(self):
         data = 10.0
 
-        self.assertEqual(
-            self.serializer.to_internal_value(data),
-            Money(10.0, 'EUR')
-        )
+        self.assertEqual(self.serializer.to_internal_value(data), Money(10.0, 'EUR'))
 
     def test_object_to_money(self):
         data = {'amount': 10, 'currency': 'USD'}
 
-        self.assertEqual(
-            self.serializer.to_internal_value(data),
-            Money(10, 'USD')
-        )
+        self.assertEqual(self.serializer.to_internal_value(data), Money(10, 'USD'))
 
 
 @override_settings(
@@ -449,23 +418,13 @@ class TestResourcePermission(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user.groups.clear()
 
-        self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_initiative')
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename='api_read_initiative'))
 
     def test_permission(self):
-        self.assertTrue(
-            self.permission.has_action_permission(
-                'GET', self.user, Initiative
-            )
-        )
+        self.assertTrue(self.permission.has_action_permission('GET', self.user, Initiative))
 
     def test_permission_create(self):
-        self.assertFalse(
-            self.permission.has_action_permission(
-                'POST', self.user, Initiative
-            )
-        )
+        self.assertFalse(self.permission.has_action_permission('POST', self.user, Initiative))
 
 
 class TestResourceOwnerPermission(BluebottleTestCase):
@@ -474,45 +433,23 @@ class TestResourceOwnerPermission(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user.groups.clear()
 
-        self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_initiative')
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename='api_read_own_initiative'))
 
     def test_permission(self):
-        self.assertTrue(
-            self.permission.has_action_permission(
-                'GET', self.user, Initiative
-            )
-        )
+        self.assertTrue(self.permission.has_action_permission('GET', self.user, Initiative))
 
     def test_object_permission(self):
-        self.assertTrue(
-            self.permission.has_object_action_permission(
-                'GET', self.user, Initiative(owner=self.user)
-            )
-        )
+        self.assertTrue(self.permission.has_object_action_permission('GET', self.user, Initiative(owner=self.user)))
 
     def test_object_permission_non_owner(self):
         other_user = BlueBottleUserFactory.create()
-        self.assertFalse(
-            self.permission.has_object_action_permission(
-                'GET', self.user, Initiative(owner=other_user)
-            )
-        )
+        self.assertFalse(self.permission.has_object_action_permission('GET', self.user, Initiative(owner=other_user)))
 
     def test_permission_create(self):
-        self.assertFalse(
-            self.permission.has_action_permission(
-                'POST', self.user, Initiative
-            )
-        )
+        self.assertFalse(self.permission.has_action_permission('POST', self.user, Initiative))
 
     def test_object_permission_create(self):
-        self.assertFalse(
-            self.permission.has_action_permission(
-                'POST', self.user, Initiative
-            )
-        )
+        self.assertFalse(self.permission.has_action_permission('POST', self.user, Initiative))
 
 
 class TestRelatedResourceOwnerPermission(BluebottleTestCase):
@@ -522,99 +459,53 @@ class TestRelatedResourceOwnerPermission(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(owner=self.user)
         self.user.groups.clear()
 
-        self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_dateactivity')
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename='api_read_own_dateactivity'))
 
     def test_permission(self):
-        self.assertTrue(
-            self.permission.has_action_permission(
-                'GET', self.user, DateActivity
-            )
-        )
+        self.assertTrue(self.permission.has_action_permission('GET', self.user, DateActivity))
 
     def test_permission_create(self):
-        self.assertFalse(
-            self.permission.has_action_permission(
-                'POST', self.user, DateActivity
-            )
-        )
+        self.assertFalse(self.permission.has_action_permission('POST', self.user, DateActivity))
 
     def test_object_permission_create(self):
-        self.assertFalse(
-            self.permission.has_action_permission(
-                'POST', self.user, DateActivity
-            )
-        )
+        self.assertFalse(self.permission.has_action_permission('POST', self.user, DateActivity))
 
 
 class TestOneOfPermission(BluebottleTestCase):
     def setUp(self):
-        self.permission = OneOf(
-            ResourceOwnerPermission, ResourcePermission
-        )()
+        self.permission = OneOf(ResourceOwnerPermission, ResourcePermission)()
         self.user = BlueBottleUserFactory.create()
         self.initiative = InitiativeFactory.create(owner=self.user)
         self.user.groups.clear()
 
     def test_permission_owner(self):
-        self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_initiative')
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename='api_read_own_initiative'))
 
-        self.assertTrue(
-            self.permission.has_action_permission(
-                'GET', self.user, Initiative
-            )
-        )
+        self.assertTrue(self.permission.has_action_permission('GET', self.user, Initiative))
 
     def test_permission(self):
-        self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_initiative')
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename='api_read_initiative'))
 
-        self.assertTrue(
-            self.permission.has_action_permission(
-                'GET', self.user, Initiative
-            )
-        )
+        self.assertTrue(self.permission.has_action_permission('GET', self.user, Initiative))
 
     def test_object_permission(self):
-        self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_initiative')
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename='api_read_own_initiative'))
 
-        self.assertTrue(
-            self.permission.has_object_action_permission(
-                'GET', self.user, obj=self.initiative
-            )
-        )
+        self.assertTrue(self.permission.has_object_action_permission('GET', self.user, obj=self.initiative))
 
     def test_object_permission_no_owner_permission(self):
-        self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_initiative')
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename='api_read_initiative'))
         self.user.save()
 
-        self.assertTrue(
-            self.permission.has_object_action_permission(
-                'GET', self.user, obj=self.initiative
-            )
-        )
+        self.assertTrue(self.permission.has_object_action_permission('GET', self.user, obj=self.initiative))
 
     def test_object_permission_no_owner(self):
         self.initiative.owner = BlueBottleUserFactory.create()
         self.initiative.save()
 
-        self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_initiative')
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename='api_read_own_initiative'))
 
-        self.assertFalse(
-            self.permission.has_object_action_permission(
-                'GET', self.user, obj=self.initiative
-            )
-        )
+        self.assertFalse(self.permission.has_object_action_permission('GET', self.user, obj=self.initiative))
 
 
 class RelatedResourceOwnerPermissionTestCase(BluebottleTestCase):
@@ -626,24 +517,16 @@ class RelatedResourceOwnerPermissionTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(owner=self.owner)
 
     def test_has_parent_permission_for_owner(self):
-        self.assertTrue(
-            self.permission.has_parent_permission('GET', self.owner, self.initiative)
-        )
+        self.assertTrue(self.permission.has_parent_permission('GET', self.owner, self.initiative))
 
     def test_has_parent_permission_denies_other_user(self):
-        self.assertFalse(
-            self.permission.has_parent_permission('GET', self.other_user, self.initiative)
-        )
+        self.assertFalse(self.permission.has_parent_permission('GET', self.other_user, self.initiative))
 
     def test_has_object_action_permission_uses_parent_owner(self):
         child = mock.Mock()
         child.parent = self.initiative
-        self.assertTrue(
-            self.permission.has_object_action_permission('GET', self.owner, child)
-        )
-        self.assertFalse(
-            self.permission.has_object_action_permission('GET', self.other_user, child)
-        )
+        self.assertTrue(self.permission.has_object_action_permission('GET', self.owner, child))
+        self.assertFalse(self.permission.has_object_action_permission('GET', self.other_user, child))
 
 
 class RestrictedImageFormFieldTestCase(TestCase):
@@ -723,7 +606,6 @@ class GetClientIPTestCase(TestCase):
 
 
 class GetCurrentLanguageTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(GetCurrentLanguageTestCase, self).setUp()
         Language.objects.update(default=False)
@@ -732,37 +614,22 @@ class GetCurrentLanguageTestCase(BluebottleTestCase):
         LanguageFactory.create(code='nl', sub_code='nl', language_name='Dutch')
         LanguageFactory.create(code='nl', sub_code='pl', language_name='Plat Leids')
 
-    @mock.patch(
-        'bluebottle.utils.models.get_language',
-        return_value=''
-    )
+    @mock.patch('bluebottle.utils.models.get_language', return_value='')
     def test_get_current_language_without_value(self, get_language):
         self.assertEqual(get_current_language().language_name, 'French')
 
-    @mock.patch(
-        'bluebottle.utils.models.get_language',
-        return_value='xx'
-    )
+    @mock.patch('bluebottle.utils.models.get_language', return_value='xx')
     def test_get_current_language_with_invalid_value(self, get_language):
         self.assertEqual(get_current_language().language_name, 'French')
 
-    @mock.patch(
-        'bluebottle.utils.models.get_language',
-        return_value='bg'
-    )
+    @mock.patch('bluebottle.utils.models.get_language', return_value='bg')
     def test_get_current_language_with_value(self, get_language):
         self.assertEqual(get_current_language().language_name, 'Bulgarian')
 
-    @mock.patch(
-        'bluebottle.utils.models.get_language',
-        return_value='nl'
-    )
+    @mock.patch('bluebottle.utils.models.get_language', return_value='nl')
     def test_get_current_language_with_two_languages(self, get_language):
         self.assertEqual(get_current_language().language_name, 'Dutch')
 
-    @mock.patch(
-        'bluebottle.utils.models.get_language',
-        return_value='nl-pl'
-    )
+    @mock.patch('bluebottle.utils.models.get_language', return_value='nl-pl')
     def test_get_current_language_with_subcode(self, get_language):
         self.assertEqual(get_current_language().language_name, 'Plat Leids')

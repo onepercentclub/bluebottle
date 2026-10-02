@@ -6,7 +6,7 @@ from .models import Follow
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     model = Follow
-    raw_id_fields = ('user', )
+    raw_id_fields = ('user',)
     list_display = ('user', 'content_type', 'title')
     search_fields = ('user__first_name', 'user__last_name', 'user__email', 'object_id')
 

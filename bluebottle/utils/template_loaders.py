@@ -27,17 +27,14 @@ class FilesystemLoader(BaseLoader):
                 template_dirs = [settings.MULTI_TENANT_DIR]
             except AttributeError:
                 raise ImproperlyConfigured(
-                    'To use %s.%s you must define the MULTI_TENANT_DIR' %
-                    (__name__, FilesystemLoader.__name__))
+                    'To use %s.%s you must define the MULTI_TENANT_DIR' % (__name__, FilesystemLoader.__name__)
+                )
         for template_dir in template_dirs:
             try:
                 if '%s' in template_dir:
-                    yield safe_join(
-                        template_dir % connection.tenant.client_name,
-                        'templates', template_name)
+                    yield safe_join(template_dir % connection.tenant.client_name, 'templates', template_name)
                 else:
-                    yield safe_join(template_dir, connection.tenant.client_name,
-                                    'templates', template_name)
+                    yield safe_join(template_dir, connection.tenant.client_name, 'templates', template_name)
             except UnicodeDecodeError:
                 # The template dir name was a bytestring that wasn't valid UTF-8.
                 raise
@@ -56,10 +53,9 @@ class FilesystemLoader(BaseLoader):
             except IOError:
                 tried.append(filepath)
         if tried:
-            error_msg = "Tried %s" % tried
+            error_msg = 'Tried %s' % tried
         else:
-            error_msg = "Your TEMPLATE_DIRS setting is empty. Change it to " \
-                        "point to at least one template directory."
+            error_msg = 'Your TEMPLATE_DIRS setting is empty. Change it to point to at least one template directory.'
         raise TemplateDoesNotExist(error_msg)
 
     load_template_source.is_usable = True

@@ -8,9 +8,12 @@ from bluebottle.activities.utils import BaseContributorSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField, CurrentStatusField
 from bluebottle.time_based.models import (
-    DeadlineRegistration, PeriodicRegistration,
-    Registration, ScheduleRegistration,
-    TeamScheduleRegistration, DateRegistration
+    DeadlineRegistration,
+    PeriodicRegistration,
+    Registration,
+    ScheduleRegistration,
+    TeamScheduleRegistration,
+    DateRegistration,
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
@@ -20,20 +23,16 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 class ContactEmailField(serializers.CharField):
     def __init__(self):
-        super().__init__(read_only=True, source="user.email")
+        super().__init__(read_only=True, source='user.email')
 
     def to_representation(self, value):
-        user = self.context["request"].user
+        user = self.context['request'].user
         if isinstance(self.parent.instance, list):
             activity = self.parent.instance[0].activity
         else:
             activity = self.parent.instance.activity
 
-        if user.is_authenticated and (
-            user.is_staff or
-            user.is_superuser or
-            user in activity.owners
-        ):
+        if user.is_authenticated and (user.is_staff or user.is_superuser or user in activity.owners):
             return super().to_representation(value)
 
 
@@ -44,32 +43,26 @@ class RegistrationSerializer(ModelSerializer):
     current_status = CurrentStatusField(source='states.current_state')
     contact_email = ContactEmailField()
 
-    document = PrivateDocumentField(
-        required=False,
-        allow_null=True,
-        permissions=[ParticipantDocumentPermission]
-    )
+    document = PrivateDocumentField(required=False, allow_null=True, permissions=[ParticipantDocumentPermission])
 
     class Meta(BaseContributorSerializer.Meta):
         model = Registration
         fields = [
-            "transitions",
-            "user",
-            "activity",
-            "contact_email",
-            "permissions",
-            "document",
-            "answer",
-            "participants",
+            'transitions',
+            'user',
+            'activity',
+            'contact_email',
+            'permissions',
+            'document',
+            'answer',
+            'participants',
         ]
-        meta_fields = (
-            'permissions', 'current_status', 'transitions'
-        )
+        meta_fields = ('permissions', 'current_status', 'transitions')
         validators = [
             validators.UniqueTogetherValidator(
                 queryset=model.objects.all(),
                 fields=('user', 'activity'),
-                message=_("Registration for this user already exists on this activity.")
+                message=_('Registration for this user already exists on this activity.'),
             )
         ]
 
@@ -86,10 +79,10 @@ class RegistrationSerializer(ModelSerializer):
         user = self.context['request'].user
 
         if (
-            user != instance.user and
-            user not in instance.activity.owners and
-            not user.is_staff and
-            not user.is_superuser
+            user != instance.user
+            and user not in instance.activity.owners
+            and not user.is_staff
+            and not user.is_superuser
         ):
             result['answer'] = None
             result['document'] = None
@@ -108,12 +101,12 @@ class DateRegistrationSerializer(RegistrationSerializer):
     participants = RelatedLinkFieldByStatus(
         many=True,
         read_only=True,
-        related_link_view_name="date-registration-related-participants",
-        related_link_url_kwarg="registration_id",
+        related_link_view_name='date-registration-related-participants',
+        related_link_url_kwarg='registration_id',
         statuses={
-            "upcoming": ["new", "accepted", "running"],
-            "passed": ["succeeded"],
-            "total": ["new", "accepted", "running", "withdrawn", "succeeded", "failed"]
+            'upcoming': ['new', 'accepted', 'running'],
+            'passed': ['succeeded'],
+            'total': ['new', 'accepted', 'running', 'withdrawn', 'succeeded', 'failed'],
         },
     )
 
@@ -129,7 +122,7 @@ class DateRegistrationSerializer(RegistrationSerializer):
         **{
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
             'document': 'bluebottle.time_based.serializers.registrations.RegistrationDocumentSerializer',
-        }
+        },
     )
 
 
@@ -148,8 +141,8 @@ class DeadlineRegistrationSerializer(RegistrationSerializer):
         **{
             'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
             'document': 'bluebottle.time_based.serializers.RegistrationDocumentSerializer',
-            'participants': 'bluebottle.time_based.serializers.DeadlineParticipantSerializer'
-        }
+            'participants': 'bluebottle.time_based.serializers.DeadlineParticipantSerializer',
+        },
     )
 
 
@@ -169,8 +162,8 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
         **{
             'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
             'document': 'bluebottle.time_based.serializers.RegistrationDocumentSerializer',
-            'participants': 'bluebottle.time_based.serializers.ScheduleParticipantSerializer'
-        }
+            'participants': 'bluebottle.time_based.serializers.ScheduleParticipantSerializer',
+        },
     )
 
 
@@ -182,29 +175,22 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
     class Meta(RegistrationSerializer.Meta):
         model = TeamScheduleRegistration
         fields = RegistrationSerializer.Meta.fields + [
-            "teams",
+            'teams',
         ]
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/team-schedule-registrations'
-        included_resources = [
-            'user',
-            'document',
-            'activity',
-            'participants',
-            'teams',
-            'teams.slots'
-        ]
+        included_resources = ['user', 'document', 'activity', 'participants', 'teams', 'teams.slots']
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,
         **{
-            "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
-            "document": "bluebottle.time_based.serializers.RegistrationDocumentSerializer",
-            "teams": "bluebottle.time_based.serializers.teams.TeamSerializer",
+            'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+            'document': 'bluebottle.time_based.serializers.RegistrationDocumentSerializer',
+            'teams': 'bluebottle.time_based.serializers.teams.TeamSerializer',
             'teams.slots': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer',
-            "participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
-        }
+            'participants': 'bluebottle.time_based.serializers.TeamScheduleParticipantSerializer',
+        },
     )
 
 
@@ -217,8 +203,8 @@ class PeriodicRegistrationSerializer(RegistrationSerializer):
     class Meta(RegistrationSerializer.Meta):
         model = PeriodicRegistration
         meta_fields = RegistrationSerializer.Meta.meta_fields + (
-            "total_slots",
-            "total_hours",
+            'total_slots',
+            'total_hours',
         )
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
@@ -229,8 +215,8 @@ class PeriodicRegistrationSerializer(RegistrationSerializer):
         **{
             'activity': 'bluebottle.time_based.serializers.PeriodicActivitySerializer',
             'document': 'bluebottle.time_based.serializers.RegistrationDocumentSerializer',
-            'participants': 'bluebottle.time_based.serializers.PeriodicParticipantSerializer'
-        }
+            'participants': 'bluebottle.time_based.serializers.PeriodicParticipantSerializer',
+        },
     )
 
 
@@ -240,23 +226,19 @@ class PolymorphicRegistrationSerializer(PolymorphicModelSerializer):
         ScheduleRegistrationSerializer,
         TeamScheduleRegistrationSerializer,
         PeriodicRegistrationSerializer,
-        DateRegistrationSerializer
+        DateRegistrationSerializer,
     ]
 
     class Meta(object):
         model = Registration
-        meta_fields = (
-            'created', 'updated', 'start', 'current_status', 'transitions', 'permissions'
-        )
+        meta_fields = ('created', 'updated', 'start', 'current_status', 'transitions', 'permissions')
 
 
 class RegistrationTransitionSerializer(TransitionSerializer):
     field = 'states'
 
     class JSONAPIMeta(object):
-        included_resources = [
-            'resource', 'resource.activity'
-        ]
+        included_resources = ['resource', 'resource.activity']
 
 
 class DateRegistrationTransitionSerializer(RegistrationTransitionSerializer):

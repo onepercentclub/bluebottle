@@ -16,16 +16,12 @@ class UnpublishedActivitiesReminderTask(ModelPeriodicTask):
             polymorphic_ctype__app_label__in=('time_based', 'deeds'),
             created__lte=timezone.now() - timedelta(days=3),
             created__gte=timezone.now() - timedelta(days=4),
-            status__in=['draft', 'needs_work']
+            status__in=['draft', 'needs_work'],
         )
 
     effects = [
-        NotificationEffect(
-            PublishActivityReminderNotification
-        ),
+        NotificationEffect(PublishActivityReminderNotification),
     ]
 
     def __str__(self):
-        return str(
-            _("Send a reminder whe activities are unpublished for more then 3 days")
-        )
+        return str(_('Send a reminder whe activities are unpublished for more then 3 days'))

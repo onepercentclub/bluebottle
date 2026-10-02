@@ -3,9 +3,7 @@ from builtins import object
 import factory
 from django.contrib.gis.geos import Point
 
-from bluebottle.geo.models import (
-    Country, SubRegion, Region, Location, LocationGroup, Place,
-    Geolocation)
+from bluebottle.geo.models import Country, SubRegion, Region, Location, LocationGroup, Place, Geolocation
 
 
 class RegionFactory(factory.DjangoModelFactory):
@@ -26,7 +24,7 @@ class SubRegionFactory(factory.DjangoModelFactory):
 class CountryFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Country
-        django_get_or_create = ("alpha2_code",)
+        django_get_or_create = ('alpha2_code',)
 
     name = factory.Faker('country')
     alpha2_code = factory.Faker('country_code')
@@ -37,11 +35,7 @@ class CountryFactory(factory.DjangoModelFactory):
         try:
             return super(CountryFactory, cls)._get_or_create(model_class, *args, **kwargs)
         except model_class.MultipleObjectsReturned:
-            lookup = {
-                field: kwargs[field]
-                for field in cls._meta.django_get_or_create
-                if field in kwargs
-            }
+            lookup = {field: kwargs[field] for field in cls._meta.django_get_or_create if field in kwargs}
             return model_class.objects.filter(**lookup).first(), False
 
 
@@ -82,9 +76,7 @@ class GeolocationFactory(factory.DjangoModelFactory):
     country = factory.SubFactory(CountryFactory)
     mapbox_id = 'some-mapbox-id'
     formatted_address = factory.LazyAttribute(
-        lambda o: '{} {} {} {}'.format(
-            o.street, o.street_number, o.locality, o.country.name if o.country else ''
-        )
+        lambda o: '{} {} {} {}'.format(o.street, o.street_number, o.locality, o.country.name if o.country else '')
     )
 
     @factory.post_generation
@@ -92,4 +84,5 @@ class GeolocationFactory(factory.DjangoModelFactory):
         if not create or not extracted:
             return
         from bluebottle.test.geo_utils import ensure_geolocation_geofeatures
+
         ensure_geolocation_geofeatures(obj)

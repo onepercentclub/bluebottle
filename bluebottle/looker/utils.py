@@ -24,15 +24,20 @@ from bluebottle.utils.utils import get_current_host
 
 class LookerSSOEmbed(object):
     session_length = settings.LOOKER_SESSION_LENGTH
-    models = ('Projects', )
-    permissions = ('see_user_dashboards', 'see_lookml_dashboards', 'access_data', 'see_looks', )
+    models = ('Projects',)
+    permissions = (
+        'see_user_dashboards',
+        'see_lookml_dashboards',
+        'access_data',
+        'see_looks',
+    )
 
     def __init__(self, user, type, id, hide_filters=None):
         if not hide_filters:
             hide_filters = []
         self.user = user
         self._path = '/embed/{}s/{}'.format(type, id)
-        hide_filters = "&".join([f'hide_filter={filter}' for filter in hide_filters])
+        hide_filters = '&'.join([f'hide_filter={filter}' for filter in hide_filters])
         self._path += '?' + hide_filters
 
     @property
@@ -52,24 +57,29 @@ class LookerSSOEmbed(object):
         if hasattr(settings, 'LOOKER_HOST'):
             return settings.LOOKER_HOST
         else:
-            return 'looker.{}'.format(
-                get_current_host(False)
-            )
+            return 'looker.{}'.format(get_current_host(False))
 
     def sign(self, params):
         attrs = (
-            'looker_host', 'path', 'nonce', 'time', 'session_length', 'external_user_id',
-            'permissions', 'models', 'group_ids', 'external_group_id', 'user_attributes',
-            'access_filters'
+            'looker_host',
+            'path',
+            'nonce',
+            'time',
+            'session_length',
+            'external_user_id',
+            'permissions',
+            'models',
+            'group_ids',
+            'external_group_id',
+            'user_attributes',
+            'access_filters',
         )
 
         values = [params.get(attr, getattr(self, attr, None)) for attr in attrs]
         values = [value for value in values if value is not None]
 
-        string_to_sign = "\n".join(values)
-        signer = hmac.new(
-            settings.LOOKER_SECRET.encode('utf-8'), string_to_sign.encode('utf-8').strip(), sha1
-        )
+        string_to_sign = '\n'.join(values)
+        signer = hmac.new(settings.LOOKER_SECRET.encode('utf-8'), string_to_sign.encode('utf-8').strip(), sha1)
         return base64.b64encode(signer.digest()).strip()
 
     @property
@@ -79,33 +89,36 @@ class LookerSSOEmbed(object):
         member_settings = MemberPlatformSettings.load()
 
         subregions = list(self.user.subregion_manager.values_list('id', flat=True))
-        subregions = ";".join(map(str, subregions))
+        subregions = ';'.join(map(str, subregions))
 
-        params = OrderedDict([
-            ('nonce', self.nonce.decode()),
-            ('time', self.time),
-            ('session_length', self.session_length),
-            ('external_user_id', '{}-{}'.format(schema_name, self.user.id)),
-            ('permissions', self.permissions),
-            ('models', self.models),
-            ('access_filters', {}),
-            ('first_name', self.user.first_name),
-            ('last_name', self.user.last_name),
-            ('group_ids', [3]),
-            ('external_group_id', 'Back-office Users'),
-            ('user_attributes', {
-                'tenant': schema_name,
-                'fiscal_month_offset': member_settings.fiscal_month_offset,
-                'user_base': analytics_settings.user_base,
-                'language': get_default_language(),
-                'region_manager': subregions,
-            }),
-            ('force_logout_login', True),
-        ])
+        params = OrderedDict(
+            [
+                ('nonce', self.nonce.decode()),
+                ('time', self.time),
+                ('session_length', self.session_length),
+                ('external_user_id', '{}-{}'.format(schema_name, self.user.id)),
+                ('permissions', self.permissions),
+                ('models', self.models),
+                ('access_filters', {}),
+                ('first_name', self.user.first_name),
+                ('last_name', self.user.last_name),
+                ('group_ids', [3]),
+                ('external_group_id', 'Back-office Users'),
+                (
+                    'user_attributes',
+                    {
+                        'tenant': schema_name,
+                        'fiscal_month_offset': member_settings.fiscal_month_offset,
+                        'user_base': analytics_settings.user_base,
+                        'language': get_default_language(),
+                        'region_manager': subregions,
+                    },
+                ),
+                ('force_logout_login', True),
+            ]
+        )
         json_params = OrderedDict((key, json.dumps(value)) for key, value in list(params.items()))
 
         json_params['signature'] = self.sign(json_params)
 
-        return '{}{}?{}'.format(
-            'https://' + self.looker_host, self.path, urlencode(json_params)
-        )
+        return '{}{}?{}'.format('https://' + self.looker_host, self.path, urlencode(json_params))

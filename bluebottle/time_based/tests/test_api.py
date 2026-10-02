@@ -28,23 +28,15 @@ class DateTimeContributionAPIViewTestCase(BluebottleTestCase):
         super().setUp()
         self.client = JSONAPITestClient()
         self.activity = self.factory.create()
-        self.participant = self.participant_factory.create(
-            activity=self.activity,
-            slot=self.activity.slots.first()
-        )
+        self.participant = self.participant_factory.create(activity=self.activity, slot=self.activity.slots.first())
         self.contribution = self.participant.contributions.get()
 
-        self.url = reverse(
-            'time-contribution-detail',
-            args=(self.contribution.pk,)
-        )
+        self.url = reverse('time-contribution-detail', args=(self.contribution.pk,))
         self.data = {
             'data': {
                 'type': 'contributions/time-contributions',
                 'id': self.contribution.pk,
-                'attributes': {
-                    'value': '5:00:00'
-                }
+                'attributes': {'value': '5:00:00'},
             }
         }
 
@@ -52,9 +44,7 @@ class DateTimeContributionAPIViewTestCase(BluebottleTestCase):
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(
-            response.json()['data']['meta']['permissions']['PUT']
-        )
+        self.assertTrue(response.json()['data']['meta']['permissions']['PUT'])
 
     def test_get_contributor(self):
         response = self.client.get(self.url, user=self.participant.user)
@@ -103,9 +93,7 @@ class SlotIcalTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.initiative = InitiativeFactory.create(status='approved')
         self.activity = DateActivityFactory.create(
-            title='Pollute Katwijk Beach',
-            owner=self.user,
-            initiative=self.initiative
+            title='Pollute Katwijk Beach', owner=self.user, initiative=self.initiative
         )
         self.slot = self.activity.slots.first()
         self.slot.is_online = True
@@ -125,22 +113,15 @@ class SlotIcalTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.get('content-type'), 'text/calendar')
         self.assertEqual(
-            response.get('content-disposition'),
-            'attachment; filename="{}.ics"'.format(self.activity.slug)
+            response.get('content-disposition'), 'attachment; filename="{}.ics"'.format(self.activity.slug)
         )
 
         calendar = icalendar.Calendar.from_ical(response.content)
 
         for ical_event in calendar.walk('vevent'):
+            self.assertAlmostEqual(ical_event['dtstart'].dt, self.slot.start, delta=timedelta(seconds=10))
             self.assertAlmostEqual(
-                ical_event['dtstart'].dt,
-                self.slot.start,
-                delta=timedelta(seconds=10)
-            )
-            self.assertAlmostEqual(
-                ical_event['dtend'].dt,
-                self.slot.start + self.slot.duration,
-                delta=timedelta(seconds=10)
+                ical_event['dtend'].dt, self.slot.start + self.slot.duration, delta=timedelta(seconds=10)
             )
 
             self.assertEqual(ical_event['dtstart'].dt.tzinfo, UTC)
@@ -162,9 +143,7 @@ class SlotIcalTestCase(BluebottleTestCase):
 
         for ical_event in calendar.walk('vevent'):
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
-            self.assertEqual(
-                ical_event['location'], self.slot.location.formatted_address
-            )
+            self.assertEqual(ical_event['location'], self.slot.location.formatted_address)
 
     def test_get_location_hint(self):
         self.slot.location = GeolocationFactory.create()
@@ -178,8 +157,7 @@ class SlotIcalTestCase(BluebottleTestCase):
         for ical_event in calendar.walk('vevent'):
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
             self.assertEqual(
-                ical_event['location'],
-                f'{self.slot.location.formatted_address} ({self.slot.location_hint})'
+                ical_event['location'], f'{self.slot.location.formatted_address} ({self.slot.location_hint})'
             )
 
     def test_get_no_signature(self):
@@ -192,7 +170,6 @@ class SlotIcalTestCase(BluebottleTestCase):
 
 
 class SkillApiTestCase(BluebottleTestCase):
-
     def setUp(self):
         super().setUp()
         MemberPlatformSettings.objects.update(closed=True)

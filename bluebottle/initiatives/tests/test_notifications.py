@@ -1,8 +1,14 @@
-from bluebottle.initiatives.messages.initiator import InitiativeSubmittedInitiatorMessage, \
-    InitiativeNeedsWorkInitiatorMessage, InitiativeRejectedInitiatorMessage, InitiativeApprovedInitiatorMessage, \
-    InitiativePublishedInitiatorMessage
-from bluebottle.initiatives.messages.reviewer import InitiativeSubmittedReviewerMessage, \
-    InitiativePublishedReviewerMessage
+from bluebottle.initiatives.messages.initiator import (
+    InitiativeSubmittedInitiatorMessage,
+    InitiativeNeedsWorkInitiatorMessage,
+    InitiativeRejectedInitiatorMessage,
+    InitiativeApprovedInitiatorMessage,
+    InitiativePublishedInitiatorMessage,
+)
+from bluebottle.initiatives.messages.reviewer import (
+    InitiativeSubmittedReviewerMessage,
+    InitiativePublishedReviewerMessage,
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory, OfficeSubRegionFactory
 
@@ -15,12 +21,10 @@ class ReviewerNotificationTestCase(NotificationTestCase):
 
     def test_submitted_notification_staff(self):
         staff = BlueBottleUserFactory.create(
-            email='staff@example.com',
-            is_staff=True,
-            submitted_initiative_notifications=True
+            email='staff@example.com', is_staff=True, submitted_initiative_notifications=True
         )
         initiator = BlueBottleUserFactory.create(first_name='Henk', last_name='qui Penk')
-        self.obj = InitiativeFactory.create(title="Save the world!", owner=initiator)
+        self.obj = InitiativeFactory.create(title='Save the world!', owner=initiator)
         self.obj.states.submit(save=True)
 
         self.create()
@@ -50,32 +54,26 @@ class ReviewerNotificationTestCase(NotificationTestCase):
             submitted_initiative_notifications=True,
         )
 
-        initiator = BlueBottleUserFactory.create(
-            first_name="Henk", last_name="qui Penk"
-        )
+        initiator = BlueBottleUserFactory.create(first_name='Henk', last_name='qui Penk')
 
         self.obj = InitiativeFactory.create(
-            title="Save the world!",
+            title='Save the world!',
             owner=initiator,
             location=LocationFactory.create(subregion=region),
         )
         self.obj.states.submit(save=True)
         self.create()
         self.assertRecipients([current_region, no_region])
-        self.assertSubject("A new initiative is ready to be reviewed on Test")
+        self.assertSubject('A new initiative is ready to be reviewed on Test')
         self.assertBodyContains('has been submitted by Henk qui Penk')
         self.assertActionLink(self.obj.get_admin_url())
-        self.assertActionTitle("View initiative")
+        self.assertActionTitle('View initiative')
 
 
 class InitiativeNotificationTestCase(NotificationTestCase):
-
     def setUp(self):
         self.obj = InitiativeFactory.create()
-        self.reviewer = BlueBottleUserFactory.create(
-            is_staff=True,
-            submitted_initiative_notifications=True
-        )
+        self.reviewer = BlueBottleUserFactory.create(is_staff=True, submitted_initiative_notifications=True)
 
     def test_initiative_submitted_reviewer_message(self):
         self.message_class = InitiativeSubmittedReviewerMessage

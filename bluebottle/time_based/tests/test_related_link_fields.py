@@ -75,9 +75,7 @@ class ActivityRelatedLinkFieldsMixin:
             activity=self.activity,
             status='rejected',
         )
-        self.interests = InterestFactory.create_batch(
-            2, activity=self.activity, slot=None
-        )
+        self.interests = InterestFactory.create_batch(2, activity=self.activity, slot=None)
         self.url = reverse(self.detail_url_name, args=(self.activity.pk,))
 
     def before_participant_setup(self):
@@ -151,9 +149,7 @@ class ActivityRelatedLinkFieldsMixin:
         self.perform_get(user=self.participant.user)
         self.assertStatus(status.HTTP_200_OK)
 
-        href = self._relationships()[self.participating_relationship]['links'][
-            'participating'
-        ]['href']
+        href = self._relationships()[self.participating_relationship]['links']['participating']['href']
         response = self.client.get(href, user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 1)
@@ -191,9 +187,7 @@ class ActivityRelatedLinkFieldsMixin:
         self.assertEqual(len(response.json()['data']), 2)
 
 
-class DeadlineActivityRelatedLinkFieldsTestCase(
-    ActivityRelatedLinkFieldsMixin, APITestCase
-):
+class DeadlineActivityRelatedLinkFieldsTestCase(ActivityRelatedLinkFieldsMixin, APITestCase):
     activity_factory = DeadlineActivityFactory
     detail_url_name = 'deadline-detail'
     contributors_list_url_name = 'deadline-participants'
@@ -207,9 +201,7 @@ class DeadlineActivityRelatedLinkFieldsTestCase(
     }
 
 
-class ScheduleActivityRelatedLinkFieldsTestCase(
-    ActivityRelatedLinkFieldsMixin, APITestCase
-):
+class ScheduleActivityRelatedLinkFieldsTestCase(ActivityRelatedLinkFieldsMixin, APITestCase):
     activity_factory = ScheduleActivityFactory
     detail_url_name = 'schedule-detail'
     contributors_list_url_name = 'schedule-participants'
@@ -223,9 +215,7 @@ class ScheduleActivityRelatedLinkFieldsTestCase(
     }
 
 
-class PeriodicActivityRelatedLinkFieldsTestCase(
-    ActivityRelatedLinkFieldsMixin, APITestCase
-):
+class PeriodicActivityRelatedLinkFieldsTestCase(ActivityRelatedLinkFieldsMixin, APITestCase):
     activity_factory = PeriodicActivityFactory
     detail_url_name = 'periodic-detail'
     contributors_list_url_name = 'periodic-participants'
@@ -268,9 +258,7 @@ class PeriodicActivityRelatedLinkFieldsTestCase(
         self.assertEqual(links['my']['meta']['count'], 1)
 
 
-class DateActivityRelatedLinkFieldsTestCase(
-    ActivityRelatedLinkFieldsMixin, APITestCase
-):
+class DateActivityRelatedLinkFieldsTestCase(ActivityRelatedLinkFieldsMixin, APITestCase):
     activity_factory = DateActivityFactory
     detail_url_name = 'date-detail'
     contributors_list_url_name = 'date-participants'
@@ -315,9 +303,7 @@ class DateActivityRelatedLinkFieldsTestCase(
             reverse('related-date-slots', args=(self.activity.pk,)),
             links['related'],
         )
-        expected = self.activity.slots.exclude(
-            status__in=['draft', 'cancelled']
-        ).count()
+        expected = self.activity.slots.exclude(status__in=['draft', 'cancelled']).count()
         self.assertEqual(links['total']['meta']['count'], expected)
 
     def test_registrations_participating_link_for_active_registration(self):
@@ -395,9 +381,7 @@ class RegisteredDateActivityParticipatingLinkTestCase(APITestCase):
         self.perform_get(user=self.participant.user)
         self.assertStatus(status.HTTP_200_OK)
 
-        href = self.response.json()['data']['relationships']['contributors']['links'][
-            'participating'
-        ]['href']
+        href = self.response.json()['data']['relationships']['contributors']['links']['participating']['href']
         response = self.client.get(href, user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 1)
@@ -418,9 +402,7 @@ class DateSlotRelatedLinkFieldsTestCase(APITestCase):
             status='full',
             capacity=1,
         )
-        self.interests = InterestFactory.create_batch(
-            2, activity=self.activity, slot=self.slot
-        )
+        self.interests = InterestFactory.create_batch(2, activity=self.activity, slot=self.slot)
         InterestFactory.create(activity=self.activity, slot=None)
         self.url = reverse('date-slot-detail', args=(self.slot.pk,))
 
@@ -486,10 +468,7 @@ class DateSlotRelatedLinkFieldsTestCase(APITestCase):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
 
-        slot = next(
-            item for item in self.response.json()['data']
-            if item['id'] == str(self.slot.pk)
-        )
+        slot = next(item for item in self.response.json()['data'] if item['id'] == str(self.slot.pk))
         links = slot['relationships']['interests']['links']
         self.assertEqual(links['related']['meta']['count'], 2)
 
@@ -541,9 +520,7 @@ class DateSlotRelatedLinkFieldsTestCase(APITestCase):
         self.perform_get(user=participant.user)
         self.assertStatus(status.HTTP_200_OK)
 
-        href = self.response.json()['data']['relationships']['participants']['links'][
-            'participating'
-        ]['href']
+        href = self.response.json()['data']['relationships']['participants']['links']['participating']['href']
         response = self.client.get(href, user=participant.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 1)

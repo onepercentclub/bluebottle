@@ -1,4 +1,3 @@
-
 from bluebottle.utils.views import ListAPIView, JsonApiViewMixin
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination

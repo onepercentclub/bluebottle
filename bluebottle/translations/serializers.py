@@ -14,7 +14,6 @@ from bluebottle.utils.models import Language
 
 
 class TranslationsSerializer(serializers.Field):
-
     def __init__(self, fields=None, **kwargs):
         self.translation_fields = fields or []
         kwargs['read_only'] = True

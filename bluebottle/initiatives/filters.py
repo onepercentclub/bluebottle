@@ -13,9 +13,7 @@ from bluebottle.initiatives.documents import initiative
 from bluebottle.initiatives.models import InitiativePlatformSettings, Theme
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 from bluebottle.segments.models import SegmentType
-from bluebottle.utils.filters import (
-    ElasticSearchFilter, Search, SegmentFacet, ModelFacet
-)
+from bluebottle.utils.filters import ElasticSearchFilter, Search, SegmentFacet, ModelFacet
 
 
 class OwnerFacet(TermsFacet):
@@ -64,17 +62,13 @@ class OfficeFacet(ModelFacet):
 
 
 class OpenFacet(BooleanFacet):
-
     def __init__(self, *args, **kwargs):
 
-        labels = {
-            True: _('Open initiatives'),
-            False: _('Closed initiatives')
-        }
+        labels = {True: _('Open initiatives'), False: _('Closed initiatives')}
         super().__init__(*args, labels=labels, field='is_open', **kwargs)
 
     def get_value(self, bucket):
-        return (self.labels[bucket["key"]], bucket["key"])
+        return (self.labels[bucket['key']], bucket['key'])
 
 
 class InitiativeSearch(Search):

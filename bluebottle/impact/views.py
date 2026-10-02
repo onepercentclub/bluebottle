@@ -4,20 +4,19 @@ from rest_framework.pagination import PageNumberPagination
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.impact.models import ImpactType, ImpactGoal
 from bluebottle.impact.serializers import ImpactTypeSerializer, ImpactGoalSerializer
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission
-)
+from bluebottle.utils.permissions import OneOf, ResourcePermission
 from bluebottle.utils.views import (
     JsonApiViewMixin,
     ListAPIView,
     CreateAPIView,
-    RetrieveUpdateDestroyAPIView, RetrieveAPIView
+    RetrieveUpdateDestroyAPIView,
+    RetrieveAPIView,
 )
 from bluebottle.utils.permissions import TenantConditionalOpenClose
 
 
 class ImpactTypeSearchFilter(filters.SearchFilter):
-    search_param = "filter[search]"
+    search_param = 'filter[search]'
 
 
 class ImpactTypePagination(PageNumberPagination):
@@ -27,19 +26,23 @@ class ImpactTypePagination(PageNumberPagination):
 class ImpactTypeList(JsonApiViewMixin, ListAPIView):
     queryset = ImpactType.objects.filter(active=True)
 
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
     serializer_class = ImpactTypeSerializer
     pagination_class = ImpactTypePagination
-    filter_backends = (ImpactTypeSearchFilter, )
+    filter_backends = (ImpactTypeSearchFilter,)
 
 
 class ImpactTypeDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = ImpactType.objects.filter(active=True)
 
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [
+        TenantConditionalOpenClose,
+    ]
     serializer_class = ImpactTypeSerializer
     pagination_class = ImpactTypePagination
-    filter_backends = (ImpactTypeSearchFilter, )
+    filter_backends = (ImpactTypeSearchFilter,)
 
 
 class ImpactGoalList(JsonApiViewMixin, CreateAPIView):

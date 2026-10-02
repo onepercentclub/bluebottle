@@ -28,49 +28,34 @@ class SegmentType(TranslatableModel, models.Model):
 
     inherit = models.BooleanField(
         _('Inherit'),
-        help_text=_(
-            'Newly created activities inherit the segments of the activity creator.'
-        ),
-        default=True
+        help_text=_('Newly created activities inherit the segments of the activity creator.'),
+        default=True,
     )
 
     visibility = models.BooleanField(
-        _('Visible'),
-        help_text=_(
-            'Show segment on the activity detail page'
-        ),
-        default=True
+        _('Visible'), help_text=_('Show segment on the activity detail page'), default=True
     )
 
     required = models.BooleanField(
         _('Required for members'),
-        help_text=_(
-            'Require members to enter their segment type once after logging in.'
-        ),
-        default=False
+        help_text=_('Require members to enter their segment type once after logging in.'),
+        default=False,
     )
 
     needs_verification = models.BooleanField(
         _('Verify SSO data'),
-        help_text=_((
-            'Require members to verify their segment type once if it is filled via SSO.'
-            'Only works if "Required for members" is enabled.'
-        )),
-        default=False
+        help_text=_(
+            (
+                'Require members to verify their segment type once if it is filled via SSO.'
+                'Only works if "Required for members" is enabled.'
+            )
+        ),
+        default=False,
     )
 
-    is_active = models.BooleanField(
-        _('Is active'),
-        default=True
-    )
-    user_editable = models.BooleanField(
-        _('Editable in user profile'),
-        default=True
-    )
-    enable_search = models.BooleanField(
-        _('Enable search filters'),
-        default=False
-    )
+    is_active = models.BooleanField(_('Is active'), default=True)
+    user_editable = models.BooleanField(_('Editable in user profile'), default=True)
+    enable_search = models.BooleanField(_('Enable search filters'), default=False)
 
     admin_user_filter = models.BooleanField(
         _('Segment manager filter - Members'),
@@ -111,30 +96,25 @@ class Segment(TranslatableModel, models.Model):
     translations = TranslatedFields(
         name=models.CharField(_('name'), max_length=255),
         slogan=models.CharField(
-            _('Slogan'), max_length=255, null=True, blank=True,
-            help_text=_(
-                'A short sentence to explain your segment. This sentence is directly visible on the page.'
-            )),
+            _('Slogan'),
+            max_length=255,
+            null=True,
+            blank=True,
+            help_text=_('A short sentence to explain your segment. This sentence is directly visible on the page.'),
+        ),
         story=QuillField(
-            _('Story'), blank=True, null=True,
-            help_text=_(
-                'A more detailed story for your segment. This story can be accessed via a link on the page.'
-            )
-        )
+            _('Story'),
+            blank=True,
+            null=True,
+            help_text=_('A more detailed story for your segment. This story can be accessed via a link on the page.'),
+        ),
     )
 
     slug = models.CharField(_('slug'), max_length=255)
 
-    alternate_names = ArrayField(
-        models.CharField(max_length=200),
-        default=list,
-        blank=True
-    )
+    alternate_names = ArrayField(models.CharField(max_length=200), default=list, blank=True)
     segment_type = models.ForeignKey(
-        SegmentType,
-        verbose_name=_('type'),
-        related_name='segments',
-        on_delete=models.CASCADE
+        SegmentType, verbose_name=_('type'), related_name='segments', on_delete=models.CASCADE
     )
 
     email_domains = ArrayField(
@@ -142,63 +122,59 @@ class Segment(TranslatableModel, models.Model):
         verbose_name=_('Email domains'),
         default=list,
         blank=True,
-        help_text=_('Users with email addresses for this domain are automatically added to this segment.')
+        help_text=_('Users with email addresses for this domain are automatically added to this segment.'),
     )
 
     logo = ImageField(
-        _("logo"), max_length=255, blank=True, null=True,
+        _('logo'),
+        max_length=255,
+        blank=True,
+        null=True,
         upload_to='categories/logos/',
-        help_text=_("The uploaded image will be scaled so that it is fully visible."),
-
+        help_text=_('The uploaded image will be scaled so that it is fully visible.'),
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     background_color = ColorField(
-        _('Background color'), null=True, blank=True,
-        help_text=_(
-            'Add a background colour to your segment page.'
-        )
+        _('Background color'), null=True, blank=True, help_text=_('Add a background colour to your segment page.')
     )
 
     button_color = ColorField(
-        _('Button color'), null=True, blank=True,
-        help_text=_(
-            'Add a button colour to your segment page.'
-        )
+        _('Button color'), null=True, blank=True, help_text=_('Add a button colour to your segment page.')
     )
 
     button_text_color = ColorField(
-        _('Button text color'), null=True, blank=True,
+        _('Button text color'),
+        null=True,
+        blank=True,
         default='#FFFFFF',
-        help_text=_(
-            'Add a button text colour to your segment page.'
-        )
+        help_text=_('Add a button text colour to your segment page.'),
     )
 
     cover_image = ImageField(
-        _("cover image"), max_length=255, blank=True, null=True,
+        _('cover image'),
+        max_length=255,
+        blank=True,
+        null=True,
         upload_to='categories/logos/',
-        help_text=_("The uploaded image will be cropped to fit a 16:9 rectangle."),
-
+        help_text=_('The uploaded image will be cropped to fit a 16:9 rectangle.'),
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
-            validate_file_infection
-        ]
+            validate_file_infection,
+        ],
     )
 
     closed = models.BooleanField(
         _('Restricted'),
         default=False,
-        help_text=_(
-            'Closed segments will only be accessible to members that belong to this segment.'
-        )
+        help_text=_('Closed segments will only be accessible to members that belong to this segment.'),
     )
 
     def __init__(self, *args, **kwargs):
@@ -222,9 +198,7 @@ class Segment(TranslatableModel, models.Model):
         self.alternate_names += other.alternate_names
 
         activities_through = self.activities.through
-        activities_through.objects.filter(segment_id=other.pk).update(
-            segment_id=self.pk
-        )
+        activities_through.objects.filter(segment_id=other.pk).update(segment_id=self.pk)
 
         users_through = self.users.through
         users_through.objects.filter(segment_id=other.pk).update(segment_id=self.pk)
@@ -234,9 +208,7 @@ class Segment(TranslatableModel, models.Model):
 
     @property
     def text_color(self):
-        rgb_background_color = [
-            c / 256.0 for c in ImageColor.getcolor(self.background_color or '#ffffff', 'RGB')
-        ]
+        rgb_background_color = [c / 256.0 for c in ImageColor.getcolor(self.background_color or '#ffffff', 'RGB')]
         white = (1, 1, 1)
 
         contrast_with_white = contrast.rgb(rgb_background_color, white)
@@ -244,7 +216,7 @@ class Segment(TranslatableModel, models.Model):
         if contrast.passes_AA(contrast_with_white, large=True):
             return 'white'
         else:
-            return "text"
+            return 'text'
 
     def __str__(self):
         try:
@@ -255,15 +227,11 @@ class Segment(TranslatableModel, models.Model):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        return u"{}/{}/segments/{}/{}/activities/list".format(
-            domain, language,
-            self.pk,
-            self.slug
-        )
+        return '{}/{}/segments/{}/{}/activities/list'.format(domain, language, self.pk, self.slug)
 
     class Meta:
         ordering = ['pk']
-        unique_together = (('slug', 'segment_type'), )
+        unique_together = (('slug', 'segment_type'),)
 
     class JSONAPIMeta(object):
         resource_name = 'segments'
@@ -272,12 +240,9 @@ class Segment(TranslatableModel, models.Model):
 @receiver(post_save)
 def connect_members_to_segments(sender, instance, created, **kwargs):
     from bluebottle.members.models import Member
+
     if isinstance(instance, Segment):
         if instance.email_domains:
             for email_domain in instance.email_domains:
-                for member in Member.objects\
-                        .exclude(segments=instance)\
-                        .filter(email__endswith=email_domain)\
-                        .all():
-
+                for member in Member.objects.exclude(segments=instance).filter(email__endswith=email_domain).all():
                     member.segments.add(instance)

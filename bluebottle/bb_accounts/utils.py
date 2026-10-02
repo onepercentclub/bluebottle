@@ -11,6 +11,7 @@ from bluebottle.members.messages import AccountActivationMessage
 def send_welcome_mail(user=None):
 
     from bluebottle.members.models import MemberPlatformSettings
+
     settings = MemberPlatformSettings.load()
 
     context = {
@@ -27,10 +28,12 @@ def send_welcome_mail(user=None):
     # If there is no password and no remote_id (SSO) then use the
     # welcome + password template, and then set a random password
     if not user.password and not user.remote_id:
-        context.update({
-            'token': default_token_generator.make_token(user),
-            'uid': int_to_base36(user.pk),
-        })
+        context.update(
+            {
+                'token': default_token_generator.make_token(user),
+                'uid': int_to_base36(user.pk),
+            }
+        )
 
     msg = AccountActivationMessage(user, context=context)
     msg.compose_and_send()
@@ -43,7 +46,7 @@ def valid_email(email=None):
     """Returns True if argument is a string with valid email adddress"""
     if not email:
         return False
-    pattern = r"[^@]+@[^@]+\.[^@]+"
+    pattern = r'[^@]+@[^@]+\.[^@]+'
     pat = re.compile(pattern)
     if pat.match(email):
         return True

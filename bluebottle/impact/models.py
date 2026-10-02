@@ -20,63 +20,50 @@ ICONS = [
     ('water', _('Water')),
     ('plastic', _('plastic')),
     ('food', _('Food')),
-
     ('task', _('Task')),
     ('task-completed', _('Task completed')),
     ('event', _('Event')),
     ('event-completed', _('Event completed')),
     ('funding', _('Funding')),
     ('funding-completed', _('Funding completed')),
-
 ]
 
 
 @python_2_unicode_compatible
 class ImpactType(SortableTranslatableModel):
-    slug = models.SlugField(
-        _('slug'),
-        max_length=100,
-        unique=True,
-        help_text=_('Do not change this field')
-    )
+    slug = models.SlugField(_('slug'), max_length=100, unique=True, help_text=_('Do not change this field'))
     active = models.BooleanField(_('active'), default=True)
 
-    icon = models.CharField(_('icon'), choices=ICONS,
-                            null=True, blank=True, max_length=20)
+    icon = models.CharField(_('icon'), choices=ICONS, null=True, blank=True, max_length=20)
 
     translations = TranslatedFields(
-        name=models.CharField(
-            _('name'),
-            blank=True,
-            max_length=100
-        ),
+        name=models.CharField(_('name'), blank=True, max_length=100),
         unit=models.CharField(
             _('unit'),
             blank=True,
             null=True,
             max_length=100,
-            help_text=_('"l" or "kg". Leave this field blank if a unit is not applicable.')
-
+            help_text=_('"l" or "kg". Leave this field blank if a unit is not applicable.'),
         ),
         text=models.CharField(
-            _(u'Formulate the goal "Our goal is to..."'),
+            _('Formulate the goal "Our goal is to..."'),
             max_length=100,
-            help_text=_(u'E.g. "Save plastic" or "Reduce CO₂ emission"')
+            help_text=_('E.g. "Save plastic" or "Reduce CO₂ emission"'),
         ),
         text_with_target=models.CharField(
-            _(u'Formulate the goal including the target “Our goal is to…”'),
+            _('Formulate the goal including the target “Our goal is to…”'),
             max_length=100,
             help_text=_(
                 (
-                    u'E.g. “Save {} kg plastic” or “Reduce CO₂ emissions by {} liters”.'
-                    u'Make sure to add “{}” where the value should go.'
+                    'E.g. “Save {} kg plastic” or “Reduce CO₂ emissions by {} liters”.'
+                    'Make sure to add “{}” where the value should go.'
                 )
-            )
+            ),
         ),
         text_passed=models.CharField(
-            _(u'Formulate the result in past tense'),
+            _('Formulate the result in past tense'),
             max_length=100,
-            help_text=_(u'E.g. "Plastic saved" or "CO₂ emissions reduced"')
+            help_text=_('E.g. "Plastic saved" or "CO₂ emissions reduced"'),
         ),
     )
 
@@ -95,36 +82,22 @@ class ImpactType(SortableTranslatableModel):
         verbose_name_plural = _('impact types')
 
     class JSONAPIMeta(object):
-        resource_name = "activities/impact-types"
+        resource_name = 'activities/impact-types'
 
 
 class ImpactGoal(ValidatedModelMixin, models.Model):
-    type = models.ForeignKey(
-        ImpactType,
-        verbose_name=_('type'),
-        related_name='goals',
-        on_delete=models.CASCADE
-    )
+    type = models.ForeignKey(ImpactType, verbose_name=_('type'), related_name='goals', on_delete=models.CASCADE)
 
     activity = models.ForeignKey(
-        'activities.activity',
-        verbose_name=_('activity'),
-        related_name='goals',
-        on_delete=models.CASCADE
+        'activities.activity', verbose_name=_('activity'), related_name='goals', on_delete=models.CASCADE
     )
 
     target = models.FloatField(
-        _('target'),
-        help_text=_('Set a target for the impact you expect to make'),
-        blank=True,
-        null=True
+        _('target'), help_text=_('Set a target for the impact you expect to make'), blank=True, null=True
     )
 
     participant_target = models.IntegerField(
-        _('Number of participants'),
-        help_text=_('How many people you expect to join?'),
-        blank=True,
-        null=True
+        _('Number of participants'), help_text=_('How many people you expect to join?'), blank=True, null=True
     )
 
     @property
@@ -141,18 +114,13 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
             return self.activity.succeeded_contributor_count * self.participant_impact
         return self.realized_from_contributions
 
-    realized_from_contributions = models.FloatField(
-        _('realized from contributions'),
-        blank=True,
-        null=True
-    )
+    realized_from_contributions = models.FloatField(_('realized from contributions'), blank=True, null=True)
 
     realized = models.FloatField(
         _('realized'),
-        help_text=_(
-            'Enter your impact results here when the activity is finished'),
+        help_text=_('Enter your impact results here when the activity is finished'),
         blank=True,
-        null=True
+        null=True,
     )
 
     class Meta(object):
@@ -160,7 +128,7 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
         verbose_name_plural = _('impact goals')
 
     class JSONAPIMeta(object):
-        resource_name = "activities/impact-goals"
+        resource_name = 'activities/impact-goals'
 
     @property
     def required_fields(self):
@@ -172,11 +140,7 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
         return []
 
     def update(self):
-        if (
-            self.target and
-            self.activity.target and
-            self.activity.realized
-        ):
+        if self.target and self.activity.target and self.activity.realized:
             amount = self.target / float(self.activity.target)
 
             self.realized_from_contributions = amount * float(self.activity.realized)

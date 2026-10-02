@@ -44,15 +44,14 @@ class ActivityOwnerUpdatePermission(permissions.BasePermission):
         audience = getattr(obj, 'audience', AudienceChoices.everyone)
 
         return (
-            obj.author in owners or
-            (not obj.notify and not obj.pinned and audience != AudienceChoices.contributors) or
-            request.user.is_staff or
-            request.user.is_superuser
+            obj.author in owners
+            or (not obj.notify and not obj.pinned and audience != AudienceChoices.contributors)
+            or request.user.is_staff
+            or request.user.is_superuser
         )
 
 
 class UpdateRelatedActivityPermission(permissions.BasePermission):
-
     def has_object_permission(self, request, view, obj):
         user = request.user
         activity = obj.activity
@@ -72,11 +71,7 @@ class CanPostUpdatePermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         settings = InitiativePlatformSettings.load()
 
-        return (
-            not settings.restrict_updates or
-            request.user in list(obj.owners)
-            or request.user.is_staff
-        )
+        return not settings.restrict_updates or request.user in list(obj.owners) or request.user.is_staff
 
     def has_object_action_permission(self, method, user, obj):
         if method in SAFE_METHODS:
@@ -84,11 +79,7 @@ class CanPostUpdatePermission(permissions.BasePermission):
 
         settings = InitiativePlatformSettings.load()
 
-        return (
-            not settings.restrict_updates or
-            user in list(obj.owners)
-            or user.is_staff
-        )
+        return not settings.restrict_updates or user in list(obj.owners) or user.is_staff
 
 
 class ContributorAudiencePermission(permissions.BasePermission):

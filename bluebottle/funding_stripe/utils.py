@@ -5,6 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 def get_stripe_settings():
     from bluebottle.funding_stripe.models import StripePaymentProvider
+
     provider = StripePaymentProvider.objects.first()
     if not provider:
         return
@@ -13,6 +14,7 @@ def get_stripe_settings():
 
 def get_stripe():
     from bluebottle.funding_stripe.models import StripePaymentProvider
+
     provider = StripePaymentProvider.objects.first()
     if not provider:
         raise ImproperlyConfigured('Stripe not enabled for this tenant')

@@ -8,7 +8,6 @@ from bluebottle.utils.models import Language
 
 
 class LanguageFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = Language
         django_get_or_create = ('language_name',)

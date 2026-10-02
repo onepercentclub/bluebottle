@@ -6,11 +6,15 @@ from django.utils.timezone import now
 from dateutil.relativedelta import relativedelta
 
 from bluebottle.activities.messages.activity_manager import (
-    ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivitySucceededNotification, ActivityRestoredNotification,
+    ActivityRejectedNotification,
+    ActivityCancelledNotification,
+    ActivitySucceededNotification,
+    ActivityRestoredNotification,
     ActivityExpiredNotification,
-    ActivitySubmittedNotification, ActivityPublishedNotification,
-    ActivityApprovedNotification, ActivityNeedsWorkNotification
+    ActivitySubmittedNotification,
+    ActivityPublishedNotification,
+    ActivityApprovedNotification,
+    ActivityNeedsWorkNotification,
 )
 from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ1Notification,
@@ -19,24 +23,25 @@ from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ4Notification,
     MatchingActivitiesNotification,
 )
-from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
-    ActivityPublishedReviewerNotification
+from bluebottle.activities.messages.reviewer import (
+    ActivitySubmittedReviewerNotification,
+    ActivityPublishedReviewerNotification,
+)
 from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.notifications.models import NotificationPlatformSettings, Message
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, DateRegistrationFactory
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DateParticipantFactory,
+    DateRegistrationFactory,
 )
 
 
 class ActivityNotificationTestCase(NotificationTestCase):
-
     def setUp(self):
-        self.obj = DateActivityFactory.create(
-            title="Save the world!"
-        )
+        self.obj = DateActivityFactory.create(title='Save the world!')
         self.reviewer = BlueBottleUserFactory.create(
             is_staff=True,
             submitted_initiative_notifications=True,
@@ -158,13 +163,16 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertBodyContains(
             'Unfortunately, no one signed up for your activity '
             '"Save the world!" before the deadline passed. '
-            'That’s why we have cancelled the activity.')
+            'That’s why we have cancelled the activity.'
+        )
         self.assertBodyContains(
             'No worries, you can always reopen the activity by extending the deadline '
-            'or start a new activity and try again.')
+            'or start a new activity and try again.'
+        )
         self.assertBodyContains(
             'Do you need tips to make your activity stand out? '
-            'Get in touch with the platform manager by replying to this email.')
+            'Get in touch with the platform manager by replying to this email.'
+        )
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View activity')
 
@@ -174,14 +182,13 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your activity "Save the world!" has succeeded 🎉')
         self.assertBodyContains(
-            'You did it! Your activity "Save the world!" has succeeded, '
-            'that calls for a celebration!')
+            'You did it! Your activity "Save the world!" has succeeded, that calls for a celebration!'
+        )
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View activity')
 
 
 class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
-
     def setUp(self):
         self.obj = NotificationPlatformSettings.load()
         self.obj = MemberPlatformSettings.load()
@@ -192,91 +199,58 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         )
 
         slot1 = DateActivitySlotFactory.create(
-            start=now() - timedelta(days=2),
-            duration=timedelta(hours=4),
-            activity=activity
+            start=now() - timedelta(days=2), duration=timedelta(hours=4), activity=activity
         )
         slot2 = DateActivitySlotFactory.create(
-            start=now() - timedelta(days=1),
-            duration=timedelta(hours=4),
-            activity=activity
+            start=now() - timedelta(days=1), duration=timedelta(hours=4), activity=activity
         )
         old_slot = DateActivitySlotFactory.create(
-            start=now().replace(year=2011),
-            duration=timedelta(hours=8),
-            activity=activity
+            start=now().replace(year=2011), duration=timedelta(hours=8), activity=activity
         )
 
         self.active_user = BlueBottleUserFactory.create(first_name='Active')
-        reg1 = DateRegistrationFactory.create(
-            user=self.active_user,
-            activity=activity
-        )
-        DateParticipantFactory.create(
-            registration=reg1,
-            slot=slot1
-        )
-        DateParticipantFactory.create(
-            registration=reg1,
-            slot=slot2
-        )
+        reg1 = DateRegistrationFactory.create(user=self.active_user, activity=activity)
+        DateParticipantFactory.create(registration=reg1, slot=slot1)
+        DateParticipantFactory.create(registration=reg1, slot=slot2)
         self.moderate_user = BlueBottleUserFactory.create(first_name='Moderate')
-        reg2 = DateRegistrationFactory.create(
-            user=self.moderate_user,
-            activity=activity
-        )
-        DateParticipantFactory.create(
-            registration=reg2,
-            slot=slot1
-        )
-        DateParticipantFactory.create(
-            registration=reg2,
-            slot=old_slot
-        )
+        reg2 = DateRegistrationFactory.create(user=self.moderate_user, activity=activity)
+        DateParticipantFactory.create(registration=reg2, slot=slot1)
+        DateParticipantFactory.create(registration=reg2, slot=old_slot)
         self.passive_user = BlueBottleUserFactory.create(first_name='Passive')
-        reg3 = DateRegistrationFactory.create(
-            user=self.passive_user,
-            activity=activity
-        )
+        reg3 = DateRegistrationFactory.create(user=self.passive_user, activity=activity)
 
-        DateParticipantFactory.create(
-            registration=reg3,
-            slot=old_slot
-        )
+        DateParticipantFactory.create(registration=reg3, slot=old_slot)
 
-        Member.objects.exclude(id__in=[
-            self.active_user.id,
-            self.passive_user.id,
-            self.moderate_user.id,
-        ]).update(receive_reminder_emails=False)
+        Member.objects.exclude(
+            id__in=[
+                self.active_user.id,
+                self.passive_user.id,
+                self.moderate_user.id,
+            ]
+        ).update(receive_reminder_emails=False)
 
     def test_reminder_q1(self):
         self.message_class = DoGoodHoursReminderQ1Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, a new year, a new chance to make impact!")
+        self.assertSubject('Test, a new year, a new chance to make impact!')
         self.assertBodyContains(
-            "Ready to make an impact from day one? On Test "
-            "you’ll find many activities waiting for you."
+            'Ready to make an impact from day one? On Test you’ll find many activities waiting for you.'
         )
         self.assertActionTitle('Find activities')
         self.assertActionLink('http://test.localhost:3000/initiatives/activities/list')
-        self.assertBodyContains(
-            "Don't want to receive these updates? Unsubscribe via the"
-        )
-        self.assertBodyContains(
-            'http://test.localhost:3000/member/profile?tab=notifications'
-        )
+        self.assertBodyContains("Don't want to receive these updates? Unsubscribe via the")
+        self.assertBodyContains('http://test.localhost:3000/member/profile?tab=notifications')
 
     def test_reminder_q2(self):
         self.message_class = DoGoodHoursReminderQ2Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, your impact starts here!")
+        self.assertSubject('Test, your impact starts here!')
         self.assertBodyContains(
-            "We know that getting started can sometimes be the hardest part. "
-            "That’s why we’ve made it simple to find activities that match your "
-            "interests and time."
+            'We know that getting started can sometimes be the hardest part. '
+            'That’s why we’ve made it simple to find activities that match your '
+            'interests and time.'
         )
         self.assertActionTitle('Find activities')
 
@@ -286,9 +260,9 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.moderate_user, self.passive_user])
         self.assertSubject("Test, there's still time to make your mark this year!")
         self.assertBodyContains(
-            "We’re halfway through the year and there’s still lots of opportunity to "
-            "make impact. Whether you’ve got a few minutes or a few hours, your efforts "
-            "can make a real difference."
+            'We’re halfway through the year and there’s still lots of opportunity to '
+            'make impact. Whether you’ve got a few minutes or a few hours, your efforts '
+            'can make a real difference.'
         )
         self.assertActionTitle('Find activities')
 
@@ -296,7 +270,7 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ4Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, use your 8 hours to make a difference!")
+        self.assertSubject('Test, use your 8 hours to make a difference!')
         self.assertBodyContains(
             'As we approach the final months of the year, there’s '
             'still time to make impact. Many causes would benefit from your time and skills.'
@@ -305,62 +279,57 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
 
 
 class MatchingActivitiesNotificationTestCase(NotificationTestCase):
-
     def setUp(self):
         self.obj = BlueBottleUserFactory.create(subscribed=True)
-        self.activity = type('Activity', (), {
-            'pk': 1,
-            'title': 'Plant trees',
-            'image': None,
-            'expertise': None,
-            'is_online': True,
-            'start': None,
-            'deadline': None,
-            'location': None,
-            'initiative': type('Initiative', (), {
+        self.activity = type(
+            'Activity',
+            (),
+            {
                 'pk': 1,
-                'theme': type('Theme', (), {'name': 'Environment'})(),
-            })(),
-            'get_absolute_url': lambda self: 'http://test.localhost/activities/1',
-        })()
+                'title': 'Plant trees',
+                'image': None,
+                'expertise': None,
+                'is_online': True,
+                'start': None,
+                'deadline': None,
+                'location': None,
+                'initiative': type(
+                    'Initiative',
+                    (),
+                    {
+                        'pk': 1,
+                        'theme': type('Theme', (), {'name': 'Environment'})(),
+                    },
+                )(),
+                'get_absolute_url': lambda self: 'http://test.localhost/activities/1',
+            },
+        )()
 
     def test_does_not_resend_same_month(self):
-        MatchingActivitiesNotification(self.obj).compose_and_send(
-            activities=[self.activity]
-        )
+        MatchingActivitiesNotification(self.obj).compose_and_send(activities=[self.activity])
         self.assertEqual(len(mail.outbox), 1)
 
-        MatchingActivitiesNotification(self.obj).compose_and_send(
-            activities=[self.activity]
-        )
+        MatchingActivitiesNotification(self.obj).compose_and_send(activities=[self.activity])
         self.assertEqual(len(mail.outbox), 1)
 
     def test_does_not_resend_unsent_row(self):
-        MatchingActivitiesNotification(self.obj).compose_and_send(
-            activities=[self.activity]
-        )
+        MatchingActivitiesNotification(self.obj).compose_and_send(activities=[self.activity])
         Message.objects.filter(
             template='messages/matching/matching_activities',
             recipient=self.obj,
         ).update(sent=None)
         mail.outbox = []
 
-        MatchingActivitiesNotification(self.obj).compose_and_send(
-            activities=[self.activity]
-        )
+        MatchingActivitiesNotification(self.obj).compose_and_send(activities=[self.activity])
         self.assertEqual(len(mail.outbox), 0)
 
     def test_sends_again_next_month(self):
-        MatchingActivitiesNotification(self.obj).compose_and_send(
-            activities=[self.activity]
-        )
+        MatchingActivitiesNotification(self.obj).compose_and_send(activities=[self.activity])
         self.assertEqual(len(mail.outbox), 1)
         Message.objects.filter(
             template='messages/matching/matching_activities',
             recipient=self.obj,
         ).update(sent=now() - relativedelta(months=1))
 
-        MatchingActivitiesNotification(self.obj).compose_and_send(
-            activities=[self.activity]
-        )
+        MatchingActivitiesNotification(self.obj).compose_and_send(activities=[self.activity])
         self.assertEqual(len(mail.outbox), 2)

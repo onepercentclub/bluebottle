@@ -1,7 +1,10 @@
 from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ActivitySegmentPermission
+    ActivityOwnerPermission,
+    ActivityTypePermission,
+    ActivityStatusPermission,
+    DeleteActivityPermission,
+    ActivitySegmentPermission,
 )
 from bluebottle.activities.views import ActivityDetailView
 from bluebottle.time_based.models import (
@@ -13,19 +16,25 @@ from bluebottle.time_based.models import (
     TimeBasedActivity,
 )
 from bluebottle.time_based.serializers import (
-    DateActivitySerializer, DeadlineActivitySerializer,
-    DateTransitionSerializer, DeadlineTransitionSerializer,
-    PeriodicActivitySerializer, PeriodicTransitionSerializer, PeriodActivitySerializer, ScheduleActivitySerializer,
-    ScheduleTransitionSerializer, RegisteredDateActivitySerializer, RegisteredDateTransitionSerializer
+    DateActivitySerializer,
+    DeadlineActivitySerializer,
+    DateTransitionSerializer,
+    DeadlineTransitionSerializer,
+    PeriodicActivitySerializer,
+    PeriodicTransitionSerializer,
+    PeriodActivitySerializer,
+    ScheduleActivitySerializer,
+    ScheduleTransitionSerializer,
+    RegisteredDateActivitySerializer,
+    RegisteredDateTransitionSerializer,
 )
 from bluebottle.time_based.views.mixins import CreatePermissionMixin, prefetch_my_interests
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission
-)
+from bluebottle.utils.permissions import OneOf, ResourcePermission
 from bluebottle.utils.views import (
-    ListCreateAPIView, JsonApiViewMixin,
+    ListCreateAPIView,
+    JsonApiViewMixin,
 )
 
 

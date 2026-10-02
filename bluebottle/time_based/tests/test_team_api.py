@@ -8,11 +8,8 @@ from bluebottle.time_based.tests.factories import ScheduleActivityFactory, TeamF
 
 
 class TeamDetailAPIViewTestCase(APITestCase):
-
     serializer = TeamSerializer
-    fields = [
-        'id', 'name', 'status', 'user'
-    ]
+    fields = ['id', 'name', 'status', 'user']
     defaults = {}
     model = Team
 
@@ -22,14 +19,8 @@ class TeamDetailAPIViewTestCase(APITestCase):
         self.manager = BlueBottleUserFactory.create()
         self.user = BlueBottleUserFactory.create()
 
-        self.activity = ScheduleActivityFactory.create(
-            team_activity='teams',
-            owner=self.manager
-        )
-        self.team = TeamFactory.create(
-            user=self.captain,
-            activity=self.activity
-        )
+        self.activity = ScheduleActivityFactory.create(team_activity='teams', owner=self.manager)
+        self.team = TeamFactory.create(user=self.captain, activity=self.activity)
         self.url = reverse('team-detail', args=(self.team.pk,))
 
     def test_manager_captain_email(self):
@@ -49,19 +40,10 @@ class TeamMemberListAPIViewTestCase(APITestCase):
         self.manager = BlueBottleUserFactory.create()
         self.captain = BlueBottleUserFactory.create()
         self.existing_member = BlueBottleUserFactory.create(email='existing.member@example.com')
-        self.activity = ScheduleActivityFactory.create(
-            team_activity='teams',
-            owner=self.manager
-        )
-        self.team = TeamFactory.create(
-            user=self.captain,
-            activity=self.activity
-        )
+        self.activity = ScheduleActivityFactory.create(team_activity='teams', owner=self.manager)
+        self.team = TeamFactory.create(user=self.captain, activity=self.activity)
 
-        self.other_team = TeamFactory.create(
-            user=self.captain,
-            activity=self.activity
-        )
+        self.other_team = TeamFactory.create(user=self.captain, activity=self.activity)
         self.url = reverse('team-member-list')
 
     def test_sign_up(self):
@@ -71,14 +53,7 @@ class TeamMemberListAPIViewTestCase(APITestCase):
                     'invite-code': self.team.invite_code,
                 },
                 'type': 'contributors/time-based/team-members',
-                'relationships': {
-                    'team': {
-                        'data': {
-                            'id': str(self.team.pk),
-                            'type': 'contributors/time-based/teams'
-                        }
-                    }
-                }
+                'relationships': {'team': {'data': {'id': str(self.team.pk), 'type': 'contributors/time-based/teams'}}},
             }
         }
 
@@ -97,14 +72,7 @@ class TeamMemberListAPIViewTestCase(APITestCase):
                     'invite-code': self.team.invite_code,
                 },
                 'type': 'contributors/time-based/team-members',
-                'relationships': {
-                    'team': {
-                        'data': {
-                            'id': str(self.team.pk),
-                            'type': 'contributors/time-based/teams'
-                        }
-                    }
-                }
+                'relationships': {'team': {'data': {'id': str(self.team.pk), 'type': 'contributors/time-based/teams'}}},
             }
         }
 
@@ -120,24 +88,15 @@ class TeamMemberListAPIViewTestCase(APITestCase):
                 },
                 'type': 'contributors/time-based/team-members',
                 'relationships': {
-                    'team': {
-                        'data': {
-                            'id': str(self.other_team.pk),
-                            'type': 'contributors/time-based/teams'
-                        }
-                    }
-                }
+                    'team': {'data': {'id': str(self.other_team.pk), 'type': 'contributors/time-based/teams'}}
+                },
             }
         }
 
         self.perform_create(user=self.existing_member, data=data)
         self.assertStatus(201)
-        self.assertEqual(
-            len(self.activity.registrations.all()), 1
-        )
-        self.assertEqual(
-            len(self.activity.participants.all()), 4
-        )
+        self.assertEqual(len(self.activity.registrations.all()), 1)
+        self.assertEqual(len(self.activity.participants.all()), 4)
         self.assertEqual(self.model.user, self.existing_member)
         self.assertEqual(self.model.team, self.other_team)
 
@@ -145,17 +104,8 @@ class TeamMemberListAPIViewTestCase(APITestCase):
         data = {
             'data': {
                 'type': 'contributors/time-based/team-members',
-                'attributes': {
-                    'email': self.existing_member.email
-                },
-                'relationships': {
-                    'team': {
-                        'data': {
-                            'id': str(self.team.pk),
-                            'type': 'contributors/time-based/teams'
-                        }
-                    }
-                }
+                'attributes': {'email': self.existing_member.email},
+                'relationships': {'team': {'data': {'id': str(self.team.pk), 'type': 'contributors/time-based/teams'}}},
             }
         }
 
@@ -169,17 +119,8 @@ class TeamMemberListAPIViewTestCase(APITestCase):
         data = {
             'data': {
                 'type': 'contributors/time-based/team-members',
-                'attributes': {
-                    'email': self.existing_member.email
-                },
-                'relationships': {
-                    'team': {
-                        'data': {
-                            'id': str(self.team.pk),
-                            'type': 'contributors/time-based/teams'
-                        }
-                    }
-                }
+                'attributes': {'email': self.existing_member.email},
+                'relationships': {'team': {'data': {'id': str(self.team.pk), 'type': 'contributors/time-based/teams'}}},
             }
         }
 

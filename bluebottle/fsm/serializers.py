@@ -25,29 +25,36 @@ class AvailableTransitionsField(ReadOnlyField):
 
         transitions = (
             {
-                "name": transition.field,
-                "target": transition.target.value,
-                "label": transition.name,
-                "passed_label": transition.passed_label,
-                "description": transition.description_front_end,
-                "short_description": transition.short_description,
-                "available": True,
+                'name': transition.field,
+                'target': transition.target.value,
+                'label': transition.name,
+                'passed_label': transition.passed_label,
+                'description': transition.description_front_end,
+                'short_description': transition.short_description,
+                'available': True,
             }
             for transition in states.possible_transitions(user=user)
             if not transition.automatic
         )
 
         preferred_order = [
-            "approve", "request_changes",
-            "reopen", "reopen_manually",
-            "succeed_manually", "succeed",
-            "submit", "restore",
-            "cancel", "reject", "delete"
+            'approve',
+            'request_changes',
+            'reopen',
+            'reopen_manually',
+            'succeed_manually',
+            'succeed',
+            'submit',
+            'restore',
+            'cancel',
+            'reject',
+            'delete',
         ]
 
         sorted_transitions = sorted(
             transitions,
-            key=lambda x: preferred_order.index(x["name"]) if x["name"] in preferred_order else len(preferred_order))
+            key=lambda x: preferred_order.index(x['name']) if x['name'] in preferred_order else len(preferred_order),
+        )
         return sorted_transitions
 
     def get_attribute(self, instance):
@@ -71,10 +78,10 @@ class TransitionSerializer(Serializer):
     field = 'states'
 
     def save(self):
-        resource = self.validated_data["resource"]
-        transition_name = self.validated_data["transition"]
-        message = self.validated_data.get("message", None)
-        send_email = self.validated_data.get("send_email", True)
+        resource = self.validated_data['resource']
+        transition_name = self.validated_data['transition']
+        message = self.validated_data.get('message', None)
+        send_email = self.validated_data.get('send_email', True)
         if send_email is None:
             send_email = True
         states = getattr(resource, self.field)

@@ -1,13 +1,10 @@
 from django.http import Http404
-from bluebottle.utils.views import (
-    ListAPIView, RetrieveAPIView, ListCreateAPIView
-)
+from bluebottle.utils.views import ListAPIView, RetrieveAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.terms.models import Terms, TermsAgreement
-from bluebottle.terms.serializers import (TermsSerializer,
-                                          TermsAgreementSerializer)
+from bluebottle.terms.serializers import TermsSerializer, TermsAgreementSerializer
 
 
 class TermsListView(ListAPIView):

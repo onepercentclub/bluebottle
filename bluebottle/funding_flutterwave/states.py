@@ -13,11 +13,10 @@ class FlutterwavePaymentStateMachine(BasePaymentStateMachine):
 
 @register(FlutterwaveBankAccount)
 class FlutterwaveBankAccountStateMachine(BankAccountStateMachine):
-
     migrate_to_lipisha = Transition(
         AllStates(),
         BankAccountStateMachine.rejected,
-        name=_("Migrate to Lipisha"),
-        description=_("Migrate to Lipisha account"),
-        automatic=False
+        name=_('Migrate to Lipisha'),
+        description=_('Migrate to Lipisha account'),
+        automatic=False,
     )

@@ -2,9 +2,7 @@ from builtins import object
 import factory.fuzzy
 
 from bluebottle.funding.tests.factories import DonorFactory, PlainPayoutAccountFactory
-from bluebottle.funding_vitepay.models import (
-    VitepayPayment, VitepayPaymentProvider, VitepayBankAccount
-)
+from bluebottle.funding_vitepay.models import VitepayPayment, VitepayPaymentProvider, VitepayBankAccount
 
 
 class VitepayPaymentFactory(factory.DjangoModelFactory):
@@ -15,7 +13,6 @@ class VitepayPaymentFactory(factory.DjangoModelFactory):
 
 
 class VitepayPaymentProviderFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = VitepayPaymentProvider
 

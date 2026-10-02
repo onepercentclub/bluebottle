@@ -15,7 +15,7 @@ class LockdownTestCase(BluebottleTestCase):
         request.LANGUAGE_CODE = 'en'
         request.META = {'HTTP_X_LOCKDOWN': 'sssht'}
         # Mock a session
-        request.session = type("MockSession", (object, ), {"get": lambda self, prop: "bla"})()
+        request.session = type('MockSession', (object,), {'get': lambda self, prop: 'bla'})()
         response = mw.process_request(request)
         self.assertEqual(response.status_code, 401)
         self.assertTrue('<style>' in response.content.decode())

@@ -16,12 +16,8 @@ class SCIMFilter(filters.SearchFilter):
 
         try:
             field, value = filter.split(' eq ')
-            mapped_filter = {
-                self.field_mapping[field]: value.strip('"')
-            }
+            mapped_filter = {self.field_mapping[field]: value.strip('"')}
         except (ValueError, KeyError):
             raise ValidationError(f'Unsupported filter: {filter}')
 
-        return queryset.filter(
-            **mapped_filter
-        )
+        return queryset.filter(**mapped_filter)

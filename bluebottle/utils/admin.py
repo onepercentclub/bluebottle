@@ -32,7 +32,7 @@ class LanguageAdmin(admin.ModelAdmin):
 
 
 def prep_field(request, obj, field, manyToManySep=';'):
-    """ Returns the field as a unicode string. If the field is a callable, it
+    """Returns the field as a unicode string. If the field is a callable, it
     attempts to call it first, without arguments.
     """
     if '__' in field:
@@ -48,7 +48,7 @@ def prep_field(request, obj, field, manyToManySep=';'):
                     pass
 
             if obj is None:
-                return ""
+                return ''
 
     attr = getattr(obj, field)
 
@@ -68,24 +68,23 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
     if isinstance(output, (list, tuple, QuerySet)):
         output = manyToManySep.join([str(item) for item in output])
-    return output if output else ""
+    return output if output else ''
 
 
 def escape_csv_formulas(item):
     if item and isinstance(item, six.string_types):
         if item[0] in ['=', '+', '-', '@']:
-            item = u"'" + item
+            item = "'" + item
         return smart_str(item)
     else:
         return item
 
 
-def export_as_csv_action(description="Export as CSV", fields=None, exclude=None, header=True,
-                         manyToManySep=';'):
-    """ This function returns an export csv action. """
+def export_as_csv_action(description='Export as CSV', fields=None, exclude=None, header=True, manyToManySep=';'):
+    """This function returns an export csv action."""
 
     def export_as_csv(modeladmin, request, queryset):
-        """ Generic csv export admin action.
+        """Generic csv export admin action.
         Based on http://djangosnippets.org/snippets/2712/
         """
         opts = modeladmin.model._meta
@@ -104,9 +103,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 labels = field_names
 
         response = HttpResponse(content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
-            str(opts).replace('.', '_')
-        )
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (str(opts).replace('.', '_'))
         writer = csv.writer(response, delimiter=';', dialect='excel')
 
         if header:
@@ -134,7 +131,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     for segment in obj.segments.filter(segment_type=segment_type):
                         segment_name = segment.name
                         segment_list.append(segment_name)
-                    segments = " | ".join(segment_list)
+                    segments = ' | '.join(segment_list)
                     row.append(segments)
             if issubclass(queryset.model, Contributor):
                 for segment_type in SegmentType.objects.all():
@@ -144,7 +141,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                         for segment in obj.user.segments.filter(segment_type=segment_type):
                             segment_name = segment.name
                             segment_list.append(segment_name)
-                        segments = " | ".join(segment_list)
+                        segments = ' | '.join(segment_list)
                     else:
                         segments = ''
                     row.append(segments)
@@ -165,11 +162,7 @@ class TotalAmountAdminChangeList(ChangeList):
         total_column = self.model_admin.total_column or 'amount'
         currency_column = '{}_currency'.format(total_column)
 
-        totals = self.queryset.values(
-            currency_column
-        ).annotate(
-            total=Sum(total_column)
-        ).order_by()
+        totals = self.queryset.values(currency_column).annotate(total=Sum(total_column)).order_by()
 
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
@@ -187,7 +180,7 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
         object_id=obj.pk,
         object_repr=str(obj),
         action_flag=action_flag,
-        change_message=change_message
+        change_message=change_message,
     )
 
 
@@ -199,11 +192,11 @@ class TranslatableAdminOrderingMixin(object):
         queryset = super(TranslatableAdminOrderingMixin, self).get_queryset(request)
         return queryset.filter(
             translations__pk__in=self.model.translations.field.model.objects.annotate(
-                is_translated=ExpressionWrapper(
-                    Q(language_code=language_code),
-                    output_field=fields.BooleanField()
-                )
-            ).order_by('master_id', '-is_translated').distinct('master_id').values('pk')
+                is_translated=ExpressionWrapper(Q(language_code=language_code), output_field=fields.BooleanField())
+            )
+            .order_by('master_id', '-is_translated')
+            .distinct('master_id')
+            .values('pk')
         ).order_by(self.translatable_ordering)
 
 

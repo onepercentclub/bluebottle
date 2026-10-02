@@ -6,19 +6,6 @@ from bluebottle.token_auth.views import TokenRedirectView
 
 
 class TokenRedirectTargetUrlTestCase(TestCase):
-    """BB-30159: ?url= was passed straight to build_absolute_uri().
-
-    Two problems, both exercised by a scanner against the Mars tenant:
-
-    * a look-alike separator (U+FF0F instead of '/') makes urlsplit raise
-      `ValueError: netloc ... contains invalid characters under NFKC
-      normalization` inside build_absolute_uri, which escaped the view as an
-      unhandled 500;
-    * `//evil.example.com` does *not* raise -- it parses cleanly and
-      build_absolute_uri returns the attacker's URL, which was then handed to
-      the IdP as the AuthnRequest RelayState.
-    """
-
     def setUp(self):
         self.view = TokenRedirectView()
 
@@ -42,6 +29,12 @@ class TokenRedirectTargetUrlTestCase(TestCase):
         self.assertEqual(
             self.target_url('http://testserver/en/activities'),
             'http://testserver/en/activities',
+        )
+
+    def test_absolute_url_on_https(self):
+        self.assertEqual(
+            self.target_url('https://testserver/en/activities'),
+            'https://testserver/en/activities',
         )
 
     def test_missing_url_falls_back_to_the_tenant_root(self):

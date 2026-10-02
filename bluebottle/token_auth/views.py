@@ -1,21 +1,19 @@
 import logging
 import re
 
-from bluebottle.members.models import MemberPlatformSettings
 import django_otp
-
-
 from django.conf import settings
 from django.contrib.auth import login
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
-from rest_framework.exceptions import PermissionDenied
 from django.template import loader
-from django.views.generic.base import View, TemplateView
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.generic.base import View, TemplateView
+from rest_framework.exceptions import PermissionDenied
 
 from bluebottle.clients import properties
-from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.models import SAMLDevice
 from bluebottle.utils.utils import get_client_ip
 
@@ -34,20 +32,6 @@ class TokenRedirectView(View):
     query_string = True
 
     def target_url(self, request):
-        """Absolute URL to land on after login, from the ?url= parameter.
-
-        The parameter is attacker-controlled and was passed straight to
-        build_absolute_uri(). A look-alike separator such as U+FF0F makes
-        urlsplit raise ValueError under NFKC normalisation, which escaped the
-        view as an unhandled 500.
-
-        An off-host value like `//evil.example.com` does not raise -- it parses
-        cleanly and build_absolute_uri returns the attacker's URL. That is not
-        an exploitable open redirect, because SAMLAuthentication.target_url
-        re-validates the RelayState against the tenant host on the way back, but
-        it does mean we hand an arbitrary URL to the IdP in the AuthnRequest.
-        Validating here keeps that from happening at all.
-        """
         url = request.GET.get('url')
         try:
             allowed = url and url_has_allowed_host_and_scheme(

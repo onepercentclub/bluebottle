@@ -7,6 +7,7 @@ from django.template.response import TemplateResponse
 from django.urls import path
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from polymorphic.models import PolymorphicTypeInvalid
 
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.fsm.state import TransitionNotPossible
@@ -222,7 +223,12 @@ class StateMachineAdminMixin(object):
 
     def state_name(self, obj):
         if hasattr(self, 'child_models'):
-            obj = obj.get_real_instance()
+            try:
+                obj = obj.get_real_instance()
+            except PolymorphicTypeInvalid:
+                # A stale polymorphic_ctype should cost us this one cell,
+                # not the whole changelist.
+                return '-'
 
         if obj.states.current_state:
             return obj.states.current_state.name

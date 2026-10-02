@@ -23,6 +23,11 @@ ruff format .         # format
 - Don't hand-format what ruff formats. If you disagree with the output,
   change the config, not the file.
 
+`ruff check .` runs in CI (the Linting job in
+`.github/workflows/quality_checks.yml`) and on commit via pre-commit. `ruff`
+is in the `dev` extra, so `pip install -e ".[dev]"` gets you the same version
+CI uses.
+
 > **Not yet applied repo-wide.** `ruff format` currently reports ~728 of 1072
 > files as unformatted. The one-off reformat is deliberately pending so it
 > doesn't collide with open branches, and `ruff-format` is commented out in

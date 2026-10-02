@@ -27,7 +27,7 @@ runs:
         # shellcheck source=/dev/null
         source "${venv_dir}/bin/activate"
         if python -c "import django" 2>/dev/null && \
-           { [ "${pip_extra}" != "dev" ] || python -c "import flake8" 2>/dev/null; }; then
+           { [ "${pip_extra}" != "dev" ] || ruff --version >/dev/null 2>&1; }; then
           echo "venv ${venv_dir} ready"
         else
           pip install -e ".[${pip_extra}]"

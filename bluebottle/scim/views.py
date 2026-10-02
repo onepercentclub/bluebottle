@@ -3,6 +3,7 @@ from builtins import object
 from builtins import str
 
 from django.contrib.auth.models import Group
+from django.db import IntegrityError
 from django.http import Http404
 from rest_framework import (
     generics, response, permissions, authentication, exceptions,
@@ -87,6 +88,15 @@ class SCIMViewMixin(object):
                 'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
                 'status': status_code,
                 'detail': 'The resource was not found'
+            }
+        elif isinstance(exc, IntegrityError):
+            logger.warning('SCIM write rejected by a database constraint: %s', exc)
+            status_code = 409
+            data = {
+                'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                'scimType': 'uniqueness',
+                'status': status_code,
+                'detail': 'A resource with one of the supplied attribute values already exists'
             }
         else:
             try:

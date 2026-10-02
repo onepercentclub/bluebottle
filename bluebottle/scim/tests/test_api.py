@@ -1182,6 +1182,29 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.last_name, 'Example')
         self.assertEqual(self.user.email, 'test@example.com')
 
+    def test_patch_duplicate_email(self):
+        BlueBottleUserFactory.create(email='taken@example.com')
+
+        request_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    "op": "Add",
+                    "path": 'emails[type eq "work"].value',
+                    "value": 'taken@example.com'
+                }
+            ]
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()['scimType'], 'uniqueness')
+
     def test_patch_segment(self):
         department = SegmentTypeFactory.create(name='Department', slug='department')
 

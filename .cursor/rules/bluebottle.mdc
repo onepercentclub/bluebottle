@@ -1,0 +1,20 @@
+---
+description: Code style and conventions for the bluebottle codebase
+alwaysApply: true
+---
+
+Follow the conventions in @docs/CODE_STYLE.md. The points that come up most:
+
+- **Comments are sparse.** Never put a Jira ticket key in code, and don't
+  explain what a bug was — that belongs in the ticket and the PR.
+- **Formatting is ruff's job** (`.ruff.toml`): 120 columns, single quotes.
+  Don't hand-format; if the output is wrong, change the config.
+- **Test docstrings are one line** describing the scenario, with no ticket
+  keys or tracebacks. A regression test must fail against the unfixed code.
+- **Run tests with `--keepdb`**:
+  `python manage.py test <path> --settings=bluebottle.settings.local --keepdb`
+- **Branch per ticket**: `ticket/BB-xxxxx-short-description`.
+
+This is a multi-tenant Django project (tenant_schemas, one Postgres schema per
+tenant) with Elasticsearch-backed activity search. Attribute access on indexed
+documents must tolerate missing fields.

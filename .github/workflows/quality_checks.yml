@@ -79,4 +79,4 @@ jobs:
       - name: Lint
         run: |
           source "${VENV_DIR}/bin/activate"
-          flake8 .
+          ruff check .

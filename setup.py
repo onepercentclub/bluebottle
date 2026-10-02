@@ -163,7 +163,7 @@ tests_requires = [
 
 dev_requires = [
     'ipdb',
-    'flake8==5.0.4',
+    'ruff==0.16.10',
     'polib==1.2.0',
 ]
 

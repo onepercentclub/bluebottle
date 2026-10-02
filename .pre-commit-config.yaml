@@ -1,5 +1,9 @@
 repos:
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.10
     hooks:
-      - id: flake8
+      - id: ruff-check
+      # Enable once the repo-wide `ruff format .` has landed. Turning it on
+      # before then means every PR carries reformat noise for the files it
+      # happens to touch.
+      # - id: ruff-format

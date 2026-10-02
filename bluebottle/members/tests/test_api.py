@@ -84,6 +84,23 @@ class LoginTestCase(BluebottleTestCase):
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
 
+    def test_login_with_a_duplicate_member(self):
+        BlueBottleUserFactory.create(
+            email=self.email.replace('test', 'Test'), password=self.password
+        )
+
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        decoded = jwt.decode(
+            response.json()['token'],
+            algorithms='HS256',
+            options=dict(verify_signature=False),
+        )
+        self.assertEqual(decoded['username'], self.user.pk)
+
     def test_expired_token(self):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}

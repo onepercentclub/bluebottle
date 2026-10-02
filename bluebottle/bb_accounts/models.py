@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import random
 import string
@@ -12,7 +13,7 @@ from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, UserManager
 )
 from django.core.mail.message import EmailMessage
-from django.db import models
+from django.db import connection, models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -30,6 +31,9 @@ from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from .utils import send_welcome_mail
 from ..segments.models import Segment
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_picture_filename(instance, filename):
@@ -81,10 +85,24 @@ class BlueBottleUserManager(UserManager):
     def get_by_natural_key(self, username):
         if isinstance(username, int):
             return self.get(pk=username)
-        else:
-            return self.get(**{
-                '{}__iexact'.format(self.model.USERNAME_FIELD): username
-            })
+
+        lookup = {'{}__iexact'.format(self.model.USERNAME_FIELD): username}
+        try:
+            return self.get(**lookup)
+        except self.model.MultipleObjectsReturned:
+            # The unique index on email is case sensitive, so rows differing
+            # only in case are legal in the database but ambiguous here. Pick
+            # the oldest -- the one most likely to carry the history -- and
+            # leave a trail so the duplicates can be merged.
+            matches = list(self.filter(**lookup).order_by('date_joined', 'pk'))
+            logger.warning(
+                'Multiple members match %r on %s: %s. Using %s.',
+                username,
+                connection.tenant.client_name,
+                ', '.join(str(match.pk) for match in matches),
+                matches[0].pk,
+            )
+            return matches[0]
 
 
 @python_2_unicode_compatible

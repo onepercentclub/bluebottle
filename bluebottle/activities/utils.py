@@ -217,17 +217,7 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
     }
 
 
-# This can't be in serializers because of circular imports
 def is_editable_draft(instance):
-    """True when the serializer is bound to a single unpublished activity.
-
-    DRF's many_init hands the child serializer the same positional args as the
-    ListSerializer, so on a list endpoint `instance` is the page's list of
-    activities rather than one activity. Reading `.status` off that raised
-    `AttributeError: 'list' object has no attribute 'status'` for any non-empty
-    page (an empty page short-circuited on `not instance`, which is why it
-    looked intermittent). A list is never a single draft being edited.
-    """
     if instance is None:
         return True
     if isinstance(instance, (list, tuple, QuerySet)):
@@ -236,15 +226,6 @@ def is_editable_draft(instance):
 
 
 def relax_validation_for_draft(fields):
-    """Let an incomplete draft be saved without dropping integrity checks.
-
-    A draft is saved field by field while the user fills the form in, so
-    required/blank/null are relaxed. Wiping `validators` wholesale also removed
-    MaxLengthValidator, though, and a value that *is* present still has to fit
-    its column -- an over-long title sailed through validation and failed on the
-    INSERT with `DataError: value too long for type character varying(255)` and
-    a 500 instead of a field-level 400 (BB-30249).
-    """
     for field in fields.values():
         field.allow_blank = True
         field.validators = [

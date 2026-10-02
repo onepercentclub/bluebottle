@@ -239,14 +239,9 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     def save(self, **kwargs):
         if self.slug in ["", "new"]:
             if self.title and slugify(self.title):
-                # Truncate: the slug is derived here rather than entered, so
-                # nothing validates its length, and slugify can lengthen a
-                # string when non-ASCII characters are transliterated. Same
-                # overflow as Activity.save() (BB-30193).
                 max_length = self._meta.get_field("slug").max_length
                 self.slug = slugify(self.title)[:max_length].rstrip("-")
                 if not self.slug:
-                    # If someone uses only special chars as title then construct a slug
                     self.slug = "in-{}".format(
                         self.__class__.objects.all().aggregate(Max("id"))["id__max"]
                         or 0 + 1

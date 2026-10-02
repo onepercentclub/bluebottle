@@ -98,8 +98,6 @@ class InitiativeTestCase(TestCase):
 
 
 class InitiativeSlugTestCase(TestCase):
-    """BB-30193: Initiative.save() had the same untruncated slug as Activity."""
-
     def test_long_title_produces_a_slug_that_fits(self):
         max_length = Initiative._meta.get_field('slug').max_length
         initiative = InitiativeFactory.create(title='a' * 255, slug='new')

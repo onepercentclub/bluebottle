@@ -835,6 +835,36 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data[3]['id'], str(activity_lyutidol.id))
         self.assertEqual(len(data), 4)
 
+    def distance_sort_response(self, place_id):
+        return self.client.get(
+            '{}?sort=distance&place={}'.format(self.url, place_id),
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
+
+    def test_sort_distance_with_unknown_place(self):
+        """The reported case: a place id that is not in this tenant's schema."""
+        DeadlineActivityFactory(
+            status="open",
+            location=GeolocationFactory.create(position=Point(4.922114, 52.362438)),
+        )
+
+        response = self.distance_sort_response(999999)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(json.loads(response.content)['data']), 1)
+
+    def test_sort_distance_with_a_place_without_a_position(self):
+        DeadlineActivityFactory(
+            status="open",
+            location=GeolocationFactory.create(position=Point(4.922114, 52.362438)),
+        )
+        place = PlaceFactory.create(position=None)
+
+        response = self.distance_sort_response(place.pk)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(json.loads(response.content)['data']), 1)
+
     def test_sort_date(self):
         today = now().date()
         activities = [

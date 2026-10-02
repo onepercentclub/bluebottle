@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, date
 
 import dateutil
@@ -32,6 +33,9 @@ from bluebottle.utils.filters import (
     Search,
     SegmentFacet,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class DistanceFacet(Facet):
@@ -471,23 +475,39 @@ class ActivitySearch(Search):
         if self._sort == "distance":
             request = get_current_request()
             place_id = request.GET.get("place")
+            position = None
+
             if place_id:
                 place = Place.objects.filter(pk=place_id).first()
                 if place and place.position:
-                    geo_sort = {
-                        "_geo_distance": {
-                            "position": {
-                                "lat": float(place.position[1]),
-                                "lon": float(place.position[0]),
-                            },
-                            "order": "asc",
-                            "distance_type": "arc",
-                        }
-                    }
+                    position = place.position
+                else:
+                    logger.warning(
+                        'Could not resolve an origin for the distance sort on %s: '
+                        'place %r is missing or has no position',
+                        request.get_host(),
+                        place_id,
+                    )
 
-                    search = search.sort({"is_online": {"order": "desc"}}, geo_sort)
+            # Distance is computed at query time, so it only exists as a
+            # _geo_distance clause. Without an origin there is nothing to sort
+            # against and the default ordering has to stand.
+            if position:
+                geo_sort = {
+                    "_geo_distance": {
+                        "position": {
+                            "lat": float(position[1]),
+                            "lon": float(position[0]),
+                        },
+                        "order": "asc",
+                        "distance_type": "arc",
+                    }
+                }
+                search = search.sort({"is_online": {"order": "desc"}}, geo_sort)
             else:
                 search = search.sort({"is_online": {"order": "desc"}})
+
+            return search
 
         if self._sort == "start":
             # Used for activity tab in initiatives

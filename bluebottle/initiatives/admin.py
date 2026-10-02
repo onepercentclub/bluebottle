@@ -56,11 +56,6 @@ class InitiativeReviewerFilter(admin.SimpleListFilter):
         try:
             reviewer_id = int(value)
         except (TypeError, ValueError):
-            # Anything non-numeric (a stale bookmark, a crawled link) would
-            # otherwise reach IntegerField.get_prep_value() inside
-            # ChangeList.__init__ and take the whole changelist down with a
-            # 500. IncorrectLookupParameters makes the admin redirect back to
-            # the unfiltered list instead.
             raise IncorrectLookupParameters(
                 "Invalid reviewer id: {!r}".format(value)
             )

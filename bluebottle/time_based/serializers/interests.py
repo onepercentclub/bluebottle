@@ -15,7 +15,7 @@ from bluebottle.time_based.models import (
     Interest,
 )
 from bluebottle.time_based.serializers.interest_validators import (
-    UserAlreadyInvolvedValidator,
+    get_interest_involvement_validator,
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -112,7 +112,9 @@ class InterestSerializer(ModelSerializer):
                     _('Interests can only be registered for full activities.')
                 )
 
-        UserAlreadyInvolvedValidator().validate(user, activity, slot)
+        get_interest_involvement_validator(activity, slot).validate(
+            user, activity, slot
+        )
 
         data['user'] = user
         data['activity'] = activity

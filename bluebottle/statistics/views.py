@@ -34,8 +34,6 @@ class StatisticList(JsonApiViewMixin, ListAPIView):
 
 class UserStatisticList(JsonApiViewMixin, ListAPIView):
     serializer_class = UserStatisticSerializer
-    # These figures are per-member, so an anonymous caller gets a 401 rather
-    # than platform-wide totals presented as their own.
     permission_classes = [TenantConditionalOpenClose, IsAuthenticated]
     renderer_classes = (StatisticsRenderer, )
 

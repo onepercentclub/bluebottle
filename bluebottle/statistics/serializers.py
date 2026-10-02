@@ -129,9 +129,6 @@ class UserStatisticSerializer(StatisticSerializer):
 
     def get_user(self):
         user = get_current_user()
-        # AnonymousUser is truthy, so without this check it reaches
-        # Statistics(user=...) and then a `.filter(user=AnonymousUser)`, which
-        # raises TypeError when Django tries to coerce it to a pk.
         if getattr(user, 'is_authenticated', False):
             return user
         return None

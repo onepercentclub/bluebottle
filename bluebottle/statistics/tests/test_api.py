@@ -352,19 +352,11 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         self.assertEqual(data[1]['attributes']['value'], 6.0)
 
     def test_get_anonymous(self):
-        """BB-30187: an anonymous caller must not reach the ORM.
-
-        AnonymousUser used to be passed straight into
-        Statistics.donated_total's `.filter(user=...)`, which raised
-        TypeError: Field 'id' expected a number but got <AnonymousUser>.
-        """
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_anonymous_user_is_not_passed_to_statistics(self):
-        """The guard sits at the serializer boundary, so it covers every
-        statistic type rather than only the first one evaluated."""
         serializer = UserStatisticSerializer()
 
         with patch(

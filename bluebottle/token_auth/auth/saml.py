@@ -11,6 +11,7 @@ from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
+from bluebottle.utils.utils import get_client_ip
 
 
 logger = logging.getLogger(__name__)
@@ -119,6 +120,17 @@ class SAMLAuthentication(BaseTokenAuthentication):
         except OneLogin_Saml2_Error as e:
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)
+        except Exception as e:
+            # The response never got far enough to be a SAML document: it failed
+            # base64 decoding or XML parsing. That is bad input, not a server fault.
+            logger.warning(
+                'Rejected unreadable SAML response on %s from %s: %s: %s',
+                self.request.get_host(),
+                get_client_ip(self.request),
+                type(e).__name__,
+                e,
+            )
+            raise TokenAuthenticationError('Invalid SAML response')
 
         if self.auth.is_authenticated():
             # del self.request.session['saml_request_id']

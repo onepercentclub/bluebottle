@@ -34,7 +34,6 @@ from bluebottle.utils.filters import (
     SegmentFacet,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -489,9 +488,6 @@ class ActivitySearch(Search):
                         place_id,
                     )
 
-            # Distance is computed at query time, so it only exists as a
-            # _geo_distance clause. Without an origin there is nothing to sort
-            # against and the default ordering has to stand.
             if position:
                 geo_sort = {
                     "_geo_distance": {

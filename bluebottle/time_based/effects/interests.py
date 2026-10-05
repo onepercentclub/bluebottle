@@ -17,6 +17,8 @@ class DeleteInterestEffect(Effect):
 
     def matching_interest_exists(self):
         """User has expressed interest in this activity or slot"""
+        if not self.instance.user_id:
+            return False
         return self._queryset().exists()
 
     conditions = [matching_interest_exists]

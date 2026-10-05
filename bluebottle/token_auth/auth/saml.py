@@ -1,4 +1,8 @@
+import binascii
+
+from defusedxml import DTDForbidden
 from future import standard_library
+from lxml.etree import XMLSyntaxError
 
 from bluebottle.token_auth.models import SAMLLog
 
@@ -117,7 +121,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
         except OneLogin_Saml2_Error as e:
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)
-        except Exception as e:
+        except (ValueError, binascii.Error, XMLSyntaxError, DTDForbidden) as e:
             logger.warning(
                 'Rejected unreadable SAML response on %s from %s: %s: %s',
                 self.request.get_host(),

@@ -379,15 +379,18 @@ class FundingSerializer(BaseActivitySerializer):
         Ignore changes to target and deadline when status is not 'draft' or 'needs_work'
         """
         if self.instance and self.instance.status not in ['draft', 'needs_work']:
-            # Remove target and deadline from data if they're being changed
+            # Send a warning if target or deadline is being changed on live campaign
             if 'target' in data and data['target'] != self.instance.target:
                 raise ValidationError(
                     {'target': _('Target cannot be changed after the funding has been published.')}
                 )
-            if 'deadline' in data and data['deadline'].date() != self.instance.deadline.date():
-                raise ValidationError(
-                    {'target': _('Deadline cannot be changed after the funding has been published.')}
-                )
+            if 'deadline' in data:
+                deadline_new = data['deadline'].date() if data.get('deadline', None) else None
+                deadline_old = self.instance.deadline.date() if self.instance.deadline else None
+                if deadline_new != deadline_old:
+                    raise ValidationError(
+                        {'deadline': _('Deadline cannot be changed after the funding has been published.')}
+                    )
         return data
 
     class Meta(BaseActivitySerializer.Meta):

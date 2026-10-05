@@ -467,7 +467,7 @@ class SlotParticipantUnFollowActivityEffect(Effect):
             return False
         return (
             reg.participants.filter(
-                status__in=("registered", "succeeded")
+                status__in=("registered", "succeeded", "accepted")
             ).count()
             == 1
         )

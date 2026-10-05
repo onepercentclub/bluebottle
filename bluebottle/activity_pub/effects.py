@@ -509,7 +509,7 @@ class SendRemoveEffect(Effect):
     def is_valid(self):
         return (
             not self.options.get('local') and
-            (self.instance.remote_user is not None or self.instance.activity.origin is not None)
+            (self.instance.remote_user is not None or hasattr(self.instance.activity, 'origin'))
         )
 
     def __str__(self):

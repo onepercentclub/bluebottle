@@ -543,7 +543,13 @@ class ActivitySearch(Search):
                 end = date.max
 
                 if "date" in self.filter_values:
-                    start, end = self.filter_values["date"][0].split(",")
+                    bounds = self.filter_values["date"][0].split(",")
+                    if len(bounds) != 2:
+                        raise ValidationError(
+                            {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+                        )
+
+                    start, end = (self.parse_bound(bound) for bound in bounds)
 
                 search = search.sort(
                     {
@@ -568,7 +574,13 @@ class ActivitySearch(Search):
                 end = now()
 
                 if "date" in self.filter_values:
-                    start, end = self.filter_values["date"][0].split(",")
+                    bounds = self.filter_values["date"][0].split(",")
+                    if len(bounds) != 2:
+                        raise ValidationError(
+                            {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+                        )
+
+                    start, end = (self.parse_bound(bound) for bound in bounds)
 
                 search = search.sort(
                     {

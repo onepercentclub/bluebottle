@@ -89,7 +89,7 @@ class BlueBottleUserManager(UserManager):
         try:
             return self.get(**lookup)
         except self.model.MultipleObjectsReturned:
-            matches = list(self.filter(**lookup).order_by('date_joined', 'pk'))
+            matches = list(self.filter(**lookup).order_by('pk'))
             logger.error(
                 'Multiple members match %r on %s: %s. Using %s.',
                 username,

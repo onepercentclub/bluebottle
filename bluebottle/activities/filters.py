@@ -478,6 +478,17 @@ class ActivitySearch(Search):
         "theme": ModelFacet("theme", Theme),
     }
 
+    def parse_bound(self, value):
+        value = value.strip()
+        if not value:
+            return None
+        try:
+            return dateutil.parser.parse(value)
+        except (ValueError, OverflowError):
+            raise ValidationError(
+                {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+            )
+
     def sort(self, search):
         search = super().sort(search)
 

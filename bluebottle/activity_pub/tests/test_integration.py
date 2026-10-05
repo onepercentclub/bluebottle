@@ -33,6 +33,7 @@ from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.geo.models import Geolocation
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -1127,6 +1128,18 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
         )
         if 'status' not in kwargs:
             self.submit()
+
+    def test_no_automatic_link_when_activity_type_disabled_on_platform(self):
+        with LocalTenant(self.other_tenant):
+            initiative_settings = InitiativePlatformSettings.load()
+            initiative_settings.activity_types = ['dateactivity']
+            initiative_settings.save()
+
+        with httmock.HTTMock(image_mock):
+            self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertFalse(LinkedActivity.objects.exists())
 
     def test_link_succeeded(self):
         self.test_accept()

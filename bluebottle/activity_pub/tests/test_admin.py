@@ -15,6 +15,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.deeds.tests.factories import DeedFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -114,6 +115,43 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         )
         self.assertEqual(follow.default_owner, default_owner)
         self.assertTrue(follow.object.organization)
+
+    def set_platform_activity_types(self, activity_types):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.activity_types = activity_types
+        initiative_settings.save()
+
+    def get_adoption_activity_type_options(self, page):
+        return {
+            checkbox['value'] for checkbox in page.html.find_all(
+                'input', {'name': 'automatic_adoption_activity_types'}
+            )
+        }
+
+    def test_following_admin_add_only_shows_enabled_activity_types(self):
+        self.set_platform_activity_types(['deed', 'dateactivity'])
+
+        page = self.app.get(reverse('admin:activity_pub_following_add'), user=self.superuser)
+
+        self.assertEqual(
+            self.get_adoption_activity_type_options(page),
+            {'deed', 'dateactivity'}
+        )
+
+    def test_following_admin_change_only_shows_enabled_activity_types(self):
+        self.set_platform_activity_types(['deed', 'dateactivity'])
+        self.submit_following_form(activity_types=['deed'])
+        follow = Following.objects.get()
+
+        page = self.app.get(
+            reverse('admin:activity_pub_following_change', args=(follow.pk,)),
+            user=self.superuser
+        )
+
+        self.assertEqual(
+            self.get_adoption_activity_type_options(page),
+            {'deed', 'dateactivity'}
+        )
 
     def test_following_admin_add_connection_invalid_platform_url(self):
         url = reverse('admin:activity_pub_following_add')

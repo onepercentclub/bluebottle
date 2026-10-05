@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from builtins import range
 from calendar import timegm
@@ -8,6 +9,7 @@ import jwt
 import mock
 from django.core import mail
 from django.core.signing import TimestampSigner
+from django.test.client import RequestFactory
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
@@ -85,13 +87,16 @@ class LoginTestCase(BluebottleTestCase):
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
 
     def test_login_with_a_duplicate_member(self):
-        BlueBottleUserFactory.create(
+        duplicate = BlueBottleUserFactory.create(
             email=self.email.replace('test', 'Test'), password=self.password
         )
+        logging.disable(logging.NOTSET)
+        self.addCleanup(logging.disable, logging.CRITICAL)
 
-        response = self.client.post(
-            reverse('token-auth'), {'email': self.email, 'password': self.password}
-        )
+        with self.assertLogs('bluebottle.bb_accounts.models', level='ERROR') as logs:
+            response = self.client.post(
+                reverse('token-auth'), {'email': self.email, 'password': self.password}
+            )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         decoded = jwt.decode(
@@ -100,6 +105,55 @@ class LoginTestCase(BluebottleTestCase):
             options=dict(verify_signature=False),
         )
         self.assertEqual(decoded['username'], self.user.pk)
+        self.assertIn(self.email, logs.output[0])
+        self.assertIn(str(self.user.pk), logs.output[0])
+        self.assertIn(str(duplicate.pk), logs.output[0])
+        self.assertIn('Using {}'.format(self.user.pk), logs.output[0])
+
+    def test_login_uses_the_duplicate_that_holds_the_password(self):
+        self.user.set_password('not-the-password')
+        self.user.save()
+        duplicate = BlueBottleUserFactory.create(
+            email=self.email.replace('test', 'Test'), password=self.password
+        )
+        logging.disable(logging.NOTSET)
+        self.addCleanup(logging.disable, logging.CRITICAL)
+
+        with self.assertLogs('bluebottle.bb_accounts.models', level='ERROR') as logs:
+            response = self.client.post(
+                reverse('token-auth'), {'email': self.email, 'password': self.password}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        decoded = jwt.decode(
+            response.json()['token'],
+            algorithms='HS256',
+            options=dict(verify_signature=False),
+        )
+        self.assertEqual(decoded['username'], duplicate.pk)
+        self.assertIn('Using {}'.format(duplicate.pk), logs.output[0])
+
+    def test_admin_login_with_a_duplicate_member(self):
+        self.user.set_password('not-the-password')
+        self.user.save()
+        duplicate = BlueBottleUserFactory.create(
+            email=self.email.replace('test', 'Test'),
+            password=self.password,
+            is_staff=True,
+        )
+        logging.disable(logging.NOTSET)
+        self.addCleanup(logging.disable, logging.CRITICAL)
+
+        with self.assertLogs('bluebottle.bb_accounts.models', level='ERROR') as logs:
+            logged_in = self.client.login(
+                request=RequestFactory().post('/'),
+                email=self.email,
+                password=self.password,
+            )
+
+        self.assertTrue(logged_in)
+        self.assertEqual(int(self.client.session['_auth_user_id']), duplicate.pk)
+        self.assertIn('Using {}'.format(duplicate.pk), logs.output[0])
 
     def test_expired_token(self):
         response = self.client.post(
@@ -1553,6 +1607,15 @@ class MemberSignUpAPITestCase(APITestCase):
         self.assertEqual(error['code'], 'social_account_unique')
 
     def test_conflict_case_insensitive(self):
+        BlueBottleUserFactory.create(email=self.defaults['email'].title())
+        self.perform_create()
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['code'], 'email_unique')
+
+    def test_conflict_when_two_members_share_the_email(self):
+        BlueBottleUserFactory.create(email=self.defaults['email'])
         BlueBottleUserFactory.create(email=self.defaults['email'].title())
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)

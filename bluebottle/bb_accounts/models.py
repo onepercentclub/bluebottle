@@ -81,23 +81,45 @@ class BlueBottleUserManager(UserManager):
             username = email
         return super().create_superuser(username, email, password, **extra_fields)
 
+    def matching_emails(self, email, **extra):
+        lookup = {'{}__iexact'.format(self.model.USERNAME_FIELD): email}
+        lookup.update(extra)
+        return list(self.filter(**lookup).order_by('pk'))
+
+    def choose_duplicate_member(self, matches):
+        for match in matches:
+            if match.is_active and match.has_usable_password():
+                return match
+        for match in matches:
+            if match.is_active:
+                return match
+        return matches[0]
+
+    def log_duplicate_members(self, email, matches, chosen):
+        if len(matches) < 2:
+            return
+        logger.error(
+            'Multiple members match %r on %s: %s. Using %s.',
+            email,
+            connection.tenant.client_name,
+            ', '.join(str(match.pk) for match in matches),
+            chosen.pk,
+        )
+
+    def get_by_email(self, email, **extra):
+        matches = self.matching_emails(email, **extra)
+        if not matches:
+            raise self.model.DoesNotExist(
+                '%s matching query does not exist.' % self.model._meta.object_name
+            )
+        chosen = matches[0] if len(matches) == 1 else self.choose_duplicate_member(matches)
+        self.log_duplicate_members(email, matches, chosen)
+        return chosen
+
     def get_by_natural_key(self, username):
         if isinstance(username, int):
             return self.get(pk=username)
-
-        lookup = {'{}__iexact'.format(self.model.USERNAME_FIELD): username}
-        try:
-            return self.get(**lookup)
-        except self.model.MultipleObjectsReturned:
-            matches = list(self.filter(**lookup).order_by('pk'))
-            logger.error(
-                'Multiple members match %r on %s: %s. Using %s.',
-                username,
-                connection.tenant.client_name,
-                ', '.join(str(match.pk) for match in matches),
-                matches[0].pk,
-            )
-            return matches[0]
+        return self.get_by_email(username)
 
 
 @python_2_unicode_compatible

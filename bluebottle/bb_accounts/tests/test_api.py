@@ -14,7 +14,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.urls import reverse
 from django.test.utils import override_settings
-from django.utils.http import int_to_base36
+from django.utils.http import base36_to_int, int_to_base36
 from rest_framework import status
 
 from bluebottle.members.models import MemberPlatformSettings, UserSegment
@@ -27,7 +27,7 @@ from bluebottle.test.factory_models.organizations import (
 )
 
 from bluebottle.test.factory_models.geo import PlaceFactory, LocationFactory
-from bluebottle.test.utils import BluebottleTestCase, APITestCase, JSONAPITestClient
+from bluebottle.test.utils import ApiClient, BluebottleTestCase, APITestCase, JSONAPITestClient
 
 ASSERTION_MAPPING = {
     'assertion_mapping': {
@@ -648,6 +648,50 @@ class UserApiIntegrationTest(BluebottleTestCase):
                 statuses.append(response.status_code)
 
             self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
+    def test_password_reset_duplicate_members(self):
+        email = 'duplicate@example.com'
+        first = BlueBottleUserFactory.create(email=email, password='not-the-one')
+        first.set_unusable_password()
+        first.save()
+        second = BlueBottleUserFactory.create(
+            email='Duplicate@example.com', password='their-password'
+        )
+
+        response = self.client.post(
+            self.user_password_reset_api_url,
+            {'data': {'attributes': {'email': email}, 'type': 'reset-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(len(mail.outbox), 1)
+
+        token_regex = re.compile(
+            r'\?token=(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,32})',
+            re.DOTALL)
+        token_matches = token_regex.search(mail.outbox[0].body)
+        self.assertEqual(base36_to_int(token_matches['uidb36']), second.pk)
+
+        new_password = 'replacement-password'
+        response = self.client.post(
+            reverse('password-reset-confirm'),
+            {
+                'data': {
+                    'attributes': {
+                        'password': new_password,
+                        'token': '{}-{}'.format(token_matches['uidb36'], token_matches['token']),
+                    },
+                    'type': 'reset-token-confirmations',
+                }
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+        login = ApiClient(self.__class__.tenant)
+        login_response = login.post(
+            reverse('token-auth'), {'email': email, 'password': new_password}
+        )
+        self.assertEqual(login_response.status_code, status.HTTP_201_CREATED)
 
     @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
     def test_password_reset_inactive(self):

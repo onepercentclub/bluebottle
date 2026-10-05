@@ -28,7 +28,7 @@ class InitiativeFactory(factory.DjangoModelFactory):
         country=factory.SubFactory(
             CountryFactory,
             # Fix this to Uzbekistan, so we don't get accidental matches when this is set to NL by random
-            alpha_2='UZ',
+            alpha2_code='UZ',
             name='Uzbekistan'
         )
     )

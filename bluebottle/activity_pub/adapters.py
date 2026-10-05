@@ -40,7 +40,9 @@ class JSONLDAdapter():
 
         try:
             # Re-run all transitions that might have happened before the model was adopted
-            for transition in Transition.objects.filter(object=instance):
+            for transition in Transition.objects.filter(object=instance, transitioned=False):
+                transition.transition()
+                transition.transitioned = True
                 transition.save()
         except ValueError:
             pass

@@ -16,8 +16,11 @@ class Transition(Activity):
 
     def save(self, *args, **kwargs):
         if not self.is_local and not self.transitioned:
-            if self.transition():
+            try:
+                self.transition()
                 self.transitioned = True
+            except TransitionNotPossible:
+                pass
 
         super().save(*args, **kwargs)
 
@@ -29,50 +32,36 @@ class Delete(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.cancel(save=True)
-            return True
 
         if self.object.link:
             self.object.link.delete()
-            return True
 
 
 class Start(Transition):
     def transition(self):
         if self.object.adopted:
-            try:
+            if self.object.adopted.status == 'cancelled':
+                self.object.adopted.states.auto_approve(save=True)
+            else:
                 self.object.adopted.states.publish(save=True)
-                return True
-            except TransitionNotPossible:
-                pass
 
         if self.object.link:
-            try:
-                self.object.link.states.start(save=True)
-                return True
-            except TransitionNotPossible:
-                pass
+            self.object.link.states.start(save=True)
 
 
 class Cancel(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.cancel(save=True)
-            return True
 
         if self.object.link:
             self.object.link.states.cancel(save=True)
-            return True
 
 
 class Finish(Transition):
     def transition(self):
         if self.object.adopted:
-            try:
-                self.object.adopted.states.succeed(save=True)
-            except TransitionNotPossible:
-                pass
-
-            return True
+            self.object.adopted.states.succeed(save=True)
 
         if self.object.link:
             self.object.link.states.succeed(save=True)

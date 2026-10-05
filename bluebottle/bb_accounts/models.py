@@ -32,7 +32,6 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 from .utils import send_welcome_mail
 from ..segments.models import Segment
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -90,12 +89,8 @@ class BlueBottleUserManager(UserManager):
         try:
             return self.get(**lookup)
         except self.model.MultipleObjectsReturned:
-            # The unique index on email is case sensitive, so rows differing
-            # only in case are legal in the database but ambiguous here. Pick
-            # the oldest -- the one most likely to carry the history -- and
-            # leave a trail so the duplicates can be merged.
             matches = list(self.filter(**lookup).order_by('date_joined', 'pk'))
-            logger.warning(
+            logger.error(
                 'Multiple members match %r on %s: %s. Using %s.',
                 username,
                 connection.tenant.client_name,

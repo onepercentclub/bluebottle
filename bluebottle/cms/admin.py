@@ -293,7 +293,7 @@ class CMSNestedPlaceholderFieldAdmin(nested_admin.NestedModelAdminMixin, Placeho
 class StatInline(CMSNestedChildInline, SortableStackedInline):
     model = Stat
     extra = 0
-    fields = ('type', 'stat_type', 'definition', 'title', 'value')
+    fields = ('type', 'definition', 'title', 'value')
 
     readonly_fields = ['definition']
 

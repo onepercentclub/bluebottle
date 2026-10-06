@@ -7,7 +7,7 @@ from django.core.files import File
 from django.urls import reverse
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.admin import FollowerAdmin, PublishedActivityAdmin
+from bluebottle.activity_pub.admin import FollowerAdmin, FollowingAdminForm, PublishedActivityAdmin
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import Accept, Follower, Following, PublishedActivity, Recipient
 from bluebottle.activity_pub.tests.factories import OrganizationFactory
@@ -51,6 +51,10 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
                 site_settings.logo = File(BytesIO(image.read()), name='upload.svg')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
+
+        self.set_platform_activity_types(
+            [activity_type for (activity_type, _) in InitiativePlatformSettings.ACTIVITY_TYPES]
+        )
 
         self.app.set_user(self.superuser)
         self.other_platform_url = self.other_tenant.build_absolute_url('/')
@@ -152,6 +156,22 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
             self.get_adoption_activity_type_options(page),
             {'deed', 'dateactivity'}
         )
+
+    def test_following_admin_rejects_disabled_activity_type(self):
+        self.set_platform_activity_types(['deed'])
+        self.submit_following_form(activity_types=['deed'])
+        follow = Following.objects.get()
+
+        form = FollowingAdminForm(
+            instance=follow,
+            data={
+                'automatic_adoption_activity_types': ['funding'],
+                'adoption_type': 'link',
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('automatic_adoption_activity_types', form.errors)
 
     def test_following_admin_add_connection_invalid_platform_url(self):
         url = reverse('admin:activity_pub_following_add')

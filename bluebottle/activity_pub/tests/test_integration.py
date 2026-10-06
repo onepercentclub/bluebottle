@@ -729,15 +729,17 @@ class SyncTestCase(ActivityPubTestCase):
 class LinkTestCase(ActivityPubTestCase):
     expected_link_status = 'open'
 
+    @property
+    def activity_type(self):
+        return self.factory._meta.model._meta.model_name
+
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
 
         with LocalTenant(self.other_tenant):
             with httmock.HTTMock(image_mock):
                 follow = Follow(
-                    automatic_adoption_activity_types=[
-                        self.factory._meta.model._meta.model_name
-                    ],
+                    automatic_adoption_activity_types=[self.activity_type],
                     adoption_type=AdoptionTypeChoices.link
                 )
                 follow.follow(platform_url)
@@ -2021,6 +2023,7 @@ class TemplateSingleSlotDateActivityTestCase(TemplateTestCase, BluebottleTestCas
 )
 class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
+    activity_type = 'collect'
 
     def create(self):
         super().create(

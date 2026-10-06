@@ -1,11 +1,10 @@
-from unittest import mock
-
 from django.urls import reverse
 
 from bluebottle.activity_pub.tests.factories import (
     CreateFactory,
     DoGoodEventFactory,
     OrganizationFactory,
+    SubEventFactory,
 )
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -13,6 +12,7 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
+from bluebottle.time_based.models import DateActivity
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -40,6 +40,14 @@ def adopt(activity):
         object=event,
         actor=OrganizationFactory.create(iri='https://supplier.example.com/org'),
     )
+    if isinstance(activity, DateActivity):
+        # Date slots are adopted from the sub events of the supplier event
+        for slot in activity.slots.all():
+            SubEventFactory.create(
+                parent=event,
+                adopted=slot,
+                iri=f'https://supplier.example.com/sub-event/{slot.pk}',
+            )
     activity.refresh_from_db()
     return event
 
@@ -139,19 +147,19 @@ class PeriodicAdoptedReviewTestCase(AdoptedActivityReviewTestCase, BluebottleTes
     activity_factory = PeriodicActivityFactory
     registration_factory = PeriodicRegistrationFactory
 
+    # Periodic participants for adopted activities are not created on the consumer
+    # (see CreateInitialPeriodicParticipantEffect.is_valid)
     def test_user_joins_registration_stays_new(self):
         registration = self.create_registration()
-        participant = registration.participants.get()
 
         self.assertEqual(registration.status, 'new')
-        self.assertEqual(participant.status, 'new')
+        self.assertFalse(registration.participants.exists())
 
     def test_admin_adds_registration_stays_new(self):
         registration = self.create_registration(as_user=self.admin_user)
-        participant = registration.participants.get()
 
         self.assertEqual(registration.status, 'new')
-        self.assertEqual(participant.status, 'new')
+        self.assertFalse(registration.participants.exists())
 
 
 class DateAdoptedReviewTestCase(AdoptedActivityReviewTestCase, BluebottleTestCase):
@@ -192,14 +200,13 @@ class DateAdoptedReviewTestCase(AdoptedActivityReviewTestCase, BluebottleTestCas
 
     def test_user_joins_registration_stays_new(self):
         registration = self.create_registration()
-        with mock.patch('bluebottle.activity_pub.adapters.adapter.sync'):
-            participant = DateParticipantFactory.create(
-                activity=self.activity,
-                slot=self.slot,
-                registration=registration,
-                user=registration.user,
-                as_user=registration.user,
-            )
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            registration=registration,
+            user=registration.user,
+            as_user=registration.user,
+        )
 
         registration.refresh_from_db()
         self.assertEqual(registration.status, 'new')
@@ -207,14 +214,13 @@ class DateAdoptedReviewTestCase(AdoptedActivityReviewTestCase, BluebottleTestCas
 
     def test_admin_adds_participant_stays_new(self):
         user = BlueBottleUserFactory.create()
-        with mock.patch('bluebottle.activity_pub.adapters.adapter.sync'):
-            participant = DateParticipantFactory.create(
-                activity=self.activity,
-                slot=self.slot,
-                user=user,
-                registration=None,
-                as_user=self.admin_user,
-            )
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=user,
+            registration=None,
+            as_user=self.admin_user,
+        )
 
         self.assertEqual(participant.status, 'new')
         self.assertEqual(participant.registration.status, 'new')
@@ -226,7 +232,7 @@ class TeamScheduleAdoptedReviewTestCase(AdoptedActivityReviewTestCase, Bluebottl
 
     def setUp(self):
         super().setUp()
-        self.activity.team_activity = True
+        self.activity.team_activity = 'teams'
         self.activity.save()
 
     def test_user_joins_registration_stays_new(self):
@@ -236,11 +242,11 @@ class TeamScheduleAdoptedReviewTestCase(AdoptedActivityReviewTestCase, Bluebottl
             activity=self.activity,
             user=registration.user,
         )
-        participant = team.team_members.get().participants.get()
-
         self.assertEqual(registration.status, 'new')
         self.assertEqual(team.status, 'new')
-        self.assertEqual(participant.status, 'new')
+        # Team slots, and so participants, are not created on the consumer
+        # (see CreateTeamSlotEffect.is_local)
+        self.assertFalse(team.team_members.get().participants.exists())
 
 
 class AdoptedRegistrationPermissionTestCase(BluebottleTestCase):
@@ -297,7 +303,6 @@ class ReviewAdminTestCase:
     adopted = True
     activity_factory = None
     registration_factory = None
-    participant_admin = None
     registration_admin = None
 
     extra_environ = {}
@@ -328,8 +333,7 @@ class ReviewAdminTestCase:
             adopt(self.activity)
             self.assertTrue(self.activity.is_adopted)
 
-        self.participant = self.create_pending_participant()
-        self.registration = self.participant.registration
+        self.registration = self.create_pending_registration()
         self.assertEqual(self.registration.status, 'new')
 
     @property
@@ -339,25 +343,17 @@ class ReviewAdminTestCase:
     def setup_activity(self):
         pass
 
-    def create_pending_participant(self):
+    def create_pending_registration(self):
         user = BlueBottleUserFactory.create()
-        registration = self.registration_factory.create(
+        return self.registration_factory.create(
             activity=self.activity, user=user, as_user=user
         )
-        return registration.participants.get()
 
     @property
     def registration_url(self):
         return reverse(
             f'admin:time_based_{self.registration_admin}_change',
             args=(self.registration.pk,)
-        )
-
-    @property
-    def participant_url(self):
-        return reverse(
-            f'admin:time_based_{self.participant_admin}_change',
-            args=(self.participant.pk,)
         )
 
     def transition_url(self, name):
@@ -375,12 +371,6 @@ class ReviewAdminTestCase:
 
     def test_registration_admin_review_transitions(self):
         self.assert_review_possible(not self.adopted)
-
-    def test_participant_admin_review_button(self):
-        page = self.app.get(self.participant_url)
-        self.assertEqual(page.status, '200 OK')
-        button = page.html.find('a', {'class': 'button', 'href': self.registration_url})
-        self.assertEqual(bool(button), not self.adopted)
 
     def test_accept_transition_url(self):
         page = self.app.get(self.transition_url('accept'))
@@ -402,14 +392,41 @@ class ReviewAdminTestCase:
         )
 
 
+class RegistrationInfoTests:
+    """
+    The registration info on the participant (or team) admin page links to the
+    review of the registration, except on adopted activities.
+    """
+
+    info_admin = None
+
+    @property
+    def info_object(self):
+        return self.registration.participants.get()
+
+    def test_registration_info_review_button(self):
+        page = self.app.get(
+            reverse(f'admin:time_based_{self.info_admin}_change', args=(self.info_object.pk,))
+        )
+        self.assertEqual(page.status, '200 OK')
+        button = page.html.find('a', {'class': 'button', 'href': self.registration_url})
+        self.assertEqual(bool(button), not self.adopted)
+        self.assertEqual(
+            'Participants are reviewed on the supplier platform.' in page.text,
+            self.adopted
+        )
+
+
 class DeadlineReviewAdmin:
     activity_factory = DeadlineActivityFactory
     registration_factory = DeadlineRegistrationFactory
-    participant_admin = 'deadlineparticipant'
     registration_admin = 'deadlineregistration'
+    info_admin = 'deadlineparticipant'
 
 
-class DeadlineAdoptedReviewAdminTestCase(DeadlineReviewAdmin, ReviewAdminTestCase, BluebottleAdminTestCase):
+class DeadlineAdoptedReviewAdminTestCase(
+    DeadlineReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
     def test_admin_added_participant_has_no_review_button(self):
         # Scenario from BB-30275: participant added by staff in the consumer admin
         participant = DeadlineParticipantFactory.create(
@@ -426,20 +443,121 @@ class DeadlineAdoptedReviewAdminTestCase(DeadlineReviewAdmin, ReviewAdminTestCas
         self.assertNotIn('Review candidate', page.text)
 
 
-class DeadlineLocalReviewAdminTestCase(DeadlineReviewAdmin, ReviewAdminTestCase, BluebottleAdminTestCase):
+class DeadlineLocalReviewAdminTestCase(
+    DeadlineReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
     adopted = False
 
 
 class ScheduleReviewAdmin:
     activity_factory = ScheduleActivityFactory
     registration_factory = ScheduleRegistrationFactory
-    participant_admin = 'scheduleparticipant'
     registration_admin = 'scheduleregistration'
+    info_admin = 'scheduleparticipant'
 
 
-class ScheduleAdoptedReviewAdminTestCase(ScheduleReviewAdmin, ReviewAdminTestCase, BluebottleAdminTestCase):
+class ScheduleAdoptedReviewAdminTestCase(
+    ScheduleReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
     pass
 
 
-class ScheduleLocalReviewAdminTestCase(ScheduleReviewAdmin, ReviewAdminTestCase, BluebottleAdminTestCase):
+class ScheduleLocalReviewAdminTestCase(
+    ScheduleReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
+    adopted = False
+
+
+class PeriodicReviewAdmin:
+    activity_factory = PeriodicActivityFactory
+    registration_factory = PeriodicRegistrationFactory
+    registration_admin = 'periodicregistration'
+    info_admin = 'periodicparticipant'
+
+
+class PeriodicAdoptedReviewAdminTestCase(PeriodicReviewAdmin, ReviewAdminTestCase, BluebottleAdminTestCase):
+    # No participant is created on the consumer, so there is no participant page to check
+    pass
+
+
+class PeriodicLocalReviewAdminTestCase(
+    PeriodicReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
+    adopted = False
+
+
+class DateReviewAdmin:
+    activity_factory = DateActivityFactory
+    registration_factory = DateRegistrationFactory
+    registration_admin = 'dateregistration'
+    info_admin = 'dateparticipant'
+
+    @property
+    def activity_kwargs(self):
+        return {'slots': []}
+
+    def setup_activity(self):
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            is_online=True,
+            location=None,
+        )
+
+    def create_pending_registration(self):
+        registration = super().create_pending_registration()
+        DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            registration=registration,
+            user=registration.user,
+            as_user=registration.user,
+        )
+        return registration
+
+
+class DateAdoptedReviewAdminTestCase(
+    DateReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
+    pass
+
+
+class DateLocalReviewAdminTestCase(
+    DateReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
+    adopted = False
+
+
+class TeamReviewAdmin:
+    activity_factory = ScheduleActivityFactory
+    registration_factory = TeamScheduleRegistrationFactory
+    registration_admin = 'teamscheduleregistration'
+    info_admin = 'team'
+
+    @property
+    def activity_kwargs(self):
+        return {'team_activity': 'teams'}
+
+    def create_pending_registration(self):
+        registration = super().create_pending_registration()
+        self.team = TeamFactory.create(
+            registration=registration,
+            activity=self.activity,
+            user=registration.user,
+        )
+        return registration
+
+    @property
+    def info_object(self):
+        return self.team
+
+
+class TeamAdoptedReviewAdminTestCase(
+    TeamReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
+    pass
+
+
+class TeamLocalReviewAdminTestCase(
+    TeamReviewAdmin, RegistrationInfoTests, ReviewAdminTestCase, BluebottleAdminTestCase
+):
     adopted = False

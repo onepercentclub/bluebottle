@@ -1,22 +1,22 @@
 from builtins import str
 
+import nested_admin
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.admin.contentitems import BaseContentItemInline
-import nested_admin
-
-from bluebottle.cms.fluent_admin import NestedContentItemFormSet, get_cms_content_item_inlines
+from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
+from bluebottle.cms.fluent_admin import NestedContentItemFormSet, get_cms_content_item_inlines
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
     Stat, Quote, Person, Step, Logo, ResultPage, HomePage, ContentLink,
@@ -362,7 +362,20 @@ class HomePageAdmin(CMSNestedPlaceholderFieldAdmin, TranslatableAdmin, Singleton
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
-    readonly_fields = ['terminated_info', 'organization']
+    readonly_fields = [
+        'terminated_info',
+        'organization',
+        'color_contrast_panel',
+        'action_on_tint_color',
+        'description_on_background_color',
+        'description_on_tint_color',
+    ]
+
+    class Media:
+        css = {
+            'all': ('admin/css/platform_color_contrast.css',)
+        }
+        js = ('admin/js/platform_color_contrast.js',)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -395,8 +408,21 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                 {
                     'fields': (
                         'logo', 'favicon',
-                        'action_color', 'action_text_color', 'alternative_link_color',
-                        'description_color', 'description_text_color',
+                        'accessible_colours',
+                        'action_color',
+                        'description_color',
+                        'color_contrast_panel',
+                        'footer_color', 'footer_text_color',
+                        'title_font', 'body_font'
+                    ) if obj.accessible_colours else (
+                        'logo', 'favicon',
+                        'accessible_colours',
+                        'action_color',
+                        'action_text_color',
+                        'description_color',
+                        'description_text_color',
+                        'alternative_link_color',
+                        'color_contrast_panel',
                         'footer_color', 'footer_text_color',
                         'title_font', 'body_font'
                     )
@@ -416,6 +442,14 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
             fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info',)
 
         return fieldsets
+
+    def color_contrast_panel(self, obj):
+        return mark_safe(render_to_string(
+            'admin/cms/color_contrast_panel.html',
+            {'accessible': obj.accessible_colours},
+        ))
+
+    color_contrast_panel.short_description = _('Colour preview')
 
     def terminated_info(self, obj):
         active_members = Member.objects.filter(is_active=True)

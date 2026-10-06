@@ -264,7 +264,7 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         self.assertEqual(payout.status, 'new')
 
         self.application.refresh_from_db()
-        self.assertEqual(self.application.status, 'payment')
+        self.assertEqual(self.application.status, 'processing_payout')
 
         self.assertEqual(self.fund.balance, Money(1500, 'EUR'))
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
@@ -283,7 +283,7 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         self.assertEqual(payout.status, 'new')
 
         self.application.refresh_from_db()
-        self.assertEqual(self.application.status, 'payment')
+        self.assertEqual(self.application.status, 'processing_payout')
 
         self.assertEqual(self.fund.balance, Money(1500, 'EUR'))
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
@@ -336,7 +336,7 @@ class GrantPaymentTriggerTestCase(FundingStripeMixin, TriggerTestCase):
     def test_initial(self):
         self.assertEqual(self.model.status, 'new')
         self.assertEqual(self.donor.status, 'new')
-        self.assertEqual(self.application.status, 'payment')
+        self.assertEqual(self.application.status, 'processing_payout')
 
         self.assertEqual(self.donor.ledger_item.status, 'pending')
 
@@ -367,7 +367,7 @@ class GrantPaymentTriggerTestCase(FundingStripeMixin, TriggerTestCase):
         self.assertEqual(self.donor.status, 'succeeded')
 
         self.application.refresh_from_db()
-        self.assertEqual(self.application.status, 'payment')
+        self.assertEqual(self.application.status, 'processing_payout')
 
         self.donor.ledger_item.refresh_from_db()
         self.assertEqual(self.donor.ledger_item.status, 'final')
@@ -409,7 +409,7 @@ class GrantPayoutTriggerTestCase(FundingStripeMixin, TriggerTestCase):
 
     def test_payout_created_awaits_payment(self):
         self.application.refresh_from_db()
-        self.assertEqual(self.application.status, 'payment')
+        self.assertEqual(self.application.status, 'processing_payout')
 
     def test_payout_succeeds(self):
         self.payout.states.succeed(save=True)
@@ -417,11 +417,11 @@ class GrantPayoutTriggerTestCase(FundingStripeMixin, TriggerTestCase):
         self.application.refresh_from_db()
         self.assertEqual(self.application.status, 'succeeded')
 
-    def test_regenerating_the_payout_keeps_the_application_in_payment(self):
+    def test_regenerating_the_payout_keeps_the_application_in_processing_payout(self):
         GrantPayout.generate(self.application)
 
         self.application.refresh_from_db()
-        self.assertEqual(self.application.status, 'payment')
+        self.assertEqual(self.application.status, 'processing_payout')
 
 
 @override_settings(

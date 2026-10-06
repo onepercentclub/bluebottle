@@ -20,6 +20,7 @@ from moneyed import Money
 
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.clients import properties
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.funding.validators import TargetValidator, TosAcceptedValidator
 from bluebottle.funding_stripe.utils import get_stripe
@@ -336,6 +337,14 @@ class GrantPayout(TriggerMixin, models.Model):
             for grant in ready_grants:
                 grant.payout = payout
                 grant.save()
+
+        # Only once every grant points at a payout: saving the activity any
+        # earlier makes CreatePayoutEffect regenerate the payout we just made.
+        if groups:
+            try:
+                activity.states.await_payment(save=True)
+            except TransitionNotPossible:
+                pass
 
     def transfer_to_account(self):
         stripe = get_stripe()

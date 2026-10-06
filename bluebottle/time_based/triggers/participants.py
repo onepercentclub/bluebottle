@@ -36,6 +36,8 @@ from bluebottle.time_based.messages import (
     ParticipantAddedNotification, ManagerSlotParticipantRegisteredNotification,
     ParticipantSlotParticipantRegisteredNotification, ParticipantChangedNotification,
     ManagerSlotParticipantWithdrewNotification,
+    ManagerSlotParticipantRemovedNotification,
+    ParticipantSlotParticipantRemovedNotification
 )
 from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
@@ -1312,7 +1314,8 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     ]
                 ),
                 SendJoinDateSlotEffect,
-                SyncRelatedEvent
+                SyncRelatedEvent,
+                CreatePreparationTimeContributionEffect
             ]
         ),
 
@@ -1329,7 +1332,8 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     DateActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
                 ),
-                NotificationEffect(ParticipantChangedNotification),
+                NotificationEffect(ParticipantSlotParticipantRemovedNotification),
+                NotificationEffect(ManagerSlotParticipantRemovedNotification),
                 SlotParticipantUnFollowActivityEffect,
                 SendRemoveEffect,
                 SyncRelatedEvent,
@@ -1342,7 +1346,6 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 TransitionEffect(
                     RegistrationParticipantStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
-
                 ),
                 RelatedTransitionEffect(
                     'registration',
@@ -1356,6 +1359,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     conditions=[participant_slot_will_be_full]
                 ),
                 FollowActivityEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
 
             ],
         ),
@@ -1427,10 +1434,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     conditions=[no_active_participation]
                 ),
                 NotificationEffect(
-                    ManagerSlotParticipantWithdrewNotification,
+                    UserDateParticipantWithdrewNotification
                 ),
                 NotificationEffect(
-                    UserDateParticipantWithdrewNotification
+                    ManagerSlotParticipantWithdrewNotification,
                 ),
                 SlotParticipantUnFollowActivityEffect,
             ],

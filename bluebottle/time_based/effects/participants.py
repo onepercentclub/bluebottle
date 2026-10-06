@@ -5,6 +5,7 @@ from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.time_based.effects.effects import CreatePeriodicParticipantsEffect
 from bluebottle.time_based.models import (
     TimeContribution,
@@ -135,9 +136,12 @@ class CreateRegistrationEffect(Effect):
             user=self.instance.user,
         )
 
-        is_local = not self.instance.activity.is_adopted
-        if not is_local:
-            registration.states.accept()
+        activity_is_remote = hasattr(self.instance.activity, 'origin')
+        if not activity_is_remote:
+            try:
+                registration.states.auto_accept(save=True)
+            except TransitionNotPossible:
+                pass
 
         self.instance.registration = registration
         self.instance.save()

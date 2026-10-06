@@ -73,10 +73,11 @@ class Activity(ActivityPubModel):
 
         if created and self.is_local:
             for recipient in self.default_recipients:
-                Recipient.objects.create(
-                    actor=recipient,
-                    activity=self
-                )
+                if recipient:
+                    Recipient.objects.create(
+                        actor=recipient,
+                        activity=self
+                    )
 
 
 class Recipient(models.Model):

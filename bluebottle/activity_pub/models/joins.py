@@ -234,7 +234,6 @@ class TeamJoin(BaseJoin):
     @property
     def local_contributor(self):
         """ Return the local contributor, since the Join was created by the supplier"""
-
         adapter.adopt(self.actor.captain)
 
         return self.actor.adopted

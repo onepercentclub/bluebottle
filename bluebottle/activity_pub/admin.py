@@ -44,6 +44,7 @@ from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import admin_form
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.utils.admin import admin_info_box
 from bluebottle.webfinger.client import client
@@ -344,7 +345,21 @@ class SourceFilter(admin.SimpleListFilter):
         return queryset
 
 
-class FollowingAddForm(forms.ModelForm):
+class EnabledActivityTypesFormMixin:
+    """Only offer activity types for automatic adoption that are enabled on this platform."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        enabled_activity_types = InitiativePlatformSettings.load().activity_types
+        field = self.fields['automatic_adoption_activity_types']
+        field.choices = [
+            (value, label) for value, label in field.choices
+            if value in enabled_activity_types
+        ]
+
+
+class FollowingAddForm(EnabledActivityTypesFormMixin, forms.ModelForm):
     platform_url = forms.URLField(
         label=_("Partner URL"),
         help_text=_("Thi is the website address of the partner you want to follow."),
@@ -432,7 +447,7 @@ class FollowingAddForm(forms.ModelForm):
         return result
 
 
-class FollowingAdminForm(forms.ModelForm):
+class FollowingAdminForm(EnabledActivityTypesFormMixin, forms.ModelForm):
     adoption_type = forms.ChoiceField(
         label=_("Adoption type"),
         widget=forms.RadioSelect(),

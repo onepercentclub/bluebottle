@@ -368,7 +368,8 @@ class Create(Activity):
             if (
                 (
                     isinstance(self.object, Event) and
-                    self.object.activity_type.lower() in follow.automatic_adoption_activity_types
+                    self.object.activity_type.lower() in follow.automatic_adoption_activity_types and
+                    self.object.activity_type.lower() in InitiativePlatformSettings.load().activity_types
                 ) or
                 isinstance(self.object, SubEvent)
             ):

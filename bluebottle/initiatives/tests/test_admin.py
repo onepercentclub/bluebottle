@@ -209,6 +209,18 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.refresh_from_db()
         self.assertEqual(self.initiative.reviewer, reviewer)
 
+    def test_invalid_form_shows_errors(self):
+        self.app.set_user(self.staff_member)
+        admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        page = self.app.get(admin_url)
+        form = page.forms['initiative_form']
+        form['owner'].force_value('999999')
+
+        page = form.submit()
+
+        self.assertEqual(page.status, '200 OK')
+        self.assertTrue('Select a valid choice' in page.text)
+
     def test_add_reviewer_cancel(self):
         self.app.set_user(self.staff_member)
         reviewer = BlueBottleUserFactory.create()
@@ -326,3 +338,72 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
         self.assertFalse('error' in page.text)
         self.initiative_settings.refresh_from_db()
         self.assertTrue(self.initiative_settings.team_activities)
+
+
+class TestInitiativeReviewerFilter(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super(TestInitiativeReviewerFilter, self).setUp()
+        self.client.force_login(self.superuser)
+        self.changelist_url = reverse('admin:initiatives_initiative_changelist')
+
+        self.reviewer = BlueBottleUserFactory.create(is_staff=True)
+        self.reviewed = InitiativeFactory.create(reviewer=self.reviewer)
+        self.unreviewed = InitiativeFactory.create(reviewer=None)
+
+    def test_invalid_reviewer_value_does_not_crash(self):
+        for value in ('True', 'not-a-number', '1.5'):
+            response = self.client.get(self.changelist_url, {'reviewer': value})
+
+            self.assertIn(
+                response.status_code,
+                (status.HTTP_200_OK, status.HTTP_302_FOUND),
+                'reviewer={} returned {}'.format(value, response.status_code),
+            )
+
+    def test_empty_reviewer_value_returns_changelist(self):
+        response = self.client.get(self.changelist_url, {'reviewer': ''})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unknown_reviewer_id_returns_empty_changelist(self):
+        response = self.client.get(self.changelist_url, {'reviewer': '999999'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.context['cl'].queryset.count(), 0)
+
+    def test_valid_reviewer_id_still_filters(self):
+        response = self.client.get(
+            self.changelist_url, {'reviewer': str(self.reviewer.pk)}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            list(response.context['cl'].queryset), [self.reviewed]
+        )
+
+    def test_me_still_filters_on_the_current_user(self):
+        self.reviewed.reviewer = self.superuser
+        self.reviewed.save()
+
+        response = self.client.get(self.changelist_url, {'reviewer': 'me'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            list(response.context['cl'].queryset), [self.reviewed]
+        )
+
+
+class TestMyReviewingInitiativesDashboard(BluebottleAdminTestCase):
+    """The dashboard module is what produced the bad ?reviewer=True URL."""
+
+    def test_title_url_uses_a_value_the_filter_accepts(self):
+        from bluebottle.initiatives.dashboard import MyReviewingInitiatives
+
+        module = MyReviewingInitiatives()
+        module.init_with_context(None)
+
+        self.assertTrue(module.title_url.endswith('?reviewer=me'))

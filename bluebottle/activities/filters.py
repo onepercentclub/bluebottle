@@ -341,6 +341,7 @@ class StatusFacet(Facet):
                     "registration_closed",
                     "on_hold",
                     "granted",
+                    "payment",
                 ]
             )
         if filter_values == ["succeeded"]:

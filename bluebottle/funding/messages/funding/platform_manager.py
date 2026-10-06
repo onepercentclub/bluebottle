@@ -32,7 +32,7 @@ class LivePayoutAccountMarkedIncomplete(TransitionMessage):
 
         applications = GrantApplication.objects.filter(
             bank_account__connect_account=self.obj,
-            status__in=['granted']
+            status__in=['granted', 'payment']
         )
 
         for application in applications:

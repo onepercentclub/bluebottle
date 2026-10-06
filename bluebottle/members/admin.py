@@ -916,7 +916,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     def grant_applications(self, obj):
         grants_url = reverse('admin:grant_management_grantapplication_changelist')
         grant_lines = []
-        grants = GrantApplication.objects.filter(owner=obj, status__in=['granted', 'succeeded'])
+        grants = GrantApplication.objects.filter(owner=obj, status__in=['granted', 'payment', 'succeeded'])
         if grants.count():
             link = grants_url + '?owner_id={}'.format(obj.id)
             grant_lines.append(format_html(

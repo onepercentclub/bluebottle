@@ -187,7 +187,7 @@ def publish_to_recipient(recipient, tenant):
             recipient.save()
 
             if isinstance(activity, Create):
-                if activity.object.activity.status in ('open', 'granted', ):
+                if activity.object.activity.status in ('open', 'granted', 'payment', ):
                     Start.objects.create(object=activity.object)
                 elif activity.object.activity.status == 'succeeded':
                     Finish.objects.create(object=activity.object)

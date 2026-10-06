@@ -206,6 +206,10 @@ class GrantPayoutTriggers(TriggerManager):
         TransitionTrigger(
             GrantPayoutStateMachine.initiate,
             effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    GrantApplicationStateMachine.await_payment
+                ),
                 NotificationEffect(PayoutReadyForApprovalMessage)
             ]
         ),

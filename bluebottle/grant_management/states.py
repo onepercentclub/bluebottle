@@ -25,6 +25,11 @@ from bluebottle.grant_management.models import (
 @register(GrantApplication)
 class GrantApplicationStateMachine(ActivityStateMachine):
     granted = State(_("Granted"), "granted", _("The grant application was approved."))
+    payment = State(
+        _("Payment"),
+        "payment",
+        _("The grant application is waiting for the payment to complete."),
+    )
     succeeded = State(
         _("Succeeded"), "succeeded", _("The grant application was approved and has been paid out to the applicant.")
     )
@@ -121,9 +126,22 @@ class GrantApplicationStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_staff,
     )
 
+    await_payment = Transition(
+        [
+            granted,
+        ],
+        payment,
+        name=_('Await payment'),
+        description=_(
+            "The payout has been created and the grant application is waiting for the payment to complete."
+        ),
+        automatic=True,
+    )
+
     succeed = Transition(
         [
             granted,
+            payment,
         ],
         succeeded,
         name=_('Complete'),
@@ -134,6 +152,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
     cancel = Transition(
         [
             granted,
+            payment,
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,

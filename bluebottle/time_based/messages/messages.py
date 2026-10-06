@@ -772,18 +772,12 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'participant_name': 'user.full_name',
-        'answer': 'registration.answer',
-        'question': 'activity.review_title'
     }
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
         context['slot'] = get_slot_info(self.obj.slot)
-        settings = InitiativePlatformSettings.load()
-        context['hour_registration'] = (
-            settings.hour_registration != 'disabled'
-            and self.obj.activity.hour_registration_data
-        )
+
         return context
 
     @property
@@ -807,18 +801,12 @@ class ManagerSlotParticipantRemovedNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'participant_name': 'user.full_name',
-        'answer': 'registration.answer',
-        'question': 'activity.review_title'
     }
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
         context['slot'] = get_slot_info(self.obj.slot)
-        settings = InitiativePlatformSettings.load()
-        context['hour_registration'] = (
-            settings.hour_registration != 'disabled'
-            and self.obj.activity.hour_registration_data
-        )
+
         return context
 
     @property
@@ -835,7 +823,7 @@ class ManagerSlotParticipantRemovedNotification(TransitionMessage):
 
 class ParticipantSlotParticipantRemovedNotification(TransitionMessage):
     """
-    Slot participant registered for a time slot for an activity
+    Slot participant removed from a time slot for an activity
     """
     subject = pgettext('platform-email', 'You have been removed from a time slot for the activity "{title}"')
     template = 'messages/participants/slot_participant_removed'
@@ -843,9 +831,6 @@ class ParticipantSlotParticipantRemovedNotification(TransitionMessage):
         'title': 'activity.title',
         'participant_name': 'user.full_name',
     }
-
-    def attachments(self, recipient=None):
-        return [ActivityIcal(self.obj.slot).to_attachment()]
 
     def get_context(self, recipient):
         context = super().get_context(recipient)

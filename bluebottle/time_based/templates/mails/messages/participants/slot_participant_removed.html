@@ -1,0 +1,9 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}{% blocktrans context 'platform-email' %}
+<p>You have been remoded from time slot for the activity "{{ title }}"!</p>
+{% endblocktrans %}
+
+{% include 'mails/messages/partial/slot.html' %}
+{% endblock %}

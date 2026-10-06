@@ -423,7 +423,7 @@ class SendJoinDateSlotEffect(Effect):
     template = 'admin/activity_pub/send_join_effect.html'
 
     def post_save(self, **kwargs):
-        if self.instance.slot:
+        if self.instance.slot and hasattr(self.instance.slot, 'origin'):
             Join.objects.create(
                 actor=self.instance.user.activity_pub_model,
                 object=self.instance.slot.origin
@@ -432,7 +432,6 @@ class SendJoinDateSlotEffect(Effect):
     @property
     def is_valid(self):
         return (
-
             not self.options.get('local') and
             self.instance.remote_user is None and
             hasattr(self.instance.user, 'activity_pub_model')

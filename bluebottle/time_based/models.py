@@ -505,7 +505,7 @@ class DateActivitySlot(ActivitySlot):
         try:
             return self.origins.get()
         except ObjectDoesNotExist:
-            raise AttributeError('origins')
+            raise AttributeError('origin')
 
     activity_pub_models = GenericRelation(
         'activity_pub.SubEvent',

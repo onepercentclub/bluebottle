@@ -929,6 +929,15 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, 'rejected')
 
+    def test_add_participant(self):
+        self.test_adopt()
+        with LocalTenant(self.other_tenant):
+            self.participant = DeadlineParticipantFactory.create(activity=self.adopted)
+
+        self.synced_participant = self.participant_factory._meta.model.objects.get()
+        self.assertEqual(self.synced_participant.status, self.expected_participant_status)
+        self.assertEqual(self.synced_participant.registration.status, 'accepted')
+
 
 class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory

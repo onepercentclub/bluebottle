@@ -1,5 +1,3 @@
-from unittest import mock
-
 from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -7,6 +5,7 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import PeriodicParticipant, TeamScheduleParticipant
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -123,17 +122,17 @@ class PeriodicAdoptedReviewTestCase(AdoptedActivityReviewTestCase, BluebottleTes
 
     def test_user_joins_registration_stays_new(self):
         registration = self.create_registration()
-        participant = registration.participants.get()
+        with self.assertRaises(PeriodicParticipant.DoesNotExist):
+            registration.participants.get()
 
         self.assertEqual(registration.status, 'new')
-        self.assertEqual(participant.status, 'new')
 
     def test_admin_adds_registration_stays_new(self):
         registration = self.create_registration(as_user=self.admin_user)
-        participant = registration.participants.get()
+        with self.assertRaises(PeriodicParticipant.DoesNotExist):
+            registration.participants.get()
 
         self.assertEqual(registration.status, 'new')
-        self.assertEqual(participant.status, 'new')
 
 
 class DateAdoptedReviewTestCase(AdoptedActivityReviewTestCase, BluebottleTestCase):
@@ -175,14 +174,13 @@ class DateAdoptedReviewTestCase(AdoptedActivityReviewTestCase, BluebottleTestCas
 
     def test_user_joins_registration_stays_new(self):
         registration = self.create_registration()
-        with mock.patch('bluebottle.activity_pub.adapters.adapter.sync'):
-            participant = DateParticipantFactory.create(
-                activity=self.activity,
-                slot=self.slot,
-                registration=registration,
-                user=registration.user,
-                as_user=registration.user,
-            )
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            registration=registration,
+            user=registration.user,
+            as_user=registration.user,
+        )
 
         registration.refresh_from_db()
         self.assertEqual(registration.status, 'new')
@@ -190,14 +188,13 @@ class DateAdoptedReviewTestCase(AdoptedActivityReviewTestCase, BluebottleTestCas
 
     def test_admin_adds_participant_stays_new(self):
         user = BlueBottleUserFactory.create()
-        with mock.patch('bluebottle.activity_pub.adapters.adapter.sync'):
-            participant = DateParticipantFactory.create(
-                activity=self.activity,
-                slot=self.slot,
-                user=user,
-                registration=None,
-                as_user=self.admin_user,
-            )
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=user,
+            registration=None,
+            as_user=self.admin_user,
+        )
 
         self.assertEqual(participant.status, 'new')
         self.assertEqual(participant.registration.status, 'new')
@@ -219,8 +216,8 @@ class TeamScheduleAdoptedReviewTestCase(AdoptedActivityReviewTestCase, Bluebottl
             activity=self.activity,
             user=registration.user,
         )
-        participant = team.team_members.get().participants.get()
+        with self.assertRaises(TeamScheduleParticipant.DoesNotExist):
+            team.team_members.get().participants.get()
 
         self.assertEqual(registration.status, 'new')
         self.assertEqual(team.status, 'new')
-        self.assertEqual(participant.status, 'new')

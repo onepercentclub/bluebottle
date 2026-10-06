@@ -81,11 +81,15 @@ class AddressesField(serializers.RelatedField):
             queryset = self.get_queryset()
             location_name = value[0]['locality']
             try:
-                return queryset.get(slug=slugify(location_name))
-            except Location.DoesNotExist:
-                return queryset.create(name=location_name)
+                slug = slugify(location_name)
             except (TypeError, ValueError):
                 self.fail('invalid')
+
+            # slug is not unique, so pick the oldest match rather than assuming one.
+            return (
+                queryset.filter(slug=slug).order_by('pk').first()
+                or queryset.create(name=location_name)
+            )
 
 
 class SchemaSerializer(NonNestedSerializer):

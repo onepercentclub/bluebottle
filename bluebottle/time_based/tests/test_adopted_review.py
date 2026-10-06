@@ -41,7 +41,6 @@ def adopt(activity):
         actor=OrganizationFactory.create(iri='https://supplier.example.com/org'),
     )
     if isinstance(activity, DateActivity):
-        # Date slots are adopted from the sub events of the supplier event
         for slot in activity.slots.all():
             SubEventFactory.create(
                 parent=event,

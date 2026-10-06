@@ -98,7 +98,6 @@ class RegistrationInfoMixin:
         )
         status = obj.registration.states.current_state.name
         if obj.activity.is_adopted:
-            # Review of adopted activities happens on the supplier platform
             return format_html(
                 'Current status <b>{status}</b>. {note}',
                 status=status,

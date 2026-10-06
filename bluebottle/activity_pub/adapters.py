@@ -1,3 +1,4 @@
+from bluebottle.fsm.states import TransitionNotPossible
 from bluebottle.activity_pub.serializers import (
     ActivityPubSerializer, FederatedObjectSerializer
 )
@@ -45,7 +46,7 @@ class JSONLDAdapter():
                     transition.transition()
                     transition.transitioned = True
                     transition.save()
-        except ValueError:
+        except (ValueError, TransitionNotPossible):
             pass
 
     def link(self, instance, **kwargs):

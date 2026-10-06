@@ -65,11 +65,9 @@ class Finish(Transition):
 
         if self.object.link:
             self.object.link.states.succeed(save=True)
-            return True
 
 
 class Lock(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.lock(save=True)
-            return True

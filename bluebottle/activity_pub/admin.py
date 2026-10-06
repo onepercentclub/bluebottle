@@ -433,7 +433,7 @@ class FollowingAddForm(EnabledActivityTypesFormMixin, forms.ModelForm):
                 })
 
         if (
-            len(result['automatic_adoption_activity_types']) > 0 and
+            result.get('automatic_adoption_activity_types') and
             result['adoption_type'] in ('template', 'sync', ) and
             not result['default_owner']
         ):
@@ -467,7 +467,7 @@ class FollowingAdminForm(EnabledActivityTypesFormMixin, forms.ModelForm):
         result = super().clean()
 
         if (
-            len(result['automatic_adoption_activity_types']) > 0 and
+            result.get('automatic_adoption_activity_types') and
             result['adoption_type'] in ('template', 'sync', ) and
             not result['default_owner']
         ):

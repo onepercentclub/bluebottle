@@ -1,5 +1,3 @@
-from unittest import mock
-
 from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,

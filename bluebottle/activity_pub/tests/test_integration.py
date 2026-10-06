@@ -188,6 +188,12 @@ class ActivityPubTestCase:
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
+            initiative_settings = InitiativePlatformSettings.load()
+            initiative_settings.activity_types = [
+                activity_type for (activity_type, _) in InitiativePlatformSettings.ACTIVITY_TYPES
+            ]
+            initiative_settings.save()
+
         self.client = ActivityPubClient()
         self.json_api_client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()

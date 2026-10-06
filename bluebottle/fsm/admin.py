@@ -32,6 +32,12 @@ def get_effects(effects):
 class StateMachineAdminMixin(object):
     form = StateMachineModelForm
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(StateMachineAdminMixin, self).get_form(request, obj, **kwargs)
+        if issubclass(form, StateMachineModelForm):
+            form = type(form.__name__, (form, ), {'user': request.user})
+        return form
+
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         """
         Determines the HttpResponse for the change_view stage.
@@ -154,7 +160,7 @@ class StateMachineAdminMixin(object):
             else TransitionConfirmationForm(request.POST or None)
         )
 
-        if transition not in state_machine.possible_transitions():
+        if transition not in state_machine.possible_transitions(user=request.user):
             messages.error(request, 'Transition not possible: {}'.format(transition.name))
             return HttpResponseRedirect(link)
 

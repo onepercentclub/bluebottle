@@ -86,6 +86,39 @@ from bluebottle.utils.admin import (
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
+class RegistrationInfoMixin:
+    registration_info_template = 'admin/time_based/registration_info.html'
+
+    def registration_info(self, obj):
+        url = reverse(
+            "admin:{}_{}_change".format(
+                obj.registration._meta.app_label, obj.registration._meta.model_name
+            ),
+            args=(obj.registration.id,),
+        )
+        status = obj.registration.states.current_state.name
+        if obj.activity.is_adopted:
+            # Review of adopted activities happens on the supplier platform
+            return format_html(
+                'Current status <b>{status}</b>. {note}',
+                status=status,
+                note=_('Participants are reviewed on the supplier platform.'),
+            )
+        if obj.registration.status == "new":
+            template = loader.get_template(self.registration_info_template)
+            return template.render({"status": status, "url": url})
+        else:
+            title = _("Change review")
+            return format_html(
+                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
+                url=url,
+                status=status,
+                title=title,
+            )
+
+    registration_info.short_description = _('Registration')
+
+
 class DateParticipantAdminInline(BaseContributorInline):
     model = DateParticipant
     verbose_name = _("Participant")
@@ -461,6 +494,7 @@ class TeamBulkAddForm(ActivityBulkAddForm):
 
 @admin.register(Team)
 class TeamAdmin(
+    RegistrationInfoMixin,
     RemoteUserAdminMixin,
     PolymorphicInlineSupportMixin,
     RegionManagerAdminMixin,
@@ -468,6 +502,7 @@ class TeamAdmin(
     StateMachineAdmin,
 ):
     model = Team
+    registration_info_template = 'admin/time_based/team_registration_info.html'
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
     fields = (
@@ -502,29 +537,6 @@ class TeamAdmin(
                 (_('Super admin'), {'fields': self.superadmin_fields}),
             )
         return fieldsets
-
-    def registration_info(self, obj):
-        url = reverse(
-            "admin:{}_{}_change".format(
-                obj.registration._meta.app_label, obj.registration._meta.model_name
-            ),
-            args=(obj.registration.id,),
-        )
-
-        status = obj.registration.states.current_state.name
-        if obj.registration.status == "new":
-            template = loader.get_template("admin/time_based/team_registration_info.html")
-            return template.render({"status": status, "url": url})
-        else:
-            title = _("Change review")
-            return format_html(
-                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
-                url=url,
-                status=status,
-                title=title,
-            )
-
-    registration_info.short_description = _('Registration')
 
 
 class TeamAdminInline(BaseParticipantUserInline):
@@ -1609,7 +1621,7 @@ class ParticipantSlotInline(admin.TabularInline):
 
 
 @admin.register(DateParticipant)
-class DateParticipantAdmin(ContributorChildAdmin):
+class DateParticipantAdmin(RegistrationInfoMixin, ContributorChildAdmin):
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
@@ -1628,27 +1640,6 @@ class DateParticipantAdmin(ContributorChildAdmin):
     readonly_fields = ContributorChildAdmin.readonly_fields + [
         'registration_info'
     ]
-
-    def registration_info(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj.registration._meta.app_label,
-            obj.registration._meta.model_name),
-            args=(obj.registration.id,)
-        )
-        status = obj.registration.states.current_state.name
-        if obj.registration.status == 'new':
-            template = loader.get_template(
-                'admin/time_based/registration_info.html'
-            )
-            return template.render({'status': status, 'url': url})
-        else:
-            title = _('Change review')
-            return format_html(
-                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
-                url=url, status=status, title=title
-            )
-
-    registration_info.short_description = _('Registration')
 
     list_display = ['__str__', 'activity_link', 'status']
 
@@ -1669,7 +1660,7 @@ class DateParticipantAdmin(ContributorChildAdmin):
 
 
 @admin.register(DeadlineParticipant)
-class DeadlineParticipantAdmin(ContributorChildAdmin):
+class DeadlineParticipantAdmin(RegistrationInfoMixin, ContributorChildAdmin):
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
@@ -1694,27 +1685,6 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
         'registration_info'
     ]
 
-    def registration_info(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj.registration._meta.app_label,
-            obj.registration._meta.model_name),
-            args=(obj.registration.id,)
-        )
-        status = obj.registration.states.current_state.name
-        if obj.registration.status == 'new':
-            template = loader.get_template(
-                'admin/time_based/registration_info.html'
-            )
-            return template.render({'status': status, 'url': url})
-        else:
-            title = _('Change review')
-            return format_html(
-                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
-                url=url, status=status, title=title
-            )
-
-    registration_info.short_description = _('Registration')
-
     list_display = ['__str__', 'activity_link', 'status']
 
 
@@ -1737,7 +1707,7 @@ class RegisteredDateParticipantAdmin(ContributorChildAdmin):
 
 
 @admin.register(PeriodicParticipant)
-class PeriodicParticipantAdmin(ContributorChildAdmin):
+class PeriodicParticipantAdmin(RegistrationInfoMixin, ContributorChildAdmin):
     raw_id_fields = ContributorChildAdmin.raw_id_fields + ("slot",)
 
     def get_inline_instances(self, request, obj=None):
@@ -1765,31 +1735,10 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
         "slot_info",
     ]
 
-    def registration_info(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj.registration._meta.app_label,
-            obj.registration._meta.model_name),
-            args=(obj.registration.id,)
-        )
-        status = obj.registration.states.current_state.name
-        if obj.registration.status == 'new':
-            template = loader.get_template(
-                'admin/time_based/registration_info.html'
-            )
-            return template.render({'status': status, 'url': url})
-        else:
-            title = _('Change review')
-            return format_html(
-                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
-                url=url, status=status, title=title
-            )
-
     def slot_info(self, obj):
         if not obj.slot:
             return "-"
         return format_html("{} to {}", obj.slot.start.date(), obj.slot.end.date())
-
-    registration_info.short_description = _("Registration")
 
     list_display = ["__str__", "activity_link", "status"]
 
@@ -1843,7 +1792,7 @@ class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
 
 
 @admin.register(ScheduleParticipant)
-class ScheduleParticipantAdmin(ContributorChildAdmin):
+class ScheduleParticipantAdmin(RegistrationInfoMixin, ContributorChildAdmin):
 
     inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin, )
 
@@ -1862,28 +1811,6 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
         "registration_info",
         "slot_info",
     ]
-
-    def registration_info(self, obj):
-        url = reverse(
-            "admin:{}_{}_change".format(
-                obj.registration._meta.app_label, obj.registration._meta.model_name
-            ),
-            args=(obj.registration.id,),
-        )
-        status = obj.registration.states.current_state.name
-        if obj.registration.status == "new":
-            template = loader.get_template("admin/time_based/registration_info.html")
-            return template.render({"status": status, "url": url})
-        else:
-            title = _("Change review")
-            return format_html(
-                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
-                url=url,
-                status=status,
-                title=title,
-            )
-
-    registration_info.short_description = _('Registration')
 
     def slot_info(self, obj):
         if not obj.slot:

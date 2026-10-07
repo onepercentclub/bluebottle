@@ -1035,11 +1035,67 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     def join(self):
         super().join()
 
-    def test_reaccept_consumer(self):
-        pass  # You cannot re-add periodic contributors
+    def re_accept(self, contributor):
+        contributor.states.restore(save=True)
+
+    def assert_registration_propagated(self, registration, expected_status):
+        self.assertStatus(registration, expected_status)
+        participant = registration.participants.get()
+        contribution = participant.contributions.first()
+        if expected_status == 'removed':
+            self.assertStatus(participant, 'removed')
+            self.assertStatus(contribution, 'failed')
+        else:
+            self.assertStatus(participant, expected_status)
+            self.assertStatus(contribution, 'new')
+
+    def test_remove_supplier(self):
+        self.test_join()
+
+        self.synced_participant.states.remove(save=True)
+        self.assert_registration_propagated(self.synced_participant, self.removed_status)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assert_registration_propagated(self.participant, self.removed_status)
+
+    def test_remove_consumer(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.remove(save=True)
+            self.assert_registration_propagated(self.participant, self.removed_status)
+
+        self.synced_participant.refresh_from_db()
+        self.assert_registration_propagated(self.synced_participant, self.removed_status)
 
     def test_reaccept_supplier(self):
-        pass  # You cannot re-add periodic contributors
+        self.test_remove_supplier()
+
+        self.re_accept(self.synced_participant)
+        self.assert_registration_propagated(
+            self.synced_participant, self.expected_participant_status
+        )
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assert_registration_propagated(
+                self.participant, self.expected_participant_status
+            )
+
+    def test_reaccept_consumer(self):
+        self.test_remove_consumer()
+
+        with LocalTenant(self.other_tenant):
+            self.re_accept(self.participant)
+            self.assert_registration_propagated(
+                self.participant, self.expected_participant_status
+            )
+
+        self.synced_participant.refresh_from_db()
+        self.assert_registration_propagated(
+            self.synced_participant, self.expected_participant_status
+        )
 
     def test_join(self):
         super().test_join()

@@ -172,8 +172,12 @@ class PeriodicJoin(RegistrationJoin):
         proxy = True
 
     def reapply(self):
-        """For periodic activities re-joining an activity means we have to start the registration again"""
-        self.registration.states.start(save=True, local=True)
+        """Resume after stop, or restore after remove."""
+        registration = self.contributor
+        if registration.status == 'removed':
+            registration.states.restore(save=True, local=True)
+        else:
+            registration.states.start(save=True, local=True)
 
     @property
     def local_contributor(self):
@@ -183,6 +187,7 @@ class PeriodicJoin(RegistrationJoin):
             remote_user=self.actor.adopted
         )
 
+    @property
     def remote_contributor(self):
         return self.object.adopted.registrations.get(
             user=self.actor.origin

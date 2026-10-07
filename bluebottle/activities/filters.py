@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, date
 
 import dateutil
@@ -34,6 +35,17 @@ from bluebottle.utils.filters import (
     SegmentFacet,
 )
 
+logger = logging.getLogger(__name__)
+
+
+def get_place(place_id):
+    if not place_id or not str(place_id).isdigit():
+        return None
+    try:
+        return Place.objects.filter(pk=place_id).first()
+    except (TypeError, ValueError):
+        return None
+
 
 class DistanceFacet(Facet):
     def get_aggregation(self):
@@ -46,18 +58,17 @@ class DistanceFacet(Facet):
         request = get_current_request()
 
         place_id = request.GET.get("place")
-        if place_id:
-            place = Place.objects.filter(pk=place_id).first()
-            if place and place.position and filter_value:
-                geo_filter = GeoDistance(
-                    _expand__to_dot=False,
-                    distance=filter_value,
-                    position={
-                        "lat": float(place.position[1]),
-                        "lon": float(place.position[0]),
-                    },
-                )
-                return geo_filter | Term(is_online=True)
+        place = get_place(place_id)
+        if place and place.position and filter_value:
+            geo_filter = GeoDistance(
+                _expand__to_dot=False,
+                distance=filter_value,
+                position={
+                    "lat": float(place.position[1]),
+                    "lon": float(place.position[0]),
+                },
+            )
+            return geo_filter | Term(is_online=True)
 
 
 class OfficeRestrictionFacet(Facet):
@@ -437,7 +448,10 @@ class ActivitySearch(Search):
     sorting = {
         "date": ["dates.start"],
         "created": ["created"],
-        "distance": ["distance"],
+        # Keep the key. Search.sort replaces an unknown sort with the date sort
+        # before this class applies the geo sort. "dates.start" is a real field;
+        # a bare "distance" sort is what Elasticsearch rejects.
+        "distance": ["dates.start"],
     }
     default_sort = "date"
 
@@ -505,23 +519,36 @@ class ActivitySearch(Search):
         if self._sort == "distance":
             request = get_current_request()
             place_id = request.GET.get("place")
-            if place_id:
-                place = Place.objects.filter(pk=place_id).first()
-                if place and place.position:
-                    geo_sort = {
-                        "_geo_distance": {
-                            "position": {
-                                "lat": float(place.position[1]),
-                                "lon": float(place.position[0]),
-                            },
-                            "order": "asc",
-                            "distance_type": "arc",
-                        }
-                    }
+            place = get_place(place_id)
+            position = place.position if place and place.position else None
 
-                    search = search.sort({"is_online": {"order": "desc"}}, geo_sort)
+            if not position:
+                logger.warning(
+                    'Could not resolve an origin for the distance sort on %s: '
+                    'place %r is missing or has no position',
+                    request.get_host(),
+                    place_id,
+                )
+
+            if position:
+                geo_sort = {
+                    "_geo_distance": {
+                        "position": {
+                            "lat": float(position[1]),
+                            "lon": float(position[0]),
+                        },
+                        "order": "asc",
+                        "distance_type": "arc",
+                    }
+                }
+                search = search.sort({"is_online": {"order": "desc"}}, geo_sort)
             else:
-                search = search.sort({"is_online": {"order": "desc"}})
+                search = search.sort(
+                    {"is_online": {"order": "desc"}},
+                    self._date_sort(),
+                )
+
+            return search
 
         if self._sort == "start":
             # Used for activity tab in initiatives
@@ -546,71 +573,70 @@ class ActivitySearch(Search):
             return search
 
         if self._sort == "date" or not self._sort:
-            if (
-                "upcoming" in self.filter_values
-                and self.filter_values["upcoming"][0] == "1"
-            ):
-                start = now()
-                end = date.max
-
-                if "date" in self.filter_values:
-                    bounds = self.filter_values["date"][0].split(",")
-                    if len(bounds) != 2:
-                        raise ValidationError(
-                            {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
-                        )
-
-                    start, end = (self.parse_bound(bound) for bound in bounds)
-
-                search = search.sort(
-                    {
-                        "dates.end": {
-                            "order": "asc",
-                            "missing": "_last",
-                            "nested": {
-                                "path": "dates",
-                                "filter": (
-                                    Range(**{"dates.end": {"lte": end}}) &
-                                    (
-                                        Range(**{"dates.end": {"gte": start}}) |
-                                        Bool(must_not=Exists(field='dates.end'))
-                                    )
-                                ),
-                            },
-                        },
-                    }
-                )
-            else:
-                start = datetime.min
-                end = now()
-
-                if "date" in self.filter_values:
-                    bounds = self.filter_values["date"][0].split(",")
-                    if len(bounds) != 2:
-                        raise ValidationError(
-                            {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
-                        )
-
-                    start, end = (self.parse_bound(bound) for bound in bounds)
-
-                search = search.sort(
-                    {
-                        "dates.end": {
-                            "order": "desc",
-                            "mode": "max",
-                            "nested": {
-                                "path": "dates",
-                                "filter": (
-                                    Range(**{"dates.end": {"lte": end}})
-                                    & Range(**{"dates.end": {"gte": start}})
-                                ),
-                            },
-                        }
-                    }
-                )
-                return search
+            search = search.sort(self._date_sort())
+            return search
 
         return search
+
+    def _date_sort(self):
+        if (
+            "upcoming" in self.filter_values
+            and self.filter_values["upcoming"][0] == "1"
+        ):
+            start = now()
+            end = date.max
+
+            if "date" in self.filter_values:
+                bounds = self.filter_values["date"][0].split(",")
+                if len(bounds) != 2:
+                    raise ValidationError(
+                        {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+                    )
+
+                start, end = (self.parse_bound(bound) for bound in bounds)
+
+            return {
+                "dates.end": {
+                    "order": "asc",
+                    "missing": "_last",
+                    "nested": {
+                        "path": "dates",
+                        "filter": (
+                            Range(**{"dates.end": {"lte": end}}) &
+                            (
+                                Range(**{"dates.end": {"gte": start}}) |
+                                Bool(must_not=Exists(field='dates.end'))
+                            )
+                        ),
+                    },
+                },
+            }
+
+        start = datetime.min
+        end = now()
+
+        if "date" in self.filter_values:
+            bounds = self.filter_values["date"][0].split(",")
+            if len(bounds) != 2:
+                raise ValidationError(
+                    {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+                )
+
+            start, end = (self.parse_bound(bound) for bound in bounds)
+
+        return {
+            "dates.end": {
+                "order": "desc",
+                "mode": "max",
+                "nested": {
+                    "path": "dates",
+                    "filter": (
+                        Range(**{"dates.end": {"lte": end}})
+                        & Range(**{"dates.end": {"gte": start}})
+                    ),
+                },
+            }
+        }
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.load()

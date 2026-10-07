@@ -215,6 +215,23 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
     }
 
 
+class ResourceRolesField(serializers.ReadOnlyField):
+    def __init__(self, **kwargs):
+        kwargs['source'] = '*'
+        super().__init__(**kwargs)
+
+    def to_representation(self, activity):
+        from bluebottle.activities.permissions import user_matches_review_scope
+
+        user = self.context['request'].user
+        is_staff = user.is_authenticated and (user.is_staff or user.is_superuser)
+
+        return {
+            'manager': user.is_authenticated and user in activity.owners,
+            'reviewer': is_staff and user_matches_review_scope(user, activity),
+        }
+
+
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField()
@@ -223,6 +240,7 @@ class BaseActivitySerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     categories = ResourceRelatedField(many=True, read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
+    roles = ResourceRolesField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()
     team_count = serializers.SerializerMethodField()
@@ -401,6 +419,7 @@ class BaseActivitySerializer(ModelSerializer):
 
         meta_fields = (
             'permissions',
+            'roles',
             'transitions',
             'translations',
             'created',

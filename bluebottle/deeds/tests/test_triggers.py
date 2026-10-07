@@ -19,7 +19,7 @@ from bluebottle.activities.states import (
     OrganizerStateMachine,
     EffortContributionStateMachine,
 )
-from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect
+from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect, SendRemoveEffect
 from bluebottle.activity_pub.tests.factories import (
     CreateFactory, GoodDeedFactory, OrganizationFactory,
 )
@@ -575,13 +575,13 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ParticipantRemovedNotification)
 
-    def test_remove_synced_emits_leave_effect(self):
+    def test_remove_synced_emits_remove_effect(self):
         self.make_synced('https://example.com/good-deed/3')
         self.create()
 
         self.model.states.remove()
         with self.execute():
-            self.assertEffect(SendLeaveEffect)
+            self.assertEffect(SendRemoveEffect)
 
     def test_expire_remove(self):
         self.create()
@@ -611,7 +611,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertNoTransitionEffect(DeedStateMachine.expire, self.model.activity)
 
-    def test_accept_no_start_no_end(self):
+    def test_reaccept_no_start_no_end(self):
         self.defaults['activity'].start = None
         self.defaults['activity'].end = None
         self.defaults['activity'].save()
@@ -620,7 +620,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model.activity.states.publish(save=True)
 
         self.model.states.remove(save=True)
-        self.model.states.accept()
+        self.model.states.re_accept()
 
         with self.execute():
             self.assertTransitionEffect(
@@ -631,7 +631,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 DeedParticipantStateMachine.succeed
             )
 
-    def test_accept_started_no_end(self):
+    def test_reaccept_started_no_end(self):
         self.defaults['activity'].start = date.today() - timedelta(days=2)
         self.defaults['activity'].end = None
         self.defaults['activity'].states.publish(save=True)
@@ -639,7 +639,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.create()
 
         self.model.states.remove(save=True)
-        self.model.states.accept()
+        self.model.states.re_accept()
 
         with self.execute():
             self.assertTransitionEffect(
@@ -650,17 +650,17 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 DeedParticipantStateMachine.succeed
             )
 
-    def test_accept_from_withdrawn_synced_emits_join_effect(self):
+    def test_reaccept_from_withdrawn_synced_emits_join_effect(self):
         self.make_synced('https://example.com/good-deed/4')
         self.create()
 
         self.model.states.withdraw(save=True)
-        self.model.states.accept()
+        self.model.states.re_accept()
 
         with self.execute():
             self.assertEffect(SendJoinEffect)
 
-    def test_accept_expired(self):
+    def test_reaccept_expired(self):
         self.defaults['activity'].start = date.today() - timedelta(days=20)
         self.defaults['activity'].end = date.today() - timedelta(days=10)
         self.defaults['activity'].status = 'expired'
@@ -669,7 +669,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.create()
 
         self.model.states.remove(save=True)
-        self.model.states.accept()
+        self.model.states.re_accept()
 
         with self.execute():
             self.assertTransitionEffect(
@@ -682,7 +682,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 DeedStateMachine.succeed, self.model.activity
             )
 
-    def test_succeed_accept(self):
+    def test_succeed_reaccept(self):
         self.defaults['status'] = 'rejected'
         activity = DeedFactory.create(
             status='expired',
@@ -693,7 +693,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.defaults['activity'] = activity
         self.create()
         self.model.activity.save()
-        self.model.states.accept()
+        self.model.states.re_accept()
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed, self.model.activity)

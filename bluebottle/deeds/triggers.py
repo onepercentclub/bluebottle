@@ -423,6 +423,15 @@ class DeedParticipantTriggers(ContributorTriggers):
             effects=[
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
                 FollowActivityEffect,
+                TransitionEffect(
+                    DeedParticipantStateMachine.succeed,
+                    conditions=[activity_did_start]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    DeedStateMachine.succeed,
+                    conditions=[activity_is_finished, activity_expired]
+                ),
                 SendSupplierJoinEffect,
                 SendJoinEffect,
                 SyncRelatedEvent

@@ -397,16 +397,15 @@ class FundingSerializer(BaseActivitySerializer):
                 raise ValidationError(
                     {'target': _('Target cannot be changed after the funding has been published.')}
                 )
-            if (
-                'deadline' in data and
-                'deadline' in readonly_fields and
-                self.instance.deadline and
-                data['deadline'] and
-                data['deadline'].date() != self.instance.deadline.date()
-            ):
-                raise ValidationError(
-                    {'deadline': _('Deadline cannot be changed after the funding has been published.')}
+            if 'deadline' in data and 'deadline' in readonly_fields:
+                deadline_new = data['deadline'].date() if data.get('deadline') else None
+                deadline_old = (
+                    self.instance.deadline.date() if self.instance.deadline else None
                 )
+                if deadline_new != deadline_old:
+                    raise ValidationError(
+                        {'deadline': _('Deadline cannot be changed after the funding has been published.')}
+                    )
         return data
 
     class Meta(BaseActivitySerializer.Meta):

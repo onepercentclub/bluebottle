@@ -310,7 +310,7 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
         )
         self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
 
-        event = adapter.create_or_update_event(funding)
+        event = adapter.sync(funding)
         self.assertEqual(event.location.name, place.place_name)
         self.assertEqual(event.location.place_type, 'city')
         self.assertEqual(event.location.latitude, geolocation.position.x)
@@ -353,7 +353,7 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
         self.assertEqual(location['name'], neighborhood.place_name)
         self.assertEqual(location['address']['locality'], 'Amsterdam')
 
-        event = adapter.create_or_update_event(funding)
+        event = adapter.sync(funding)
         self.assertEqual(event.location.place_type, 'neighborhood')
         self.assertEqual(event.location.address.locality, 'Amsterdam')
 

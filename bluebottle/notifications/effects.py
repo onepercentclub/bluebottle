@@ -125,7 +125,6 @@ class BaseLogErrorEffect(Effect):
 
     def post_save(self, **kwargs):
         if self.is_valid:
-            print(self.message.format(**self.get_args()))
             logger.error(self.message.format(**self.get_args()))
 
     def __repr__(self):

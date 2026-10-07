@@ -772,6 +772,8 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'participant_name': 'user.full_name',
+        'question': 'activity.review_title',
+        'answer': 'registration.answer',
     }
 
     def get_context(self, recipient):

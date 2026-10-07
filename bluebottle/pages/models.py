@@ -262,6 +262,7 @@ class Page(PublishableModel):
         'DocumentPlugin',
         'PeopleBlockPlugin',
         'ImagePlainTextBlockPlugin',
+        'PollBlockPlugin',
     ])
     # This should not be nessecary, but fixes deletion of some pages
     # See https://github.com/edoburu/django-fluent-contents/issues/19
@@ -317,6 +318,7 @@ class PlatformPage(TranslatableModel):
             'DocumentPlugin',
             'PeopleBlockPlugin',
             'ImagePlainTextBlockPlugin',
+            'PollBlockPlugin',
         ]
     )
 

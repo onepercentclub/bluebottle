@@ -59,10 +59,11 @@ def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
             'feature_type': geofeature.feature_type or '',
             'is_primary': is_primary,
         }
-        if country and country.has_translation(lang.full_code):
-            country.set_current_language(lang.full_code)
-            entry['country'] = country.name
+        if country:
             entry['country_code'] = country.alpha2_code
+            if country.has_translation(lang.full_code):
+                country.set_current_language(lang.full_code)
+                entry['country'] = country.name
         data.append(entry)
 
     geofeature._current_language = current_language

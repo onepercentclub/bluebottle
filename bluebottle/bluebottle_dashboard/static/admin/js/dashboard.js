@@ -100,6 +100,54 @@ function fixMapboxWidget() {
 }
 
 
+function tabContentHasErrors($content) {
+  return (
+    $content.find('.form-row.errors, .row-form-errors, .errorlist').length > 0
+  );
+}
+
+function revealChangeformTabErrors() {
+  var $changeform = django.jQuery('.change-form');
+  if (!$changeform.length) {
+    return;
+  }
+
+  var $container = $changeform.find('#content-main > form > div');
+  var $wrappers = $container.find('> .module, > .inline-group');
+  var $tabItems = $changeform.find('.changeform-tabs-item');
+  var firstErrorHref = null;
+
+  $tabItems.each(function() {
+    var $tabItem = django.jQuery(this);
+    var href = $tabItem.find('.changeform-tabs-item-link').attr('href') || '';
+    var match = href.match(/#\/tab\/([^/]+)\//);
+    if (!match) {
+      return;
+    }
+    var $content = $wrappers.filter('.' + match[1]);
+    if (tabContentHasErrors($content)) {
+      $tabItem.addClass('errors');
+      if (!firstErrorHref) {
+        firstErrorHref = href;
+      }
+    }
+  });
+
+  if (!firstErrorHref || $tabItems.filter('.selected').hasClass('errors')) {
+    return;
+  }
+
+  var selector = firstErrorHref.match(/#\/tab\/([^/]+)\//)[1];
+  $tabItems.removeClass('selected');
+  $wrappers.removeClass('selected');
+  $tabItems
+    .find('.changeform-tabs-item-link[href="' + firstErrorHref + '"]')
+    .closest('.changeform-tabs-item')
+    .addClass('selected');
+  $wrappers.filter('.' + selector).addClass('selected');
+  window.location.hash = firstErrorHref;
+}
+
 window.onload = function () {
   if (!django.jQuery && jQuery) {
     django.jQuery = jQuery;
@@ -111,7 +159,8 @@ window.onload = function () {
   removeRedundantTabs();
   removeFluentEditorTabs();
   addHashToInlinePaginator();
-  hideDeleteButton();
   hideInfoBoxLabel();
+  revealChangeformTabErrors();
+  hideDeleteButton();
   window.onhashchange = addHashToInlinePaginator;
 };

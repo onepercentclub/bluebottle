@@ -1,5 +1,7 @@
 from django.urls import reverse
 
+from bluebottle.activities.models import RemoteMember
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.models import Team
@@ -204,3 +206,85 @@ class TeamMemberListAPIViewTestCase(APITestCase):
         self.assertEqual(self.model.team, self.team)
         self.assertIn(self.manager, self.activity.owners)
         self.assertNotEqual(self.manager, self.captain)
+
+
+class RelatedTeamListSyncedTeamAPIViewTestCase(APITestCase):
+    """
+    BB-30309: a team synced from a consumer platform has no local captain
+    (user is NULL, remote_user is set). The activity's `teams` links count it,
+    so the sidebar says "1 team participating", but the list behind the
+    link the public Teams tab loads (`active`) should then also return it.
+    """
+    serializer = TeamSerializer
+
+    def setUp(self):
+        super().setUp()
+        self.manager = BlueBottleUserFactory.create()
+        self.other_user = BlueBottleUserFactory.create()
+
+        initiative = InitiativeFactory.create()
+        self.activity = ScheduleActivityFactory.create(
+            team_activity='teams',
+            owner=self.manager,
+            initiative=initiative,
+            review=False,
+        )
+        initiative.states.submit()
+        initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
+
+        remote_captain = RemoteMember.objects.create(
+            email='cas@example.com',
+            first_name='Cas',
+            last_name='Consumer',
+        )
+        self.team = TeamFactory.create(
+            activity=self.activity,
+            user=None,
+            remote_user=remote_captain,
+        )
+
+    def schedule_team(self):
+        # Scheduling a synced team through its slot syncs back to the consumer,
+        # which needs the federated Team actor. That flow is covered in
+        # activity_pub's SyncTeamScheduleActivityTestCase; here we only care
+        # about what the list returns, so set the status directly.
+        Team.objects.filter(pk=self.team.pk).update(status='scheduled')
+
+    def get_link(self, name, user=None):
+        self.url = reverse('schedule-detail', args=(self.activity.pk,))
+        self.perform_get(user=user)
+        self.assertStatus(200)
+        return self.response.json()['data']['relationships']['teams']['links'][name]
+
+    def assertListMatchesLink(self, name, user=None):
+        link = self.get_link(name, user=user)
+        self.assertEqual(link['meta']['count'], 1)
+
+        self.url = link['href']
+        self.perform_get(user=user)
+        self.assertStatus(200)
+        self.assertObjectList(models=[self.team])
+
+    def test_synced_team_has_no_local_captain(self):
+        self.assertIsNone(self.team.user)
+        self.assertIsNone(self.team.owner)
+        self.assertEqual(self.team.status, 'accepted')
+
+    def test_unscheduled_synced_team_manager(self):
+        self.assertListMatchesLink('unscheduled', user=self.manager)
+
+    def test_unscheduled_synced_team_other_user(self):
+        self.assertListMatchesLink('unscheduled', user=self.other_user)
+
+    def test_scheduled_synced_team_manager(self):
+        self.schedule_team()
+        self.assertListMatchesLink('active', user=self.manager)
+
+    def test_scheduled_synced_team_other_user(self):
+        self.schedule_team()
+        self.assertListMatchesLink('active', user=self.other_user)
+
+    def test_scheduled_synced_team_anonymous(self):
+        self.schedule_team()
+        self.assertListMatchesLink('active')

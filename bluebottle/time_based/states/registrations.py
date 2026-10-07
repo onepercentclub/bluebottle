@@ -180,6 +180,14 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         permission=is_user_or_manager,
     )
 
+    stop_automatically = Transition(
+        [RegistrationStateMachine.accepted],
+        stopped,
+        name=_('Stop'),
+        short_description=_("This person will no longer actively participate."),
+        automatic=True,
+    )
+
     remove = Transition(
         [RegistrationStateMachine.accepted],
         removed,

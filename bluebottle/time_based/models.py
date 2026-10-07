@@ -972,6 +972,12 @@ class PeriodicActivity(RegistrationActivity):
     class JSONAPIMeta:
         resource_name = 'activities/time-based/periodics'
 
+    @property
+    def accepted_registrations(self):
+        return self.registrations.filter(
+            status__in=["accepted"],
+        )
+
 
 class RegisteredDateActivity(TimeBasedActivity):
     """

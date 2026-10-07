@@ -639,6 +639,34 @@ class SyncTestCase(ActivityPubTestCase):
             Accept.objects.filter(object=self.model.activity_pub_model).exists()
         )
 
+    expected_cancelled_status = 'cancelled'
+
+    def test_cancel_supplier(self):
+        self.test_join()
+
+        self.model.states.cancel(save=True)
+        self.assertStatus(self.model, 'cancelled')
+        self.assertStatus(self.synced_participant, self.expected_cancelled_status)
+
+        with LocalTenant(self.other_tenant):
+            self.assertStatus(self.adopted, 'cancelled')
+            self.assertStatus(self.participant, self.expected_cancelled_status)
+            self.assertTrue(
+                Reject.objects.filter(object=self.adopted.origin).exists()
+            )
+
+    def test_restore_supplier(self):
+        self.test_cancel_supplier()
+
+        self.model.states.restore(save=True)
+        self.model.states.approve(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.assertStatus(self.adopted, 'open')
+            self.assertStatus(self.participant, self.expected_cancelled_status)
+
+        self.assertStatus(self.synced_participant, self.expected_cancelled_status)
+
     def test_restore_and_reapprove(self):
         self.test_cancel_adoption()
 
@@ -868,6 +896,7 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
     factory = DeedFactory
     participant_factory = DeedParticipantFactory
     expected_participant_status = 'accepted'
+    expected_cancelled_status = 'failed'
     removed_status = 'rejected'
 
     def create(self, **kwargs):
@@ -1036,6 +1065,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     participant_factory = PeriodicRegistrationFactory
     expected_participant_status = 'accepted'
     removed_status = 'removed'
+    expected_cancelled_status = 'stopped'
 
     def create(self, **kwargs):
         super().create(
@@ -1188,6 +1218,7 @@ class SyncCollectActivityTestCase(SyncTestCase, BluebottleTestCase):
     participant_factory = CollectContributorFactory
     expected_participant_status = 'accepted'
     removed_status = 'rejected'
+    expected_cancelled_status = 'failed'
 
     def create(self, **kwargs):
         super().create(

@@ -150,7 +150,6 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                     "contributions",
                     ContributionStateMachine.fail,
                 ),
-                SendLeaveEffect
             ],
         ),
         TransitionTrigger(

@@ -169,6 +169,15 @@ class CollectActivity(Activity):
             return CollectContributor.objects.none()
 
     @property
+    def failed_participants(self):
+        if self.pk:
+            return self.contributors.instance_of(CollectContributor).filter(
+                status__in=('failed',)
+            )
+        else:
+            return []
+
+    @property
     def active_contributors(self):
         return self.participants.filter(
             status__in=['succeeded', 'accepted']

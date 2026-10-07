@@ -196,6 +196,15 @@ class CollectContributorStateMachine(ContributorStateMachine):
         permission=is_owner,
     )
 
+    fail = ContributorStateMachine.fail.extend(
+        sources=[
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed,
+            accepted
+        ],
+    )
+
 
 @register(CollectContribution)
 class CollectContributionStateMachine(ContributionStateMachine):

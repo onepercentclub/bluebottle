@@ -16,7 +16,7 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
 from bluebottle.activity_pub.effects import (
     LockEffect, PublishAdoptionEffect, CreateEffect, CancelEffect, FinishEffect, UpdateEventEffect,
-    UnpublishAdoptionEffect
+    UnpublishAdoptionEffect, StartEffect
 )
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
@@ -53,6 +53,9 @@ from bluebottle.time_based.states import (
 )
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
+)
+from bluebottle.time_based.states.registrations import (
+    PeriodicRegistrationStateMachine,
 )
 from bluebottle.time_based.states.slots import (
     ScheduleSlotStateMachine,
@@ -311,6 +314,7 @@ class TimeBasedTriggers(ActivityTriggers):
                         is_not_full,
                     ],
                 ),
+                StartEffect
             ]
         ),
         TransitionTrigger(
@@ -536,6 +540,7 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
                 ),
             ],
         ),
+
         TransitionTrigger(
             TimeBasedStateMachine.reject,
             effects=[
@@ -543,14 +548,6 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
                     "accepted_participants", RegistrationParticipantStateMachine.cancel
                 ),
             ],
-        ),
-        TransitionTrigger(
-            TimeBasedStateMachine.restore,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants", RegistrationParticipantStateMachine.restore
-                ),
-            ]
         ),
 
         ModelChangedTrigger(
@@ -701,6 +698,7 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
             TimeBasedStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect("teams", TeamStateMachine.cancel),
+                CancelEffect
             ],
         ),
         TransitionTrigger(
@@ -747,6 +745,16 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
             effects=[
                 CreateFirstSlotEffect,
             ]
+        ),
+
+        TransitionTrigger(
+            PeriodicActivityStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'accepted_registrations',
+                    PeriodicRegistrationStateMachine.stop_automatically
+                ),
+            ],
         ),
         ModelChangedTrigger(
             ['title', 'description', 'start', 'deadline', 'location', 'duration', 'period', 'image'],

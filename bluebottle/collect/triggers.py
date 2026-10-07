@@ -180,6 +180,7 @@ class CollectActivityTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
+                RelatedTransitionEffect('participants', CollectContributorStateMachine.fail),
                 UnpublishAdoptionEffect,
                 CancelEffect
             ]

@@ -11,7 +11,6 @@ from bluebottle.activities.messages.participant import (
 )
 from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine, ActivityStateMachine,
-    ContributorStateMachine
 )
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
@@ -163,14 +162,13 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
-                StartEffect
+                StartEffect,
             ]
         ),
         TransitionTrigger(
             ActivityStateMachine.approve,
             effects=[
                 PublishAdoptionEffect,
-                RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.accept),
                 StartEffect
             ]
         ),
@@ -247,7 +245,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                RelatedTransitionEffect('participants', ContributorStateMachine.fail),
+                RelatedTransitionEffect('participants', DeedParticipantStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
                 UnpublishAdoptionEffect,
                 CancelEffect
@@ -258,7 +256,6 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.restore,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
-                RelatedTransitionEffect('failed_participants', ContributorStateMachine.reset),
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),

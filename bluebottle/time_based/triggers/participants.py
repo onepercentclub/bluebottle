@@ -265,7 +265,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         if effect.instance.activity.deadline:
             return effect.instance.activity.deadline < now().date()
 
-
         return True
 
     def is_not_self(self):

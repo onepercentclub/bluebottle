@@ -442,6 +442,22 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
             subjects,
         )
 
+    def test_succeed_manually(self):
+        self.activity.start = date.today() + timedelta(days=7)
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.states.approve(save=True)
+
+        self.create_participants()
+
+        for registration in self.registrations:
+            self.assertEqual(registration.participants.first().status, "accepted")
+
+        self.activity.states.succeed_manually(save=True)
+
+        for registration in self.registrations:
+            self.assertEqual(registration.participants.first().status, "succeeded")
+
     def test_cancel(self):
         self.create_participants()
         super().test_cancel()

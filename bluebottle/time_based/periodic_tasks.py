@@ -170,7 +170,8 @@ class DeadlineActivityStartedTask(ModelPeriodicTask):
             start__lte=date.today(),
             status__in=["open", "full", "registration_closed"],
             deadline__isnull=True,
-        )
+            contributors__status='accepted'
+        ).distinct()
 
     effects = [
         RelatedTransitionEffect('accepted_participants', DeadlineParticipantStateMachine.succeed)

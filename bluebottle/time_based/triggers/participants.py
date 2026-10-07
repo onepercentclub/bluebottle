@@ -258,12 +258,13 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             effect.instance.activity.accepted_participants, effect.instance
         )
 
-    def activity_has_started(effect):
+    def activity_has_completed(effect):
         """ Activity has started """
-        if effect.instance.activity.start:
+        if effect.instance.activity.start and not effect.instance.activity.deadline:
             return effect.instance.activity.start < now().date()
         if effect.instance.activity.deadline:
             return effect.instance.activity.deadline < now().date()
+
 
         return True
 
@@ -301,7 +302,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
-                        activity_has_started
+                        activity_has_completed
                     ]
                 ),
                 RelatedTransitionEffect(
@@ -328,7 +329,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
-                        activity_has_started
+                        activity_has_completed
                     ]
                 ),
                 RelatedTransitionEffect(
@@ -354,7 +355,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
-                        activity_has_started
+                        activity_has_completed
                     ]
                 ),
                 RelatedTransitionEffect(
@@ -409,7 +410,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
-                        registration_is_accepted, activity_has_started
+                        registration_is_accepted, activity_has_completed
                     ],
                 ),
                 RelatedTransitionEffect(
@@ -434,7 +435,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
                         registration_is_accepted,
-                        activity_has_started
+                        activity_has_completed
                     ]
                 ),
                 RelatedTransitionEffect(
@@ -454,7 +455,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
                         registration_is_accepted,
-                        activity_has_started
+                        activity_has_completed
                     ],
                 ),
                 RelatedTransitionEffect(

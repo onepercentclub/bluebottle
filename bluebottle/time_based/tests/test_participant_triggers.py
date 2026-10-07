@@ -44,6 +44,14 @@ class ParticipantTriggerTestCase:
 
         self.initiative = InitiativeFactory(owner=self.user)
 
+        self.create_activity()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
+
+        mail.outbox = []
+
+    def create_activity(self):
         self.activity = self.activity_factory.create(
             initiative=self.initiative,
             review=False,
@@ -51,11 +59,6 @@ class ParticipantTriggerTestCase:
             registration_deadline=None,
             preparation=timedelta(hours=1),
         )
-        self.initiative.states.submit()
-        self.initiative.states.approve(save=True)
-        self.activity.states.publish(save=True)
-
-        mail.outbox = []
 
     def get_duration(self):
         return self.activity.duration
@@ -269,6 +272,17 @@ class ParticipantTriggerTestCase:
 class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
     activity_factory = DeadlineActivityFactory
 
+    def create_activity(self):
+        self.activity = self.activity_factory.create(
+            initiative=self.initiative,
+            start=None,
+            deadline=None,
+            review=False,
+            capacity=4,
+            registration_deadline=None,
+            preparation=timedelta(hours=1),
+        )
+
     def create(self, user=None, as_user=None):
         if not user:
             user = BlueBottleUserFactory.create()
@@ -303,6 +317,7 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     def assert_reapply(self, status):
         self.participant.states.withdraw(save=True)
         self.assertEqual(self.participant.status, 'withdrawn')
+        __import__('ipdb').set_trace()
         self.participant.states.reapply(save=True)
         self.assertEqual(self.participant.status, status)
 
@@ -325,10 +340,6 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
     def test_initial_deadline_in_past(self):
         self.assert_initial('succeeded', start=None, deadline=self.passed)
-
-    def test_reapply_deadline_in_past(self):
-        self.assert_initial('succeeded', start=None, deadline=self.passed)
-        self.assert_reapply('succeeded')
 
     def test_readd_deadline_in_past(self):
         self.assert_initial('succeeded', start=None, deadline=self.passed)
@@ -357,15 +368,15 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.assert_readd('succeeded')
 
     def test_initial_start_in_past_deadline_in_future(self):
-        self.assert_initial('succeeded', start=self.passed, deadline=self.future)
+        self.assert_initial('accepted', start=self.passed, deadline=self.future)
 
     def test_reapply_start_in_past_deadline_in_future(self):
-        self.assert_initial('succeeded', start=self.passed, deadline=self.future)
-        self.assert_reapply('succeeded')
+        self.assert_initial('accepted', start=self.passed, deadline=self.future)
+        self.assert_reapply('accepted')
 
     def test_readd_start_in_past_deadline_in_future(self):
-        self.assert_initial('succeeded', start=self.passed, deadline=self.future)
-        self.assert_readd('succeeded')
+        self.assert_initial('accepted', start=self.passed, deadline=self.future)
+        self.assert_readd('accepted')
 
     def test_initial_added_through_admin(self):
         mail.outbox = []

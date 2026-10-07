@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-07 12:35+0200\n"
-"PO-Revision-Date: 2026-10-07 10:36\n"
+"POT-Creation-Date: 2026-10-07 14:40+0200\n"
+"PO-Revision-Date: 2026-10-07 12:41\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -453,10 +453,10 @@ msgstr "Bewerbung anzeigen"
 #: bluebottle/time_based/messages/messages.py:617
 #: bluebottle/time_based/messages/messages.py:689
 #: bluebottle/time_based/messages/messages.py:710
-#: bluebottle/time_based/messages/messages.py:844
-#: bluebottle/time_based/messages/messages.py:880
-#: bluebottle/time_based/messages/messages.py:1001
-#: bluebottle/time_based/messages/messages.py:1052
+#: bluebottle/time_based/messages/messages.py:846
+#: bluebottle/time_based/messages/messages.py:882
+#: bluebottle/time_based/messages/messages.py:1003
+#: bluebottle/time_based/messages/messages.py:1054
 #: bluebottle/time_based/messages/participants.py:124
 msgctxt "platform-email"
 msgid "View activity"
@@ -641,10 +641,10 @@ msgstr "Du hast dich von der Aktivität „{title}“ zurückgezogen"
 #: bluebottle/time_based/messages/messages.py:424
 #: bluebottle/time_based/messages/messages.py:732
 #: bluebottle/time_based/messages/messages.py:759
-#: bluebottle/time_based/messages/messages.py:903
-#: bluebottle/time_based/messages/messages.py:926
-#: bluebottle/time_based/messages/messages.py:951
-#: bluebottle/time_based/messages/messages.py:988
+#: bluebottle/time_based/messages/messages.py:905
+#: bluebottle/time_based/messages/messages.py:928
+#: bluebottle/time_based/messages/messages.py:953
+#: bluebottle/time_based/messages/messages.py:990
 #: bluebottle/time_based/messages/participants.py:19
 #: bluebottle/time_based/messages/registrations.py:37
 msgctxt "platform-email"
@@ -2060,12 +2060,12 @@ msgid "The initiative will be cancelled."
 msgstr "Die Initiative wird abgebrochen."
 
 #: bluebottle/activity_pub/admin.py:94
-#: bluebottle/activity_pub/models/activities.py:114
+#: bluebottle/activity_pub/models/activities.py:115
 msgid "Recipient"
 msgstr "Empfänger"
 
 #: bluebottle/activity_pub/admin.py:95
-#: bluebottle/activity_pub/models/activities.py:115
+#: bluebottle/activity_pub/models/activities.py:116
 msgid "Recipients"
 msgstr "Empfänger"
 
@@ -2103,7 +2103,7 @@ msgstr "Nicht adoptiert"
 
 #: bluebottle/activity_pub/admin.py:335 bluebottle/activity_pub/admin.py:642
 #: bluebottle/activity_pub/admin.py:921 bluebottle/activity_pub/admin.py:1158
-#: bluebottle/activity_pub/models/activities.py:122
+#: bluebottle/activity_pub/models/activities.py:123
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:22
 msgid "Partner"
 msgstr "Partner"
@@ -2122,13 +2122,13 @@ msgstr "Diese Person wird der Aktivitätsmanager der adoptierten Aktivitäten se
 
 #: bluebottle/activity_pub/admin.py:374 bluebottle/activity_pub/admin.py:452
 #: bluebottle/activity_pub/admin.py:505 bluebottle/activity_pub/admin.py:629
-#: bluebottle/activity_pub/models/activities.py:151
+#: bluebottle/activity_pub/models/activities.py:152
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:28
 msgid "Adoption type"
 msgstr "Adoptionsart"
 
 #: bluebottle/activity_pub/admin.py:379 bluebottle/activity_pub/admin.py:457
-#: bluebottle/activity_pub/models/activities.py:152
+#: bluebottle/activity_pub/models/activities.py:153
 msgid "Select how a received activity should be adopted."
 msgstr "Wählen Sie aus, wie eine erhaltene Aktivität angenommen werden soll."
 
@@ -2148,11 +2148,11 @@ msgstr "Fehler beim Erstellen der Follow-Beziehung: %s"
 
 #: bluebottle/activity_pub/admin.py:442 bluebottle/activity_pub/admin.py:476
 msgid "If automatic adoption is enabled, default owner is required. Without a default owner, it is impossible to create the activities"
-msgstr ""
+msgstr "Wenn die automatische Übernahme aktiviert ist, ist ein Standardbesitzer erforderlich. Ohne einen Standardbesitzer ist es unmöglich, die Aktivitäten zu erstellen"
 
 #: bluebottle/activity_pub/admin.py:507 bluebottle/activity_pub/admin.py:637
 msgid "Adopted activities"
-msgstr ""
+msgstr "Übernommene Aktivitäten"
 
 #: bluebottle/activity_pub/admin.py:515 bluebottle/activity_pub/admin.py:657
 #: bluebottle/activity_pub/dashboard.py:142 bluebottle/members/models.py:386
@@ -2166,7 +2166,7 @@ msgid "Follow request sent to %s. Your platforms will be connected when the requ
 msgstr "Follow-Anfrage an %s gesendet. Ihre Plattformen werden verbunden, wenn die Anfrage akzeptiert wird."
 
 #: bluebottle/activity_pub/admin.py:601
-#: bluebottle/activity_pub/models/activities.py:158
+#: bluebottle/activity_pub/models/activities.py:159
 msgid "Publish mode"
 msgstr "Veröffentlichungsmodus"
 
@@ -2226,19 +2226,19 @@ msgstr "Plätze"
 
 #: bluebottle/activity_pub/dashboard.py:27
 msgid "Recently received activities"
-msgstr ""
+msgstr "Kürzlich erhaltene Aktivitäten"
 
 #: bluebottle/activity_pub/dashboard.py:41
 msgid "Recently adopted activities"
-msgstr ""
+msgstr "Kürzlich übernommene Aktivitäten"
 
 #: bluebottle/activity_pub/dashboard.py:59
 msgid "Received activities awaiting adoption"
-msgstr ""
+msgstr "Erhaltene Aktivitäten warten auf Übernahme"
 
 #: bluebottle/activity_pub/dashboard.py:77
 msgid "Recently shared activities"
-msgstr ""
+msgstr "Kürzlich geteilte Aktivitäten"
 
 #: bluebottle/activity_pub/dashboard.py:102
 #: bluebottle/activity_pub/models/events.py:140
@@ -2266,11 +2266,11 @@ msgstr "Verbundenen Verbraucher"
 
 #: bluebottle/activity_pub/dashboard.py:142
 msgid "Requested"
-msgstr ""
+msgstr "Angefragt"
 
 #: bluebottle/activity_pub/dashboard.py:149
 msgid "Connected platforms"
-msgstr ""
+msgstr "Verbundenen Plattformen"
 
 #: bluebottle/activity_pub/effects.py:40 bluebottle/activity_pub/effects.py:64
 #: bluebottle/activity_pub/effects.py:93
@@ -2283,7 +2283,7 @@ msgstr "Veröffentlichen, dass die Aktivität angenommen wurde"
 
 #: bluebottle/activity_pub/effects.py:165
 msgid "Notify source platform that adoption ended"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform, dass die Übernahme beendet wurde"
 
 #: bluebottle/activity_pub/effects.py:189
 msgid "Notify subscribers of the changes"
@@ -2303,7 +2303,7 @@ msgstr "Benachrichtigen Sie Abonnenten über das Ende"
 
 #: bluebottle/activity_pub/effects.py:269
 msgid "Notify subscribers of the lock"
-msgstr ""
+msgstr "Benachrichtige die Abonnenten über die Sperre"
 
 #: bluebottle/activity_pub/effects.py:289
 #: bluebottle/activity_pub/templates/admin/activity_pub/delete_effect.html:2
@@ -2319,42 +2319,42 @@ msgstr "Benachrichtigen Sie Abonnenten über die Löschung"
 #: bluebottle/activity_pub/effects.py:466
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_join_effect.html:2
 msgid "Notify source platform of join"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform über die Teilnahme"
 
 #: bluebottle/activity_pub/effects.py:483
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_leave_effect.html:2
 msgid "Notify source platform of leave"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform über den Austritt"
 
 #: bluebottle/activity_pub/effects.py:515
 msgid "Notify source platform of remove"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform über die Entfernung"
 
 #: bluebottle/activity_pub/effects.py:569
 #: bluebottle/activity_pub/effects.py:595
 msgid "Notify source platform of team join"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform über die Teilnahme am Team"
 
 #: bluebottle/activity_pub/effects.py:620
 msgid "Notify source platform of team member add"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform über das Hinzufügen eines Teammitglieds"
 
 #: bluebottle/activity_pub/effects.py:647
 msgid "Notify source platform of team leave"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform über den Austritt aus dem Team"
 
 #: bluebottle/activity_pub/effects.py:672
 msgid "Notify source platform of team member leave"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform über den Austritt eines Teammitglieds"
 
 #: bluebottle/activity_pub/effects.py:715
 msgid "Notify consumer platform of acceptance"
-msgstr ""
+msgstr "Benachrichtige die Verbraucherplattform über die Akzeptanz"
 
 #: bluebottle/activity_pub/effects.py:743
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_reject_effect.html:2
 msgid "Notify consumer platform of rejection"
-msgstr ""
+msgstr "Benachrichtige die Verbraucherplattform über die Ablehnung"
 
 #: bluebottle/activity_pub/forms.py:16
 msgid "These partners are already recipients and cannot be changed here."
@@ -2388,87 +2388,87 @@ msgstr "Freigabeoptionen"
 msgid "Select how you would like to share activities with this consumer"
 msgstr "Wählen Sie aus, wie Sie Aktivitäten mit diesem Verbraucher teilen möchten"
 
-#: bluebottle/activity_pub/models/activities.py:23
+#: bluebottle/activity_pub/models/activities.py:24
 #: bluebottle/activity_pub/models/events.py:248
 msgid "Use received activities as template to create your own activities."
 msgstr "Verwenden Sie erhaltene Aktivitäten als Vorlage, um Ihre eigenen Aktivitäten zu erstellen."
 
-#: bluebottle/activity_pub/models/activities.py:27
+#: bluebottle/activity_pub/models/activities.py:28
 #: bluebottle/activity_pub/models/events.py:252
 msgid "Show adopted activities as links to the partner platform."
 msgstr "Zeigen Sie angenommene Aktivitäten als Links zur Partnerplattform an."
 
-#: bluebottle/activity_pub/models/activities.py:31
+#: bluebottle/activity_pub/models/activities.py:32
 #: bluebottle/activity_pub/models/events.py:256
 msgid "Fully synced copy; Participants sync with source."
-msgstr ""
+msgstr "Vollständig synchronisierte Kopie; Teilnehmer synchronisieren mit der Quelle."
 
-#: bluebottle/activity_pub/models/activities.py:38
+#: bluebottle/activity_pub/models/activities.py:39
 #: bluebottle/activity_pub/models/events.py:263
 msgid "Template"
 msgstr "Vorlage"
 
-#: bluebottle/activity_pub/models/activities.py:42
+#: bluebottle/activity_pub/models/activities.py:43
 #: bluebottle/activity_pub/models/events.py:267 bluebottle/cms/models.py:149
 #: bluebottle/cms/models.py:542 bluebottle/cms/utils/color_contrast.py:318
 msgid "Link"
 msgstr "Link"
 
-#: bluebottle/activity_pub/models/activities.py:46
+#: bluebottle/activity_pub/models/activities.py:47
 #: bluebottle/activity_pub/models/events.py:271
 msgid "Fully synced"
 msgstr "Vollständig synchronisiert"
 
-#: bluebottle/activity_pub/models/activities.py:53
+#: bluebottle/activity_pub/models/activities.py:54
 #: bluebottle/activity_pub/models/events.py:278
 msgid "Choose which activities you want to share"
 msgstr "Wählen Sie aus, welche Aktivitäten Sie teilen möchten"
 
-#: bluebottle/activity_pub/models/activities.py:57
+#: bluebottle/activity_pub/models/activities.py:58
 #: bluebottle/activity_pub/models/events.py:282
 msgid "Activities will be shared when they go live."
 msgstr "Aktivitäten werden geteilt, wenn sie live gehen."
 
-#: bluebottle/activity_pub/models/activities.py:130
+#: bluebottle/activity_pub/models/activities.py:131
 msgid "Default activity owner"
 msgstr "Standardaktivitätsbesitzer"
 
-#: bluebottle/activity_pub/models/activities.py:132
+#: bluebottle/activity_pub/models/activities.py:133
 msgid "This user will be assigned as the activity manager for any activity cloned from a template. It can be left empty and no activity manager will be assigned by default."
-msgstr ""
+msgstr "Dieser Benutzer wird als Aktivitätsmanager für jede aus einer Vorlage geklonte Aktivität zugewiesen. Es kann leer gelassen werden, und es wird kein Aktivitätsmanager standardmäßig zugewiesen."
 
-#: bluebottle/activity_pub/models/activities.py:140
+#: bluebottle/activity_pub/models/activities.py:141
 msgid "Automatically adopted these activity types"
 msgstr "Automatisch angenommene Aktivitätstypen"
 
-#: bluebottle/activity_pub/models/activities.py:145
+#: bluebottle/activity_pub/models/activities.py:146
 msgid "Selected activity types are automatically adopted when they are published."
 msgstr "Ausgewählte Aktivitätstypen werden automatisch angenommen, wenn sie veröffentlicht werden."
 
-#: bluebottle/activity_pub/models/activities.py:238
+#: bluebottle/activity_pub/models/activities.py:239
 msgid "Connection"
 msgstr "Verbindung"
 
-#: bluebottle/activity_pub/models/activities.py:239
+#: bluebottle/activity_pub/models/activities.py:240
 msgid "Connections"
 msgstr "Verbindungen"
 
-#: bluebottle/activity_pub/models/activities.py:245
+#: bluebottle/activity_pub/models/activities.py:246
 #: bluebottle/cms/models.py:712
 msgid "Consumer"
 msgstr "Verbraucher"
 
-#: bluebottle/activity_pub/models/activities.py:246
+#: bluebottle/activity_pub/models/activities.py:247
 #: bluebottle/activity_pub/templates/dashboard/connections.html:30
 msgid "Consumers"
 msgstr "Verbraucher"
 
-#: bluebottle/activity_pub/models/activities.py:252
+#: bluebottle/activity_pub/models/activities.py:253
 #: bluebottle/cms/models.py:711
 msgid "Supplier"
 msgstr "Lieferant"
 
-#: bluebottle/activity_pub/models/activities.py:253
+#: bluebottle/activity_pub/models/activities.py:254
 #: bluebottle/activity_pub/templates/dashboard/connections.html:4
 msgid "Suppliers"
 msgstr "Lieferanten"
@@ -2491,7 +2491,7 @@ msgstr "GoodUp Connect-Objekte"
 
 #: bluebottle/activity_pub/models/events.py:83
 msgid "Total contributors from all platforms"
-msgstr ""
+msgstr "Gesamtanzahl der Mitwirkenden von allen Plattformen"
 
 #: bluebottle/activity_pub/models/events.py:123
 msgid "Shared/Received activity"
@@ -2546,19 +2546,19 @@ msgstr "Erhaltene Aktivitäten werden immer automatisch angenommen und veröffen
 
 #: bluebottle/activity_pub/models/events.py:310
 msgid "Team this schedule slot belongs to (team-mode activities)."
-msgstr ""
+msgstr "Team, zu dem dieser Zeitfenster gehört (Team-Modus-Aktivitäten)."
 
 #: bluebottle/activity_pub/models/events.py:314
 msgid "Accepted participants for this slot."
-msgstr ""
+msgstr "Akzeptierte Teilnehmer für diesen Slot."
 
 #: bluebottle/activity_pub/models/events.py:317
 msgid "Capacity"
-msgstr ""
+msgstr "Kapazität"
 
 #: bluebottle/activity_pub/models/events.py:320
 msgid "Per-slot attendee limit (schema.org maximumAttendeeCapacity). Mirrors activity slot."
-msgstr ""
+msgstr "Teilnehmerlimit pro Slot (schema.org maximumAttendeeCapacity). Spiegelt den Aktivitätsslot wider."
 
 #: bluebottle/activity_pub/models/events.py:336
 msgid "Sub event"
@@ -2570,11 +2570,11 @@ msgstr "Unterereignisse"
 
 #: bluebottle/activity_pub/models/events.py:373
 msgid "maximum attendee capacity"
-msgstr ""
+msgstr "maximale Teilnehmerkapazität"
 
 #: bluebottle/activity_pub/models/events.py:376
 msgid "Overall attendee limit (schema.org maximumAttendeeCapacity). Mirrors time-based activity."
-msgstr ""
+msgstr "Gesamtteilnehmerlimit (schema.org maximumAttendeeCapacity). Spiegelt zeitbasierte Aktivitäten wider."
 
 #: bluebottle/activity_pub/models/events.py:398
 msgid "Date activities"
@@ -2606,27 +2606,29 @@ msgstr "\n"
 msgid "\n"
 "        Notify other platforms that the activity was deleted.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Benachrichtige andere Plattformen, dass die Aktivität gelöscht wurde.\n"
+"    "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/adopt_buttons.html:7
 msgid "View original activity"
-msgstr ""
+msgstr "Originalaktivität anzeigen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/adopt_buttons.html:15
 msgid "View cloned activity"
-msgstr ""
+msgstr "Geklonte Aktivität anzeigen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/adopt_buttons.html:19
 msgid "Activities are cloned automatically for this connection"
-msgstr ""
+msgstr "Aktivitäten werden automatisch für diese Verbindung geklont"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/adopt_buttons.html:22
 msgid "Clone activity"
-msgstr ""
+msgstr "Aktivität klonen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/adopt_buttons.html:35
 msgid "Activities are linked automatically for this connection"
-msgstr ""
+msgstr "Aktivitäten werden automatisch für diese Verbindung verknüpft"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/adopt_buttons.html:38
 msgid "Link activity"
@@ -2638,7 +2640,7 @@ msgstr "Angenommene Aktivität anzeigen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/adopt_buttons.html:51
 msgid "Adopt event"
-msgstr ""
+msgstr "Veranstaltung übernehmen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/recipients_list.html:8
 msgid "Shared to"
@@ -2768,13 +2770,15 @@ msgstr "Keine unveröffentlichten erfolgreichen Aktivitäten"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/lock_effect.html:2
 msgid "Notify other platforms that the activity is locked"
-msgstr ""
+msgstr "Benachrichtige andere Plattformen, dass die Aktivität gesperrt ist"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/lock_effect.html:5
 msgid "\n"
 "        This activity is locked automatically notify these platforms:\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Diese Aktivität ist automatisch gesperrt, benachrichtige diese Plattformen:\n"
+"    "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/publish_adoption_effect.html:2
 msgid "Announce adoption"
@@ -2788,41 +2792,51 @@ msgstr "\n"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_accept_effect.html:2
 msgid "Notify source platform of acceptance"
-msgstr ""
+msgstr "Benachrichtige die Quellplattform über die Akzeptanz"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_accept_effect.html:4
 msgid "\n"
 "        Notify the source platform that a user was accepted\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Benachrichtige die Quellplattform, dass ein Benutzer akzeptiert wurde\n"
+"    "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_join_effect.html:4
 msgid "\n"
 "        Notify the source platform that a user joined this synced deed.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Benachrichtige die Quellplattform, dass ein Benutzer an dieser synchronisierten guten Tat teilgenommen hat.\n"
+"    "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_leave_effect.html:4
 msgid "\n"
 "        Notify the source platform that a user left this synced deed.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Benachrichtige die Quellplattform, dass ein Benutzer diese synchronisierte gute Tat verlassen hat.\n"
+"    "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_reject_effect.html:4
 msgid "\n"
 "        Notify the consumer platform that a synced participant was rejected.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Benachrichtige die Verbraucherplattform, dass ein synchronisierter Teilnehmer abgelehnt wurde.\n"
+"    "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_remove_effect.html:2
 msgid "Notify platform of leave"
-msgstr ""
+msgstr "Benachrichtige die Plattform über den Austritt"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/send_remove_effect.html:4
 msgid "\n"
 "        Notify the platform that a user is removed from synced deed.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Benachrichtige die Plattform, dass ein Benutzer von der synchronisierten guten Tat entfernt wurde.\n"
+"    "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/start_effect.html:2
 msgid "Notify other platforms that the activity has started"
@@ -2838,21 +2852,23 @@ msgstr "\n"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/sync_related_event.html:2
 msgid "Publish the related activity to other platforms"
-msgstr ""
+msgstr "Veröffentliche die zugehörige Aktivität auf anderen Plattformen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/sync_related_event.html:5
 msgid "\n"
 "    The related activity will be automatically be published to these platforms:\n"
-msgstr ""
+msgstr "\n"
+"    Die zugehörige Aktivität wird automatisch auf diesen Plattformen veröffentlicht:\n"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/unpublish_adoption_effect.html:2
 msgid "End adoption"
-msgstr ""
+msgstr "Übernahme beenden"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/unpublish_adoption_effect.html:5
 msgid "\n"
 "    Notify the source platform that this activity is no longer adopted\n"
-msgstr ""
+msgstr "\n"
+"    Benachrichtige die Quellplattform, dass diese Aktivität nicht mehr übernommen wird\n"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/update_event_effect.html:2
 msgid "Publish changes"
@@ -2866,19 +2882,19 @@ msgstr "\n"
 
 #: bluebottle/activity_pub/templates/dashboard/connections.html:25
 msgid "No suppliers connected yet."
-msgstr ""
+msgstr "Noch keine Lieferanten verbunden."
 
 #: bluebottle/activity_pub/templates/dashboard/connections.html:51
 msgid "No consumers connected yet."
-msgstr ""
+msgstr "Noch keine Verbraucher verbunden."
 
 #: bluebottle/activity_pub/templates/dashboard/quick_links.html:10
 msgid "No links available."
-msgstr ""
+msgstr "Keine Links verfügbar."
 
 #: bluebottle/activity_pub/templates/dashboard/recent_events.html:16
 msgid "No activities yet."
-msgstr ""
+msgstr "Noch keine Aktivitäten."
 
 #: bluebottle/analytics/admin.py:12 bluebottle/grant_management/admin.py:199
 msgid "General"
@@ -3537,11 +3553,11 @@ msgstr "Schließen"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/tabular_paginator.html:13
 msgid "previous"
-msgstr ""
+msgstr "vorherige"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/tabular_paginator.html:43
 msgid "next"
-msgstr ""
+msgstr "weiter"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/_wizard_actions.html:12
 msgid "Back"
@@ -4435,7 +4451,7 @@ msgid "Add another %(verbose_name)s"
 msgstr "Weitere %(verbose_name)s hinzufügen"
 
 #: bluebottle/cms/templates/admin/edit_inline/stacked-nested.html:88
-#: bluebottle/collect/states.py:193 bluebottle/deeds/states.py:200
+#: bluebottle/collect/states.py:193 bluebottle/deeds/states.py:201
 #: bluebottle/grant_management/states.py:475
 #: bluebottle/time_based/states/participants.py:134
 #: bluebottle/time_based/states/participants.py:261
@@ -4662,7 +4678,7 @@ msgstr "initiieren"
 msgid "Re-Accept"
 msgstr "Wiederakzeptieren"
 
-#: bluebottle/collect/states.py:163
+#: bluebottle/collect/states.py:163 bluebottle/deeds/states.py:213
 #: bluebottle/time_based/states/participants.py:87
 #: bluebottle/time_based/states/participants.py:215
 #: bluebottle/time_based/states/participants.py:351
@@ -4672,7 +4688,7 @@ msgstr "Wiederakzeptieren"
 msgid "Accept"
 msgstr "Akzeptieren"
 
-#: bluebottle/collect/states.py:170 bluebottle/deeds/states.py:177
+#: bluebottle/collect/states.py:170 bluebottle/deeds/states.py:178
 #: bluebottle/time_based/states/participants.py:161
 #: bluebottle/time_based/states/participants.py:407
 #: bluebottle/time_based/states/participants.py:496
@@ -4686,7 +4702,7 @@ msgstr "Zurückziehen"
 msgid "Cancel your contribution to this activity."
 msgstr "Kündigen Sie Ihren Beitrag zu dieser Aktivität."
 
-#: bluebottle/collect/states.py:180 bluebottle/deeds/states.py:187
+#: bluebottle/collect/states.py:180 bluebottle/deeds/states.py:188
 #: bluebottle/time_based/states/participants.py:172
 #: bluebottle/time_based/states/participants.py:507
 msgid "Reapply"
@@ -4874,7 +4890,7 @@ msgstr "Die Aktivität endet und die Leute können sich nicht mehr registrieren.
 
 #: bluebottle/deeds/states.py:109
 msgid "Start the activity. This is only for remote activities."
-msgstr ""
+msgstr "Starte die Aktivität. Dies gilt nur für Fernaktivitäten."
 
 #: bluebottle/deeds/states.py:116
 #: bluebottle/time_based/states/participants.py:162
@@ -4894,29 +4910,31 @@ msgstr "Diese Person hat sich zurückgezogen."
 msgid "This person has been signed up for the activity and was accepted automatically."
 msgstr "Diese Person wurde für die Aktivität registriert und automatisch angenommen."
 
-#: bluebottle/deeds/states.py:168 bluebottle/deeds/states.py:214
+#: bluebottle/deeds/states.py:169
 msgid "Reaccept"
 msgstr "Erneut akzeptieren"
 
-#: bluebottle/deeds/states.py:169
+#: bluebottle/deeds/states.py:170
 msgid "Reaccept user after previously withdrawing or rejecting."
 msgstr "Benutzer nach dem Abheben oder Ablehnen erneut akzeptieren."
 
-#: bluebottle/deeds/states.py:178
+#: bluebottle/deeds/states.py:179
 msgid "Stop your participation in the activity."
 msgstr "Beenden Sie Ihre Teilnahme an der Aktivität."
 
-#: bluebottle/deeds/states.py:188
+#: bluebottle/deeds/states.py:189
 msgid "Reapply after previously withdrawing."
 msgstr "Erneut bewerben nach vorheriger Abhebung."
 
-#: bluebottle/deeds/states.py:201
+#: bluebottle/deeds/states.py:202
 msgid "Remove participant from the activity."
 msgstr "Teilnehmer von der Aktivität entfernen."
 
-#: bluebottle/deeds/states.py:215
-msgid "Put a participant back as participating after it was successful."
-msgstr "Setzen Sie einen Teilnehmer als Teilnehmer zurück, nachdem es erfolgreich war."
+#: bluebottle/deeds/states.py:214
+#: bluebottle/time_based/states/participants.py:216
+#: bluebottle/time_based/states/registrations.py:80
+msgid "Accept this person as a participant of this activity."
+msgstr "Akzeptieren Sie diese Person als Teilnehmer dieser Aktivität."
 
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:14
 #, python-format
@@ -5746,37 +5764,37 @@ msgstr "Die Frist sollte in Zukunft nicht mehr als 60 Tage betragen"
 msgid "Target cannot be changed after the funding has been published."
 msgstr "Das Ziel kann nach der Veröffentlichung der Finanzierung nicht mehr geändert werden."
 
-#: bluebottle/funding/serializers.py:408
+#: bluebottle/funding/serializers.py:407
 msgid "Deadline cannot be changed after the funding has been published."
 msgstr "Die Frist kann nach der Veröffentlichung der Finanzierung nicht mehr geändert werden."
 
-#: bluebottle/funding/serializers.py:477 bluebottle/funding/serializers.py:644
+#: bluebottle/funding/serializers.py:476 bluebottle/funding/serializers.py:643
 msgid "Pledge"
 msgstr "Versprechen"
 
-#: bluebottle/funding/serializers.py:513
+#: bluebottle/funding/serializers.py:512
 msgid "The selected reward is not related to this activity"
 msgstr "Die ausgewählte Belohnung ist nicht mit dieser Aktivität verbunden"
 
-#: bluebottle/funding/serializers.py:529
+#: bluebottle/funding/serializers.py:528
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr "Der Betrag muss höher oder gleich der Höhe der Belohnung sein."
 
-#: bluebottle/funding/serializers.py:538
+#: bluebottle/funding/serializers.py:537
 msgid "User can only be set, not changed."
 msgstr "Benutzer kann nur gesetzt und nicht geändert werden."
 
-#: bluebottle/funding/serializers.py:688
+#: bluebottle/funding/serializers.py:687
 #, python-brace-format
 msgid "Amount must be at least {amount} {currency}"
 msgstr "Betrag muss mindestens {amount} {currency} sein"
 
-#: bluebottle/funding/serializers.py:705
+#: bluebottle/funding/serializers.py:704
 #, python-brace-format
 msgid "Amount cannot exceed {amount} {currency}"
 msgstr "Betrag darf {amount} {currency} nicht überschreiten"
 
-#: bluebottle/funding/serializers.py:732
+#: bluebottle/funding/serializers.py:731
 msgid "Donations cannot exceed the target amount"
 msgstr "Spenden dürfen den Zielbetrag nicht überschreiten"
 
@@ -8575,11 +8593,11 @@ msgstr "Lokal / Vom Partner"
 
 #: bluebottle/initiatives/models.py:293
 msgid "Partner platform"
-msgstr ""
+msgstr "Partnerplattform"
 
 #: bluebottle/initiatives/models.py:293
 msgid "select a partner platform"
-msgstr ""
+msgstr "Wähle eine Partnerplattform aus"
 
 #: bluebottle/initiatives/models.py:331
 msgid "Neighbourhood"
@@ -9092,23 +9110,23 @@ msgstr "Looker Id"
 
 #: bluebottle/mails/models.py:20
 msgid "Enter a display name, not an email address."
-msgstr ""
+msgstr "Gib einen Anzeigenamen ein, keine E-Mail-Adresse."
 
 #: bluebottle/mails/models.py:38
 msgid "Email address used as the From address for platform emails."
-msgstr ""
+msgstr "E-Mail-Adresse, die als Absender für Plattform-E-Mails verwendet wird."
 
 #: bluebottle/mails/models.py:43
 msgid "Name shown next to the From address, such as the platform name. Do not use an email address."
-msgstr ""
+msgstr "Name, der neben der Absenderadresse angezeigt wird, z. B. der Plattformname. Verwende keine E-Mail-Adresse."
 
 #: bluebottle/mails/models.py:50
 msgid "Email address used when recipients reply to a platform email."
-msgstr ""
+msgstr "E-Mail-Adresse, die verwendet wird, wenn Empfänger auf eine Plattform-E-Mail antworten."
 
 #: bluebottle/mails/models.py:54
 msgid "Optional text added at the bottom of platform emails."
-msgstr ""
+msgstr "Optionaler Text, der am Ende von Plattform-E-Mails hinzugefügt wird."
 
 #: bluebottle/mails/models.py:58 bluebottle/mails/models.py:59
 msgid "mail platform settings"
@@ -11365,23 +11383,23 @@ msgstr "Slot für diesen Teilnehmer erstellen"
 msgid "Create participant for this registration"
 msgstr "Teilnehmer für diese Registrierung erstellen"
 
-#: bluebottle/time_based/effects/registrations.py:27
+#: bluebottle/time_based/effects/registrations.py:31
 msgid "Create slot participant for this registration"
 msgstr "Slot Teilnehmer für diese Registrierung erstellen"
 
-#: bluebottle/time_based/effects/registrations.py:46
+#: bluebottle/time_based/effects/registrations.py:50
 msgid "Create participant for this team member"
 msgstr "Teilnehmer für dieses Teammitglied erstellen"
 
-#: bluebottle/time_based/effects/registrations.py:63
+#: bluebottle/time_based/effects/registrations.py:67
 msgid "Create initial periodic participant for this registration"
 msgstr "Erstelle einen ersten periodischen Teilnehmer für diese Registrierung"
 
-#: bluebottle/time_based/effects/registrations.py:81
+#: bluebottle/time_based/effects/registrations.py:85
 msgid "Adjust initial periodic participant and connect to slot"
 msgstr "Den ursprünglichen periodischen Teilnehmer anpassen und mit Slot verbinden"
 
-#: bluebottle/time_based/effects/registrations.py:114
+#: bluebottle/time_based/effects/registrations.py:118
 msgid "Delete registration if it no longer has participants"
 msgstr "Registrierung löschen, wenn sie keine Teilnehmer mehr hat"
 
@@ -11597,62 +11615,62 @@ msgctxt "platform-email"
 msgid "A participant has registered for a time slot for your activity \"{title}\""
 msgstr "Ein Teilnehmer hat sich für ein Zeitfenster für deine Aktivität „{title}“ registriert"
 
-#: bluebottle/time_based/messages/messages.py:787
-#: bluebottle/time_based/messages/messages.py:816
+#: bluebottle/time_based/messages/messages.py:789
+#: bluebottle/time_based/messages/messages.py:818
 msgctxt "platform-email"
 msgid "View your activity"
 msgstr "Deine Aktivität anzeigen"
 
-#: bluebottle/time_based/messages/messages.py:799
+#: bluebottle/time_based/messages/messages.py:801
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant has been removed from a time slot for your activity \"{title}\""
-msgstr ""
+msgstr "Ein Teilnehmer wurde aus einem Zeitfenster für deine Aktivität „{title}“ entfernt"
 
-#: bluebottle/time_based/messages/messages.py:828
+#: bluebottle/time_based/messages/messages.py:830
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have been removed from a time slot for the activity \"{title}\""
-msgstr ""
+msgstr "Du wurdest aus einem Zeitfenster für die Aktivität „{title}“ entfernt"
 
-#: bluebottle/time_based/messages/messages.py:856
+#: bluebottle/time_based/messages/messages.py:858
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You've registered for a time slot for the activity \"{title}\""
 msgstr "Du hast dich für ein Zeitfenster für die Aktivität „{title}“ registriert"
 
-#: bluebottle/time_based/messages/messages.py:892
+#: bluebottle/time_based/messages/messages.py:894
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant has been added to your activity \"{title}\" 🎉"
 msgstr "Ein Teilnehmer wurde zu deiner Aktivität „{title}“ hinzugefügt 🎉"
 
-#: bluebottle/time_based/messages/messages.py:918
+#: bluebottle/time_based/messages/messages.py:920
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A team has been added to your activity \"{title}\" 🎉"
 msgstr "Ein Team wurde deiner Aktivität „{title}“ hinzugefügt 🎉"
 
-#: bluebottle/time_based/messages/messages.py:940
+#: bluebottle/time_based/messages/messages.py:942
 #: bluebottle/time_based/messages/participants.py:33
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant has been removed from your activity \"{title}\""
 msgstr "Ein Teilnehmer wurde von deiner Aktivität „{title}“ entfernt"
 
-#: bluebottle/time_based/messages/messages.py:962
+#: bluebottle/time_based/messages/messages.py:964
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A slot for your activity \"{title}\" has been cancelled"
 msgstr "Ein Zeitfenster für deine Aktivität „{title}“ wurde abgebrochen"
 
-#: bluebottle/time_based/messages/messages.py:998
+#: bluebottle/time_based/messages/messages.py:1000
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A spot has opened up for an activity on {site_name}."
 msgstr "Ein Platz ist für eine Aktivität auf {site_name} verfügbar geworden."
 
-#: bluebottle/time_based/messages/messages.py:1048
+#: bluebottle/time_based/messages/messages.py:1050
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You'll be notified if a spot opens up for {title}"
@@ -12138,7 +12156,7 @@ msgstr "Fähigkeiten"
 
 #: bluebottle/time_based/models.py:1334
 msgid "When set, this registration is a synced participant without a local user."
-msgstr ""
+msgstr "Wenn eingestellt, ist diese Registrierung ein synchronisierter Teilnehmer ohne lokalen Benutzer."
 
 #: bluebottle/time_based/models.py:1350
 #, python-brace-format
@@ -12230,15 +12248,15 @@ msgstr "Teamkapitän"
 
 #: bluebottle/time_based/models.py:1766
 msgid "Remote captain"
-msgstr ""
+msgstr "Remote-Kapitän"
 
 #: bluebottle/time_based/models.py:1771
 msgid "When set, this team was synced from another platform without a local captain user."
-msgstr ""
+msgstr "Wenn eingestellt, wurde dieses Team von einer anderen Plattform ohne lokalen Kapitän synchronisiert."
 
 #: bluebottle/time_based/models.py:1859
 msgid "When set, this team member was synced from another platform without a local user."
-msgstr ""
+msgstr "Wenn eingestellt, wurde dieses Teammitglied von einer anderen Plattform ohne lokalen Benutzer synchronisiert."
 
 #: bluebottle/time_based/models.py:1878
 msgid "Team member"
@@ -12530,11 +12548,6 @@ msgstr "wiederhergestellt"
 msgid "Restore the participant, because the activity was restored."
 msgstr "Stelle den Teilnehmer wieder her, weil die Aktivität wiederhergestellt wurde."
 
-#: bluebottle/time_based/states/participants.py:216
-#: bluebottle/time_based/states/registrations.py:80
-msgid "Accept this person as a participant of this activity."
-msgstr "Akzeptieren Sie diese Person als Teilnehmer dieser Aktivität."
-
 #: bluebottle/time_based/states/participants.py:237
 #: bluebottle/time_based/states/participants.py:319
 msgid "Restore previously cancelled participant"
@@ -12624,7 +12637,7 @@ msgstr "Der Teilnehmer schließt sich dem Team-Slot an."
 
 #: bluebottle/time_based/states/participants.py:523
 msgid "Restore previously removed participant"
-msgstr ""
+msgstr "Zuvor entfernten Teilnehmer wiederherstellen"
 
 #: bluebottle/time_based/states/registrations.py:15
 msgid "This person has applied and must be reviewed."
@@ -12708,7 +12721,7 @@ msgstr "Fortsetzen Sie die Teilnahme an Ihrer Aktivität fort."
 
 #: bluebottle/time_based/states/registrations.py:217
 msgid "Restore after being withdrawn ro removed."
-msgstr ""
+msgstr "Wiederherstellen nach Zurückziehen oder Entfernen."
 
 #: bluebottle/time_based/states/slots.py:15
 msgid "The slot is not scheduled yet."
@@ -13434,7 +13447,9 @@ msgstr "\n"
 msgid "\n"
 "                        A total of  <b>%(count)s</b> participants registered for this activity. <b>%(local)s</b> registered on this platform.\n"
 "                    "
-msgstr ""
+msgstr "\n"
+"                        Insgesamt haben sich <b>%(count)s</b> Teilnehmer für diese Aktivität registriert. <b>%(local)s</b> haben sich auf dieser Plattform registriert.\n"
+"                    "
 
 #: bluebottle/time_based/templates/admin/reset_slot_selection.html:2
 msgid "Reset slot selection to 'all'"
@@ -13742,7 +13757,8 @@ msgstr "\n"
 msgctxt "platform-email"
 msgid "\n"
 "<p>%(participant_name)s has been removed from a time slot for your activity \"%(title)s\"!</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>%(participant_name)s wurde aus einem Zeitfenster für deine Aktivität „%(title)s“ entfernt!</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/manager/slot_participant_withdrew.html:4
 #, python-format
@@ -14089,7 +14105,8 @@ msgstr "\n"
 msgctxt "platform-email"
 msgid "\n"
 "<p>You have been remoded from time slot for the activity \"%(title)s\"!</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Du wurdest aus einem Zeitfenster für die Aktivität „%(title)s“ entfernt!</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/participants/user_date_participant_withdrew.html:4
 #, python-format

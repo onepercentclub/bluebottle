@@ -2,8 +2,12 @@ from django.test.utils import override_settings
 from django.urls.base import reverse
 from django.utils import translation
 
-from bluebottle.cms.models import Link
-from bluebottle.test.factory_models.cms import LinkGroupFactory, LinkFactory
+from fluent_contents.tests.factories import create_content_item, create_placeholder
+
+from bluebottle.cms.models import Link, StatsContent
+from bluebottle.test.factory_models.cms import (
+    LinkGroupFactory, LinkFactory, ResultPageFactory, StatFactory
+)
 from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -66,3 +70,28 @@ class SiteLinkAdminTestCase(BluebottleAdminTestCase):
 
         link = Link.objects.last()
         self.assertEqual(link.link, '/pages/some')
+
+
+class ResultPageAdminTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+
+        self.page = ResultPageFactory.create()
+        placeholder = create_placeholder(page=self.page, slot='content')
+        block = create_content_item(
+            StatsContent,
+            placeholder=placeholder,
+            sort_order=1,
+            language_code='en',
+        )
+        StatFactory.create(block=block, title='Participants')
+
+    def test_change_view_with_a_stats_block(self):
+        url = reverse('admin:cms_resultpage_change', args=(self.page.id,))
+        page = self.app.get(url)
+        self.assertEqual(page.status, '200 OK')

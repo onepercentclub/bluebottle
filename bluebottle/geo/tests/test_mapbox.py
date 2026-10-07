@@ -610,10 +610,9 @@ class MapboxUtilsTestCase(BluebottleTestCase):
 
         self.assertIn('en', languages)
         self.assertIn('nl', languages)
-        self.assertEqual(
-            next(entry for entry in translations if entry['language'] == 'nl')['place_name'],
-            'Ouddorp, Nederland',
-        )
+        dutch = next(entry for entry in translations if entry['language'] == 'nl')
+        self.assertEqual(dutch['place_name'], 'Ouddorp, Nederland')
+        self.assertEqual(dutch['country_code'], 'NL')
         self.assertEqual(translations[0]['feature_type'], 'place')
 
     def test_get_translated_geofeature_list_skips_missing_translations(self):

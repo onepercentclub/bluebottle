@@ -11,11 +11,12 @@ from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 
 from bluebottle.cms.models import (
-    QuotesContent, PeopleContent,
+    QuotesContent, PeopleContent, PollContent,
     HomePage, SlidesContent, SitePlatformSettings,
     LinksContent, StepsContent, HomepageStatisticsContent, LogosContent,
     CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
 )
+from bluebottle.cms.utils.color_contrast import contrast_ratio, mix_with_white, passes_aa
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
 from bluebottle.members.models import MemberPlatformSettings
@@ -30,6 +31,8 @@ from bluebottle.test.factory_models.cms import (
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory, PlatformPageFactory
 from bluebottle.test.utils import BluebottleTestCase, APITestCase
+from bluebottle.voting.models import Poll
+from bluebottle.voting.tests.factories import PollOptionFactory, PollVoteFactory
 
 
 class PageAdminUrlApiTestsMixin(object):
@@ -255,6 +258,70 @@ class HomeTestCase(APITestCase):
             quote['attributes']['email'],
             'test@example.com'
         )
+
+    def test_poll(self):
+        poll = Poll()
+        poll.set_current_language('en')
+        poll.title = 'Favourite colour'
+        poll.subtitle = 'Pick one'
+        poll.save()
+        block = PollContent.objects.create_for_placeholder(
+            self.placeholder, poll=poll
+        )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': str(block.pk), 'type': 'pages/blocks/poll'}
+        )
+
+        poll_block = get_include(response, 'pages/blocks/poll')
+        self.assertNotIn('title', poll_block['attributes'])
+        self.assertNotIn('sub-title', poll_block['attributes'])
+        self.assertEqual(
+            poll_block['relationships']['poll']['data'],
+            {'id': str(poll.pk), 'type': 'polls'}
+        )
+
+        included_poll = get_include(response, 'polls')
+        self.assertEqual(included_poll['attributes']['title'], 'Favourite colour')
+        self.assertEqual(included_poll['attributes']['subtitle'], 'Pick one')
+        self.assertEqual(included_poll['attributes']['votes-cast'], 0)
+        self.assertEqual(included_poll['relationships']['my-vote']['data'], None)
+
+    def test_poll_closed_includes_results(self):
+        poll = Poll()
+        poll.set_current_language('en')
+        poll.title = 'Favourite colour'
+        poll.subtitle = 'Pick one'
+        poll.status = 'closed'
+        poll.save()
+        winner = PollOptionFactory.create(poll=poll, title='Blue')
+        other = PollOptionFactory.create(poll=poll, title='Green')
+        PollVoteFactory.create_batch(2, poll=poll, option=winner)
+        PollVoteFactory.create(poll=poll, option=other)
+        PollContent.objects.create_for_placeholder(
+            self.placeholder, poll=poll
+        )
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+        included_poll = get_include(response, 'polls')
+        self.assertEqual(included_poll['attributes']['status'], 'closed')
+        self.assertEqual(included_poll['attributes']['votes-cast'], 3)
+
+        options = {
+            included['attributes']['title']: included['attributes']
+            for included in response.json()['included']
+            if included['type'] == 'polls/options'
+        }
+        self.assertEqual(options['Blue']['votes'], 2)
+        self.assertTrue(options['Blue']['winner'])
+        self.assertEqual(options['Green']['votes'], 1)
+        self.assertFalse(options['Green']['winner'])
 
     def test_logos(self):
         block = LogosContent.objects.create_for_placeholder(self.placeholder)
@@ -756,3 +823,72 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
                 '/media/cache'
             )
         )
+
+    def test_computes_readable_text_colors_on_save(self):
+        settings = SitePlatformSettings.objects.create(
+            accessible_colours=True,
+            action_color='#FFFF00',
+            action_text_color='#FFFFFF',
+            description_color='#281E50',
+            description_text_color='#000000',
+        )
+
+        settings.refresh_from_db()
+        self.assertEqual(settings.action_text_color.upper(), '#2A2A2A')
+        self.assertEqual(settings.description_text_color.upper(), '#FFFFFF')
+        self.assertGreaterEqual(
+            contrast_ratio(settings.alternative_link_color, '#FFFFFF'),
+            4.5,
+        )
+        self.assertGreaterEqual(
+            contrast_ratio(settings.alternative_link_color, '#EEEEEE'),
+            4.5,
+        )
+        self.assertEqual(settings.description_on_background_color.upper(), '#281E50')
+        self.assertTrue(settings.action_on_tint_color)
+        self.assertGreaterEqual(
+            contrast_ratio(
+                settings.action_on_tint_color,
+                mix_with_white('#FFFF00', 90),
+            ),
+            4.5,
+        )
+        self.assertEqual(settings.description_on_tint_color.upper(), '#281E50')
+
+        response = self.client.get(reverse('settings'))
+        content = response.data['platform']['content']
+        self.assertEqual(content['action_text_color'].upper(), '#2A2A2A')
+        self.assertEqual(content['alternative_link_color'].upper(), settings.alternative_link_color.upper())
+        self.assertEqual(content['action_on_tint_color'].upper(), settings.action_on_tint_color.upper())
+        self.assertNotIn('action_on_tint_100_color', content)
+        self.assertNotIn('action_on_tint_300_color', content)
+        self.assertEqual(content['description_on_background_color'].upper(), '#281E50')
+        self.assertEqual(content['description_on_tint_color'].upper(), '#281E50')
+        self.assertNotIn('description_on_tint_100_color', content)
+        self.assertNotIn('description_on_tint_300_color', content)
+
+        settings.action_color = '#000000'
+        settings.save()
+        settings.refresh_from_db()
+        self.assertEqual(settings.action_text_color.upper(), '#FFFFFF')
+
+    def test_publishes_adjusted_fill_without_overwriting_the_chosen_colour(self):
+        settings = SitePlatformSettings.objects.create(
+            accessible_colours=True,
+            action_color='#777777',
+            description_color='#777777',
+        )
+        settings.refresh_from_db()
+
+        self.assertEqual(settings.action_color.upper(), '#777777')
+        self.assertEqual(settings.description_color.upper(), '#777777')
+        self.assertNotEqual(settings.action_color_adjusted.upper(), '#777777')
+        self.assertTrue(passes_aa('#FFFFFF', settings.action_color_adjusted))
+        self.assertTrue(passes_aa('#FFFFFF', settings.description_color_adjusted))
+
+        response = self.client.get(reverse('settings'))
+        content = response.data['platform']['content']
+        self.assertEqual(content['action_color'].upper(), settings.action_color_adjusted.upper())
+        self.assertEqual(content['description_color'].upper(), settings.description_color_adjusted.upper())
+        self.assertNotIn('action_color_adjusted', content)
+        self.assertNotIn('description_color_adjusted', content)

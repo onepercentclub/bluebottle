@@ -843,7 +843,7 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     location = LocationSerializer(allow_null=True, required=False)
     image = ImageSerializer(required=False, allow_null=True)
     start_time = DateField(source='start', allow_null=True)
-    end_time = DateField(source='deadline', allow_null=True, read_only=True)
+    end_time = DateField(source='deadline', allow_null=True)
     application_deadline = DateField(source='registration_deadline', allow_null=True)
     duration = serializers.DurationField(allow_null=True)
     repetition_mode = RepetitionModeField()

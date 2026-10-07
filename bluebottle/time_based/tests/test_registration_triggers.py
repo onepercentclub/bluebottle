@@ -387,6 +387,10 @@ class PeriodicRegistrationTriggerTestCase(
     def test_remove(self):
         self.test_accept()
 
+        participant = self.registration.participants.get()
+        contribution = participant.contributions.first()
+        self.assertEqual(contribution.status, "new")
+
         mail.outbox = []
 
         self.registration.states.remove(save=True)
@@ -397,8 +401,54 @@ class PeriodicRegistrationTriggerTestCase(
             f'You have been removed from the activity "{self.activity.title}"'
         )
 
+        self.assertEqual(self.registration.status, "removed")
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertEqual(self.registration.participants.get().status, "removed")
+        participant.refresh_from_db()
+        contribution.refresh_from_db()
+        self.assertEqual(participant.status, "removed")
+        self.assertEqual(contribution.status, "failed")
+
+    def test_unfill_remove(self):
+        self.test_fill()
+        self.registration.states.remove(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+    def test_restore(self):
+        self.test_remove()
+
+        mail.outbox = []
+        self.registration.states.restore(save=True)
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'Your contribution to the activity "{self.activity.title}" has been restarted',
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'A participant for your activity "{self.activity.title}" has restarted',
+        )
+
+        self.assertEqual(self.registration.status, "accepted")
+        participant = self.registration.participants.get()
+        contribution = participant.contributions.first()
+        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(contribution.status, "new")
+
+    def test_fill_restore(self):
+        self.test_fill()
+        self.registration.states.remove(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+        self.registration.states.restore(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.registration.status, "accepted")
+        self.assertEqual(self.registration.participants.get().status, "accepted")
 
     def test_stop(self):
         self.test_initial()

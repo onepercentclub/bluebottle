@@ -1047,6 +1047,13 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     def join(self):
         super().join()
 
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertIsNotNone(self.model.deadline)
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.deadline, self.model.deadline)
+
     def re_accept(self, contributor):
         contributor.states.restore(save=True)
 

@@ -5,6 +5,7 @@ from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.time_based.effects.effects import CreatePeriodicParticipantsEffect
 from bluebottle.time_based.models import (
     TimeContribution,
@@ -130,13 +131,18 @@ class CreateRegistrationEffect(Effect):
         raise ValueError(f'No registration defined for participant model {self.instance.__class__.__name__}')
 
     def post_save(self, **kwargs):
-        is_local = not self.instance.activity.is_adopted
-        status = 'accepted' if is_local else 'new'
         registration = self.get_registration_model().objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
-            status=status
         )
+
+        activity_is_remote = hasattr(self.instance.activity, 'origin')
+        if not activity_is_remote:
+            try:
+                registration.states.auto_accept(save=True)
+            except TransitionNotPossible:
+                pass
+
         self.instance.registration = registration
         self.instance.save()
 

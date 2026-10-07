@@ -1,6 +1,11 @@
+import binascii
+
+from defusedxml import DTDForbidden
 from future import standard_library
+from lxml.etree import XMLSyntaxError
 
 from bluebottle.token_auth.models import SAMLLog
+
 standard_library.install_aliases()
 import logging
 import urllib.parse
@@ -11,7 +16,7 @@ from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
-
+from bluebottle.utils.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -106,19 +111,25 @@ class SAMLAuthentication(BaseTokenAuthentication):
         return data
 
     def authenticate_request(self):
-        saml_request_id = self.request.session.get('saml_request_id',
-                                                   self.auth.get_last_request_id())
-        # See BB-17150
-        # if 'saml_request_id' not in self.request.session:
-        #     error = 'SAML request id missing from session'
-        #     logger.error('Saml login error: {}'.format(error))
-        #     raise TokenAuthenticationError(error)
+        saml_request_id = self.request.session.get(
+            'saml_request_id',
+            self.auth.get_last_request_id()
+        )
         try:
             self.auth.process_response(saml_request_id)
             SAMLLog.log(body=self.auth.get_last_response_xml())
         except OneLogin_Saml2_Error as e:
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)
+        except (ValueError, binascii.Error, XMLSyntaxError, DTDForbidden) as e:
+            logger.warning(
+                'Rejected unreadable SAML response on %s from %s: %s: %s',
+                self.request.get_host(),
+                get_client_ip(self.request),
+                type(e).__name__,
+                e,
+            )
+            raise TokenAuthenticationError('Invalid SAML response')
 
         if self.auth.is_authenticated():
             # del self.request.session['saml_request_id']

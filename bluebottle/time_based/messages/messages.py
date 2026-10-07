@@ -772,18 +772,12 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'participant_name': 'user.full_name',
-        'answer': 'registration.answer',
-        'question': 'activity.review_title'
     }
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
         context['slot'] = get_slot_info(self.obj.slot)
-        settings = InitiativePlatformSettings.load()
-        context['hour_registration'] = (
-            settings.hour_registration != 'disabled'
-            and self.obj.activity.hour_registration_data
-        )
+
         return context
 
     @property
@@ -796,6 +790,63 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
         """activity owner"""
 
         return [self.obj.slot.activity.owner]
+
+
+class ManagerSlotParticipantRemovedNotification(TransitionMessage):
+    """
+    A slot participant was removed from a time slot for your activity
+    """
+    subject = pgettext('platform-email', 'A participant has been removed from a time slot for your activity "{title}"')
+    template = 'messages/manager/slot_participant_removed'
+    context = {
+        'title': 'activity.title',
+        'participant_name': 'user.full_name',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.slot.activity.get_absolute_url()
+
+    action_title = pgettext('platform-email', 'View your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+
+        return [self.obj.slot.activity.owner]
+
+
+class ParticipantSlotParticipantRemovedNotification(TransitionMessage):
+    """
+    Slot participant removed from a time slot for an activity
+    """
+    subject = pgettext('platform-email', 'You have been removed from a time slot for the activity "{title}"')
+    template = 'messages/participants/slot_participant_removed'
+    context = {
+        'title': 'activity.title',
+        'participant_name': 'user.full_name',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.slot.get_absolute_url()
+
+    action_title = pgettext('platform-email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+
+        return [self.obj.user]
 
 
 class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):

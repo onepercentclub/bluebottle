@@ -78,7 +78,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'NewsBlockPlugin',
         'QuotesBlockPlugin',
         'PeopleBlockPlugin',
-        'DonateButtonBlockPlugin'
+        'DonateButtonBlockPlugin',
+        'PollBlockPlugin',
 
     ])
     translations = TranslatedFields()
@@ -90,6 +91,9 @@ class HomePage(SingletonModel, TranslatableModel):
             ('api_change_homepage', 'Can change homepages through the API'),
             ('api_delete_homepage', 'Can delete homepages through the API'),
         )
+
+    def __str__(self):
+        return str(_('Homepage'))
 
 
 class LinkPermission(models.Model):
@@ -401,6 +405,27 @@ class DonateButtonContent(TitledContent):
 
     def __str__(self):
         return str(self.funding.title)
+
+
+class PollContent(ContentItem):
+    type = 'poll'
+    preview_template = 'admin/cms/preview/default.html'
+
+    poll = models.ForeignKey(
+        'voting.Poll',
+        verbose_name=_('Poll'),
+        on_delete=models.CASCADE,
+        limit_choices_to={'status__in': ['open', 'closed']}
+    )
+
+    class Meta:
+        verbose_name = _('Poll')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/poll'
+
+    def __str__(self):
+        return str(self.poll)
 
 
 class ProjectsContent(TitledContent):
@@ -731,23 +756,42 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         )
     )
 
+    accessible_colours = models.BooleanField(
+        _('Accessible colours'),
+        help_text=_('Make sure the colours are WCAG compliant. You should save settings for this to take effect.'),
+        default=False,
+    )
+
     action_color = ColorField(
         _('Action colour'), null=True, blank=True,
         help_text=_(
             'Colour for action buttons and links'
         )
     )
+    action_color_adjusted = ColorField(
+        _('Adjusted action colour'), null=True, blank=True,
+        help_text=_(
+            'Darkened when white or dark text would not be readable on the action colour'
+        )
+    )
     action_text_color = ColorField(
         _('Action text colour'), null=True, blank=True,
         help_text=_(
-            'If the action colour is quite light, you could set this to a darker colour for better contrast'
+            'Automatically set to white or dark grey so text stays readable on the action colour'
         )
     )
     alternative_link_color = ColorField(
-        _('Alternative link colour'), null=True, blank=True,
+        _('Action text on white'), null=True, blank=True,
         default=None,
         help_text=_(
-            'If the action colour is quite light, you can set this colour to use for text links'
+            'Automatically darkened so the action colour stays readable as text on white or grey'
+        )
+    )
+    action_on_tint_color = ColorField(
+        _('Action text on tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a light tint of the action colour'
         )
     )
 
@@ -767,10 +811,30 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'Colour for descriptive and secondary buttons'
         )
     )
+    description_color_adjusted = ColorField(
+        _('Adjusted description colour'), null=True, blank=True,
+        help_text=_(
+            'Darkened when white or dark text would not be readable on the description colour'
+        )
+    )
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
         help_text=_(
-            'If the description colour is quite light, you could set this to a darker colour for better contrast'
+            'Automatically set to white or dark grey so text stays readable on the description colour'
+        )
+    )
+    description_on_background_color = ColorField(
+        _('Description text on white'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so the description colour stays readable as text on white or grey'
+        )
+    )
+    description_on_tint_color = ColorField(
+        _('Description text on tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a light tint of the description colour'
         )
     )
     footer_color = ColorField(
@@ -865,6 +929,19 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     def save(self, *args, **kwargs):
+        from bluebottle.cms.utils.color_contrast import apply_on_colors
+
+        if self.accessible_colours:
+            apply_on_colors(self)
+        else:
+            self.action_color_adjusted = None
+            self.action_on_tint_text_color = self.action_color
+            self.action_on_tint_color = self.action_color
+
+            self.description_color_adjusted = None
+            self.description_on_background_color = self.description_color
+            self.description_on_tint_color = self.description_color
+
         if self.share_activities and not self.organization_id:
             tenant = connection.tenant
             self.organization = Organization.objects.create(

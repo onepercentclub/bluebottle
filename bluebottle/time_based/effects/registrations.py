@@ -18,8 +18,9 @@ class CreateParticipantEffect(Effect):
             registration=self.instance,
         )
 
+    @property
     def is_valid(self):
-        return not self.instance.participants.exists()
+        return not self.instance.activity.participants.filter(user=self.instance.user).exists()
 
 
 class CreateSlotParticipantEffect(Effect):

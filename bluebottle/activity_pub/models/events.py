@@ -163,7 +163,7 @@ class CollectCampaign(Event):
         null=True,
     )
 
-    activity_type = 'collectactivity'
+    activity_type = 'collect'
 
     class Meta:
         verbose_name = _("Collect campaign")

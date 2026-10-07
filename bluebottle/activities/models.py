@@ -770,7 +770,7 @@ class FileUploadQuestion(ActivityQuestion, TranslatableModel):
 
 
 class FileUploadAnswer(ActivityAnswer):
-    file = PrivateDocumentField(on_delete=models.CASCADE)
+    file = PrivateDocumentField(on_delete=models.CASCADE, view_name='file-upload-answer-document')
 
     class JSONAPIMeta:
         resource_name = 'file-upload-answers'

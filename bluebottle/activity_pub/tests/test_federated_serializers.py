@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, timezone
 from io import BytesIO
 
 import httmock
@@ -288,5 +288,21 @@ class PeriodicSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase
 
     factory_data = {
         'slot_mode': 'PeriodicSlotMode',
-        'event_attendance_mode': 'online'
+        'event_attendance_mode': 'online',
+        'repetition_mode': 'WeeklyRepetitionMode',
+        'start_time': datetime(2026, 10, 7, 12, 0, tzinfo=timezone.utc),
+        'end_time': datetime(2026, 12, 6, 12, 0, tzinfo=timezone.utc),
     }
+
+    def test_create_federated_model(self):
+        super().test_create_federated_model()
+
+        self.assertEqual(self.instance.start, date(2026, 10, 7))
+        self.assertEqual(self.instance.deadline, date(2026, 12, 6))
+
+    def test_to_representation(self):
+        super().test_to_representation()
+
+        self.assertEqual(
+            self.instance.deadline, self.serializer.data['end_time'].date()
+        )

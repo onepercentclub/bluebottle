@@ -33,6 +33,7 @@ from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.geo.models import Geolocation
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -186,6 +187,12 @@ class ActivityPubTestCase:
                 site_settings.logo = File(BytesIO(image.read()), name='favion.png')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
+
+            initiative_settings = InitiativePlatformSettings.load()
+            initiative_settings.activity_types = [
+                activity_type for (activity_type, _) in InitiativePlatformSettings.ACTIVITY_TYPES
+            ]
+            initiative_settings.save()
 
         self.client = ActivityPubClient()
         self.json_api_client = JSONAPITestClient()
@@ -718,9 +725,25 @@ class SyncTestCase(ActivityPubTestCase):
             self.adopted.refresh_from_db()
             self.assertStatus(self.adopted, 'cancelled')
 
+    def test_restore(self):
+        self.test_cancel()
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.restore(save=True)
+            self.model.states.approve(save=True)
+            self.assertStatus(self.model, 'open')
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'open')
+
 
 class LinkTestCase(ActivityPubTestCase):
     expected_link_status = 'open'
+
+    @property
+    def activity_type(self):
+        return self.factory._meta.model._meta.model_name
 
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
@@ -728,9 +751,7 @@ class LinkTestCase(ActivityPubTestCase):
         with LocalTenant(self.other_tenant):
             with httmock.HTTMock(image_mock):
                 follow = Follow(
-                    automatic_adoption_activity_types=[
-                        self.factory._meta.model._meta.model_name
-                    ],
+                    automatic_adoption_activity_types=[self.activity_type],
                     adoption_type=AdoptionTypeChoices.link
                 )
                 follow.follow(platform_url)
@@ -929,6 +950,15 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, 'rejected')
 
+    def test_add_participant(self):
+        self.test_adopt()
+        with LocalTenant(self.other_tenant):
+            self.participant = DeadlineParticipantFactory.create(activity=self.adopted)
+
+        self.synced_participant = self.participant_factory._meta.model.objects.get()
+        self.assertEqual(self.synced_participant.status, self.expected_participant_status)
+        self.assertEqual(self.synced_participant.registration.status, 'accepted')
+
 
 class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
@@ -1017,11 +1047,74 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     def join(self):
         super().join()
 
-    def test_reaccept_consumer(self):
-        pass  # You cannot re-add periodic contributors
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertIsNotNone(self.model.deadline)
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.deadline, self.model.deadline)
+
+    def re_accept(self, contributor):
+        contributor.states.restore(save=True)
+
+    def assert_registration_propagated(self, registration, expected_status):
+        self.assertStatus(registration, expected_status)
+        participant = registration.participants.get()
+        contribution = participant.contributions.first()
+        if expected_status == 'removed':
+            self.assertStatus(participant, 'removed')
+            self.assertStatus(contribution, 'failed')
+        else:
+            self.assertStatus(participant, expected_status)
+            self.assertStatus(contribution, 'new')
+
+    def test_remove_supplier(self):
+        self.test_join()
+
+        self.synced_participant.states.remove(save=True)
+        self.assert_registration_propagated(self.synced_participant, self.removed_status)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assert_registration_propagated(self.participant, self.removed_status)
+
+    def test_remove_consumer(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.remove(save=True)
+            self.assert_registration_propagated(self.participant, self.removed_status)
+
+        self.synced_participant.refresh_from_db()
+        self.assert_registration_propagated(self.synced_participant, self.removed_status)
 
     def test_reaccept_supplier(self):
-        pass  # You cannot re-add periodic contributors
+        self.test_remove_supplier()
+
+        self.re_accept(self.synced_participant)
+        self.assert_registration_propagated(
+            self.synced_participant, self.expected_participant_status
+        )
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assert_registration_propagated(
+                self.participant, self.expected_participant_status
+            )
+
+    def test_reaccept_consumer(self):
+        self.test_remove_consumer()
+
+        with LocalTenant(self.other_tenant):
+            self.re_accept(self.participant)
+            self.assert_registration_propagated(
+                self.participant, self.expected_participant_status
+            )
+
+        self.synced_participant.refresh_from_db()
+        self.assert_registration_propagated(
+            self.synced_participant, self.expected_participant_status
+        )
 
     def test_join(self):
         super().test_join()
@@ -1127,6 +1220,18 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
         )
         if 'status' not in kwargs:
             self.submit()
+
+    def test_no_automatic_link_when_activity_type_disabled_on_platform(self):
+        with LocalTenant(self.other_tenant):
+            initiative_settings = InitiativePlatformSettings.load()
+            initiative_settings.activity_types = ['dateactivity']
+            initiative_settings.save()
+
+        with httmock.HTTMock(image_mock):
+            self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertFalse(LinkedActivity.objects.exists())
 
     def test_link_succeeded(self):
         self.test_accept()
@@ -2002,6 +2107,7 @@ class TemplateSingleSlotDateActivityTestCase(TemplateTestCase, BluebottleTestCas
 )
 class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
+    activity_type = 'collect'
 
     def create(self):
         super().create(

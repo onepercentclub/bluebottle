@@ -73,10 +73,11 @@ class Activity(ActivityPubModel):
 
         if created and self.is_local:
             for recipient in self.default_recipients:
-                Recipient.objects.create(
-                    actor=recipient,
-                    activity=self
-                )
+                if recipient:
+                    Recipient.objects.create(
+                        actor=recipient,
+                        activity=self
+                    )
 
 
 class Recipient(models.Model):
@@ -368,7 +369,8 @@ class Create(Activity):
             if (
                 (
                     isinstance(self.object, Event) and
-                    self.object.activity_type.lower() in follow.automatic_adoption_activity_types
+                    self.object.activity_type.lower() in follow.automatic_adoption_activity_types and
+                    self.object.activity_type.lower() in InitiativePlatformSettings.load().activity_types
                 ) or
                 isinstance(self.object, SubEvent)
             ):

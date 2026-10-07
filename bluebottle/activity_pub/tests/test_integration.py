@@ -33,6 +33,7 @@ from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.geo.models import Geolocation
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -186,6 +187,12 @@ class ActivityPubTestCase:
                 site_settings.logo = File(BytesIO(image.read()), name='favion.png')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
+
+            initiative_settings = InitiativePlatformSettings.load()
+            initiative_settings.activity_types = [
+                activity_type for (activity_type, _) in InitiativePlatformSettings.ACTIVITY_TYPES
+            ]
+            initiative_settings.save()
 
         self.client = ActivityPubClient()
         self.json_api_client = JSONAPITestClient()
@@ -722,15 +729,17 @@ class SyncTestCase(ActivityPubTestCase):
 class LinkTestCase(ActivityPubTestCase):
     expected_link_status = 'open'
 
+    @property
+    def activity_type(self):
+        return self.factory._meta.model._meta.model_name
+
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
 
         with LocalTenant(self.other_tenant):
             with httmock.HTTMock(image_mock):
                 follow = Follow(
-                    automatic_adoption_activity_types=[
-                        self.factory._meta.model._meta.model_name
-                    ],
+                    automatic_adoption_activity_types=[self.activity_type],
                     adoption_type=AdoptionTypeChoices.link
                 )
                 follow.follow(platform_url)
@@ -1136,6 +1145,18 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
         )
         if 'status' not in kwargs:
             self.submit()
+
+    def test_no_automatic_link_when_activity_type_disabled_on_platform(self):
+        with LocalTenant(self.other_tenant):
+            initiative_settings = InitiativePlatformSettings.load()
+            initiative_settings.activity_types = ['dateactivity']
+            initiative_settings.save()
+
+        with httmock.HTTMock(image_mock):
+            self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertFalse(LinkedActivity.objects.exists())
 
     def test_link_succeeded(self):
         self.test_accept()
@@ -2011,6 +2032,7 @@ class TemplateSingleSlotDateActivityTestCase(TemplateTestCase, BluebottleTestCas
 )
 class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
+    activity_type = 'collect'
 
     def create(self):
         super().create(

@@ -724,6 +724,18 @@ class SyncTestCase(ActivityPubTestCase):
             self.adopted.refresh_from_db()
             self.assertStatus(self.adopted, 'cancelled')
 
+    def test_restore(self):
+        self.test_cancel()
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.restore(save=True)
+            self.model.states.approve(save=True)
+            self.assertStatus(self.model, 'open')
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'open')
+
 
 class LinkTestCase(ActivityPubTestCase):
     expected_link_status = 'open'

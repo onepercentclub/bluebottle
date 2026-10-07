@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import random
 import string
@@ -12,7 +13,7 @@ from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, UserManager
 )
 from django.core.mail.message import EmailMessage
-from django.db import models
+from django.db import connection, models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -30,6 +31,8 @@ from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from .utils import send_welcome_mail
 from ..segments.models import Segment
+
+logger = logging.getLogger(__name__)
 
 
 def generate_picture_filename(instance, filename):
@@ -78,13 +81,45 @@ class BlueBottleUserManager(UserManager):
             username = email
         return super().create_superuser(username, email, password, **extra_fields)
 
+    def matching_emails(self, email, **extra):
+        lookup = {'{}__iexact'.format(self.model.USERNAME_FIELD): email}
+        lookup.update(extra)
+        return list(self.filter(**lookup).order_by('pk'))
+
+    def choose_duplicate_member(self, matches):
+        for match in matches:
+            if match.is_active and match.has_usable_password():
+                return match
+        for match in matches:
+            if match.is_active:
+                return match
+        return matches[0]
+
+    def log_duplicate_members(self, email, matches, chosen):
+        if len(matches) < 2:
+            return
+        logger.error(
+            'Multiple members match %r on %s: %s. Using %s.',
+            email,
+            connection.tenant.client_name,
+            ', '.join(str(match.pk) for match in matches),
+            chosen.pk,
+        )
+
+    def get_by_email(self, email, **extra):
+        matches = self.matching_emails(email, **extra)
+        if not matches:
+            raise self.model.DoesNotExist(
+                '%s matching query does not exist.' % self.model._meta.object_name
+            )
+        chosen = matches[0] if len(matches) == 1 else self.choose_duplicate_member(matches)
+        self.log_duplicate_members(email, matches, chosen)
+        return chosen
+
     def get_by_natural_key(self, username):
         if isinstance(username, int):
             return self.get(pk=username)
-        else:
-            return self.get(**{
-                '{}__iexact'.format(self.model.USERNAME_FIELD): username
-            })
+        return self.get_by_email(username)
 
 
 @python_2_unicode_compatible

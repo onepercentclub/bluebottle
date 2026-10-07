@@ -599,8 +599,8 @@ class UniqueEmailValidator(validators.UniqueValidator):
         try:
             return super().__call__(value, serializer_field)
         except serializers.ValidationError:
-            user = BB_USER_MODEL.objects.get(email__iexact=value)
-            if user.social_auth.count() > 0:
+            users = BB_USER_MODEL.objects.filter(email__iexact=value)
+            if users.filter(social_auth__isnull=False).exists():
                 code = 'social_account_unique'
             else:
                 code = 'email_unique'
@@ -679,7 +679,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
         errors = super(UserCreateSerializer, self).errors
 
         if 'email' in errors and 'email' in self.data and errors['email'][0].code == 'unique':
-            user = self.Meta.model.objects.get(email__iexact=self.data['email'])
+            users = self.Meta.model.objects.filter(email__iexact=self.data['email']).order_by('pk')
+            user = users.filter(social_auth__isnull=False).first() or users.first()
+            if user is None:
+                return errors
 
             conflict = {
                 'email': user.email,

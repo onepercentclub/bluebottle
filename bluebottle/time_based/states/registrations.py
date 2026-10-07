@@ -207,3 +207,14 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         automatic=False,
         permission=is_user_or_manager,
     )
+
+    restore = Transition(
+        [RegistrationStateMachine.withdrawn, removed],
+        RegistrationStateMachine.accepted,
+        name=_("Restore"),
+        passed_label=_("restored"),
+        description=_(
+            "Restore after being withdrawn ro removed."
+        ),
+        automatic=False,
+    )

@@ -445,6 +445,24 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                 SendRemoveEffect
             ],
         ),
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.restore,
+            effects=[
+                NotificationEffect(UserRegistrationRestartedNotification),
+                NotificationEffect(ManagerRegistrationRestartedNotification),
+                RelatedTransitionEffect(
+                    "participants",
+                    PeriodicParticipantStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+                SendJoinEffect,
+                SyncRelatedEvent
+            ],
+        ),
 
     ]
 

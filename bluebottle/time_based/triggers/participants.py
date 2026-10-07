@@ -555,6 +555,11 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             PeriodicParticipantStateMachine.restore,
             effects=[
+                FollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],

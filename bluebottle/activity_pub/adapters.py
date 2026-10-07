@@ -1,4 +1,4 @@
-from bluebottle.fsm.states import TransitionNotPossible
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.activity_pub.serializers import (
     ActivityPubSerializer, FederatedObjectSerializer
 )

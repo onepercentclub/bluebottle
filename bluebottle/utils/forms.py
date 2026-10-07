@@ -128,7 +128,8 @@ class TransitionConfirmationForm(forms.Form):
             and 'custom_message' not in self.initial
         ):
             message = message_class(self.instance)
-            self.fields['custom_message'].initial = message.get_message_block_html()
+            default_message = message.get_message_block_html().replace('"', '\"')
+            self.fields['custom_message'].initial = default_message
 
     def save(self, **kwargs):
         if self.cleaned_data.get('custom_message'):

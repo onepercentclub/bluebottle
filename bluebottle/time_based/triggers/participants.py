@@ -262,6 +262,9 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         """ Activity has started """
         if effect.instance.activity.start:
             return effect.instance.activity.start < now().date()
+        if effect.instance.activity.deadline:
+            return effect.instance.activity.deadline < now().date()
+
         return True
 
     def is_not_self(self):
@@ -398,6 +401,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 SendJoinEffect,
                 TransitionEffect(
+                    DeadlineParticipantStateMachine.accept,
+                    conditions=[
+                        registration_is_accepted,
+                    ]
+                ),
+                TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
                         registration_is_accepted, activity_has_started
@@ -415,6 +424,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 SendJoinEffect,
                 SyncRelatedEvent,
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.accept,
+                    conditions=[
+                        registration_is_accepted,
+                    ]
+                ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[

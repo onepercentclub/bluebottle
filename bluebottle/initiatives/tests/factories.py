@@ -1,14 +1,13 @@
 from builtins import object
+
 import factory
 
-from bluebottle.test.factory_models import generate_rich_text
-
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
-
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.files.tests.factories import ImageFactory
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
+from bluebottle.test.factory_models import generate_rich_text
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory, CountryFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 
 
 class InitiativeFactory(factory.DjangoModelFactory):
@@ -23,7 +22,16 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
     theme = factory.SubFactory(ThemeFactory)
     image = factory.SubFactory(ImageFactory)
-    place = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
+    place = factory.SubFactory(
+        GeolocationFactory,
+        with_geofeatures=True,
+        country=factory.SubFactory(
+            CountryFactory,
+            # Fix this to Uzbekistan, so we don't get accidental matches when this is set to NL by random
+            alpha2_code='UZ',
+            name='Uzbekistan'
+        )
+    )
 
     @factory.post_generation
     def activity_managers(self, create, extracted, **kwargs):

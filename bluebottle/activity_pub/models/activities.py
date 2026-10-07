@@ -1,19 +1,16 @@
 from django.db import models, connection
 from django.utils.translation import gettext_lazy as _
-
 from multiselectfield import MultiSelectField
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.models.base import ActivityPubModel
 from bluebottle.activity_pub.models.actors import Actor, Organization, Person, Team
+from bluebottle.activity_pub.models.base import ActivityPubModel
 from bluebottle.activity_pub.models.events import SubEvent, Event, DoGoodEvent
 from bluebottle.activity_pub.tasks import publish_to_recipient
 from bluebottle.activity_pub.utils import get_platform_actor
-
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import Registration
-
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 
@@ -232,7 +229,13 @@ class Follow(Activity):
             )
 
     def __str__(self):
-        return str(self.object)
+        try:
+            platform_actor = get_platform_actor()
+            if platform_actor and self.object_id == platform_actor.id:
+                return str(self.actor)
+            return str(self.object)
+        except Actor.DoesNotExist:
+            return "-"
 
     class Meta:
         verbose_name = _('Connection')
@@ -251,12 +254,6 @@ class Following(Follow):
         proxy = True
         verbose_name = _('Supplier')
         verbose_name_plural = _('Suppliers')
-
-    def __str__(self):
-        try:
-            return str(self.object)
-        except Actor.DoesNotExist:
-            return "-"
 
 
 class Accept(Activity):

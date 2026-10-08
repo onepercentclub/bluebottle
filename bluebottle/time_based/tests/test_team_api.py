@@ -210,10 +210,7 @@ class TeamMemberListAPIViewTestCase(APITestCase):
 
 class RelatedTeamListSyncedTeamAPIViewTestCase(APITestCase):
     """
-    BB-30309: a team synced from a consumer platform has no local captain
-    (user is NULL, remote_user is set). The activity's `teams` links count it,
-    so the sidebar says "1 team participating", but the list behind the
-    link the public Teams tab loads (`active`) should then also return it.
+    A team synced from a consumer platform should be shown in the public teams tab.
     """
     serializer = TeamSerializer
 
@@ -245,10 +242,6 @@ class RelatedTeamListSyncedTeamAPIViewTestCase(APITestCase):
         )
 
     def schedule_team(self):
-        # Scheduling a synced team through its slot syncs back to the consumer,
-        # which needs the federated Team actor. That flow is covered in
-        # activity_pub's SyncTeamScheduleActivityTestCase; here we only care
-        # about what the list returns, so set the status directly.
         Team.objects.filter(pk=self.team.pk).update(status='scheduled')
 
     def get_link(self, name, user=None):

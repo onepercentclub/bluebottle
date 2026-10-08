@@ -4,8 +4,10 @@ from itertools import groupby
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxLengthValidator
 from django.core.validators import validate_email
 from django.db.models import Count, Sum, Q
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
@@ -215,9 +217,27 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
     }
 
 
-# This can't be in serializers because of circular imports
+def is_editable_draft(instance):
+    if instance is None:
+        return True
+    if isinstance(instance, (list, tuple, QuerySet)):
+        return False
+    return getattr(instance, 'status', None) in ('draft', 'needs_work')
+
+
+def relax_validation_for_draft(fields):
+    for field in fields.values():
+        field.allow_blank = True
+        field.validators = [
+            validator for validator in field.validators
+            if isinstance(validator, MaxLengthValidator)
+        ]
+        field.allow_null = True
+        field.required = False
+
+
 class BaseActivitySerializer(ModelSerializer):
-    title = serializers.CharField()
+    title = serializers.CharField(max_length=255)
     description = RichTextField()
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
@@ -286,12 +306,8 @@ class BaseActivitySerializer(ModelSerializer):
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
 
-        if not instance or instance.status in ('draft', 'needs_work'):
-            for key in self.fields:
-                self.fields[key].allow_blank = True
-                self.fields[key].validators = []
-                self.fields[key].allow_null = True
-                self.fields[key].required = False
+        if is_editable_draft(instance):
+            relax_validation_for_draft(self.fields)
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
@@ -447,7 +463,9 @@ class BaseActivitySerializer(ModelSerializer):
 
 
 class BaseActivityListSerializer(ModelSerializer):
-    title = serializers.CharField(allow_blank=True, required=False)
+    title = serializers.CharField(
+        allow_blank=True, required=False, max_length=255
+    )
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
@@ -515,7 +533,9 @@ class BaseActivityListSerializer(ModelSerializer):
 
 
 class BaseTinyActivitySerializer(ModelSerializer):
-    title = serializers.CharField(allow_blank=True, required=False)
+    title = serializers.CharField(
+        allow_blank=True, required=False, max_length=255
+    )
     slug = serializers.CharField(read_only=True)
 
     class Meta(object):
@@ -537,7 +557,7 @@ class BaseTinyActivitySerializer(ModelSerializer):
 
 class ActivitySubmitSerializer(ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(required=True, queryset=Member.objects.all())
-    title = serializers.CharField(required=True)
+    title = serializers.CharField(required=True, max_length=255)
     description = serializers.CharField(
         required=True,
         error_messages={

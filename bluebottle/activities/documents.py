@@ -282,7 +282,6 @@ class ActivityDocument(Document):
     )
 
     organization = fields.NestedField(
-        attr='organization',
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
@@ -557,10 +556,10 @@ class ActivityDocument(Document):
         return instance.created
 
     def prepare_organization(self, instance):
-        if not instance.organization:
+        org = getattr(instance, 'organization', None)
+        if not org:
             return None
 
-        org = instance.organization
         return {
             'id': org.pk,
             'name': org.name,

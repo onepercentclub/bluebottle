@@ -919,6 +919,10 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_join(self):
         super().test_join()
 
+        self.assertEqual(
+            str(self.synced_participant.registration),
+            f'Candidate {self.synced_participant.remote_user} for {self.model.title}'
+        )
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
         self.assertEqual(self.synced_participant.registration.status, 'accepted')
 

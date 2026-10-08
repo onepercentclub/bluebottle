@@ -1347,7 +1347,9 @@ class Registration(TriggerMixin, PolymorphicModel):
 
     def __str__(self):
         if self.activity_id:
-            return _('Candidate {name} for {activity}').format(name=self.user, activity=self.activity)
+            return _('Candidate {name} for {activity}').format(
+                name=self.user or self.remote_user, activity=self.activity
+            )
         return _('Candidate {name}').format(name=self.user)
 
     class Meta:

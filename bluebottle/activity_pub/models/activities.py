@@ -6,9 +6,11 @@ from multiselectfield import MultiSelectField
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models.base import ActivityPubModel
 from bluebottle.activity_pub.models.actors import Actor, Organization, Person, Team
-from bluebottle.activity_pub.models.events import SubEvent, Event, DoGoodEvent
+from bluebottle.activity_pub.models.events import SubEvent, Event
 from bluebottle.activity_pub.tasks import publish_to_recipient
 from bluebottle.activity_pub.utils import get_platform_actor
+
+from bluebottle.activities.models import Activity as BluebottleActivity
 
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -200,7 +202,7 @@ class Follow(Activity):
 
     @property
     def unpublished_activities(self):
-        return DoGoodEvent.objects.filter(
+        return BluebottleActivity.objects.filter(
             status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
         ).exclude(
             activity_pub_model__create__recipients__actor=self.actor,

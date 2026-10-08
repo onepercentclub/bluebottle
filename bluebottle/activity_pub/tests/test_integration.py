@@ -165,7 +165,8 @@ class ActivityPubTestCase:
     def setUp(self):
         super().setUp()
 
-        self.other_tenant = Client.objects.get(schema_name='test2')
+        self.consumer = Client.objects.get(schema_name='test2')
+
         site_settings = SitePlatformSettings.load()
         with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             site_settings.logo = File(BytesIO(image.read()), name='favion.png')
@@ -176,7 +177,7 @@ class ActivityPubTestCase:
 
         publish_to_recipient.delay_on_commit = publish_to_recipient.delay
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             CountryFactory.create(
                 alpha2_code=self.country.alpha2_code
             )
@@ -225,7 +226,7 @@ class ActivityPubTestCase:
             object=self.follow
         )
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             accept = Accept.objects.get(object=Follow.objects.get())
             self.assertTrue(accept)
             self.assertTrue(accept.actor.adopted)
@@ -251,7 +252,7 @@ class ActivityPubTestCase:
         with httmock.HTTMock(image_mock):
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.event = Event.objects.get()
             self.assertEqual(self.event.name, self.model.title)
 
@@ -261,7 +262,7 @@ class ActivityPubTestCase:
         self.follow.publish_mode = 'automatic'
         self.follow.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             Event.objects.all().delete()
 
         self.create()
@@ -275,14 +276,14 @@ class ActivityPubTestCase:
             Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists()
         )
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             event = Event.objects.get()
             self.assertEqual(event.name, activity.title)
 
     def test_manual_follow_not_auto_published(self):
         self.test_accept()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             Event.objects.all().delete()
 
         activity = DeedFactory.create(status='submitted')
@@ -291,13 +292,13 @@ class ActivityPubTestCase:
         event = getattr(activity, 'event', None)
         self.assertIsNone(event)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(Event.objects.count(), 0)
 
     def test_manual_publish_after_approve(self):
         self.test_accept()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             Event.objects.all().delete()
 
         activity = DeedFactory.create(status='submitted')
@@ -307,12 +308,12 @@ class ActivityPubTestCase:
         publish = activity.activity_pub_model.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             event = Event.objects.get()
             self.assertEqual(event.name, activity.title)
 
     def test_publish_to_closed_platform(self):
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             MemberPlatformSettings.objects.create(closed=True)
 
         self.test_accept()
@@ -323,7 +324,7 @@ class ActivityPubTestCase:
         with httmock.HTTMock(image_mock):
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             event = Event.objects.get()
             self.assertTrue(event.name, self.model.title)
 
@@ -331,7 +332,7 @@ class ActivityPubTestCase:
         self.test_follow()
         self.create()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(Event.objects.count(), 0)
 
     def test_publish_closed_segment(self):
@@ -340,7 +341,7 @@ class ActivityPubTestCase:
         segment = SegmentFactory.create(closed=True)
         self.model.segments.add(segment)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(Event.objects.count(), 0)
 
     def approve(self, activity):
@@ -363,7 +364,7 @@ class TemplateTestCase(ActivityPubTestCase):
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             with httmock.HTTMock(image_mock):
 
                 follow = Follow(
@@ -380,7 +381,7 @@ class TemplateTestCase(ActivityPubTestCase):
     def test_adopt(self):
         self.test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.event = Event.objects.get()
 
             request = RequestFactory().get('/')
@@ -408,12 +409,12 @@ class TemplateTestCase(ActivityPubTestCase):
     def test_adopt_default_owner(self):
         self.test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             follow = Follow.objects.get()
             follow.default_owner = BlueBottleUserFactory()
             follow.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             follow = Follow.objects.get()
             self.event = Event.objects.get()
 
@@ -427,7 +428,7 @@ class TemplateTestCase(ActivityPubTestCase):
     def test_update_title_when_image_has_no_origin(self):
         self.test_adopt()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             origin = self.adopted.image.origin
             origin.adopted = None
             origin.save()
@@ -436,7 +437,7 @@ class TemplateTestCase(ActivityPubTestCase):
             self.model.title = 'Some new title'
             self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.adopted.refresh_from_db()
             self.assertEqual(self.adopted.title, 'Some new title')
 
@@ -444,7 +445,7 @@ class TemplateTestCase(ActivityPubTestCase):
 class SyncTestCase(ActivityPubTestCase):
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             with httmock.HTTMock(image_mock):
 
                 follow = Follow(
@@ -461,7 +462,7 @@ class SyncTestCase(ActivityPubTestCase):
     def test_sync_organization(self):
         self.test_accept()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             site_settings = SitePlatformSettings.load()
             organization = site_settings.organization
 
@@ -485,7 +486,7 @@ class SyncTestCase(ActivityPubTestCase):
             organization.name = 'New name'
             organization.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             actor = Accept.objects.get().actor
             actor.refresh_from_db()
             self.assertEqual(
@@ -495,7 +496,7 @@ class SyncTestCase(ActivityPubTestCase):
     def test_adopt(self):
         self.test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.event = Event.objects.get()
 
             request = RequestFactory().get('/')
@@ -529,7 +530,7 @@ class SyncTestCase(ActivityPubTestCase):
     def test_join(self):
         self.test_adopt()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.join()
             self.email = self.participant.user.email
             self.adopted.origin.refresh_from_db()
@@ -548,7 +549,7 @@ class SyncTestCase(ActivityPubTestCase):
     def test_update_participant(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             user = self.participant.user
             user.first_name = 'New first name'
             user.save()
@@ -560,7 +561,7 @@ class SyncTestCase(ActivityPubTestCase):
     def test_leave(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.states.withdraw(save=True)
             self.adopted.origin.refresh_from_db()
             self.assertEqual(self.adopted.origin.contributor_count, 0)
@@ -573,7 +574,7 @@ class SyncTestCase(ActivityPubTestCase):
     def test_rejoin(self):
         self.test_leave()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.states.reapply(save=True)
 
             self.adopted.origin.refresh_from_db()
@@ -590,7 +591,7 @@ class SyncTestCase(ActivityPubTestCase):
         self.synced_participant.states.remove(save=True)
         self.assertEqual(self.synced_participant.status, self.removed_status)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, self.removed_status)
 
@@ -599,13 +600,13 @@ class SyncTestCase(ActivityPubTestCase):
 
         self.re_accept(self.synced_participant)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, self.expected_participant_status)
 
     def test_reaccept_consumer(self):
         self.test_remove_consumer()
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.re_accept(self.participant)
             self.assertStatus(self.participant, self.expected_participant_status)
 
@@ -615,17 +616,86 @@ class SyncTestCase(ActivityPubTestCase):
     def test_remove_consumer(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.states.remove(save=True)
             self.assertEqual(self.participant.status, self.removed_status)
 
         self.synced_participant.refresh_from_db()
         self.assertStatus(self.synced_participant, self.removed_status)
 
-    def test_cancel_adoption(self):
-        self.test_join()
+    def test_update(self):
+        self.test_adopt()
 
-        with LocalTenant(self.other_tenant):
+        with httmock.HTTMock(image_mock):
+            self.model.title = 'Some new title'
+            self.model.save()
+
+        with LocalTenant(self.consumer):
+            self.event.refresh_from_db()
+            self.assertEqual(self.event.name, 'Some new title')
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.adopted.title, 'Some new title')
+
+    def test_update_title_when_image_has_no_origin(self):
+        self.test_adopt()
+
+        with LocalTenant(self.consumer):
+            origin = self.adopted.image.origin
+            origin.adopted = None
+            origin.save()
+
+        with httmock.HTTMock(image_mock):
+            self.model.title = 'Some new title'
+            self.model.save()
+
+        with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.adopted.title, 'Some new title')
+
+    def test_update_image(self):
+        self.test_adopt()
+
+        with httmock.HTTMock(image_mock):
+            self.model.image = ImageFactory.create()
+            self.model.save()
+
+        image_iri = self.model.image.activity_pub_model.pub_url
+
+        with LocalTenant(self.consumer):
+            self.event.refresh_from_db()
+            self.assertEqual(self.event.image.iri, image_iri)
+            self.adopted.refresh_from_db()
+            self.assertEqual(
+                self.adopted.image.origin.iri,
+                image_iri
+            )
+
+    def test_succeed(self):
+        self.test_adopt()
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.succeed(save=True)
+
+        with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'succeeded')
+
+    def test_cancel_supplier(self):
+        self.test_adopt()
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.cancel(save=True)
+
+            self.assertStatus(self.model, 'cancelled')
+
+        with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'cancelled')
+
+    def test_cancel_consumer(self):
+        self.test_adopt()
+
+        with LocalTenant(self.consumer):
             self.adopted.states.cancel(save=True)
             self.assertStatus(self.adopted, 'cancelled')
             self.assertTrue(
@@ -635,14 +705,27 @@ class SyncTestCase(ActivityPubTestCase):
                 Accept.objects.filter(object=self.adopted.origin).exists()
             )
 
+        self.assertStatus(self.model, 'open')
         self.assertFalse(
             Accept.objects.filter(object=self.model.activity_pub_model).exists()
         )
 
-    def test_restore_and_reapprove(self):
-        self.test_cancel_adoption()
+    def test_restore_supplier(self):
+        self.test_cancel_supplier()
 
-        with LocalTenant(self.other_tenant):
+        with httmock.HTTMock(image_mock):
+            self.model.states.restore(save=True)
+            self.model.states.approve(save=True)
+            self.assertStatus(self.model, 'open')
+
+        with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'open')
+
+    def test_restore_consumer(self):
+        self.test_cancel_consumer()
+
+        with LocalTenant(self.consumer):
             self.adopted.states.restore(save=True)
             self.assertStatus(self.adopted, 'needs_work')
             self.adopted.states.submit(save=True)
@@ -658,85 +741,6 @@ class SyncTestCase(ActivityPubTestCase):
             1,
         )
 
-    def test_update(self):
-        self.test_adopt()
-
-        with httmock.HTTMock(image_mock):
-            self.model.title = 'Some new title'
-            self.model.save()
-
-        with LocalTenant(self.other_tenant):
-            self.event.refresh_from_db()
-            self.assertEqual(self.event.name, 'Some new title')
-            self.adopted.refresh_from_db()
-            self.assertEqual(self.adopted.title, 'Some new title')
-
-    def test_update_title_when_image_has_no_origin(self):
-        self.test_adopt()
-
-        with LocalTenant(self.other_tenant):
-            origin = self.adopted.image.origin
-            origin.adopted = None
-            origin.save()
-
-        with httmock.HTTMock(image_mock):
-            self.model.title = 'Some new title'
-            self.model.save()
-
-        with LocalTenant(self.other_tenant):
-            self.adopted.refresh_from_db()
-            self.assertEqual(self.adopted.title, 'Some new title')
-
-    def test_update_image(self):
-        self.test_adopt()
-
-        with httmock.HTTMock(image_mock):
-            self.model.image = ImageFactory.create()
-            self.model.save()
-
-        image_iri = self.model.image.activity_pub_model.pub_url
-
-        with LocalTenant(self.other_tenant):
-            self.event.refresh_from_db()
-            self.assertEqual(self.event.image.iri, image_iri)
-            self.adopted.refresh_from_db()
-            self.assertEqual(
-                self.adopted.image.origin.iri,
-                image_iri
-            )
-
-    def test_succeed(self):
-        self.test_adopt()
-
-        with httmock.HTTMock(image_mock):
-            self.model.states.succeed(save=True)
-
-        with LocalTenant(self.other_tenant):
-            self.adopted.refresh_from_db()
-            self.assertStatus(self.adopted, 'succeeded')
-
-    def test_cancel(self):
-        self.test_adopt()
-
-        with httmock.HTTMock(image_mock):
-            self.model.states.cancel(save=True)
-
-        with LocalTenant(self.other_tenant):
-            self.adopted.refresh_from_db()
-            self.assertStatus(self.adopted, 'cancelled')
-
-    def test_restore(self):
-        self.test_cancel()
-
-        with httmock.HTTMock(image_mock):
-            self.model.states.restore(save=True)
-            self.model.states.approve(save=True)
-            self.assertStatus(self.model, 'open')
-
-        with LocalTenant(self.other_tenant):
-            self.adopted.refresh_from_db()
-            self.assertStatus(self.adopted, 'open')
-
 
 class LinkTestCase(ActivityPubTestCase):
     expected_link_status = 'open'
@@ -748,7 +752,7 @@ class LinkTestCase(ActivityPubTestCase):
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             with httmock.HTTMock(image_mock):
                 follow = Follow(
                     automatic_adoption_activity_types=[self.activity_type],
@@ -767,7 +771,7 @@ class LinkTestCase(ActivityPubTestCase):
     def test_update_follow(self):
         self.test_follow()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             follow = Follow.objects.get()
             follow.adoption_type = AdoptionTypeChoices.clone
             follow.save()
@@ -779,7 +783,7 @@ class LinkTestCase(ActivityPubTestCase):
         with httmock.HTTMock(image_mock):
             self.test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, self.expected_link_status)
             self.assertEqual(link.title, self.model.title)
@@ -801,7 +805,7 @@ class LinkTestCase(ActivityPubTestCase):
         with httmock.HTTMock(image_mock):
             self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.title, title)
 
@@ -811,7 +815,7 @@ class LinkTestCase(ActivityPubTestCase):
         with httmock.HTTMock(image_mock):
             self.model.states.cancel(save=True)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'cancelled')
             self.assertFalse(Accept.objects.filter(object=link.origin).exists())
@@ -826,7 +830,7 @@ class LinkTestCase(ActivityPubTestCase):
         with httmock.HTTMock(image_mock):
             self.model.states.succeed(save=True)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'succeeded')
 
@@ -834,7 +838,7 @@ class LinkTestCase(ActivityPubTestCase):
         self.test_link()
         self.model.delete()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             with self.assertRaises(LinkedActivity.DoesNotExist):
                 LinkedActivity.objects.get()
 
@@ -902,7 +906,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.test_adopt()
         self.model.states.lock(save=True)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.adopted.refresh_from_db()
             self.assertStatus(self.adopted, 'full')
 
@@ -919,6 +923,10 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_join(self):
         super().test_join()
 
+        self.assertEqual(
+            str(self.synced_participants.registration),
+            f'Candidate {self.synced_participant.remote_user} for {self.model.title}'
+        )
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
         self.assertEqual(self.synced_participant.registration.status, 'accepted')
 
@@ -927,7 +935,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.model.review = True
         self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.join()
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()
@@ -938,7 +946,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.test_join_with_review()
         self.synced_participant.registration.states.accept(save=True)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, self.expected_participant_status)
 
@@ -946,13 +954,13 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.test_join_with_review()
         self.synced_participant.registration.states.reject(save=True)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, 'rejected')
 
     def test_add_participant(self):
         self.test_adopt()
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant = DeadlineParticipantFactory.create(activity=self.adopted)
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()
@@ -985,7 +993,7 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.model.review = True
         self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.join()
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()
@@ -1004,7 +1012,7 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_participant.slot.location = GeolocationFactory.create(country=self.country)
         self.synced_participant.slot.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertEqual(
                 self.participant.status, 'scheduled'
@@ -1021,7 +1029,7 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_participant.slot.location = GeolocationFactory.create(country=self.country)
         self.synced_participant.slot.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertEqual(
                 self.participant.status, 'scheduled'
@@ -1074,14 +1082,14 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_participant.states.remove(save=True)
         self.assert_registration_propagated(self.synced_participant, self.removed_status)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assert_registration_propagated(self.participant, self.removed_status)
 
     def test_remove_consumer(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.states.remove(save=True)
             self.assert_registration_propagated(self.participant, self.removed_status)
 
@@ -1096,7 +1104,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.synced_participant, self.expected_participant_status
         )
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assert_registration_propagated(
                 self.participant, self.expected_participant_status
@@ -1105,7 +1113,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_reaccept_consumer(self):
         self.test_remove_consumer()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.re_accept(self.participant)
             self.assert_registration_propagated(
                 self.participant, self.expected_participant_status
@@ -1124,7 +1132,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.synced_participant.participants.get().slot, self.model.slots.first()
         )
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertEqual(
                 self.participant.participants.get().slot.origin.pub_url,
@@ -1136,7 +1144,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.model.review = True
         self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.join()
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()
@@ -1146,7 +1154,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_leave(self):
         self.test_next_slot()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.states.stop(save=True)
             self.adopted.origin.refresh_from_db()
             self.assertEqual(self.adopted.origin.contributor_count, 0)
@@ -1159,7 +1167,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_rejoin(self):
         self.test_leave()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.states.start(save=True)
 
             self.adopted.origin.refresh_from_db()
@@ -1173,7 +1181,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_next_slot(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(
                 PeriodicParticipant.objects.count(), 1
             )
@@ -1184,7 +1192,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             PeriodicParticipant.objects.count(), 2
         )
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(
                 PeriodicParticipant.objects.count(), 2
             )
@@ -1222,7 +1230,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             self.submit()
 
     def test_no_automatic_link_when_activity_type_disabled_on_platform(self):
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             initiative_settings = InitiativePlatformSettings.load()
             initiative_settings.activity_types = ['dateactivity']
             initiative_settings.save()
@@ -1230,7 +1238,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
         with httmock.HTTMock(image_mock):
             self.test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertFalse(LinkedActivity.objects.exists())
 
     def test_link_succeeded(self):
@@ -1242,7 +1250,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             self.create(status='succeeded')
             adapter.sync(self.model)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'succeeded')
 
@@ -1255,14 +1263,14 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             self.create(status='cancelled')
             adapter.sync(self.model)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'cancelled')
 
     def test_link_manual_succeeded(self):
         self.test_accept()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             follow = Follow.objects.get()
             follow.automatic_adoption_activity_types = []
             follow.save()
@@ -1278,7 +1286,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             publish = self.model.activity_pub_model.create_set.first()
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             event = GoodDeed.objects.get()
 
             with httmock.HTTMock(image_mock):
@@ -1334,7 +1342,7 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
             self.model.amount_donated = Money(12, 'EUR')
             self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedFunding.objects.get()
             self.assertEqual(link.donated, Money(12, 'EUR'))
 
@@ -1346,21 +1354,21 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
             self.model.amount_matching = Money(30, 'EUR')
             self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedFunding.objects.get()
             self.assertEqual(link.donated, Money(120, 'EUR'))
 
     def test_deadline_maps_to_end(self):
         self.test_link()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedFunding.objects.get()
             self.assertEqual(link.end, self.model.deadline)
 
     def test_image_maps_to_linked_funding_image(self):
         self.test_link()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedFunding.objects.get()
             self.assertIsNotNone(self.model.image, "Original Funding should have an image")
             self.assertIsNotNone(link.image, "LinkedFunding should have an image mapped from Funding")
@@ -1368,7 +1376,7 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
     def test_impact_location_maps_to_linked_funding_location(self):
         self.test_link()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedFunding.objects.get()
             self.assertIsNotNone(self.model.impact_location)
             self.assertIsNotNone(link.location)
@@ -1420,7 +1428,7 @@ class TemplateFundingTestCase(FundingStripeMixin, TemplateTestCase, BluebottleTe
     def test_publish(self):
         super().test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.event.target, self.model.target.amount)
             self.assertEqual(self.event.target_currency, str(self.model.target.currency))
             self.assertEqual(self.event.end_time, self.model.deadline)
@@ -1465,28 +1473,28 @@ class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
         with httmock.HTTMock(image_mock):
             self.model.states.succeed(save=True)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'succeeded')
 
     def test_target_maps_to_linked_grant_application(self):
         self.test_link()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedGrantApplication.objects.get()
             self.assertEqual(link.target, self.model.target)
 
     def test_start_maps_to_linked_grant_application(self):
         self.test_link()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedGrantApplication.objects.get()
             self.assertEqual(link.start, self.model.started)
 
     def test_impact_location_maps_to_linked_grant_application_location(self):
         self.test_link()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedGrantApplication.objects.get()
             self.assertIsNotNone(self.model.impact_location)
             self.assertIsNotNone(link.location)
@@ -1513,7 +1521,7 @@ class TemplateGrantApplicationTestCase(TemplateTestCase, BluebottleTestCase):
     def test_publish(self):
         super().test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.event.target, self.model.target.amount)
             self.assertEqual(self.event.target_currency, str(self.model.target.currency))
             self.assertEqual(self.event.start_time, self.model.started)
@@ -1581,7 +1589,7 @@ class TemplateDeadlineActivityTestCase(TemplateTestCase, BluebottleTestCase):
         publish = self.model.activity_pub_model.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             event = Event.objects.filter(name=self.model.title).first()
             self.assertTrue(event)
             self.assertTrue(event.organization)
@@ -1636,7 +1644,7 @@ class TemplateScheduleActivityTestCase(TemplateTestCase, BluebottleTestCase):
     def test_publish(self):
         super().test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.event.start_time.date(), self.model.start)
             self.assertEqual(self.event.end_time.date(), self.model.deadline)
             self.assertEqual(self.event.duration, self.model.duration)
@@ -1681,7 +1689,7 @@ class TemplatePeriodicActivityTestCase(TemplateTestCase, BluebottleTestCase):
     def test_publish(self):
         super().test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.event.start_time.date(), self.model.start)
             self.assertEqual(self.event.duration, self.model.duration)
             self.assertEqual(self.event.repetition_mode, RepetitionModeChoices.weekly)
@@ -1738,7 +1746,7 @@ class TemplateRegisteredDateActivityTestCase(TemplateTestCase, BluebottleTestCas
     def test_publish(self):
         super().test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.event.start_time.date(), self.model.start.date())
             if self.model.end:
                 self.assertEqual(self.event.end_time.date(), self.model.end.date())
@@ -1798,7 +1806,7 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
 
     def test_publish(self):
         super().test_publish()
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.event.sub_event.count(), 3)
 
     def test_publish_skips_past_unpublished_slots(self):
@@ -1861,7 +1869,7 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
     def test_adopt(self):
         super().test_adopt()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.adopted.slots.count(), 3)
 
     def test_adopt_blank_slot_title(self):
@@ -1878,7 +1886,7 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
         self.create = create
         self.test_publish = lambda: ActivityPubTestCase.test_publish(self)
         TemplateTestCase.test_adopt(self)
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.adopted.slots.count(), 1)
             self.assertEqual(self.adopted.slots.first().title, '')
 
@@ -1904,7 +1912,7 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
             Geolocation, 'save', _geolocation_save_skip_mapbox
         ):
             TemplateTestCase.test_adopt(self)
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.adopted.slots.count(), 1)
             slot = self.adopted.slots.first()
             self.assertEqual(slot.location.street, '')
@@ -1961,7 +1969,7 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertIsNotNone(sub_event)
         self.assertEqual(sub_event.contributor_count, 1)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             consumer_slot = self.adopted.slots.order_by('start', 'id').first()
             consumer_slot.origin.refresh_from_db()
             self.assertEqual(consumer_slot.origin.contributor_count, 1)
@@ -1969,7 +1977,7 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_join_additional_slot(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             second_slot = self.adopted.slots.order_by('start', 'id')[1]
             DateParticipantFactory.create(
                 activity=self.adopted,
@@ -2000,7 +2008,7 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.model.review = True
         self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.join()
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()
@@ -2092,13 +2100,13 @@ class TemplateSingleSlotDateActivityTestCase(TemplateTestCase, BluebottleTestCas
 
     def test_publish(self):
         super().test_publish()
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.event.sub_event.count(), 1)
 
     def test_adopt(self):
         super().test_adopt()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.adopted.slots.count(), 1)
 
 
@@ -2128,7 +2136,7 @@ class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
             self.model.collect_type = new_collect_type
             self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             link = LinkedActivity.objects.get()
             self.assertIsNotNone(link)
 
@@ -2149,7 +2157,7 @@ class TemplateCollectActivityTestCase(TemplateTestCase, BluebottleTestCase):
     def test_publish(self):
         super().test_publish()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.event.start_time.date(), self.model.start)
             self.assertEqual(self.event.end_time.date(), self.model.end)
 
@@ -2202,13 +2210,13 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.re_accept(self.synced_participant)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, self.expected_participant_status)
 
     def test_reaccept_consumer(self):
         self.test_remove_consumer()
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.re_accept(self.participant)
             self.assertStatus(self.team, self.expected_participant_status)
 
@@ -2218,7 +2226,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_join(self):
         self.test_adopt()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.join()
             self.email = self.captain.email
             self.adopted.origin.refresh_from_db()
@@ -2238,7 +2246,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.test_join()
         print('updating user')
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             user = self.captain
             user.first_name = 'New first name'
             user.save()
@@ -2253,7 +2261,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_rejoin(self):
         self.test_team_withdraw()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.team.refresh_from_db()
             self.team.states.rejoin(save=True)
             self.participant.refresh_from_db()
@@ -2278,14 +2286,14 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_team.states.remove(save=True)
         self.assertStatus(self.synced_team, self.removed_status)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.team.refresh_from_db()
             self.assertStatus(self.team, self.removed_status)
 
     def test_remove_consumer(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.team.refresh_from_db()
             self.team.states.remove(save=True)
             self.assertEqual(self.team.status, self.removed_status)
@@ -2298,7 +2306,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.model.review = True
         self.model.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.join()
 
         self.synced_registration = TeamScheduleRegistration.objects.get()
@@ -2306,7 +2314,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertEqual(self.synced_registration.status, 'new')
         self.assertEqual(self.synced_team.status, 'new')
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.team.refresh_from_db()
             self.participant.refresh_from_db()
             self.assertEqual(self.participant.status, 'new')
@@ -2316,7 +2324,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.test_join_with_review()
         self.synced_registration.states.accept(save=True)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.team.refresh_from_db()
             self.assertEqual(self.participant.status, 'accepted')
@@ -2326,7 +2334,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.test_join_with_review()
         self.synced_registration.states.reject(save=True)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.team.refresh_from_db()
             self.assertEqual(self.participant.status, 'rejected')
@@ -2335,7 +2343,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_member_join(self):
         self.test_join()
         self.assertEqual(TeamMember.objects.count(), 1)
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             member = BlueBottleUserFactory.create()
             self.team_member = TeamMemberFactory.create(
                 team=self.team,
@@ -2359,7 +2367,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         slot.is_online = False
         slot.save()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.team.refresh_from_db()
             participant = self.team.team_members.get().participants.get()
             consumer_slot = self.team.slots.order_by('pk').first()
@@ -2376,7 +2384,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_member_withdraw(self):
         self.test_member_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.team_member.states.withdraw(save=True)
 
         remote_member = TeamMember.objects.exclude(
@@ -2388,7 +2396,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_member_reapply(self):
         self.test_member_withdraw()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.team_member.refresh_from_db()
             self.team_member.states.reapply(save=True)
             self.assertEqual(self.team_member.status, 'active')
@@ -2402,7 +2410,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_team_withdraw(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.team.states.withdraw(save=True)
             self.adopted.origin.refresh_from_db()
             self.assertEqual(self.adopted.origin.contributor_count, 0)

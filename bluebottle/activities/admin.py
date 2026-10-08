@@ -51,7 +51,7 @@ from bluebottle.activities.models import (
 )
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.activity_pub.forms import SharePublishForm
-from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
+from bluebottle.activity_pub.models import Create, Follow as ActivityPubFollow, Recipient
 from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import admin_form, confirmation_form
@@ -151,6 +151,42 @@ class RemoteMemberPlatformFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(origin__source_id=self.value())
+        return queryset
+
+
+class ActivityPartnerFilter(admin.SimpleListFilter):
+    title = _('Partner')
+    parameter_name = 'partner'
+
+    def _partner_event_ids(self, partner_id):
+        return Create.objects.filter(actor_id=partner_id).values_list(
+            'object_id', flat=True
+        )
+
+    def lookups(self, request, model_admin):
+        # Create.object is a generic ActivityPub FK; cannot join origin__create_set.
+        event_ids = (
+            model_admin.get_queryset(request)
+            .filter(origin__isnull=False)
+            .values_list('origin__pk', flat=True)
+        )
+        partner_ids = (
+            Create.objects.filter(object_id__in=event_ids)
+            .values_list('actor_id', flat=True)
+            .distinct()
+        )
+        return [
+            (organization.pk, organization.name)
+            for organization in Organization.objects.filter(
+                pk__in=[pk for pk in partner_ids if pk]
+            ).order_by('name')
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                origin__pk__in=self._partner_event_ids(self.value())
+            )
         return queryset
 
 
@@ -1299,6 +1335,8 @@ class ActivityAdmin(
 
         if settings.team_activities:
             filters = filters + ['team_activity']
+        if SitePlatformSettings.load().is_receiving_activities:
+            filters = filters + [ActivityPartnerFilter]
         return filters
 
     list_display = ['__str__', 'created', 'type', 'state_name', 'highlight']
@@ -1311,12 +1349,31 @@ class ActivityAdmin(
 
     location_link.short_description = _('work location')
 
+    def partner(self, obj):
+        if not obj.is_adopted:
+            return '-'
+        actor = obj.origin.source
+        if not actor:
+            return '-'
+        url = reverse('admin:activity_pub_organization_change', args=(actor.pk,))
+        return format_html('<a href="{}">{}</a>', url, actor)
+
+    partner.short_description = _('Partner')
+
     def get_list_display(self, request):
         fields = list(self.list_display)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             fields = fields + ['office_location']
+        if SitePlatformSettings.load().is_receiving_activities:
+            fields = fields + ['partner']
         return fields
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if SitePlatformSettings.load().is_receiving_activities:
+            qs = qs.select_related('origin')
+        return qs
 
     search_fields = ('title', 'description',
                      'owner__first_name', 'owner__last_name')

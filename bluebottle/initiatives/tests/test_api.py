@@ -26,6 +26,7 @@ from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFacto
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
 from bluebottle.time_based.tests.factories import (
@@ -882,6 +883,39 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             active=str(matching_office.pk)
         )
         self.assertFound(matching)
+
+    def test_filter_organization(self):
+        matching_organization, other_organization = OrganizationFactory.create_batch(2)
+
+        matching = InitiativeFactory.create_batch(
+            2,
+            status='approved',
+            has_organization=True,
+            organization=matching_organization,
+        )
+        other = InitiativeFactory.create_batch(
+            3,
+            status='approved',
+            has_organization=True,
+            organization=other_organization,
+        )
+        InitiativeFactory.create_batch(2, status='approved', has_organization=False)
+
+        self.search({'organization': matching_organization.pk})
+        self.assertFacets(
+            'organization',
+            {
+                str(matching_organization.pk): len(matching),
+                str(other_organization.pk): len(other),
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_organization_unknown(self):
+        InitiativeFactory.create_batch(2, status='approved')
+
+        self.search({'organization': 999999})
+        self.assertFound([])
 
     def test_filter_theme(self):
         matching_theme, other_theme = ThemeFactory.create_batch(2)

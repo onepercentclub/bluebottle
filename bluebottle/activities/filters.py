@@ -25,6 +25,7 @@ from bluebottle.categories.models import Category
 from bluebottle.geo.models import Country, Location, Place
 from bluebottle.initiatives.models import InitiativePlatformSettings, Theme
 from bluebottle.offices.models import OfficeRegion, OfficeSubRegion
+from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import Skill
 from bluebottle.utils.filters import (
@@ -449,6 +450,7 @@ class ActivitySearch(Search):
 
     facets = {
         "initiative.id": InitiativeFacet(),
+        "organization": UntranslatedModelFacet("organization", Organization),
         "upcoming": UpcomingFacet(),
         "draft": DraftFacet(),
         "activity-type": TermsFacet(field="activity_type", min_doc_count=0),

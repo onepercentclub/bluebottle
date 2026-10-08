@@ -138,6 +138,8 @@ class ActivityDocument(Document):
             'owner',
             'image',
             'initiative__owner',
+            'organization',
+            'host_organization',
             'office_location',
             'office_location__country',
             'office_location__subregion',
@@ -276,6 +278,13 @@ class ActivityDocument(Document):
             'is_primary': fields.BooleanField(),
             'country': TextField(),
             'country_code': TextField(),
+        }
+    )
+
+    organization = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
         }
     )
 
@@ -545,6 +554,16 @@ class ActivityDocument(Document):
 
     def prepare_created(self, instance):
         return instance.created
+
+    def prepare_organization(self, instance):
+        org = getattr(instance, 'organization', None)
+        if not org:
+            return None
+
+        return {
+            'id': org.pk,
+            'name': org.name,
+        }
 
     def prepare_host_organization(self, instance):
         if not instance.host_organization:

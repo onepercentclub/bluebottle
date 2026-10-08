@@ -883,7 +883,7 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
 class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
     participant_factory = DeadlineParticipantFactory
-    expected_participant_status = 'succeeded'
+    expected_participant_status = 'accepted'
     removed_status = 'removed'
 
     motivation = 'Some motivation'
@@ -939,7 +939,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
-            self.assertStatus(self.participant, 'succeeded')
+            self.assertStatus(self.participant, self.expected_participant_status)
 
     def test_reject_participant(self):
         self.test_join_with_review()
@@ -1045,6 +1045,13 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def join(self):
         super().join()
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertIsNotNone(self.model.deadline)
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.deadline, self.model.deadline)
 
     def re_accept(self, contributor):
         contributor.states.restore(save=True)

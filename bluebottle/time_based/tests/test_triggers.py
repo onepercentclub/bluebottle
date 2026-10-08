@@ -1666,12 +1666,11 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
         self.assertEqual(self.activity.status, 'full')
 
     def test_remove_unfill(self):
-        for _ in range(self.activity.capacity):
-            user = BlueBottleUserFactory.create()
+        for user in BlueBottleUserFactory.create_batch(self.activity.capacity):
             ScheduleRegistrationFactory.create(
-                activity=self.activity,
                 user=user,
-                as_relation='user',
+                activity=self.activity,
+                as_relation='user'
             )
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'full')

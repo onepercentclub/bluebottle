@@ -245,6 +245,28 @@ class FollowAdmin(ActivityAdmin):
     readonly_fields = ("actor", "object", "iri", "pub_url")
     inlines = [RecipientInline]
 
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        # Generic /follow/ is slow and wrong for Connect UIs. Send consumers /
+        # suppliers to their proxy admins. Only when this is the Follow admin
+        # itself — subclasses (Follower/Following) must not redirect.
+        if self.model is Follow and object_id:
+            platform_actor = get_platform_actor()
+            follow = (
+                Follow.objects.filter(pk=unquote(object_id))
+                .only('id', 'actor_id', 'object_id')
+                .first()
+            )
+            if follow and platform_actor:
+                if follow.object_id == platform_actor.id:
+                    return HttpResponseRedirect(
+                        reverse('admin:activity_pub_follower_change', args=[follow.pk])
+                    )
+                if follow.actor_id == platform_actor.id:
+                    return HttpResponseRedirect(
+                        reverse('admin:activity_pub_following_change', args=[follow.pk])
+                    )
+        return super().change_view(request, object_id, form_url, extra_context)
+
 
 @admin.register(PublicKey)
 class PublicKeyAdmin(ActivityPubModelChildAdmin):
@@ -542,12 +564,30 @@ class FollowingAdmin(FollowAdmin):
         return True
 
     def get_queryset(self, request):
-        qs = Follow.objects.all()
+        # non_polymorphic keeps Following proxies so Jet sibling links use
+        # /following/… instead of the generic /follow/ change view.
+        qs = Following.objects.non_polymorphic()
         platform_actor = get_platform_actor()
         if platform_actor:
             # Show Follow records where the platform is the actor (following others)
             return qs.filter(actor=platform_actor)
         return qs.none()  # No platform actor configured
+
+    def get_object(self, request, object_id, from_field=None):
+        obj = super().get_object(request, object_id, from_field)
+        if obj is not None and type(obj) is not Following:
+            obj.__class__ = Following
+        return obj
+
+    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+        # Jet sibling URLs use type(original); keep the Following proxy.
+        original = context.get('original')
+        if original is not None and type(original) is not Following:
+            original.__class__ = Following
+            context['original'] = original
+        return super().render_change_form(
+            request, context, add=add, change=change, form_url=form_url, obj=obj
+        )
 
     def get_form(self, request, obj=None, **kwargs):
         """Use custom form for adding new Following objects"""
@@ -642,11 +682,30 @@ class FollowerAdmin(FollowAdmin):
     platform.short_description = _("Partner")
 
     def get_queryset(self, request):
-        qs = Follower.objects.all()
+        # non_polymorphic keeps Follower proxies so Jet sibling links use
+        # /follower/… instead of the generic /follow/ change view.
+        qs = Follower.objects.non_polymorphic()
         platform_actor = get_platform_actor()
         if platform_actor:
             return qs.filter(object=platform_actor)
         return qs.none()
+
+    def get_object(self, request, object_id, from_field=None):
+        obj = super().get_object(request, object_id, from_field)
+        if obj is not None and type(obj) is not Follower:
+            obj.__class__ = Follower
+        return obj
+
+    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+        # Jet sibling URLs use type(original); keep the Follower proxy so links
+        # stay on /follower/… instead of the slow generic /follow/ admin.
+        original = context.get('original')
+        if original is not None and type(original) is not Follower:
+            original.__class__ = Follower
+            context['original'] = original
+        return super().render_change_form(
+            request, context, add=add, change=change, form_url=form_url, obj=obj
+        )
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""

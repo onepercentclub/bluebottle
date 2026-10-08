@@ -1,6 +1,7 @@
 from builtins import object
 from rest_framework import serializers
 
+from bluebottle.activities.utils import get_stats_for_activities
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer
@@ -44,6 +45,17 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
     class JSONAPIMeta(object):
         resource_name = 'organizations'
         included_resources = ['owner', ]
+
+
+class OrganizationDetailSerializer(OrganizationSerializer):
+    stats = serializers.SerializerMethodField()
+
+    def get_stats(self, obj):
+        return get_stats_for_activities(obj.activities.all())
+
+    class Meta(OrganizationSerializer.Meta):
+        fields = OrganizationSerializer.Meta.fields + ('stats',)
+        meta_fields = OrganizationSerializer.Meta.meta_fields + ['stats']
 
 
 class OrganizationContactSerializer(NoCommitMixin, ModelSerializer):

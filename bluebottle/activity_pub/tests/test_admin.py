@@ -9,7 +9,7 @@ from django.urls import reverse
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.admin import FollowerAdmin, FollowingAdminForm, PublishedActivityAdmin
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Accept, Follower, Following, PublishedActivity, Recipient
+from bluebottle.activity_pub.models import Accept, Follow, Follower, Following, PublishedActivity, Recipient
 from bluebottle.activity_pub.tests.factories import OrganizationFactory
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -192,6 +192,54 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
             response.text
         )
         self.assertEqual(Following.objects.count(), 0)
+
+    def test_follower_str_uses_partner_actor(self):
+        actor = self.create_remote_actor()
+        actor.name = 'DLL'
+        actor.save()
+        follower = self.create_follower(actor=actor)
+        platform_name = str(follower.object)
+
+        self.assertEqual(str(follower), 'DLL')
+        self.assertEqual(str(Follow.objects.get(pk=follower.pk)), 'DLL')
+        self.assertEqual(str(Follower.objects.get(pk=follower.pk)), 'DLL')
+        self.assertNotEqual(str(follower), platform_name)
+
+        url = reverse('admin:activity_pub_follower_change', args=(follower.id,))
+        page = self.app.get(url, user=self.superuser)
+        breadcrumbs = page.html.find(class_='breadcrumbs')
+        self.assertIn('DLL', breadcrumbs.text)
+        self.assertNotIn(platform_name, breadcrumbs.text)
+
+    def test_follower_admin_sibling_links_use_follower_change_url(self):
+        first = self.create_follower(actor=self.create_remote_actor())
+        first.actor.name = 'DLL'
+        first.actor.save()
+        second = self.create_follower(actor=self.create_remote_actor())
+        second.actor.name = 'Do Good Up'
+        second.actor.save()
+
+        url = reverse('admin:activity_pub_follower_change', args=(first.id,))
+        page = self.app.get(url, user=self.superuser)
+        sibling_url = reverse(
+            'admin:activity_pub_follower_change', args=(second.id,)
+        )
+        generic_follow_url = reverse(
+            'admin:activity_pub_follow_change', args=(second.id,)
+        )
+
+        self.assertIn(sibling_url, page.text)
+        self.assertNotIn(generic_follow_url, page.text)
+        self.assertIn('Do Good Up', page.text)
+
+    def test_follow_admin_redirects_consumer_to_follower_change(self):
+        follower = self.create_follower()
+        generic_url = reverse('admin:activity_pub_follow_change', args=(follower.id,))
+        expected = reverse('admin:activity_pub_follower_change', args=(follower.id,))
+
+        response = self.app.get(generic_url, user=self.superuser)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, expected)
 
     def test_follower_admin_publish_activities_button_counts_unpublished(self):
         follower = self.create_follower()

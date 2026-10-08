@@ -1,7 +1,7 @@
-from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.activity_pub.serializers import (
     ActivityPubSerializer, FederatedObjectSerializer
 )
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.webfinger.client import client as webfinger_client
 
 

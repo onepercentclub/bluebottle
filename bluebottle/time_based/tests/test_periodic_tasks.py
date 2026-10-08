@@ -655,6 +655,7 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
         )
         self.activity.states.publish(save=True)
         self.tenant = connection.tenant
+        self.user = BlueBottleUserFactory.create()
 
     @property
     def after_registration_deadline(self):
@@ -667,6 +668,28 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
             timezone.get_current_timezone()
         )
 
+    @property
+    def after_start(self):
+        return make_aware(
+            datetime(
+                self.activity.start.year,
+                self.activity.start.month,
+                self.activity.start.day
+            ) + timedelta(days=1),
+            timezone.get_current_timezone()
+        )
+
+    @property
+    def after_deadline(self):
+        return make_aware(
+            datetime(
+                self.activity.deadline.year,
+                self.activity.deadline.month,
+                self.activity.deadline.day
+            ) + timedelta(days=1),
+            timezone.get_current_timezone()
+        )
+
     def run_task(self, when):
         with mock.patch.object(timezone, 'now', return_value=when):
             with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
@@ -675,11 +698,10 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
                 deadline_activity_tasks()
 
     def test_registration_closed_from_full_after_registration_deadline(self):
-        user = BlueBottleUserFactory.create()
         DeadlineRegistrationFactory.create(
             activity=self.activity,
-            user=user,
-            as_user=user,
+            user=self.user,
+            as_user=self.user,
         )
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'full')
@@ -690,6 +712,62 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
             self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'registration_closed')
+
+    def test_start_with_deadline(self):
+        self.activity.start = date.today() + timedelta(days=7)
+        self.activity.deadline = date.today() + timedelta(days=14)
+        self.activity.save()
+
+        self.participant = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user,
+        ).participants.get()
+
+        self.run_task(self.after_start)
+
+        self.participant.refresh_from_db()
+        self.assertEqual(self.participant.status, 'accepted')
+
+    def test_start_without_deadline(self):
+        self.activity.start = date.today() + timedelta(days=7)
+        self.activity.deadline = None
+        self.activity.save()
+
+        self.participant = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user,
+        ).participants.get()
+
+        self.run_task(self.after_start)
+
+        self.participant.refresh_from_db()
+        self.assertEqual(self.participant.status, 'succeeded')
+
+    def test_finish(self):
+        self.test_start_with_deadline()
+        self.run_task(self.after_deadline)
+
+        self.participant.refresh_from_db()
+        self.assertEqual(self.participant.activity.status, 'succeeded')
+        self.assertEqual(self.participant.status, 'succeeded')
+
+    def test_finish_without_start(self):
+        self.activity.start = None
+        self.activity.deadline = date.today() + timedelta(days=7)
+        self.activity.save()
+
+        self.participant = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user,
+        ).participants.get()
+
+        self.run_task(self.after_deadline)
+
+        self.participant.refresh_from_db()
+        self.assertEqual(self.participant.status, 'succeeded')
 
 
 class SlotActivityPeriodicTasksTest(BluebottleTestCase):

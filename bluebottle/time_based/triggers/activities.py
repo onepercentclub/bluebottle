@@ -648,6 +648,26 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
         ),
 
         TransitionTrigger(
+            RegistrationActivityStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    RegistrationParticipantStateMachine.succeed
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            RegistrationActivityStateMachine.succeed_manually,
+            effects=[
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    RegistrationParticipantStateMachine.succeed
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
             RegistrationActivityStateMachine.approve,
             effects=[
                 PublishAdoptionEffect,

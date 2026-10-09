@@ -105,8 +105,12 @@ class AdjustInitialPeriodicParticipantEffect(Effect):
                 registration=self.instance,
             )
 
+    @property
     def is_valid(self):
-        return not self.instance.participants.filter(slot__isnull=False).exists()
+        return (
+            not any(participant.slot_id for participant in self.instance.participants) and
+            not hasattr(self.instance.activity, 'origin')
+        )
 
 
 class DeleteRegistrationEffect(Effect):

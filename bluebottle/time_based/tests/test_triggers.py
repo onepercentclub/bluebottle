@@ -1631,12 +1631,13 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
             )
 
     def test_fill_join(self):
-        ScheduleRegistrationFactory.create_batch(
-            self.activity.capacity - 1,
-            activity=self.activity,
-            user=BlueBottleUserFactory.create(),
-            as_relation='user',
-        )
+        for _ in range(self.activity.capacity - 1):
+            user = BlueBottleUserFactory.create()
+            ScheduleRegistrationFactory.create(
+                activity=self.activity,
+                user=user,
+                as_relation='user',
+            )
         ScheduleRegistrationFactory.create(
             activity=self.activity,
             user=BlueBottleUserFactory.create(),

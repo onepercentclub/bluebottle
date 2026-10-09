@@ -374,6 +374,9 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
 
     def test_reaccept(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=1)
+        self.defaults['activity'].save()
+
         self.create()
 
         self.model.states.remove(save=True)

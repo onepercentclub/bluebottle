@@ -45,7 +45,6 @@ from bluebottle.time_based.models import (
     PeriodicParticipant, RegisteredDateActivity, DateParticipant, TeamMember,
     TeamScheduleRegistration, Team
 )
-
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -2236,7 +2235,6 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_update_participant(self):
         self.test_join()
-        print('updating user')
 
         with LocalTenant(self.other_tenant):
             user = self.captain

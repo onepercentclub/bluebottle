@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-07 12:35+0200\n"
+"POT-Creation-Date: 2026-10-07 14:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -460,10 +460,10 @@ msgstr ""
 #: bluebottle/time_based/messages/messages.py:617
 #: bluebottle/time_based/messages/messages.py:689
 #: bluebottle/time_based/messages/messages.py:710
-#: bluebottle/time_based/messages/messages.py:844
-#: bluebottle/time_based/messages/messages.py:880
-#: bluebottle/time_based/messages/messages.py:1001
-#: bluebottle/time_based/messages/messages.py:1052
+#: bluebottle/time_based/messages/messages.py:846
+#: bluebottle/time_based/messages/messages.py:882
+#: bluebottle/time_based/messages/messages.py:1003
+#: bluebottle/time_based/messages/messages.py:1054
 #: bluebottle/time_based/messages/participants.py:124
 msgctxt "platform-email"
 msgid "View activity"
@@ -652,10 +652,10 @@ msgstr ""
 #: bluebottle/time_based/messages/messages.py:424
 #: bluebottle/time_based/messages/messages.py:732
 #: bluebottle/time_based/messages/messages.py:759
-#: bluebottle/time_based/messages/messages.py:903
-#: bluebottle/time_based/messages/messages.py:926
-#: bluebottle/time_based/messages/messages.py:951
-#: bluebottle/time_based/messages/messages.py:988
+#: bluebottle/time_based/messages/messages.py:905
+#: bluebottle/time_based/messages/messages.py:928
+#: bluebottle/time_based/messages/messages.py:953
+#: bluebottle/time_based/messages/messages.py:990
 #: bluebottle/time_based/messages/participants.py:19
 #: bluebottle/time_based/messages/registrations.py:37
 msgctxt "platform-email"
@@ -2107,12 +2107,12 @@ msgid "The initiative will be cancelled."
 msgstr ""
 
 #: bluebottle/activity_pub/admin.py:94
-#: bluebottle/activity_pub/models/activities.py:114
+#: bluebottle/activity_pub/models/activities.py:115
 msgid "Recipient"
 msgstr ""
 
 #: bluebottle/activity_pub/admin.py:95
-#: bluebottle/activity_pub/models/activities.py:115
+#: bluebottle/activity_pub/models/activities.py:116
 msgid "Recipients"
 msgstr ""
 
@@ -2150,7 +2150,7 @@ msgstr ""
 
 #: bluebottle/activity_pub/admin.py:335 bluebottle/activity_pub/admin.py:642
 #: bluebottle/activity_pub/admin.py:921 bluebottle/activity_pub/admin.py:1158
-#: bluebottle/activity_pub/models/activities.py:122
+#: bluebottle/activity_pub/models/activities.py:123
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:22
 msgid "Partner"
 msgstr ""
@@ -2170,13 +2170,13 @@ msgstr ""
 
 #: bluebottle/activity_pub/admin.py:374 bluebottle/activity_pub/admin.py:452
 #: bluebottle/activity_pub/admin.py:505 bluebottle/activity_pub/admin.py:629
-#: bluebottle/activity_pub/models/activities.py:151
+#: bluebottle/activity_pub/models/activities.py:152
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:28
 msgid "Adoption type"
 msgstr ""
 
 #: bluebottle/activity_pub/admin.py:379 bluebottle/activity_pub/admin.py:457
-#: bluebottle/activity_pub/models/activities.py:152
+#: bluebottle/activity_pub/models/activities.py:153
 msgid "Select how a received activity should be adopted."
 msgstr ""
 
@@ -2220,7 +2220,7 @@ msgid ""
 msgstr ""
 
 #: bluebottle/activity_pub/admin.py:601
-#: bluebottle/activity_pub/models/activities.py:158
+#: bluebottle/activity_pub/models/activities.py:159
 msgid "Publish mode"
 msgstr ""
 
@@ -2446,91 +2446,91 @@ msgstr ""
 msgid "Select how you would like to share activities with this consumer"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:23
+#: bluebottle/activity_pub/models/activities.py:24
 #: bluebottle/activity_pub/models/events.py:248
 msgid "Use received activities as template to create your own activities."
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:27
+#: bluebottle/activity_pub/models/activities.py:28
 #: bluebottle/activity_pub/models/events.py:252
 msgid "Show adopted activities as links to the partner platform."
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:31
+#: bluebottle/activity_pub/models/activities.py:32
 #: bluebottle/activity_pub/models/events.py:256
 msgid "Fully synced copy; Participants sync with source."
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:38
+#: bluebottle/activity_pub/models/activities.py:39
 #: bluebottle/activity_pub/models/events.py:263
 msgid "Template"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:42
+#: bluebottle/activity_pub/models/activities.py:43
 #: bluebottle/activity_pub/models/events.py:267 bluebottle/cms/models.py:149
 #: bluebottle/cms/models.py:542 bluebottle/cms/utils/color_contrast.py:318
 msgid "Link"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:46
+#: bluebottle/activity_pub/models/activities.py:47
 #: bluebottle/activity_pub/models/events.py:271
 msgid "Fully synced"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:53
+#: bluebottle/activity_pub/models/activities.py:54
 #: bluebottle/activity_pub/models/events.py:278
 msgid "Choose which activities you want to share"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:57
+#: bluebottle/activity_pub/models/activities.py:58
 #: bluebottle/activity_pub/models/events.py:282
 msgid "Activities will be shared when they go live."
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:130
+#: bluebottle/activity_pub/models/activities.py:131
 msgid "Default activity owner"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:132
+#: bluebottle/activity_pub/models/activities.py:133
 msgid ""
 "This user will be assigned as the activity manager for any activity cloned "
 "from a template. It can be left empty and no activity manager will be "
 "assigned by default."
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:140
+#: bluebottle/activity_pub/models/activities.py:141
 msgid "Automatically adopted these activity types"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:145
+#: bluebottle/activity_pub/models/activities.py:146
 msgid ""
 "Selected activity types are automatically adopted when they are published."
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:238
+#: bluebottle/activity_pub/models/activities.py:239
 msgid "Connection"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:239
+#: bluebottle/activity_pub/models/activities.py:240
 msgid "Connections"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:245
+#: bluebottle/activity_pub/models/activities.py:246
 #: bluebottle/cms/models.py:712
 msgid "Consumer"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:246
+#: bluebottle/activity_pub/models/activities.py:247
 #: bluebottle/activity_pub/templates/dashboard/connections.html:30
 msgid "Consumers"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:252
+#: bluebottle/activity_pub/models/activities.py:253
 #: bluebottle/cms/models.py:711
 msgid "Supplier"
 msgstr ""
 
-#: bluebottle/activity_pub/models/activities.py:253
+#: bluebottle/activity_pub/models/activities.py:254
 #: bluebottle/activity_pub/templates/dashboard/connections.html:4
 msgid "Suppliers"
 msgstr ""
@@ -4588,7 +4588,7 @@ msgid "Add another %(verbose_name)s"
 msgstr ""
 
 #: bluebottle/cms/templates/admin/edit_inline/stacked-nested.html:88
-#: bluebottle/collect/states.py:193 bluebottle/deeds/states.py:200
+#: bluebottle/collect/states.py:193 bluebottle/deeds/states.py:201
 #: bluebottle/grant_management/states.py:475
 #: bluebottle/time_based/states/participants.py:134
 #: bluebottle/time_based/states/participants.py:261
@@ -4825,7 +4825,7 @@ msgstr ""
 msgid "Re-Accept"
 msgstr ""
 
-#: bluebottle/collect/states.py:163
+#: bluebottle/collect/states.py:163 bluebottle/deeds/states.py:213
 #: bluebottle/time_based/states/participants.py:87
 #: bluebottle/time_based/states/participants.py:215
 #: bluebottle/time_based/states/participants.py:351
@@ -4835,7 +4835,7 @@ msgstr ""
 msgid "Accept"
 msgstr ""
 
-#: bluebottle/collect/states.py:170 bluebottle/deeds/states.py:177
+#: bluebottle/collect/states.py:170 bluebottle/deeds/states.py:178
 #: bluebottle/time_based/states/participants.py:161
 #: bluebottle/time_based/states/participants.py:407
 #: bluebottle/time_based/states/participants.py:496
@@ -4849,7 +4849,7 @@ msgstr ""
 msgid "Cancel your contribution to this activity."
 msgstr ""
 
-#: bluebottle/collect/states.py:180 bluebottle/deeds/states.py:187
+#: bluebottle/collect/states.py:180 bluebottle/deeds/states.py:188
 #: bluebottle/time_based/states/participants.py:172
 #: bluebottle/time_based/states/participants.py:507
 msgid "Reapply"
@@ -5067,28 +5067,30 @@ msgid ""
 "automatically."
 msgstr ""
 
-#: bluebottle/deeds/states.py:168 bluebottle/deeds/states.py:214
+#: bluebottle/deeds/states.py:169
 msgid "Reaccept"
 msgstr ""
 
-#: bluebottle/deeds/states.py:169
+#: bluebottle/deeds/states.py:170
 msgid "Reaccept user after previously withdrawing or rejecting."
 msgstr ""
 
-#: bluebottle/deeds/states.py:178
+#: bluebottle/deeds/states.py:179
 msgid "Stop your participation in the activity."
 msgstr ""
 
-#: bluebottle/deeds/states.py:188
+#: bluebottle/deeds/states.py:189
 msgid "Reapply after previously withdrawing."
 msgstr ""
 
-#: bluebottle/deeds/states.py:201
+#: bluebottle/deeds/states.py:202
 msgid "Remove participant from the activity."
 msgstr ""
 
-#: bluebottle/deeds/states.py:215
-msgid "Put a participant back as participating after it was successful."
+#: bluebottle/deeds/states.py:214
+#: bluebottle/time_based/states/participants.py:216
+#: bluebottle/time_based/states/registrations.py:80
+msgid "Accept this person as a participant of this activity."
 msgstr ""
 
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:14
@@ -5938,37 +5940,37 @@ msgstr ""
 msgid "Target cannot be changed after the funding has been published."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:408
+#: bluebottle/funding/serializers.py:407
 msgid "Deadline cannot be changed after the funding has been published."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:477 bluebottle/funding/serializers.py:644
+#: bluebottle/funding/serializers.py:476 bluebottle/funding/serializers.py:643
 msgid "Pledge"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:513
+#: bluebottle/funding/serializers.py:512
 msgid "The selected reward is not related to this activity"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:529
+#: bluebottle/funding/serializers.py:528
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:538
+#: bluebottle/funding/serializers.py:537
 msgid "User can only be set, not changed."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:688
+#: bluebottle/funding/serializers.py:687
 #, python-brace-format
 msgid "Amount must be at least {amount} {currency}"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:705
+#: bluebottle/funding/serializers.py:704
 #, python-brace-format
 msgid "Amount cannot exceed {amount} {currency}"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:732
+#: bluebottle/funding/serializers.py:731
 msgid "Donations cannot exceed the target amount"
 msgstr ""
 
@@ -11648,23 +11650,23 @@ msgstr ""
 msgid "Create participant for this registration"
 msgstr ""
 
-#: bluebottle/time_based/effects/registrations.py:27
+#: bluebottle/time_based/effects/registrations.py:31
 msgid "Create slot participant for this registration"
 msgstr ""
 
-#: bluebottle/time_based/effects/registrations.py:46
+#: bluebottle/time_based/effects/registrations.py:50
 msgid "Create participant for this team member"
 msgstr ""
 
-#: bluebottle/time_based/effects/registrations.py:63
+#: bluebottle/time_based/effects/registrations.py:67
 msgid "Create initial periodic participant for this registration"
 msgstr ""
 
-#: bluebottle/time_based/effects/registrations.py:81
+#: bluebottle/time_based/effects/registrations.py:85
 msgid "Adjust initial periodic participant and connect to slot"
 msgstr ""
 
-#: bluebottle/time_based/effects/registrations.py:114
+#: bluebottle/time_based/effects/registrations.py:118
 msgid "Delete registration if it no longer has participants"
 msgstr ""
 
@@ -11882,63 +11884,63 @@ msgid ""
 "A participant has registered for a time slot for your activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:787
-#: bluebottle/time_based/messages/messages.py:816
+#: bluebottle/time_based/messages/messages.py:789
+#: bluebottle/time_based/messages/messages.py:818
 msgctxt "platform-email"
 msgid "View your activity"
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:799
+#: bluebottle/time_based/messages/messages.py:801
 #, python-brace-format
 msgctxt "platform-email"
 msgid ""
 "A participant has been removed from a time slot for your activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:828
+#: bluebottle/time_based/messages/messages.py:830
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have been removed from a time slot for the activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:856
+#: bluebottle/time_based/messages/messages.py:858
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You've registered for a time slot for the activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:892
+#: bluebottle/time_based/messages/messages.py:894
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant has been added to your activity \"{title}\" 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:918
+#: bluebottle/time_based/messages/messages.py:920
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A team has been added to your activity \"{title}\" 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:940
+#: bluebottle/time_based/messages/messages.py:942
 #: bluebottle/time_based/messages/participants.py:33
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant has been removed from your activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:962
+#: bluebottle/time_based/messages/messages.py:964
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A slot for your activity \"{title}\" has been cancelled"
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:998
+#: bluebottle/time_based/messages/messages.py:1000
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A spot has opened up for an activity on {site_name}."
 msgstr ""
 
-#: bluebottle/time_based/messages/messages.py:1048
+#: bluebottle/time_based/messages/messages.py:1050
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You'll be notified if a spot opens up for {title}"
@@ -12847,11 +12849,6 @@ msgstr ""
 
 #: bluebottle/time_based/states/participants.py:200
 msgid "Restore the participant, because the activity was restored."
-msgstr ""
-
-#: bluebottle/time_based/states/participants.py:216
-#: bluebottle/time_based/states/registrations.py:80
-msgid "Accept this person as a participant of this activity."
 msgstr ""
 
 #: bluebottle/time_based/states/participants.py:237

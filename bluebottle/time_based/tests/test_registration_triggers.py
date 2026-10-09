@@ -99,12 +99,13 @@ class RegistrationTriggerTestCase:
         )
 
     def test_fill(self):
-        self.factory.create_batch(
-            self.activity.capacity - 1,
-            activity=self.activity,
-            user=BlueBottleUserFactory(),
-            as_relation='user'
-        )
+        for _ in range(self.activity.capacity - 1):
+            user = BlueBottleUserFactory.create()
+            self.factory.create(
+                activity=self.activity,
+                user=user,
+                as_relation='user',
+            )
         self.create()
         self.assertEqual(self.registration.status, "accepted")
         self.assertEqual(self.registration.activity.status, "full")

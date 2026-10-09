@@ -1189,6 +1189,30 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
                 PeriodicParticipant.objects.count(), 2
             )
 
+    def assert_consumer_slots_match_supplier(self):
+        supplier_slot_urls = [
+            slot.activity_pub_model.pub_url for slot in self.model.slots.order_by('start')
+        ]
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            consumer_slots = list(self.adopted.slots.order_by('start'))
+
+            self.assertEqual(len(consumer_slots), len(supplier_slot_urls))
+            for slot, supplier_slot_url in zip(consumer_slots, supplier_slot_urls):
+                self.assertEqual(slot.origin.pub_url, supplier_slot_url)
+                self.assertEqual(slot.participants.count(), 1)
+
+    def test_join_adopts_slot_once(self):
+        self.test_join()
+
+        self.assert_consumer_slots_match_supplier()
+
+    def test_next_slot_adopts_slot_once(self):
+        self.test_next_slot()
+
+        self.assert_consumer_slots_match_supplier()
+
 
 class SyncCollectActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = CollectActivityFactory

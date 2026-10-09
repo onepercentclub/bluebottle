@@ -1346,9 +1346,10 @@ class Registration(TriggerMixin, PolymorphicModel):
         return self.activity.anonymized
 
     def __str__(self):
+        name = self.user or self.remote_user
         if self.activity_id:
-            return _('Candidate {name} for {activity}').format(name=self.user, activity=self.activity)
-        return _('Candidate {name}').format(name=self.user)
+            return _('Candidate {name} for {activity}').format(name=name, activity=self.activity)
+        return _('Candidate {name}').format(name=name)
 
     class Meta:
         ordering = ('-created',)

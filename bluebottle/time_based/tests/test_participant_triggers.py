@@ -317,7 +317,6 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     def assert_reapply(self, status):
         self.participant.states.withdraw(save=True)
         self.assertEqual(self.participant.status, 'withdrawn')
-        __import__('ipdb').set_trace()
         self.participant.states.reapply(save=True)
         self.assertEqual(self.participant.status, status)
 

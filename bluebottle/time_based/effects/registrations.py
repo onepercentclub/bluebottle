@@ -21,7 +21,7 @@ class CreateParticipantEffect(Effect):
     @property
     def is_valid(self):
         if not self.instance.user_id:
-            return not bool(self.instance.participants)
+            return not self.instance.pk or not self.instance.participants.exists()
         return not self.instance.activity.participants.filter(
             user_id=self.instance.user_id
         ).exists()

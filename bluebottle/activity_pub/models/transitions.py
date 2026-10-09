@@ -35,8 +35,6 @@ class Transition(Activity):
 class ActivityTransitionMixin:
     @property
     def has_target(self):
-        # Without an adopted activity or link there is nothing to transition yet;
-        # leave it untransitioned so it is retried once the object is adopted or linked
         return bool(self.object.adopted or getattr(self.object, 'link', None))
 
 

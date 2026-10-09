@@ -329,10 +329,6 @@ class Geolocation(models.Model):
         'geo.GeoFeature', blank=True, related_name='geolocations'
     )
 
-    origin = models.ForeignKey(
-        'activity_pub.Place', null=True, related_name="locations", on_delete=models.SET_NULL
-    )
-
     @property
     def place_name(self):
         if not self.geofeature:

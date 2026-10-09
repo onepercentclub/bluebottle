@@ -19,7 +19,6 @@
         class="float-right btn btn-link">{% trans "Back to Account Security" %}</a>
     <p><a href="{% url 'two_factor:phone_create' %}"
         class="btn btn-success">{% trans "Add Phone Number" %}</a></p>
-        !!{{request.session.next}}
   {% endif %}
 
 {% endblock %}

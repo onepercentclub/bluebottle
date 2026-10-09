@@ -811,6 +811,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             DeadlineActivityFactory.create(
                 status='open',
                 initiative=initiative,
+                location=None,
                 office_location=LocationFactory.create(country=matching_country)
             )
 
@@ -819,6 +820,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             DeadlineActivityFactory.create(
                 status='open',
                 initiative=initiative,
+                location=None,
                 office_location=LocationFactory.create(country=other_country)
             )
 

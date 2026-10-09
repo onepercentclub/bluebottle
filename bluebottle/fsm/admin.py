@@ -23,11 +23,20 @@ def get_effects(effects):
     for effect in displayed_effects:
         grouped_effects[(effect.__class__, effect.instance.__class__)].append(effect)
 
-    return [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
+    rendered = [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
+    hidden = [effect for effect in effects if not effect.display]
+    rendered.extend(effect.to_html() for effect in hidden)
+    return rendered
 
 
 class StateMachineAdminMixin(object):
     form = StateMachineModelForm
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(StateMachineAdminMixin, self).get_form(request, obj, **kwargs)
+        if issubclass(form, StateMachineModelForm):
+            form = type(form.__name__, (form, ), {'user': request.user})
+        return form
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         """
@@ -64,6 +73,7 @@ class StateMachineAdminMixin(object):
                                     send_messages=send_messages
                                 )
             rendered_effects = get_effects(effects)
+
             if rendered_effects:
 
                 cancel_link = reverse(
@@ -150,7 +160,7 @@ class StateMachineAdminMixin(object):
             else TransitionConfirmationForm(request.POST or None)
         )
 
-        if transition not in state_machine.possible_transitions():
+        if transition not in state_machine.possible_transitions(user=request.user):
             messages.error(request, 'Transition not possible: {}'.format(transition.name))
             return HttpResponseRedirect(link)
 

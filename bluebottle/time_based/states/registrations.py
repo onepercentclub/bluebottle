@@ -33,6 +33,9 @@ class RegistrationStateMachine(ModelStateMachine):
 
     def can_accept_registration(self, user):
         """can accept participant"""
+        if self.instance.activity.is_adopted:
+            # No review on adopted activities
+            return False
         return (
             user in self.instance.activity.owners or
             user.is_superuser or
@@ -203,4 +206,15 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         short_description=_("Resume this persons participation in your activity."),
         automatic=False,
         permission=is_user_or_manager,
+    )
+
+    restore = Transition(
+        [RegistrationStateMachine.withdrawn, removed],
+        RegistrationStateMachine.accepted,
+        name=_("Restore"),
+        passed_label=_("restored"),
+        description=_(
+            "Restore after being withdrawn ro removed."
+        ),
+        automatic=False,
     )

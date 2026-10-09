@@ -33,6 +33,17 @@ form .aligned p.file-upload + p.help {
     width: 280px;
 }
 
+.readonly-description-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    background: #fff;
+    display: block;
+    box-sizing: border-box;
+    max-width: 800px;
+}
+
 .site-title {
     padding: 8px 0;
     font-size: 1.2rem;
@@ -417,6 +428,15 @@ html {
 form .aligned .form-row label + p.help {
     margin-left: 12.85714rem;
     padding-left: 0;
+}
+
+form .aligned .form-row br + span.helptext {
+    clear: left;
+    margin-top: 0;
+    margin-left: 12.85714rem;
+    padding-left: 0;
+    color: #9b9b9b;
+    font-size: 0.85714rem;
 }
 
 

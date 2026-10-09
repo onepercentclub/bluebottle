@@ -315,7 +315,7 @@ class CreateFirstSlotEffect(Effect):
 
     @property
     def is_valid(self):
-        return self.instance.slots.count() == 0
+        return self.instance.slots.count() == 0 and not hasattr(self.instance, 'origin')
 
     def post_save(self):
         if self.instance.slots.count():
@@ -358,15 +358,17 @@ class CreateNextSlotEffect(Effect):
 class CreatePeriodicParticipantsEffect(Effect):
 
     def post_save(self):
-        for registration in self.instance.activity.registrations.filter(
-            status="accepted"
-        ):
-            PeriodicParticipant.objects.create(
-                user=registration.user,
-                slot=self.instance,
-                activity=self.instance.activity,
-                registration=registration,
-            )
+        if not hasattr(self.instance.activity, 'origin'):
+            for registration in self.instance.activity.registrations.filter(
+                status="accepted",
+            ):
+                PeriodicParticipant.objects.create(
+                    remote_user=registration.remote_user,
+                    user=registration.user,
+                    slot=self.instance,
+                    activity=self.instance.activity,
+                    registration=registration,
+                )
 
 
 class RescheduleScheduleSlotContributions(Effect):
@@ -460,9 +462,12 @@ class SlotParticipantUnFollowActivityEffect(Effect):
 
     @property
     def is_valid(self):
+        reg = getattr(self.instance, 'registration', None)
+        if reg is None:
+            return False
         return (
-            self.instance.registration.participants.filter(
-                status__in=("registered", "succeeded")
+            reg.participants.filter(
+                status__in=("registered", "succeeded", "accepted")
             ).count()
             == 1
         )

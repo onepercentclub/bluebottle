@@ -25,6 +25,8 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType, Segment
 
+from bluebottle.fsm.triggers import TriggerMixin
+
 
 def default_support_groups():
     return ['Engineering Team', 'Support']
@@ -378,7 +380,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
 
 
 @python_2_unicode_compatible
-class Member(BlueBottleBaseUser):
+class Member(TriggerMixin, BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
     accepted = models.BooleanField(
         _('Accepted'),

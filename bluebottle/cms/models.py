@@ -14,7 +14,7 @@ from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
-from bluebottle.activity_pub.models import Following
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
 from bluebottle.organizations.models import Organization
@@ -735,6 +735,8 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
 
     @property
     def is_linking_activities(self):
+        from bluebottle.activity_pub.models import Following
+
         return Following.objects.filter(adoption_type='link').exists()
 
     platform_name = models.CharField(
@@ -947,9 +949,8 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
                 logo=self.logo,
             )
 
-        if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):
-            from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
-            ActivityPubOrganization.objects.from_model(self.organization)
+        if self.organization_id and not hasattr(self.organization, 'origin'):
+            adapter.sync(self.organization)
 
         super().save(*args, **kwargs)
 

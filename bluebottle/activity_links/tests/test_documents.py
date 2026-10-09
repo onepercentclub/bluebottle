@@ -11,15 +11,22 @@ from bluebottle.activity_links.tests.factories import (
 )
 from bluebottle.funding.documents import FundingDocument
 from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.geo_utils import ensure_geolocation_geofeatures, save_built_geolocation
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.documents import unique_slot_geolocations
 
+from django.test.utils import override_settings
 
+
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
 class LinkedActivityDocumentIdTestCase(BluebottleTestCase):
     def test_linked_funding_document_uses_prefixed_id(self):
-        linked_funding = LinkedFundingFactory.create()
+        linked_funding = LinkedFundingFactory.create(host_organization=OrganizationFactory.create())
         funding = FundingFactory.create()
 
         linked_doc_id = LinkedFundingDocument.generate_id(linked_funding)

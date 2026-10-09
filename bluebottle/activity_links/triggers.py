@@ -1,6 +1,6 @@
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_links.states import LinkedActivityStateMachine
-from bluebottle.activity_pub.effects import PublishAdoptionEffect
+from bluebottle.activity_pub.effects import PublishAdoptionEffect, UnpublishAdoptionEffect
 from bluebottle.fsm.triggers import (
     TriggerManager, TransitionTrigger, register
 )
@@ -10,7 +10,15 @@ from bluebottle.fsm.triggers import (
 class LinkedActivityTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            LinkedActivityStateMachine.initiate,
+            LinkedActivityStateMachine.start,
             effects=[PublishAdoptionEffect]
+        ),
+        TransitionTrigger(
+            LinkedActivityStateMachine.succeed,
+            effects=[PublishAdoptionEffect]
+        ),
+        TransitionTrigger(
+            LinkedActivityStateMachine.cancel,
+            effects=[UnpublishAdoptionEffect]
         ),
     ]

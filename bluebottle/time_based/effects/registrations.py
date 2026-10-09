@@ -14,11 +14,17 @@ class CreateParticipantEffect(Effect):
         self.instance.participants.create(
             activity=self.instance.activity,
             user=self.instance.user,
+            remote_user=self.instance.remote_user,
             registration=self.instance,
         )
 
+    @property
     def is_valid(self):
-        return not self.instance.participants.exists()
+        if not self.instance.user_id:
+            return not bool(self.instance.participants)
+        return not self.instance.activity.participants.filter(
+            user_id=self.instance.user_id
+        ).exists()
 
 
 class CreateSlotParticipantEffect(Effect):
@@ -65,11 +71,14 @@ class CreateInitialPeriodicParticipantEffect(Effect):
         self.instance.participants.create(
             activity=self.instance.activity,
             user=self.instance.user,
+            remote_user=self.instance.remote_user,
             registration=self.instance,
+            slot=None if self.instance.activity.review else self.instance.activity.slots.last()
         )
 
+    @property
     def is_valid(self):
-        return not self.instance.participants.exists()
+        return not len(self.instance.participants) and not hasattr(self.instance.activity, 'origin')
 
 
 class AdjustInitialPeriodicParticipantEffect(Effect):

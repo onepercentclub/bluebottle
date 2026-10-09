@@ -99,12 +99,13 @@ class RegistrationTriggerTestCase:
         )
 
     def test_fill(self):
-        self.factory.create_batch(
-            self.activity.capacity - 1,
-            activity=self.activity,
-            user=BlueBottleUserFactory(),
-            as_relation='user'
-        )
+        for _ in range(self.activity.capacity - 1):
+            user = BlueBottleUserFactory.create()
+            self.factory.create(
+                activity=self.activity,
+                user=user,
+                as_relation='user',
+            )
         self.create()
         self.assertEqual(self.registration.status, "accepted")
         self.assertEqual(self.registration.activity.status, "full")
@@ -309,6 +310,44 @@ class DeadlineRegistrationTriggerTestCase(
         self.assertEqual(len(self.registration.participants.all()), 1)
         self.assertEqual(self.registration.participants.get().status, "new")
 
+    def test_initial_remote(self):
+        from bluebottle.activities.models import RemoteMember
+
+        remote_user = RemoteMember.objects.create(
+            email='remote@example.com',
+            first_name='Remote',
+            last_name='User',
+        )
+        self.registration = self.factory.create(
+            activity=self.activity,
+            user=None,
+            remote_user=remote_user,
+        )
+
+        self.assertEqual(self.registration.status, "accepted")
+        participant = self.registration.participants.get()
+        self.assertEqual(participant.status, "succeeded")
+
+    def test_initial_remote_review(self):
+        from bluebottle.activities.models import RemoteMember
+
+        self.activity.review = True
+        self.activity.save()
+
+        remote_user = RemoteMember.objects.create(
+            email='remote@example.com',
+            first_name='Remote',
+            last_name='User',
+        )
+        self.registration = self.factory.create(
+            activity=self.activity,
+            user=None,
+            remote_user=remote_user,
+        )
+
+        self.assertEqual(self.registration.status, "new")
+        self.assertEqual(self.registration.participants.get().status, "new")
+
     def test_accept(self):
         super().test_accept()
         self.assertEqual(self.registration.participants.get().status, "succeeded")
@@ -349,6 +388,10 @@ class PeriodicRegistrationTriggerTestCase(
     def test_remove(self):
         self.test_accept()
 
+        participant = self.registration.participants.get()
+        contribution = participant.contributions.first()
+        self.assertEqual(contribution.status, "new")
+
         mail.outbox = []
 
         self.registration.states.remove(save=True)
@@ -359,8 +402,54 @@ class PeriodicRegistrationTriggerTestCase(
             f'You have been removed from the activity "{self.activity.title}"'
         )
 
+        self.assertEqual(self.registration.status, "removed")
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertEqual(self.registration.participants.get().status, "removed")
+        participant.refresh_from_db()
+        contribution.refresh_from_db()
+        self.assertEqual(participant.status, "removed")
+        self.assertEqual(contribution.status, "failed")
+
+    def test_unfill_remove(self):
+        self.test_fill()
+        self.registration.states.remove(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+    def test_restore(self):
+        self.test_remove()
+
+        mail.outbox = []
+        self.registration.states.restore(save=True)
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'Your contribution to the activity "{self.activity.title}" has been restarted',
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'A participant for your activity "{self.activity.title}" has restarted',
+        )
+
+        self.assertEqual(self.registration.status, "accepted")
+        participant = self.registration.participants.get()
+        contribution = participant.contributions.first()
+        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(contribution.status, "new")
+
+    def test_fill_restore(self):
+        self.test_fill()
+        self.registration.states.remove(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+        self.registration.states.restore(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.registration.status, "accepted")
+        self.assertEqual(self.registration.participants.get().status, "accepted")
 
     def test_stop(self):
         self.test_initial()

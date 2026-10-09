@@ -13,7 +13,7 @@ class LinkedActivityImageAPITestCase(BluebottleTestCase):
         self.init_projects()
         self.user = BlueBottleUserFactory.create()
         self.linked = LinkedFundingFactory.create(
-            image=ImageFactory.create(user=self.user),
+            image=ImageFactory.create(),
         )
 
     def test_linked_activity_image_endpoint(self):

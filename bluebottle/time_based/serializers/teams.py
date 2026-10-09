@@ -55,6 +55,7 @@ class TeamSerializer(ModelSerializer):
     registration = ResourceRelatedField(read_only=True)
     activity = ResourceRelatedField(queryset=ScheduleActivity.objects.all())
     user = ResourceRelatedField(read_only=True)
+    remote_user = ResourceRelatedField(read_only=True)
     slots = ResourceRelatedField(read_only=True, many=True)
 
     transitions = AvailableTransitionsField(source="states")
@@ -69,7 +70,9 @@ class TeamSerializer(ModelSerializer):
             user.is_staff or
             user.is_superuser
         ):
-            return obj.user.email
+            captain = obj.user or obj.remote_user
+            if captain:
+                return captain.email
         return
 
     team_members = CountedHyperlinkedRelatedField(
@@ -114,6 +117,7 @@ class TeamSerializer(ModelSerializer):
             "invite_code",
             "activity",
             "user",
+            "remote_user",
             "slots",
             "team_members",
             "member_export_url",
@@ -134,6 +138,8 @@ class TeamSerializer(ModelSerializer):
             "registration",
             "activity",
             "user",
+            "remote_user",
+            "remote_user.source",
             "slots",
             "slots.location",
             "slots.location.country",
@@ -141,6 +147,8 @@ class TeamSerializer(ModelSerializer):
 
     included_serializers = {
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
+        "remote_user": "bluebottle.activities.serializers.RemoteMemberSerializer",
+        "remote_user.source": "bluebottle.organizations.serializers.OrganizationSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
         "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
         "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
@@ -152,6 +160,7 @@ class TeamSerializer(ModelSerializer):
 class TeamMemberSerializer(ModelSerializer):
     team = ResourceRelatedField(queryset=Team.objects)
     user = ResourceRelatedField(read_only=True)
+    remote_user = ResourceRelatedField(read_only=True)
     participants = ResourceRelatedField(read_only=True, many=True)
 
     permissions = ResourcePermissionField("team-member-detail", view_args=("pk",))
@@ -162,17 +171,21 @@ class TeamMemberSerializer(ModelSerializer):
 
     class Meta:
         model = TeamMember
-        fields = ("id", "team", "user", "invite_code", "participants", "email")
+        fields = ("id", "team", "user", "remote_user", "invite_code", "participants", "email")
         meta_fields = ("permissions", "transitions", "current_status")
 
     class JSONAPIMeta:
         resource_name = "contributors/time-based/team-members"
-        included_resources = ["team", "user", "team.activity", "participants"]
+        included_resources = [
+            "team", "user", "remote_user", "remote_user.source", "team.activity", "participants"
+        ]
 
     included_serializers = {
         "team": "bluebottle.time_based.serializers.TeamSerializer",
         "team.activity": "bluebottle.time_based.serializers.activities.ScheduleActivitySerializer",
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
+        "remote_user": "bluebottle.activities.serializers.RemoteMemberSerializer",
+        "remote_user.source": "bluebottle.organizations.serializers.OrganizationSerializer",
         "participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
     }
 

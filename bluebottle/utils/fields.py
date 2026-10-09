@@ -3,6 +3,7 @@ import mimetypes
 import xml.etree.cElementTree as et
 from builtins import object, str
 
+from django.contrib.admin.helpers import mark_safe
 import inflection
 import sorl.thumbnail
 from django import forms
@@ -13,6 +14,7 @@ from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
 from djmoney.forms import MoneyField as DjangoMoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
+import django_quill
 from rest_framework import serializers
 from rest_framework.fields import Field
 from rest_framework_json_api.relations import (
@@ -442,3 +444,12 @@ class PolymorphicSerializerMethodResourceRelatedField(
             if key in cls.many_kwargs:
                 list_kwargs[key] = kwargs[key]
         return cls.many_cls(*args, **list_kwargs)
+
+
+class FieldQuill(django_quill.fields.FieldQuill):
+    def __str__(self):
+        return mark_safe(f'<div style="max-width: 60%">{clean_html(self.html)}</div>')
+
+
+class QuillField(django_quill.fields.QuillField):
+    attr_class = FieldQuill

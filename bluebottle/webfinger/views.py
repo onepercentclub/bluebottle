@@ -1,8 +1,9 @@
 import re
 from rest_framework import generics, renderers, serializers, exceptions
 
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.activity_pub.serializers.json_ld import ActorSerializer
+from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
 
 
 class WebFingerRenderer(renderers.JSONRenderer):
@@ -10,7 +11,7 @@ class WebFingerRenderer(renderers.JSONRenderer):
 
 
 def to_webfinger(actor):
-    data = ActorSerializer().to_representation(actor)
+    data = ActivityPubSerializer().to_representation(actor)
     return {
         'subject': actor.webfinger_uri,
         'aliases': [data['id']],
@@ -25,7 +26,7 @@ def to_webfinger(actor):
 
 class WebFingerSerializer(serializers.Serializer):
     def to_representation(self, obj):
-        data = ActorSerializer().to_representation(obj)
+        data = ActivityPubSerializer().to_representation(obj)
         return {
             'subject': obj.webfinger_uri,
             'aliases': [data['id']],
@@ -51,7 +52,9 @@ class WebFingerView(generics.RetrieveAPIView):
         if re.match(f'{self.request.scheme}://{self.request.get_host()}/?$', resource):
             settings = SitePlatformSettings.load()
 
-            if settings.organization and hasattr(settings.organization, 'activity_pub_organization'):
-                return settings.organization.activity_pub_organization
+            if settings.organization:
+                if hasattr(settings.organization, 'activity_pub_model'):
+                    return settings.organization.activity_pub_model
+                return adapter.sync(settings.organization)
 
         raise exceptions.NotFound()

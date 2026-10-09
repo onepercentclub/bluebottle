@@ -20,7 +20,7 @@ delete-selected-confirmation{% endblock %}
 {% endblock %}
 
 {% block content %}
-<form method="post" id="confirm">{% csrf_token %}
+<form method="post" id="confirm" name="confirm">{% csrf_token %}
     <h2>{% trans "Confirm action" %}</h2>
     {% if transition %}
     <p>

@@ -1,11 +1,14 @@
+import datetime
 import uuid
 from urllib.parse import urlencode
-import datetime
 
 import pytz
+from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator
 from django.db import connection
-from django.db.models import Sum
+from django.db.models import Q, Sum
+from django.urls import reverse
 from django.utils import timezone
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
@@ -114,8 +117,19 @@ class TimeBasedActivity(Activity):
         blank=True, null=True,
         max_length=300,
     )
-
     activity_type = _('Time-based activity')
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'capacity', 'registration_deadline', 'review', 'review_title', 'review_description',
+                'review_link', 'preparation',
+            ]
+
+        return readonly_fields
 
     @property
     def local_timezone(self):
@@ -144,7 +158,6 @@ class TimeBasedActivity(Activity):
     def participants(self):
         if self.pk:
             return self.contributors.instance_of(
-                PeriodParticipant,
                 DateParticipant,
                 DeadlineParticipant,
                 PeriodicParticipant,
@@ -225,6 +238,15 @@ class DateActivity(TimeBasedActivity):
     ]
 
     @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + ['start', 'duration', ]
+
+        return readonly_fields
+
+    @property
     def start(self):
         if self.slots.first():
             return self.slots.first().start.date()
@@ -234,6 +256,12 @@ class DateActivity(TimeBasedActivity):
         return self.slots.filter(
             status__in=['open', 'full', 'registration_closed', 'running', 'finished']
         ).order_by('start', 'id')
+
+    @property
+    def publishable_slots(self):
+        return self.slots.filter(
+            self.slots.model.activity_pub_publishable_q()
+        ).distinct().order_by('start', 'id')
 
     @property
     def active_durations(self):
@@ -320,22 +348,34 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    origin = models.ForeignKey(
-        'activity_pub.SubEvent', null=True, related_name="adopted_slots", on_delete=models.SET_NULL
-    )
+    @property
+    def is_adopted(self):
+        return hasattr(self, 'origin') and self.origin
+
+    @property
+    def host_organization(self):
+        return self.activity.host_organization if self.activity else None
 
     @property
     def event(self):
         from bluebottle.activity_pub.models import SubEvent
         try:
-            return SubEvent.objects.get(slot=self)
+            return self.subevent
         except SubEvent.DoesNotExist:
             pass
 
     @property
     def activity_pub_url(self):
-        if self.event:
-            return self.event.iri
+        sub = self.event
+        if sub is None and self.origin_id:
+            sub = self.origin
+        if sub is None:
+            return None
+        if sub.iri:
+            return sub.iri
+        return connection.tenant.build_absolute_url(
+            reverse('json-ld:sub-event', args=(sub.pk,))
+        )
 
     @property
     def uid(self):
@@ -452,6 +492,44 @@ class DateActivitySlot(ActivitySlot):
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
+    remote_contributor_count = models.PositiveIntegerField(default=0)
+
+    origins = GenericRelation(
+        'activity_pub.SubEvent',
+        object_id_field="adopted_id",
+        content_type_field="adopted_content_type",
+    )
+
+    @property
+    def origin(self):
+        try:
+            return self.origins.get()
+        except ObjectDoesNotExist:
+            raise AttributeError('origin')
+
+    activity_pub_models = GenericRelation(
+        'activity_pub.SubEvent',
+        object_id_field="origin_id",
+        content_type_field="origin_content_type",
+    )
+
+    @property
+    def activity_pub_model(self):
+        try:
+            return self.activity_pub_models.get()
+        except ObjectDoesNotExist:
+            raise AttributeError('activity_pub_model')
+
+    @classmethod
+    def activity_pub_publishable_q(cls, at=None):
+        at = at or timezone.now()
+        return Q(activity_pub_models__isnull=False) | Q(start__gte=at)
+
+    @property
+    def is_activity_pub_publishable(self):
+        if self.activity_pub_models.exists():
+            return True
+        return bool(self.start and self.start >= timezone.now())
 
     @property
     def owners(self):
@@ -574,6 +652,17 @@ class RegistrationActivity(TimeBasedActivity):
     )
 
     @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'is_online', 'location', 'location_hint', 'start', 'deadline',
+            ]
+
+        return readonly_fields
+
+    @property
     def duration_human_readable(self):
         if self.duration:
             return get_human_readable_duration(str(self.duration)).lower()
@@ -639,6 +728,17 @@ class DeadlineActivity(RegistrationActivity):
         null=True,
         blank=True,
     )
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if self.is_adopted:
+            readonly_fields = readonly_fields + [
+                'duration', 'online_meeting_url',
+            ]
+
+        return readonly_fields
 
     @property
     def required_fields(self):
@@ -730,9 +830,27 @@ class ScheduleActivity(RegistrationActivity):
     )
 
     @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+            ]
+
+        return readonly_fields
+
+    @property
     def accepted_participants(self):
         if self.pk:
             return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])
+        else:
+            return ScheduleRegistration.objects.none()
+
+    @property
+    def active_participants(self):
+        if self.pk:
+            return self.registrations.filter(status__in=["new", "accepted", "succeeded", "scheduled"])
         else:
             return ScheduleRegistration.objects.none()
 
@@ -796,6 +914,17 @@ class PeriodicActivity(RegistrationActivity):
         blank=True,
     )
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'period', 'duration',
+            ]
+
+        return readonly_fields
 
     @property
     def required_fields(self):
@@ -874,6 +1003,17 @@ class RegisteredDateActivity(TimeBasedActivity):
         ),
         null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+            ]
+
+        return readonly_fields
 
     @property
     def end(self):
@@ -1063,7 +1203,7 @@ class DateParticipant(Participant):
         resource_name = 'contributors/time-based/date-participants'
 
 
-class PeriodParticipant(Participant, Contributor):
+class PeriodParticipant(Participant):
     """
     A participant in a recurring activity.
     """
@@ -1152,7 +1292,7 @@ class Skill(TranslatableModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', any_language=True) or str(self.pk)
 
     class Meta():
         ordering = ['pk']
@@ -1181,7 +1321,17 @@ class Registration(TriggerMixin, PolymorphicModel):
     user = models.ForeignKey(
         'members.Member',
         related_name='registrations',
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL,
+        null=True
+    )
+    remote_user = models.ForeignKey(
+        "activities.RemoteMember",
+        verbose_name=_("Remote member"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="registrations",
+        help_text=_("When set, this registration is a synced participant without a local user."),
     )
 
     status = models.CharField(max_length=40)
@@ -1445,7 +1595,7 @@ class PeriodicRegistration(Registration):
         ).count()
 
 
-class DeadlineParticipant(Participant, Contributor):
+class DeadlineParticipant(Participant):
     """
     A candidate for a flexible activity.
     """
@@ -1607,7 +1757,18 @@ class Team(TriggerMixin, models.Model):
         'members.Member',
         verbose_name=_('Team captain'),
         related_name='team_captains',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    remote_user = models.ForeignKey(
+        "activities.RemoteMember",
+        verbose_name=_("Remote captain"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="captained_teams",
+        help_text=_("When set, this team was synced from another platform without a local captain user."),
     )
 
     name = models.CharField(
@@ -1657,7 +1818,13 @@ class Team(TriggerMixin, models.Model):
 
     def save(self, *args, **kwargs):
         if not self.name:
-            self.name = _("Team {name}").format(name=self.user.full_name)
+            captain_name = None
+            if self.user:
+                captain_name = self.user.full_name
+            elif self.remote_user:
+                captain_name = self.remote_user.full_name or self.remote_user.email
+            if captain_name:
+                self.name = _("Team {name}").format(name=captain_name)
 
         super().save(*args, **kwargs)
 
@@ -1682,6 +1849,15 @@ class TeamMember(TriggerMixin, models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
+    remote_user = models.ForeignKey(
+        "activities.RemoteMember",
+        verbose_name=_("Remote member"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="team_members",
+        help_text=_("When set, this team member was synced from another platform without a local user."),
+    )
 
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
@@ -1692,7 +1868,11 @@ class TeamMember(TriggerMixin, models.Model):
 
     @property
     def is_captain(self):
-        return self.user_id == self.team.user_id
+        if self.user_id and self.team.user_id:
+            return self.user_id == self.team.user_id
+        if self.remote_user_id and self.team.remote_user_id:
+            return self.remote_user_id == self.team.remote_user_id
+        return False
 
     class Meta:
         verbose_name = _("Team member")
@@ -1727,7 +1907,7 @@ class TeamMember(TriggerMixin, models.Model):
             return ''
 
 
-class ScheduleParticipant(Participant, Contributor):
+class ScheduleParticipant(Participant):
     """
     A participant in an activity that is scheduled after sign-up
     """
@@ -1749,7 +1929,7 @@ class ScheduleParticipant(Participant, Contributor):
         blank=True,
     )
 
-    class Meta(Contributor.Meta):
+    class Meta:
         verbose_name = _("Participant to schedule activities")
         verbose_name_plural = _("Participants to schedule activities")
 
@@ -1786,7 +1966,7 @@ class ScheduleParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/schedule-participants'
 
 
-class TeamScheduleParticipant(Participant, Contributor):
+class TeamScheduleParticipant(Participant):
     """
     A team participation in an activity that is scheduled after sign-up
     """
@@ -1923,8 +2103,38 @@ class Slot(models.Model):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
+    origins = GenericRelation(
+        'activity_pub.SubEvent',
+        object_id_field="adopted_id",
+        content_type_field="adopted_content_type",
+    )
+
+    @property
+    def origin(self):
+        origin = self.origins.first()
+        if origin is None:
+            raise AttributeError('origin')
+        return origin
+
+    @property
+    def is_adopted(self):
+        return hasattr(self, 'origin') and self.origin
+
+    activity_pub_models = GenericRelation(
+        'activity_pub.SubEvent',
+        object_id_field="origin_id",
+        content_type_field="origin_content_type",
+    )
+
     class Meta:
         abstract = True
+
+    @property
+    def activity_pub_model(self):
+        try:
+            return self.activity_pub_models.get()
+        except ObjectDoesNotExist:
+            raise AttributeError('activity_pub_model')
 
     @property
     def uid(self):
@@ -2107,7 +2317,7 @@ class TeamScheduleSlot(BaseScheduleSlot):
         return self.team.owner
 
 
-class PeriodicParticipant(Participant, Contributor):
+class PeriodicParticipant(Participant):
     """
     A participant in a slot of a periodic activity, e.g. the participant joined this week.
     """

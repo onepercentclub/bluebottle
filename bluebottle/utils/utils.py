@@ -314,3 +314,9 @@ def _json_object_hook(d):
 
 def json2obj(data):
     return json.loads(data, object_hook=_json_object_hook)
+
+
+def get_subclasses(cls):
+    for subclass in cls.__subclasses__():
+        yield from get_subclasses(subclass)
+        yield subclass

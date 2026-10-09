@@ -12,10 +12,11 @@ from future.utils import python_2_unicode_compatible
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from bluebottle.fsm.triggers import TriggerMixin
 
 
 @python_2_unicode_compatible
-class Organization(ValidatedModelMixin, models.Model):
+class Organization(TriggerMixin, ValidatedModelMixin, models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
     """
@@ -32,7 +33,7 @@ class Organization(ValidatedModelMixin, models.Model):
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
     )
 
-    origin = models.ForeignKey(
+    origin_old = models.ForeignKey(
         'activity_pub.Organization', null=True, related_name="organizations", on_delete=models.SET_NULL
     )
 

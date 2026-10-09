@@ -5,7 +5,6 @@ from rest_framework_json_api.relations import (
     SerializerMethodResourceRelatedField
 )
 
-from bluebottle.activities.models import Organizer
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
@@ -65,12 +64,6 @@ class CollectActivitySerializer(BaseActivitySerializer):
         user = self.context['request'].user
         if user.is_authenticated:
             return instance.contributors.filter(user=user).instance_of(CollectContributor).first()
-
-    def get_contributor_count(self, instance):
-        return instance.contributors.not_instance_of(Organizer).filter(
-            status__in=['accepted', 'succeeded', 'activity_refunded'],
-            user__isnull=False
-        ).count()
 
     target = serializers.FloatField(allow_null=True, required=False)
     realized = serializers.FloatField(allow_null=True, required=False)
@@ -179,11 +172,15 @@ class CollectContributorSerializer(BaseContributorSerializer):
         resource_name = 'contributors/collect/contributors'
         included_resources = [
             'user',
+            "remote_user",
+            "remote_user.source",
             'activity',
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
+        'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'activity': 'bluebottle.collect.serializers.CollectActivitySerializer',
     }
 

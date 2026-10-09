@@ -19,7 +19,7 @@ from bluebottle.activities.states import (
 )
 from bluebottle.activity_pub.effects import (
     PublishAdoptionEffect, CreateEffect, UpdateEventEffect,
-    CancelEffect, DeletedEffect, StartEffect
+    CancelEffect, DeletedEffect, StartEffect, UnpublishAdoptionEffect
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -193,6 +193,7 @@ class ActivityTriggers(TriggerManager):
                     OrganizerStateMachine.fail,
                     conditions=[has_organizer]
                 ),
+                UnpublishAdoptionEffect,
                 CancelEffect
             ]
         ),
@@ -217,6 +218,7 @@ class ActivityTriggers(TriggerManager):
                     'slots',
                     DateActivitySlotStateMachine.auto_cancel
                 ),
+                UnpublishAdoptionEffect,
                 CancelEffect
             ]
         ),

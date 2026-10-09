@@ -1,16 +1,15 @@
-import dateutil
 from datetime import datetime, time
 
+import dateutil
 from django.utils.timezone import get_current_timezone
-
 from rest_framework import filters
-
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission,
     ActivityStatusPermission,
     DeleteActivityPermission,
-    IsAdminPermission
+    IsAdminPermission,
+    IsNotAdoptedPermission,
 )
 from bluebottle.time_based.models import (
     DateActivitySlot, ScheduleSlot, TeamScheduleSlot,
@@ -36,11 +35,14 @@ class DateSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
+            IsNotAdoptedPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
         ]
     }
 
-    permission_classes = [TenantConditionalOpenClose]
+    permission_classes = [
+        TenantConditionalOpenClose
+    ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 
@@ -94,6 +96,7 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
+            IsNotAdoptedPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
             DeleteActivityPermission,
         ]

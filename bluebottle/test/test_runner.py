@@ -1,5 +1,6 @@
 import locale
 import os
+import atexit
 from builtins import range
 
 from django.conf import settings
@@ -45,6 +46,28 @@ def _wipe_stale_pid_test_elasticsearch_indices():
         from elasticsearch_dsl import connections
         es = connections.get_connection()
         pattern = f'{prefix}-pid*'
+        es.indices.delete(
+            index=pattern,
+            params={'ignore_unavailable': 'true'},
+        )
+    except Exception:
+        pass
+
+
+def _wipe_worker_test_elasticsearch_indices(worker_id):
+    """
+    Delete indices matching {ELASTICSEARCH_TEST_INDEX_PREFIX}-w{worker_id}-*
+    (parallel test worker indices). Keeps per-worker isolation during the run,
+    but cleans up shards afterwards so ES memory/shard count doesn't grow on
+    long-lived self-hosted runners.
+    """
+    prefix = getattr(settings, 'ELASTICSEARCH_TEST_INDEX_PREFIX', None)
+    if not prefix or not worker_id:
+        return
+    try:
+        from elasticsearch_dsl import connections
+        es = connections.get_connection()
+        pattern = f'{prefix}-w{worker_id}-*'
         es.indices.delete(
             index=pattern,
             params={'ignore_unavailable': 'true'},
@@ -112,6 +135,8 @@ def _init_worker_with_es(
 
     if worker_id:
         os.environ["DJANGO_TEST_PROCESS_NUMBER"] = str(worker_id)
+        # Cleanup this worker's per-worker indices when the worker process exits.
+        atexit.register(_wipe_worker_test_elasticsearch_indices, worker_id)
     # Complete ES index setup before this worker is used; Django does not
     # assign tests to a worker until its initializer returns.
     _setup_es_indices()
@@ -136,57 +161,55 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         # Set local explicitely so test also run on OSX
         locale.setlocale(locale.LC_ALL, 'en_GB.UTF-8')
 
-        connection.set_schema_to_public()
+        if kwargs['aliases']:
+            connection.set_schema_to_public()
 
-        tenant2, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test2.localhost",
-            name="Test Too",
-            schema_name="test2",
-            client_name="test2",
-        )
-
-        connection.set_tenant(tenant2)
-        self.init_projects()
-
-        connection.set_schema_to_public()
-
-        tenant, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test.localhost",
-            name="Test",
-            schema_name="test",
-            client_name="test",
-        )
-
-        connection.set_tenant(tenant)
-        self.init_projects()
-
-        try:
-            backend, _created = ExchangeBackend.objects.get_or_create(
-                base_currency='USD',
-                name='openexchangerates.org'
+            tenant2, _created = get_tenant_model().objects.get_or_create(
+                domain_url="test2.localhost",
+                name="Test Too",
+                schema_name="test2",
+                client_name="test2",
             )
-            Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
-            Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
-            Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})
-            Rate.objects.update_or_create(backend=backend, currency='NGN', defaults={'value': 500})
-            Rate.objects.update_or_create(backend=backend, currency='UGX', defaults={'value': 5000})
-            Rate.objects.update_or_create(backend=backend, currency='KES', defaults={'value': 100})
-        except IntegrityError:
-            pass
 
-        # Single process: set up ES indices before returning so no tests run until they are ready.
-        if parallel <= 1:
-            _setup_es_indices()
+            connection.set_tenant(tenant2)
+            self.init_projects()
 
-        if parallel > 1:
-            for index in range(parallel):
-                connection.creation.clone_test_db(
-                    suffix=index + 1,
-                    verbosity=self.verbosity,
-                    keepdb=self.keepdb,
+            connection.set_schema_to_public()
+
+            tenant, _created = get_tenant_model().objects.get_or_create(
+                domain_url="test.localhost",
+                name="Test",
+                schema_name="test",
+                client_name="test",
+            )
+
+            connection.set_tenant(tenant)
+            self.init_projects()
+
+            try:
+                backend, _created = ExchangeBackend.objects.get_or_create(
+                    base_currency='USD',
+                    name='openexchangerates.org'
                 )
+                Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
+                Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
+                Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})
+                Rate.objects.update_or_create(backend=backend, currency='NGN', defaults={'value': 500})
+                Rate.objects.update_or_create(backend=backend, currency='UGX', defaults={'value': 5000})
+                Rate.objects.update_or_create(backend=backend, currency='KES', defaults={'value': 100})
+            except IntegrityError:
+                pass
+
+            # Single process: set up ES indices before returning so no tests run until they are ready.
+            if parallel <= 1:
+                _setup_es_indices()
+
+            if parallel > 1:
+                for index in range(parallel):
+                    connection.creation.clone_test_db(
+                        suffix=index + 1,
+                        verbosity=self.verbosity,
+                        keepdb=self.keepdb,
+                    )
 
         return result
-
-    def run_checks(self, *args, **kwargs):
-        return

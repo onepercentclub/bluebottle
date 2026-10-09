@@ -1631,12 +1631,13 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
             )
 
     def test_fill_join(self):
-        ScheduleRegistrationFactory.create_batch(
-            self.activity.capacity - 1,
-            activity=self.activity,
-            user=BlueBottleUserFactory.create(),
-            as_relation='user',
-        )
+        for _ in range(self.activity.capacity - 1):
+            user = BlueBottleUserFactory.create()
+            ScheduleRegistrationFactory.create(
+                activity=self.activity,
+                user=user,
+                as_relation='user',
+            )
         ScheduleRegistrationFactory.create(
             activity=self.activity,
             user=BlueBottleUserFactory.create(),
@@ -1665,12 +1666,12 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
         self.assertEqual(self.activity.status, 'full')
 
     def test_remove_unfill(self):
-        ScheduleRegistrationFactory.create_batch(
-            self.activity.capacity,
-            activity=self.activity,
-            user=BlueBottleUserFactory.create(),
-            as_relation='user',
-        )
+        for user in BlueBottleUserFactory.create_batch(self.activity.capacity):
+            ScheduleRegistrationFactory.create(
+                user=user,
+                activity=self.activity,
+                as_relation='user'
+            )
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'full')
 

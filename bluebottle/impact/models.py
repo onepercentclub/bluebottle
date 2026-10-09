@@ -81,11 +81,12 @@ class ImpactType(SortableTranslatableModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', any_language=True) or self.slug
 
     def save(self, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            name = self.safe_translation_getter('name', any_language=True) or ''
+            self.slug = slugify(name)
 
         super(ImpactType, self).save(**kwargs)
 

@@ -134,7 +134,7 @@ class TeamTriggerTestCase(BluebottleTestCase):
         self.team.states.withdraw(save=True)
         self.assertEqual(self.team.status, "withdrawn")
 
-        self.assertEqual(self.team.registration.status, "accepted")
+        self.assertEqual(self.team.registration.status, "withdrawn")
 
         self.assertEqual(self.team.team_members.get().status, "withdrawn")
 

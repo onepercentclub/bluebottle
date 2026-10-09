@@ -24,6 +24,9 @@ class LinkedDeedFactory(factory.DjangoModelFactory):
     title = factory.Faker('sentence')
     description = factory.LazyFunction(generate_rich_text)
     status = 'open'
+    host_organization = factory.SubFactory(
+        'bluebottle.test.factory_models.organizations.OrganizationFactory'
+    )
 
     start = factory.fuzzy.FuzzyDateTime(
         now(),
@@ -41,6 +44,9 @@ class LinkedFundingFactory(factory.DjangoModelFactory):
         model = LinkedFunding
 
     status = 'open'
+    host_organization = factory.SubFactory(
+        'bluebottle.test.factory_models.organizations.OrganizationFactory'
+    )
 
     title = factory.Faker('sentence')
     description = factory.LazyFunction(generate_rich_text)
@@ -54,6 +60,9 @@ class LinkedGrantApplicationFactory(factory.DjangoModelFactory):
         model = LinkedGrantApplication
 
     status = 'open'
+    host_organization = factory.SubFactory(
+        'bluebottle.test.factory_models.organizations.OrganizationFactory'
+    )
 
     title = factory.Faker('sentence')
     description = factory.LazyFunction(generate_rich_text)

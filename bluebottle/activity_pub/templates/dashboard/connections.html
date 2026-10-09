@@ -1,0 +1,54 @@
+{% load i18n %}
+{% block module_content %}
+{% if module.show_suppliers %}
+<h4>{% trans "Suppliers" %}</h4>
+{% if module.suppliers %}
+<table class="dashboard-connection-table">
+    <thead>
+        <tr>
+            <th>{% trans "Platform" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Shared activities" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for connection in module.suppliers %}
+        <tr class="{% cycle 'odd' 'even' %}">
+            <td><a href="{{ connection.admin_url }}">{{ connection.name }}</a></td>
+            <td>{{ connection.status }}</td>
+            <td>{{ connection.shared_activities }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>{% trans "No suppliers connected yet." %}</p>
+{% endif %}
+{% endif %}
+
+{% if module.show_consumers %}
+<h4>{% trans "Consumers" %}</h4>
+{% if module.consumers %}
+<table class="dashboard-connection-table">
+    <thead>
+        <tr>
+            <th>{% trans "Platform" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Shared activities" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for connection in module.consumers %}
+        <tr class="{% cycle 'odd' 'even' %}">
+            <td><a href="{{ connection.admin_url }}">{{ connection.name }}</a></td>
+            <td>{{ connection.status }}</td>
+            <td>{{ connection.shared_activities }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>{% trans "No consumers connected yet." %}</p>
+{% endif %}
+{% endif %}
+{% endblock %}

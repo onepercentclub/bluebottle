@@ -1345,12 +1345,22 @@ class Registration(TriggerMixin, PolymorphicModel):
     def anonymized(self):
         return self.activity.anonymized
 
+    @property
+    def actual_user(self):
+        if self.user_id:
+            return self.user
+        else:
+            return self.remote_user
+
     def __str__(self):
-        if self.activity_id:
+        if self.activity_id and self.actual_user:
             return _('Candidate {name} for {activity}').format(
-                name=self.user or self.remote_user, activity=self.activity
+                name=self.actual_user, activity=self.activity
             )
-        return _('Candidate {name}').format(name=self.user)
+        elif self.actual_user:
+            return _('Candidate {name}').format(name=self.actual_user)
+        else:
+            return str(_('Anonymous candidate'))
 
     class Meta:
         ordering = ('-created',)

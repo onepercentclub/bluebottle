@@ -4,11 +4,35 @@ from django.utils.timezone import now
 
 from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+
+from bluebottle.activities.tests.factories import RemoteMemberFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory, PeriodicActivityFactory,
-    RegisteredDateActivityFactory, ScheduleActivityFactory
+    RegisteredDateActivityFactory, ScheduleActivityFactory, DeadlineRegistrationFactory
 )
+
+
+class RegistrationModelTestCase(BluebottleTestCase):
+    factory = DeadlineRegistrationFactory
+
+    def setUp(self):
+        self.user = BlueBottleUserFactory.create(first_name='Test', last_name='van Testem')
+        self.remote_user = RemoteMemberFactory.create(first_name='Test', last_name='van Buiten')
+        self.activity = DeadlineActivityFactory.create(title='An activity')
+
+    def test_str_user(self):
+        registration = self.factory.create(user=self.user, remote_user=None, activity=self.activity)
+        self.assertEqual(str(registration), 'Candidate Test van Testem for An activity')
+
+    def test_str_remote_user(self):
+        registration = self.factory.create(remote_user=self.remote_user, user=None, activity=self.activity)
+        self.assertEqual(str(registration), 'Candidate Test van Buiten for An activity')
+
+    def test_str_anonymous(self):
+        registration = self.factory.create(remote_user=None, user=None, activity=self.activity)
+        self.assertEqual(str(registration), 'Anonymous Candidate')
 
 
 class PeriodicActivityModelTestCase(BluebottleTestCase):

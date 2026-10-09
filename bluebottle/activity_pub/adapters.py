@@ -32,6 +32,9 @@ class JSONLDAdapter():
         serializer.is_valid(raise_exception=True)
         result = serializer.save(**kwargs)
 
+        if hasattr(instance, 'adopted'):
+            instance.adopted = result
+
         self.perform_retro_active_transitions(instance)
 
         return result

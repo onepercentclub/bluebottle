@@ -923,7 +923,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         super().test_join()
 
         self.assertEqual(
-            str(self.synced_participants.registration),
+            str(self.synced_participant.registration),
             f'Candidate {self.synced_participant.remote_user} for {self.model.title}'
         )
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)

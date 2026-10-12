@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.test.utils import override_settings
 
 from bluebottle.members.models import Member
+from bluebottle.geo.models import Location
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.scim.models import SCIMPlatformSettings, SCIMSegmentSetting
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -798,6 +799,45 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
         self.assertEqual(user.location.name, location_name)
 
+    def test_post_duplicate_location(self):
+        """
+        Locations are not unique by slug, so two rows can match one locality.
+        """
+        first = LocationFactory.create(name='Utrecht', slug='utrecht')
+        LocationFactory.create(name='Utrecht', slug='utrecht')
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': '123',
+            'externalId': 'some-external-id',
+            'addresses': [{
+                'type': 'work',
+                'locality': 'Utrecht',
+            }],
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
+        self.assertEqual(user.location, first)
+        self.assertEqual(Location.objects.filter(slug='utrecht').count(), 2)
+
     def test_post_segment(self):
         """
         Create a user with a location that does not exist yet.
@@ -1309,6 +1349,35 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.location.name, location_name)
+
+    def test_patch_duplicate_location(self):
+        """
+        Locations are not unique by slug, so two rows can match one locality.
+        """
+        first = LocationFactory.create(name='Utrecht', slug='utrecht')
+        LocationFactory.create(name='Utrecht', slug='utrecht')
+
+        request_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    'op': 'Add',
+                    'path': 'addresses[type eq "work"].locality',
+                    'value': 'Utrecht'
+                },
+            ]
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.location, first)
 
     def test_delete(self):
         response = self.client.delete(

@@ -352,7 +352,7 @@ class CreateNextSlotEffect(Effect):
     def is_valid(self):
         settings = SitePlatformSettings.load()
 
-        return not settings.terminated
+        return not settings.terminated and not hasattr(self.instance.activity, 'origin')
 
 
 class CreatePeriodicParticipantsEffect(Effect):

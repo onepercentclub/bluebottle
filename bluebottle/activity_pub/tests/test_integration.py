@@ -17,6 +17,7 @@ from requests import Request, Response
 from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, LinkedGrantApplication
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
+from bluebottle.activity_pub.models.joins import BaseJoin, Join, PeriodicSlotJoin
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event, Place,
     Recipient, RepetitionModeChoices, GoodDeed, Reject
@@ -1195,6 +1196,77 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.assertEqual(
                 PeriodicParticipant.objects.count(), 2
             )
+
+    def assert_consumer_slots_match_supplier(self):
+        supplier_slot_urls = [
+            slot.activity_pub_model.pub_url for slot in self.model.slots.order_by('start')
+        ]
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            consumer_slots = list(self.adopted.slots.order_by('start'))
+
+            self.assertEqual(len(consumer_slots), len(supplier_slot_urls))
+            for slot, supplier_slot_url in zip(consumer_slots, supplier_slot_urls):
+                self.assertEqual(slot.origin.pub_url, supplier_slot_url)
+                self.assertEqual(slot.participants.count(), 1)
+
+    def test_join_adopts_slot_once(self):
+        self.test_join()
+
+        self.assert_consumer_slots_match_supplier()
+
+    def test_next_slot_adopts_slot_once(self):
+        self.test_next_slot()
+
+        self.assert_consumer_slots_match_supplier()
+
+    def test_join_accept_before_slot_join(self):
+        deferred_slot_joins = []
+        save = BaseJoin.save
+
+        def defer_slot_join(join, *args, **kwargs):
+            if isinstance(join, PeriodicSlotJoin) and not join.is_local:
+                Join.save(join, *args, **kwargs)
+                deferred_slot_joins.append(join)
+            else:
+                save(join, *args, **kwargs)
+
+        with mock.patch.object(BaseJoin, 'save', defer_slot_join):
+            self.test_adopt()
+
+            with LocalTenant(self.other_tenant):
+                self.join()
+                self.participant.refresh_from_db()
+                self.assertEqual(self.participant.status, 'accepted')
+
+                # Only the supplier creates slots and assigns participants to them
+                self.assertEqual(self.adopted.slots.count(), 0)
+
+        self.assertEqual(len(deferred_slot_joins), 1)
+
+        with LocalTenant(self.other_tenant):
+            for join in deferred_slot_joins:
+                if join.contributor:
+                    join.reapply()
+                else:
+                    join.apply()
+
+        self.assert_consumer_slots_match_supplier()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.participant.participants.count(), 1)
+
+    def test_finish_slot_consumer_does_not_create_next_slot(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            slot = self.adopted.slots.get()
+            slot.states.start(save=True)
+            slot.states.finish(save=True)
+
+            # The next slot is created by the supplier and synced, never locally
+            self.assertEqual(self.adopted.slots.count(), 1)
 
 
 class SyncCollectActivityTestCase(SyncTestCase, BluebottleTestCase):

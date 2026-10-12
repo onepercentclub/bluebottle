@@ -32,7 +32,7 @@ class RegistrationModelTestCase(BluebottleTestCase):
 
     def test_str_anonymous(self):
         registration = self.factory.create(remote_user=None, user=None, activity=self.activity)
-        self.assertEqual(str(registration), 'Anonymous Candidate')
+        self.assertEqual(str(registration), 'Anonymous candidate')
 
 
 class PeriodicActivityModelTestCase(BluebottleTestCase):

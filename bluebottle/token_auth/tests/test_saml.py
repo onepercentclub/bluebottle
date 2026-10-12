@@ -3,6 +3,7 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.core import mail
 from django.test import TestCase, RequestFactory
 from future import standard_library
 from mock import patch, MagicMock
@@ -135,6 +136,58 @@ class TestSAMLTokenAuthentication(TestCase):
             )
             error.assert_called()
             self.assertTrue(len(SAMLLog.objects.all()), 1)
+
+    def _assert_rejected(self, response):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+            self.assertRaises(TokenAuthenticationError, auth_backend.authenticate)
+
+    def test_auth_bad_base64_padding(self):
+        self._assert_rejected('PHNhbWxwOlJlc3BvbnNlPg')
+
+    def test_auth_base64_length_one_mod_four(self):
+        self._assert_rejected('YWJjZGU')
+
+    def test_auth_non_base64_characters(self):
+        self._assert_rejected("' OR 1=1--")
+
+    def test_auth_non_ascii_body(self):
+        self._assert_rejected('\u00e9\u00e8\u00ea')
+
+    def test_auth_empty_response(self):
+        self._assert_rejected('')
+
+    def test_auth_not_xml(self):
+        self._assert_rejected(
+            OneLogin_Saml2_Utils.b64encode('this is not xml at all')
+        )
+
+    def test_auth_dtd_entity(self):
+        self._assert_rejected(
+            OneLogin_Saml2_Utils.b64encode(
+                '<?xml version="1.0"?>'
+                '<!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://evil.example.com/x">]>'
+                '<samlp:Response>&xxe;</samlp:Response>'
+            )
+        )
+
+    def test_auth_xml_but_not_a_saml_response(self):
+        self._assert_rejected(
+            OneLogin_Saml2_Utils.b64encode('<hello>world</hello>')
+        )
+
+    def test_auth_malformed_responses_do_not_mail_admins(self):
+        for response in ('PHNhbWxwOlJlc3BvbnNlPg', "' OR 1=1--", ''):
+            self._assert_rejected(response)
+
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_auth_success_missing_field(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)

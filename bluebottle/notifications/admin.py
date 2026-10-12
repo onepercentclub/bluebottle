@@ -60,7 +60,8 @@ class NotificationAdminMixin(object):
 
         if request.method == 'POST':
             form = ModelForm(request.POST, request.FILES, instance=obj)
-            new = self.save_form(request, form, change=True)
+            if form.is_valid():
+                new = self.save_form(request, form, change=True)
         old = self.get_object(request, object_id)
 
         confirm = request.POST.get('confirm', False)

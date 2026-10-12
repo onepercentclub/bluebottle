@@ -278,10 +278,13 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
     readonly_fields = BaseContributorInline.readonly_fields + ['slot_date']
 
     def slot_date(self, obj):
-        if obj.slot:
-            return obj.slot.start.strftime('%Y-%m-%d %H:%M')
-        else:
+        start, _end, is_local = get_slot_local_datetimes(obj.slot)
+        if not start:
             return format_html('<i>{}</i>', _('unscheduled'))
+        label = start.strftime('%Y-%m-%d %H:%M')
+        if is_local:
+            return format_html('{} <em>{}</em>', label, _('Local time'))
+        return label
 
 
 class TeamScheduleParticipantAdminInline(BaseContributorInline):
@@ -359,10 +362,11 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
     raw_id_fields = ('location',)
 
     can_delete = True
-    readonly_fields = ('link', 'created', 'activity')
+    readonly_fields = ('link', 'created', 'activity', 'local_time_info')
     fields = (
         'link',
         'start',
+        'local_time_info',
         'duration',
         'created',
         'status',
@@ -383,6 +387,43 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
 
     verbose_name = _('Time, date & location')
     verbose_name_plural = _('Time, date & location')
+
+    def local_time_info(self, obj):
+        start, end, is_local = get_slot_local_datetimes(obj)
+        if not start:
+            return '-'
+
+        end_time = end.strftime('%H:%M') if end else '-'
+        if is_local:
+            return format_html(
+                '{} {} - {}<br/><em>{}</em>',
+                start.date(),
+                start.strftime('%H:%M'),
+                end_time,
+                _('Local time'),
+            )
+        return format_html(
+            '{} {} - {}',
+            start.date(),
+            start.strftime('%H:%M'),
+            end_time,
+        )
+
+    local_time_info.short_description = _('Local time')
+
+    def get_formset(self, request, obj=None, **kwargs):
+        FormSet = super().get_formset(request, obj, **kwargs)
+        base_form = FormSet.form
+
+        class SlotInlineForm(base_form):
+            def __init__(self, *args, **form_kwargs):
+                super().__init__(*args, **form_kwargs)
+                help_text = get_local_time_help_text(self.instance)
+                if help_text and 'start' in self.fields:
+                    self.fields['start'].help_text = help_text
+
+        FormSet.form = SlotInlineForm
+        return FormSet
 
     def status_label(self, obj):
         return obj.states.current_state.name
@@ -952,6 +993,10 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         url = reverse('admin:time_based_scheduleparticipant_change', args=(participant.id,))
         return format_html("<a href='{}'>{}</a>", url, participant)
 
+    def get_form(self, request, obj=None, **kwargs):
+        kwargs = add_local_time_help_texts(obj, kwargs)
+        return super().get_form(request, obj, **kwargs)
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         if request.user.is_superuser:
@@ -1118,6 +1163,61 @@ class DateParticipantInline(admin.TabularInline):
     registration_status.short_description = _('Registered')
 
 
+def get_slot_local_datetimes(slot):
+    """
+    Return (start, end, is_local) in the venue timezone when the slot is
+    on-site in a different timezone than the platform; otherwise platform TZ.
+    """
+    if not slot or not slot.start:
+        return None, None, False
+
+    if not slot.is_online and slot.location and slot.location.timezone:
+        local_tz = timezone(slot.location.timezone)
+        start = slot.start.astimezone(local_tz)
+        end = slot.end.astimezone(local_tz) if slot.end else None
+        platform_start = slot.start.astimezone(get_current_timezone())
+        is_local = start.utcoffset() != platform_start.utcoffset()
+        return start, end, is_local
+
+    return slot.start, slot.end, False
+
+
+def get_local_time_help_text(obj):
+    """
+    When a slot has an on-site location in another timezone, explain the
+    local start time for the start field.
+    """
+    if not obj or obj.is_online or not obj.location or not obj.start:
+        return None
+
+    local_start = obj.start.astimezone(timezone(obj.location.timezone))
+    platform_start = obj.start.astimezone(get_current_timezone())
+    offset = local_start.utcoffset() - platform_start.utcoffset()
+
+    if offset.total_seconds() == 0:
+        return None
+
+    return _(
+        'Local time in "{location}" is {local_time}. '
+        'This is {offset} hours {relation} compared to the '
+        'standard platform timezone ({current_timezone}).'
+    ).format(
+        location=obj.location,
+        local_time=defaultfilters.time(local_start),
+        offset=abs(offset.total_seconds() / 3600.0),
+        relation=_('later') if offset.total_seconds() > 0 else _('earlier'),
+        current_timezone=get_current_timezone()
+    )
+
+
+def add_local_time_help_texts(obj, kwargs):
+    help_text = get_local_time_help_text(obj)
+    if help_text:
+        kwargs = dict(kwargs)
+        kwargs['help_texts'] = {'start': help_text}
+    return kwargs
+
+
 class SlotAdmin(StateMachineAdmin):
     raw_id_fields = ['activity', 'location']
 
@@ -1149,27 +1249,7 @@ class SlotAdmin(StateMachineAdmin):
     activity_link.short_description = _('Activity')
 
     def get_form(self, request, obj=None, **kwargs):
-        if obj and not obj.is_online and obj.location:
-            local_start = obj.start.astimezone(timezone(obj.location.timezone))
-            platform_start = obj.start.astimezone(get_current_timezone())
-            offset = local_start.utcoffset() - platform_start.utcoffset()
-
-            if offset.total_seconds() != 0:
-                timezone_text = _(
-                    'Local time in "{location}" is {local_time}. '
-                    'This is {offset} hours {relation} compared to the '
-                    'standard platform timezone ({current_timezone}).'
-                ).format(
-                    location=obj.location,
-                    local_time=defaultfilters.time(local_start),
-                    offset=abs(offset.total_seconds() / 3600.0),
-                    relation=_('later') if offset.total_seconds() > 0 else _('earlier'),
-                    current_timezone=get_current_timezone()
-                )
-
-                help_texts = {'start': timezone_text}
-                kwargs.update({'help_texts': help_texts})
-
+        kwargs = add_local_time_help_texts(obj, kwargs)
         return super(SlotAdmin, self).get_form(request, obj, **kwargs)
 
     def duration_string(self, obj):
@@ -1832,20 +1912,39 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
     def slot_info(self, obj):
         if not obj.slot:
             return "- no slot set -"
-        url = reverse("admin:time_based_scheduleslot_change", args=(obj.slot.id,))
-        if obj.slot.start:
+
+        slot = obj.slot
+        url = reverse(
+            'admin:{}_{}_change'.format(slot._meta.app_label, slot._meta.model_name),
+            args=(slot.id,),
+        )
+        start, end, is_local = get_slot_local_datetimes(slot)
+        if not start:
             return format_html(
-                "<div style='display:inline-block'>{}<br/>{} - {} <br/>{}<br/><a href='{}'>Edit</a></span>",
-                obj.slot.start.date(),
-                obj.slot.start.time(),
-                obj.slot.end.time(),
-                obj.slot.is_online and _("Remote/Online") or obj.slot.location,
+                "<a href='{}'>- no time set -</a>",
                 url,
             )
-        return format_html(
-            "<a href='{}'>- no time set -</a>",
-            url,
+
+        local_label = (
+            format_html('<br/><em>{}</em>', _('Local time'))
+            if is_local else ''
         )
+        location_display = (
+            _('Remote/Online') if slot.is_online else slot.location
+        )
+        end_time = end.strftime('%H:%M:%S') if end else '-'
+        return format_html(
+            "<div style='display:inline-block'>{}<br/>{} - {}{}<br/>{}<br/>"
+            "<a href='{}'>{}</a></div>",
+            start.date(),
+            start.strftime('%H:%M:%S'),
+            end_time,
+            local_label,
+            location_display,
+            url,
+            _('Edit'),
+        )
+
     slot_info.short_description = _('Date, Time & Location')
 
     list_display = ['__str__', 'activity_link', 'status']
@@ -1854,8 +1953,10 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
 @admin.register(TeamScheduleParticipant)
 class TeamScheduleParticipantAdmin(ScheduleParticipantAdmin):
     model = TeamScheduleParticipant
-    readonly_fields = ScheduleParticipantAdmin.readonly_fields + ["slot", "team_member"]
-    fields = ContributorChildAdmin.fields + ["registration_info", "slot", "team_member"]
+    readonly_fields = ScheduleParticipantAdmin.readonly_fields + ["team_member"]
+    fields = ContributorChildAdmin.fields + [
+        "registration_info", "slot_info", "team_member"
+    ]
 
 
 @admin.register(Registration)

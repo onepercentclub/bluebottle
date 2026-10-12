@@ -15,7 +15,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, is_editable_draft, relax_validation_for_draft
+    BaseActivitySerializer
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -31,7 +31,6 @@ from bluebottle.time_based.models import (
     Interest
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
-from bluebottle.utils.fields import RichTextField
 from bluebottle.time_based.serializers.interest_link_field import (
     InterestLinkField,
     remove_interests_field_for_non_managers,
@@ -44,6 +43,7 @@ from bluebottle.time_based.serializers.interest_validators import (
     PARTICIPATING_REGISTERED_DATE_PARTICIPANT_STATUSES,
     PARTICIPATING_SCHEDULE_PARTICIPANT_STATUSES,
 )
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -74,9 +74,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
-
-        if is_editable_draft(instance):
-            relax_validation_for_draft(self.fields)
 
         self.fields['permissions'] = ResourcePermissionField(self.detail_view_name, view_args=('pk',))
 

@@ -7,8 +7,7 @@ from rest_framework_json_api.relations import (
 )
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer,
-    is_editable_draft, relax_validation_for_draft
+    BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -37,11 +36,6 @@ class StartDateValidator():
 
 
 class DeedSerializer(BaseActivitySerializer):
-    def __init__(self, instance=None, *args, **kwargs):
-        super().__init__(instance, *args, **kwargs)
-
-        if is_editable_draft(instance):
-            relax_validation_for_draft(self.fields)
 
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     end = serializers.DateField(allow_null=True)

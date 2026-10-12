@@ -1050,17 +1050,6 @@ class DeedParticipantDetailViewAPITestCase(APITestCase):
 
 
 class DeedListNonEmptyTestCase(BluebottleTestCase):
-    """BB-30125: GET /api/deeds 500'd whenever the page was not empty.
-
-    DeedListView is a ListCreateAPIView using DeedSerializer for both verbs, so
-    on a GET the child serializer is constructed with the page's list of deeds.
-    Its __init__ read `.status` off that list:
-
-        AttributeError: 'list' object has no attribute 'status'
-
-    An empty page short-circuited on `not instance` and returned fine, which is
-    why the failure looked intermittent rather than total.
-    """
 
     def setUp(self):
         super().setUp()

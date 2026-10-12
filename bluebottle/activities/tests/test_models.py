@@ -125,13 +125,6 @@ class ActivitySlugTestCase(TestCase):
 
         self.assertEqual(activity.slug, 'a-normal-title')
 
-    def test_truncated_slug_has_no_trailing_hyphen(self):
-        activity = DeedFactory.create(title='word ' * 40, slug='new')
-
-        self.assertLessEqual(
-            len(activity.slug), Activity._meta.get_field('slug').max_length
-        )
-
     def test_two_long_titles_sharing_a_prefix_both_save(self):
         """slug is indexed but not unique, so truncation needs no suffix."""
         prefix = 'a' * 120

@@ -14,6 +14,7 @@ from bluebottle.collect.tests.factories import CollectActivityFactory, CollectCo
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
@@ -246,6 +247,27 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
             json.dumps(data),
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_closed_platform_anonymous(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        try:
+            response = self.client.get(
+                reverse('organization_detail', kwargs={'pk': self.organization_1.pk})
+            )
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        finally:
+            MemberPlatformSettings.objects.update(closed=False)
+
+    def test_closed_platform_authenticated(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        try:
+            response = self.client.get(
+                reverse('organization_detail', kwargs={'pk': self.organization_1.pk}),
+                user=self.user_1,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        finally:
+            MemberPlatformSettings.objects.update(closed=False)
 
 
 class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):

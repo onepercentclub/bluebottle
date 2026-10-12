@@ -5,6 +5,7 @@ from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.time_based.effects.effects import CreatePeriodicParticipantsEffect
 from bluebottle.time_based.models import (
     TimeContribution,
@@ -133,8 +134,15 @@ class CreateRegistrationEffect(Effect):
         registration = self.get_registration_model().objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
-            status='accepted'
         )
+
+        activity_is_remote = hasattr(self.instance.activity, 'origin')
+        if not activity_is_remote:
+            try:
+                registration.states.auto_accept(save=True)
+            except TransitionNotPossible:
+                pass
+
         self.instance.registration = registration
         self.instance.save()
 
@@ -172,7 +180,7 @@ class CreateDateRegistrationEffect(Effect):
         self.instance.registration = self.instance.activity.registrations.filter(user=self.instance.user).first()
 
     def post_save(self, **kwargs):
-        if not self.instance.registration:
+        if not self.instance.registration and self.instance.user:
             self.instance.registration = DateRegistration.objects.create(
                 activity=self.instance.activity,
                 user=self.instance.user,
@@ -228,8 +236,12 @@ class CreateScheduleSlotEffect(Effect):
     def without_slot(self):
         return not self.instance.slot_id
 
+    def is_local(self):
+        return not hasattr(self.instance.activity, 'origin')
+
     def post_save(self, **kwargs):
         activity = self.instance.activity
+
         self.instance.slot = ScheduleSlot.objects.create(
             activity=activity,
             is_online=activity.is_online,
@@ -240,4 +252,4 @@ class CreateScheduleSlotEffect(Effect):
         )
         self.instance.save()
 
-    conditions = [without_slot]
+    conditions = [without_slot, is_local]

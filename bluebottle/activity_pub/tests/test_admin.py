@@ -7,14 +7,15 @@ from django.core.files import File
 from django.urls import reverse
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.admin import FollowerAdmin
+from bluebottle.activity_pub.admin import FollowerAdmin, FollowingAdminForm, PublishedActivityAdmin
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Accept, Follower, Following, Recipient
+from bluebottle.activity_pub.models import Accept, Follow, Follower, Following, PublishedActivity, Recipient
 from bluebottle.activity_pub.tests.factories import OrganizationFactory
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.deeds.tests.factories import DeedFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -51,6 +52,10 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
+        self.set_platform_activity_types(
+            [activity_type for (activity_type, _) in InitiativePlatformSettings.ACTIVITY_TYPES]
+        )
+
         self.app.set_user(self.superuser)
         self.other_platform_url = self.other_tenant.build_absolute_url('/')
 
@@ -83,18 +88,18 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
             form['default_owner'] = str(default_owner.id)
         actor = kwargs.get('actor') or self.create_remote_actor()
         with mock.patch(
-            'bluebottle.activity_pub.admin.client.get',
+            'bluebottle.webfinger.client.client.get',
             return_value=self.other_platform_url
         ), mock.patch(
-            'bluebottle.activity_pub.admin.adapter.follow'
-        ) as follow:
-            follow.side_effect = lambda url, model=None: setattr(model, 'object', actor)
+            'bluebottle.activity_pub.adapters.adapter.discover'
+        ) as discover:
+            discover.side_effect = lambda url: actor
             return form.submit()
 
     def create_published_activity(self, follow, status='open'):
         activity = DeedFactory.create(status=status)
-        adapter.create_or_update_event(activity)
-        publish = activity.event.create_set.first()
+        adapter.sync(activity)
+        publish = activity.activity_pub_model.create_set.first()
         Recipient.objects.create(actor=follow.actor, activity=publish)
         return activity
 
@@ -115,6 +120,59 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(follow.default_owner, default_owner)
         self.assertTrue(follow.object.organization)
 
+    def set_platform_activity_types(self, activity_types):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.activity_types = activity_types
+        initiative_settings.save()
+
+    def get_adoption_activity_type_options(self, page):
+        return {
+            checkbox['value'] for checkbox in page.html.find_all(
+                'input', {'name': 'automatic_adoption_activity_types'}
+            )
+        }
+
+    def test_following_admin_add_only_shows_enabled_activity_types(self):
+        self.set_platform_activity_types(['deed', 'dateactivity'])
+
+        page = self.app.get(reverse('admin:activity_pub_following_add'), user=self.superuser)
+
+        self.assertEqual(
+            self.get_adoption_activity_type_options(page),
+            {'deed', 'dateactivity'}
+        )
+
+    def test_following_admin_change_only_shows_enabled_activity_types(self):
+        self.set_platform_activity_types(['deed', 'dateactivity'])
+        self.submit_following_form(activity_types=['deed'])
+        follow = Following.objects.get()
+
+        page = self.app.get(
+            reverse('admin:activity_pub_following_change', args=(follow.pk,)),
+            user=self.superuser
+        )
+
+        self.assertEqual(
+            self.get_adoption_activity_type_options(page),
+            {'deed', 'dateactivity'}
+        )
+
+    def test_following_admin_rejects_disabled_activity_type(self):
+        self.set_platform_activity_types(['deed'])
+        self.submit_following_form(activity_types=['deed'])
+        follow = Following.objects.get()
+
+        form = FollowingAdminForm(
+            instance=follow,
+            data={
+                'automatic_adoption_activity_types': ['funding'],
+                'adoption_type': 'link',
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('automatic_adoption_activity_types', form.errors)
+
     def test_following_admin_add_connection_invalid_platform_url(self):
         url = reverse('admin:activity_pub_following_add')
         page = self.app.get(url, user=self.superuser)
@@ -134,6 +192,54 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
             response.text
         )
         self.assertEqual(Following.objects.count(), 0)
+
+    def test_follower_str_uses_partner_actor(self):
+        actor = self.create_remote_actor()
+        actor.name = 'DLL'
+        actor.save()
+        follower = self.create_follower(actor=actor)
+        platform_name = str(follower.object)
+
+        self.assertEqual(str(follower), 'DLL')
+        self.assertEqual(str(Follow.objects.get(pk=follower.pk)), 'DLL')
+        self.assertEqual(str(Follower.objects.get(pk=follower.pk)), 'DLL')
+        self.assertNotEqual(str(follower), platform_name)
+
+        url = reverse('admin:activity_pub_follower_change', args=(follower.id,))
+        page = self.app.get(url, user=self.superuser)
+        breadcrumbs = page.html.find(class_='breadcrumbs')
+        self.assertIn('DLL', breadcrumbs.text)
+        self.assertNotIn(platform_name, breadcrumbs.text)
+
+    def test_follower_admin_sibling_links_use_follower_change_url(self):
+        first = self.create_follower(actor=self.create_remote_actor())
+        first.actor.name = 'DLL'
+        first.actor.save()
+        second = self.create_follower(actor=self.create_remote_actor())
+        second.actor.name = 'Do Good Up'
+        second.actor.save()
+
+        url = reverse('admin:activity_pub_follower_change', args=(first.id,))
+        page = self.app.get(url, user=self.superuser)
+        sibling_url = reverse(
+            'admin:activity_pub_follower_change', args=(second.id,)
+        )
+        generic_follow_url = reverse(
+            'admin:activity_pub_follow_change', args=(second.id,)
+        )
+
+        self.assertIn(sibling_url, page.text)
+        self.assertNotIn(generic_follow_url, page.text)
+        self.assertIn('Do Good Up', page.text)
+
+    def test_follow_admin_redirects_consumer_to_follower_change(self):
+        follower = self.create_follower()
+        generic_url = reverse('admin:activity_pub_follow_change', args=(follower.id,))
+        expected = reverse('admin:activity_pub_follower_change', args=(follower.id,))
+
+        response = self.app.get(generic_url, user=self.superuser)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, expected)
 
     def test_follower_admin_publish_activities_button_counts_unpublished(self):
         follower = self.create_follower()
@@ -177,23 +283,27 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url, user=self.superuser)
         form = page.forms[1]
 
-        with mock.patch('bluebottle.activity_pub.admin.publish_activities.delay') as delay:
+        with mock.patch('bluebottle.activity_pub.admin.publish_activity.delay_on_commit') as delay:
             response = form.submit(name='confirm')
 
         self.assertEqual(response.status_code, 302)
 
-        called_actor, called_queryset, called_tenant = delay.call_args[0]
+        called_actor, called_model, called_tenant = delay.call_args[0]
         self.assertEqual(called_actor, follower.actor)
         self.assertEqual(called_tenant, self.tenant)
         self.assertEqual(
-            set(called_queryset.values_list('id', flat=True)),
-            {open_activity.id}
+            called_model.pk,
+            open_activity.id
         )
 
     def test_follower_admin_accept_follow_request_sets_publish_mode(self):
         follower = self.create_follower(accepted=False)
         url = reverse('admin:activity_pub_follower_accept', args=(follower.id,))
         page = self.app.get(url, user=self.superuser)
+        self.assertContains(page, 'Partner:')
+        self.assertContains(page, str(follower.actor))
+        self.assertContains(page, 'Adoption type:')
+        self.assertContains(page, follower.short_adoption_type)
         form = page.forms[1]
         form['publish_mode'] = 'automatic'
         response = form.submit(name='confirm')
@@ -202,3 +312,14 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         follower.refresh_from_db()
         self.assertEqual(follower.publish_mode, 'automatic')
         self.assertTrue(Accept.objects.filter(object=follower).exists())
+
+    def test_shared_activities_adopted_column_counts_accepts(self):
+        activity = self.create_published_activity(self.create_follower())
+        event = activity.activity_pub_model
+        Accept.objects.create(actor=self.create_remote_actor(), object=event)
+        Accept.objects.create(actor=self.create_remote_actor(), object=event)
+
+        admin = PublishedActivityAdmin(PublishedActivity, AdminSite())
+        self.assertNotIn('adopted', admin.list_display)
+        self.assertIsNone(event.adopted)
+        self.assertEqual(admin.adopted_count(event), 2)

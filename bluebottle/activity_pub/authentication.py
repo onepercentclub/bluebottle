@@ -40,7 +40,7 @@ class JSONLDKeyResolver(HTTPSignatureKeyResolver):
     def get_actor(self, iri):
         if is_local(iri):
             resolved_url = resolve(urlparse(iri).path)
-            return Actor.objects.get(**resolved_url.kwargs)
+            return Actor.objects.get(pk=resolved_url.kwargs['pk'])
         else:
             return Actor.objects.get(iri=iri)
 

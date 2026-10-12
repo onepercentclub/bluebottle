@@ -95,7 +95,7 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     withdraw = Transition(
-        [scheduled, accepted],
+        [scheduled, accepted, new],
         withdrawn,
         name=_("Withdraw"),
         passed_label=_("withdrawn"),

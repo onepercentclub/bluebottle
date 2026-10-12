@@ -1,4 +1,8 @@
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
+from bluebottle.activity_pub.effects import (
+    SendJoinEffect, SendSupplierJoinEffect, SendAcceptEffect, SendLeaveEffect,
+    SendRejectEffect, SyncRelatedEvent, SendRemoveEffect
+)
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
@@ -76,6 +80,21 @@ def is_user(effect):
     return user and effect.instance.user_id == user.id
 
 
+def is_remote(effect):
+    """Is remote participant"""
+    return bool(effect.instance.remote_user_id)
+
+
+def is_local_activity(effect):
+    """Is local activity"""
+    return not effect.instance.activity.is_adopted
+
+
+def is_user_or_remote(effect):
+    """Registration was submitted by the participant (local or remote)"""
+    return is_user(effect) or is_remote(effect)
+
+
 def is_admin(effect):
     """Is not user"""
     user = effect.options.get("user")
@@ -105,21 +124,24 @@ class RegistrationTriggers(TriggerManager):
                     RegistrationStateMachine.auto_accept,
                     conditions=[
                         no_review_needed,
-                        is_user
+                        is_user_or_remote
                     ]
                 ),
                 TransitionEffect(
                     RegistrationStateMachine.add,
                     conditions=[
-                        is_admin
+                        is_admin,
+                        is_local_activity
                     ]
                 ),
+                SyncRelatedEvent
             ]
         ),
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
             effects=[
                 FollowActivityEffect,
+                SendAcceptEffect,
             ]
         ),
         TransitionTrigger(
@@ -130,6 +152,7 @@ class RegistrationTriggers(TriggerManager):
                     RegistrationParticipantStateMachine.accept,
                 ),
                 FollowActivityEffect,
+                SendAcceptEffect,
             ],
         ),
         TransitionTrigger(
@@ -167,6 +190,7 @@ class RegistrationTriggers(TriggerManager):
                     RegistrationParticipantStateMachine.reject,
                 ),
                 UnFollowActivityEffect,
+                SendRejectEffect
             ]
         ),
 
@@ -211,6 +235,7 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     DeadlineUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
+                SendJoinEffect
             ]
         ),
         TransitionTrigger(
@@ -227,6 +252,7 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
                 ),
+                SendJoinEffect,
             ],
         ),
         TransitionTrigger(
@@ -302,6 +328,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     PeriodicUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
+                SendJoinEffect
             ],
         ),
         TransitionTrigger(
@@ -383,6 +410,8 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                SendJoinEffect,
+                SyncRelatedEvent
             ],
         ),
         TransitionTrigger(
@@ -395,6 +424,8 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                SendLeaveEffect,
+                SyncRelatedEvent
             ],
         ),
 
@@ -412,8 +443,29 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     "participants",
                     PeriodicParticipantStateMachine.auto_remove,
                 ),
+                SendRemoveEffect
             ],
         ),
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.restore,
+            effects=[
+                NotificationEffect(UserRegistrationRestartedNotification),
+                NotificationEffect(ManagerRegistrationRestartedNotification),
+                RelatedTransitionEffect(
+                    "participants",
+                    PeriodicParticipantStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+                SendJoinEffect,
+                SendSupplierJoinEffect,
+                SyncRelatedEvent
+            ],
+        ),
+
     ]
 
 
@@ -461,6 +513,7 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     ScheduleUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
+                SendJoinEffect
             ],
         ),
         TransitionTrigger(
@@ -695,6 +748,7 @@ class DateRegistrationTriggers(RegistrationTriggers):
                         is_user
                     ]
                 ),
+                SendJoinEffect
             ]
         ),
         TransitionTrigger(

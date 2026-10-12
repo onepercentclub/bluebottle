@@ -1535,8 +1535,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        matching_country = CountryFactory.create()
-        other_country = CountryFactory.create()
+        # Explicit codes + no initiative place / default location: CountryFactory
+        # uses get_or_create(alpha2_code) with Faker, so random factory countries
+        # can collide and inflate facet counts.
+        matching_country = CountryFactory.create(alpha2_code='NL')
+        other_country = CountryFactory.create(alpha2_code='BE')
 
         # CountryFactory get-or-creates on alpha2_code, and both InitiativeFactory
         # and DeadlineActivityFactory create extra locations by default. Those
@@ -1545,23 +1548,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             DeadlineActivityFactory.create(
                 initiative=None,
                 location=None,
+                initiative__place=None,
                 office_location=LocationFactory.create(country=matching_country),
                 status='open',
             ),
             DeadlineActivityFactory.create(
                 initiative=None,
                 location=GeolocationFactory.create(country=matching_country),
+                initiative__place=None,
                 status='open',
             ),
             FundingFactory.create(
                 initiative=None,
                 impact_location=GeolocationFactory.create(country=matching_country),
+                initiative__place=None,
                 status='open'
-
             ),
             DeedFactory.create(
                 initiative=None,
                 office_location=LocationFactory.create(country=matching_country),
+                initiative__place=None,
                 status='open'
             )
         ]
@@ -1570,6 +1576,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             initiative=None,
             slots=[],
             status='open',
+            initiative__place=None,
         )
         DateActivitySlotFactory.create(
             activity=date_activity,
@@ -1583,6 +1590,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             3,
             initiative=None,
             location=None,
+            initiative__place=None,
             office_location=LocationFactory.create(country=other_country),
             status='open',
         )
@@ -1590,6 +1598,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             3,
             initiative=None,
             location=GeolocationFactory.create(country=None),
+            initiative__place=None,
             status='open',
         )
 

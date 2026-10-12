@@ -16,10 +16,19 @@ class ManagerRegistrationNotification(TransitionMessage):
         'title': 'activity.title',
         'applicant_name': 'user.full_name',
         'team_name': 'team.name',
-        'captain_email': 'team.user.email',
         'question': 'activity.review_title',
         'answer': 'answer',
     }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        team = getattr(self.obj, 'team', None) or (
+            self.obj.teams.first() if hasattr(self.obj, 'teams') else None
+        )
+        if team:
+            captain = team.user or team.remote_user
+            context['captain_email'] = captain.email if captain else None
+        return context
 
     @property
     def action_link(self):

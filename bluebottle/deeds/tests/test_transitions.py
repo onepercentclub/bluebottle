@@ -195,7 +195,8 @@ class DeedParticipantStateMachineTestCase(StateMachineTestCase):
         self.create()
 
         self.assertNoTransition('accept', self.user)
-        self.assertTransition('accept', self.staff_user)
-        self.assertTransition('accept', self.owner)
-        self.assertTransition('accept', self.defaults['activity'].initiative.owner)
-        self.assertTransition('accept', self.defaults['activity'].initiative.activity_manager)
+        self.assertNoTransition('re_accept', self.user)
+        self.assertTransition('re_accept', self.staff_user)
+        self.assertTransition('re_accept', self.owner)
+        self.assertTransition('re_accept', self.defaults['activity'].initiative.owner)
+        self.assertTransition('re_accept', self.defaults['activity'].initiative.activity_manager)

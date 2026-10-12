@@ -1,6 +1,8 @@
 import json
 from django.urls import reverse
 
+from bluebottle.activity_pub.tests.factories import CreateFactory, DoGoodEventFactory, OrganizationFactory
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory
@@ -25,8 +27,6 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         form = page.forms['dateactivity_form']
         form['title'] = 'Complete activity'
         form['description'] = json.dumps({'html': 'Description', 'delta': ''})
-        page = form.submit()
-        form = page.forms[1]
         form.submit()
 
         activity.refresh_from_db()
@@ -46,8 +46,6 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         form = page.forms['dateactivity_form']
         form['title'] = 'Complete activity'
         form['description'] = json.dumps({'html': 'Description', 'delta': ''})
-        page = form.submit()
-        form = page.forms[1]
         form.submit()
 
         activity.refresh_from_db()
@@ -76,3 +74,42 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url)
         form = page.forms['dateactivity_form']
         self.assertTrue('office_location' in form.fields)
+
+
+class ActivityAdminPartnerTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.superuser)
+        self.url = reverse('admin:activities_activity_changelist')
+
+    def test_partner_filter_and_column_when_consumer(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['consumer']
+        site_settings.save()
+
+        partner = OrganizationFactory.create(name='DLL Partner')
+        activity = DateActivityFactory.create()
+        event = DoGoodEventFactory.create(adopted=activity)
+        CreateFactory.create(actor=partner, object=event)
+
+        page = self.app.get(self.url)
+        self.assertIn('Partner', page.text)
+        self.assertIn('DLL Partner', page.text)
+
+        filtered = self.app.get(f'{self.url}?partner={partner.pk}')
+        self.assertIn(activity.title, filtered.text)
+
+    def test_partner_filter_hidden_when_not_consumer(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier']
+        site_settings.save()
+
+        page = self.app.get(self.url)
+        self.assertNotIn('?partner=', page.text)
+        filters = page.html.find(id='changelist-filter')
+        if filters:
+            self.assertNotIn('Partner', filters.text)

@@ -4,50 +4,10 @@ from django_quill.fields import QuillField
 from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
-from bluebottle.activity_pub.models import (
-    Follow, Create, Start, Finish, Cancel
-)
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import MoneyField
-
-
-class LinkedActivityManager(PolymorphicManager):
-    def sync(self, event):
-        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
-        from bluebottle.activity_links.serializers import LinkedActivitySerializer
-
-        try:
-            instance = self.get(event=event)
-        except LinkedActivity.DoesNotExist:
-            instance = None
-
-        data = EventSerializer(instance=event).data
-        serializer = LinkedActivitySerializer(
-            data=data, instance=instance
-        )
-        serializer.is_valid(raise_exception=True)
-
-        follow = Follow.objects.get(object=event.create_set.first().actor)
-
-        activity_type = serializer.validated_data['type'].lower()
-        if activity_type == 'collectcampaign':
-            activity_type = 'collectactivity'
-
-        if activity_type == 'gooddeed':
-            activity_type = 'deed'
-
-        if (
-            activity_type in follow.automatic_adoption_activity_types or
-            serializer.instance
-        ):
-            organization = Create.objects.filter(object=event).first().actor.organization
-
-            return serializer.save(
-                event=event, host_organization=organization
-            )
 
 
 class LinkedActivity(TriggerMixin, PolymorphicModel):
@@ -77,24 +37,7 @@ class LinkedActivity(TriggerMixin, PolymorphicModel):
         on_delete=models.SET_NULL,
     )
 
-    objects = LinkedActivityManager()
-
-    def save(self, *args, **kwargs):
-        created = not self.pk
-        super().save(*args, **kwargs)
-
-        if created:
-            try:
-                for start in Start.objects.filter(object=self.event):
-                    self.states.start(save=True)
-
-                for finish in Finish.objects.filter(object=self.event):
-                    self.states.succeed(save=True)
-
-                for cancel in Cancel.objects.filter(object=self.event):
-                    self.states.cancel(save=True)
-            except TransitionNotPossible:
-                pass
+    objects = PolymorphicManager()
 
     class Meta:
         verbose_name_plural = _('Linked activities')
@@ -196,6 +139,3 @@ class LinkedScheduleActivity(LinkedActivity):
     duration = models.DurationField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     activity_type = _('Past date activity')
-
-
-from bluebottle.activity_links.signals import *  # noqa

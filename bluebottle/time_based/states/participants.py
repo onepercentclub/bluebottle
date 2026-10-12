@@ -516,6 +516,14 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
     withdraw = None
 
+    restore = Transition(
+        [ParticipantStateMachine.removed, ParticipantStateMachine.withdrawn],
+        ParticipantStateMachine.accepted,
+        name=_("Restore"),
+        description=_("Restore previously removed participant"),
+        automatic=True,
+    )
+
 
 @register(DateParticipant)
 class DateParticipantStateMachine(RegistrationParticipantStateMachine):

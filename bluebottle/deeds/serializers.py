@@ -159,6 +159,8 @@ class DeedParticipantSerializer(BaseContributorSerializer):
         resource_name = 'contributors/deeds/participants'
         included_resources = [
             "user",
+            "remote_user",
+            "remote_user.source",
             "user.avatar",
             "activity",
             "activity.goals",
@@ -166,6 +168,8 @@ class DeedParticipantSerializer(BaseContributorSerializer):
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
+        'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'activity': 'bluebottle.deeds.serializers.DeedSerializer',
         'activity.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',

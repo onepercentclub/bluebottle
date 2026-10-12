@@ -38,6 +38,8 @@ class ParticipantSerializer(BaseContributorSerializer):
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         included_resources = [
             "user",
+            "remote_user",
+            "remote_user.source",
             "registration",
             "activity",
             "contributions"
@@ -48,6 +50,8 @@ class ParticipantSerializer(BaseContributorSerializer):
         **{
             'activity': 'bluebottle.time_based.serializers.RegisteredDateActivitySerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+            'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
+            'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
         }
     )
 
@@ -67,7 +71,10 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
-        fields = ParticipantSerializer.Meta.fields + ("contributions", 'slot')
+        fields = ParticipantSerializer.Meta.fields + (
+            "contributions",
+            "slot",
+        )
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = "contributors/time-based/date-participants"
@@ -89,7 +96,7 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
 
     class Meta(ParticipantSerializer.Meta):
         model = DeadlineParticipant
-        fields = ParticipantSerializer.Meta.fields + ("contributions",)
+        fields = ParticipantSerializer.Meta.fields + ("contributions", )
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = "contributors/time-based/deadline-participants"

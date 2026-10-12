@@ -39,11 +39,14 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
 
 
 class StateMachineModelForm(forms.ModelForm, metaclass=StateMachineModelFormMetaClass):
+    # Set by StateMachineAdminMixin.get_form, so transitions are checked against the user's permissions
+    user = None
+
     def __init__(self, *args, **kwargs):
         super(StateMachineModelForm, self).__init__(*args, **kwargs)
         for field in self.state_machine_fields:
             machine = getattr(self.instance, field)
-            transitions = machine.possible_transitions()
+            transitions = machine.possible_transitions(user=self.user)
 
             self.fields[field].widget.attrs['obj'] = self.instance
             self.fields[field].label = _('Transitions')

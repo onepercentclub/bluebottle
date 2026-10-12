@@ -13,7 +13,7 @@ from rest_framework_json_api.relations import (
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.activities.models import Activity, Organizer
+from bluebottle.activities.models import Activity
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -263,7 +263,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         related_link_view_name="deadline-participants",
         related_link_url_kwarg="activity_id",
         statuses={
-            "active": ["succeeded"],
+            "active": ["succeeded", "accepted"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
         participating_statuses=PARTICIPATING_DEADLINE_PARTICIPANT_STATUSES,
@@ -514,13 +514,11 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         related_link_url_kwarg='activity_id',
     )
 
-    def get_contributor_count(self, instance):
-        return (
-            instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
-        )
+    def get_contributor_count(self, obj):
+        if hasattr(obj, 'origin'):
+            return obj.origin.contributor_count
+        else:
+            return obj.active_contributors.count()
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity
@@ -603,14 +601,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         related_link_url_kwarg='activity_id',
         activity_level_only=False,
     )
-
-    def get_contributor_count(self, instance):
-        return (
-            instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
-        )
 
     def get_filtered_slots(self, obj, only_upcoming=False):
 
@@ -764,8 +754,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
         user = self.context['request'].user
         if (
-                user.is_authenticated and
-                obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+            user.is_authenticated and
+            obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
         ):
             meeting_url = slot.online_meeting_url or None
         else:

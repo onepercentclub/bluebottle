@@ -1,21 +1,23 @@
+import logging
 import re
 
-from bluebottle.members.models import MemberPlatformSettings
 import django_otp
-
-
 from django.conf import settings
 from django.contrib.auth import login
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
-from rest_framework.exceptions import PermissionDenied
 from django.template import loader
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
+from rest_framework.exceptions import PermissionDenied
 
 from bluebottle.clients import properties
-from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.models import SAMLDevice
 from bluebottle.utils.utils import get_client_ip
+
+logger = logging.getLogger(__name__)
 
 
 def get_auth(request, settings, saml_request=None):
@@ -29,6 +31,27 @@ class TokenRedirectView(View):
     permanent = False
     query_string = True
 
+    def target_url(self, request):
+        url = request.GET.get('url')
+        try:
+            allowed = url and url_has_allowed_host_and_scheme(
+                url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            )
+            if allowed:
+                return request.build_absolute_uri(url)
+        except ValueError:
+            allowed = False
+
+        if url:
+            logger.warning(
+                'Rejected off-site or malformed token redirect url %r on %s',
+                url,
+                request.get_host(),
+            )
+        return request.build_absolute_uri('/')
+
     def get(self, request, *args, **kwargs):
         client_ip = get_client_ip(request)
 
@@ -38,7 +61,7 @@ class TokenRedirectView(View):
             saml_settings = properties.TOKEN_AUTH
 
         auth = get_auth(request, settings=saml_settings, **kwargs)
-        sso_url = auth.sso_url(target_url=request.build_absolute_uri(request.GET.get('url')))
+        sso_url = auth.sso_url(target_url=self.target_url(request))
         return HttpResponseRedirect(sso_url)
 
 

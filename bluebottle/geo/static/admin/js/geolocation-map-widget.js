@@ -152,7 +152,7 @@
     function forwardGeocodeV6(query, accessToken) {
         const url = new URL('https://api.mapbox.com/search/geocode/v6/forward');
         url.searchParams.set('q', query);
-        url.searchParams.set('types', 'address,street,place,locality');
+        url.searchParams.set('types', 'address,street,neighborhood,place,locality,region,country');
         url.searchParams.set('permanent', 'true');
         url.searchParams.set('limit', '5');
         url.searchParams.set('autocomplete', 'true');

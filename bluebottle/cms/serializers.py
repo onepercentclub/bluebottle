@@ -3,7 +3,7 @@ from builtins import object
 from django.db.models import Q
 from django.urls import reverse
 from django_tools.middlewares.ThreadLocal import get_current_user
-from fluent_contents.models import ContentItem
+from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
@@ -20,7 +20,8 @@ from bluebottle.cms.models import (
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, NewsContent
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, NewsContent,
+    PollContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
@@ -32,6 +33,15 @@ from bluebottle.pages.models import (
 from bluebottle.slides.models import Slide
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, RichTextField, SafeField
 from bluebottle.utils.models import get_default_language
+
+
+def get_staff_admin_url(obj):
+    user = get_current_user()
+    if user and user.is_authenticated and (user.is_staff or user.is_superuser):
+        return reverse(
+            'admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name),
+            args=[obj.pk]
+        )
 
 
 class QuoteSerializer(ModelSerializer):
@@ -226,6 +236,27 @@ class DonateButtonBlockSerializer(BaseBlockSerializer):
 
     included_serializers = {
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
+    }
+
+
+class PollBlockSerializer(BaseBlockSerializer):
+
+    poll = ResourceRelatedField(
+        read_only=True
+    )
+
+    class Meta(object):
+        model = PollContent
+        fields = ('id', 'block_type', 'poll')
+        included_resources = ['poll', 'poll.options', 'poll.my_vote']
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/poll'
+
+    included_serializers = {
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'poll.options': 'bluebottle.voting.serializers.PollOptionSerializer',
+        'poll.my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
     }
 
 
@@ -557,6 +588,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         StepsBlockSerializer,
         ActivitiesBlockSerializer,
         DonateButtonBlockSerializer,
+        PollBlockSerializer,
         ProjectsMapBlockSerializer,
         LinksBlockSerializer,
         StatsBlockSerializer,
@@ -600,7 +632,7 @@ class BlockSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding',
-            'full_page', 'persons'
+            'poll', 'poll.options', 'full_page', 'persons'
 
         ]
 
@@ -611,9 +643,23 @@ class BlockSerializer(PolymorphicModelSerializer):
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
         'persons': 'bluebottle.cms.serializers.PersonSerializer',
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'poll.options': 'bluebottle.voting.serializers.PollOptionSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
+
+
+def get_content_items(obj, attribute):
+    """
+    Return the content items of a placeholder field, tolerating a missing placeholder.
+    """
+    try:
+        placeholder = getattr(obj, attribute)
+    except Placeholder.DoesNotExist:
+        return ContentItem.objects.none()
+
+    return placeholder.contentitems.all()
 
 
 class BaseCMSSerializer(ModelSerializer):
@@ -627,11 +673,14 @@ class BaseCMSSerializer(ModelSerializer):
     content_attribute = 'content'
 
     def get_blocks(self, obj):
-        blocks = obj.content.contentitems.all().translated()
+        items = get_content_items(obj, self.content_attribute)
+
+        blocks = items.translated()
         if blocks.exists():
             return blocks
+
         default_language = get_default_language()
-        return obj.content.contentitems.all().translated(default_language)
+        return items.translated(default_language)
 
     class Meta(object):
         fields = ('id', 'blocks')
@@ -646,6 +695,9 @@ class BaseCMSSerializer(ModelSerializer):
             'blocks.persons',
             'blocks.funding',
             'blocks.funding.image',
+            'blocks.poll',
+            'blocks.poll.options',
+            'blocks.poll.my_vote',
             'blocks.logos',
             'blocks.categories',
         ]
@@ -659,6 +711,9 @@ class BaseCMSSerializer(ModelSerializer):
         'persons': 'bluebottle.cms.serializers.PersonSerializer',
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'options': 'bluebottle.voting.serializers.PollOptionSerializer',
+        'my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
@@ -674,13 +729,20 @@ class HomeSerializer(BaseCMSSerializer):
 
 class PageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    admin_url = serializers.SerializerMethodField()
 
     def get_blocks(self, obj):
-        return obj.content.contentitems.all()
+        return get_content_items(obj, self.content_attribute)
+
+    def get_admin_url(self, obj):
+        return get_staff_admin_url(obj)
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'show_title', 'full_page', 'slug', 'admin_url'
+        )
+        meta_fields = ('admin_url',)
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'pages'
@@ -688,18 +750,19 @@ class PageSerializer(BaseCMSSerializer):
 
 class PlatformPageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    admin_url = serializers.SerializerMethodField()
 
-    def get_blocks(self, obj):
-        blocks = obj.body.contentitems.all().translated()
-        if blocks.exists():
-            return blocks
+    content_attribute = 'body'
 
-        default_language = get_default_language()
-        return obj.body.contentitems.all().translated(default_language)
+    def get_admin_url(self, obj):
+        return get_staff_admin_url(obj)
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'show_title', 'full_page', 'slug', 'admin_url'
+        )
+        meta_fields = ('admin_url',)
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'pages'
@@ -713,7 +776,7 @@ class NewsItemSerializer(BaseCMSSerializer):
     content_attribute = 'contents'
 
     def get_blocks(self, obj):
-        return obj.contents.contentitems.all()
+        return get_content_items(obj, self.content_attribute)
 
     class Meta(BaseCMSSerializer.Meta):
         model = NewsItem
@@ -742,6 +805,14 @@ class NewsItemPreviewSerializer(ModelSerializer):
         resource_name = 'news-item-preview'
 
 
+def _published_brand_color(obj, original_attr, adjusted_attr):
+    if getattr(obj, 'accessible_colours', False):
+        adjusted = getattr(obj, adjusted_attr, None)
+        if adjusted:
+            return adjusted
+    return getattr(obj, original_attr, None)
+
+
 class FaviconsSerializer(serializers.Serializer):
     large = SorlImageField('194x194', source='*')
     small = SorlImageField('32x32', source='*')
@@ -749,6 +820,14 @@ class FaviconsSerializer(serializers.Serializer):
 
 class SitePlatformSettingsSerializer(serializers.ModelSerializer):
     favicons = FaviconsSerializer(source='favicon')
+    action_color = serializers.SerializerMethodField()
+    description_color = serializers.SerializerMethodField()
+
+    def get_action_color(self, obj):
+        return _published_brand_color(obj, 'action_color', 'action_color_adjusted')
+
+    def get_description_color(self, obj):
+        return _published_brand_color(obj, 'description_color', 'description_color_adjusted')
 
     class Meta(object):
         model = SitePlatformSettings
@@ -770,8 +849,11 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'action_color',
             'action_text_color',
             'alternative_link_color',
+            'action_on_tint_color',
             'description_color',
             'description_text_color',
+            'description_on_background_color',
+            'description_on_tint_color',
             'footer_color',
             'footer_text_color',
             'title_font',

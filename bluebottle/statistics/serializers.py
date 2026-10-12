@@ -128,4 +128,7 @@ class StatisticSerializer(BaseStatisticSerializer):
 class UserStatisticSerializer(StatisticSerializer):
 
     def get_user(self):
-        return get_current_user()
+        user = get_current_user()
+        if getattr(user, 'is_authenticated', False):
+            return user
+        return None

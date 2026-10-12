@@ -28,6 +28,10 @@ urlpatterns = [
         include('bluebottle.categories.urls.api')
     ),
     path(
+        'api/polls/',
+        include('bluebottle.voting.urls.api')
+    ),
+    path(
         'api/geo/',
         include('bluebottle.geo.urls.api')
     ),

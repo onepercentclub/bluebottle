@@ -4,6 +4,7 @@ from builtins import object
 from django.db.models import Q
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodResourceRelatedField, HyperlinkedRelatedField
@@ -140,6 +141,7 @@ class CurrentMemberSerializer(MemberSerializer):
     )
     segments = ResourceRelatedField(many=True, read_only=True)
     has_initiatives = serializers.SerializerMethodField()
+    has_votes = serializers.SerializerMethodField()
     can_pledge = serializers.BooleanField(read_only=True)
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
 
@@ -155,13 +157,16 @@ class CurrentMemberSerializer(MemberSerializer):
     def get_has_initiatives(self, obj):
         return obj.is_initiator
 
+    def get_has_votes(self, obj):
+        return obj.poll_votes.exists()
+
     class Meta(MemberSerializer.Meta):
         fields = MemberSerializer.Meta.fields + (
             "hours_spent",
             "hours_planned",
             "has_initiatives",
+            "has_votes",
             "segments",
-            "has_initiatives",
             "profile",
             "can_pledge",
             "can_do_bank_transfer",
@@ -313,6 +318,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     stats = serializers.SerializerMethodField()
     transitions = AvailableTransitionsField(source='states')
+    admin_url = serializers.SerializerMethodField()
 
     is_open = serializers.ReadOnlyField()
 
@@ -355,6 +361,14 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     def get_stats(self, obj):
         return get_stats_for_activities(self.get_activities(obj))
 
+    def get_admin_url(self, obj):
+        user = get_current_user()
+        if user and user.is_authenticated and (user.is_staff or user.is_superuser):
+            return reverse(
+                'admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name),
+                args=[obj.pk]
+            )
+
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
@@ -389,12 +403,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'activities', 'segments',
             'errors', 'required', 'stats', 'is_open', 'status', 'is_global',
-            'translations'
+            'translations', 'admin_url'
         )
 
         meta_fields = (
             'permissions', 'transitions', 'status', 'created', 'required',
-            'errors', 'stats', 'current_status', 'translations'
+            'errors', 'stats', 'current_status', 'translations', 'admin_url'
         )
 
     class JSONAPIMeta(object):

@@ -47,7 +47,7 @@ def deduplicate(items):
 def unique_slot_geolocations(slots):
     seen = {}
     for slot in slots:
-        if slot.is_online or not slot.location_id:
+        if getattr(slot, 'is_online', False) or not slot.location_id:
             continue
         if slot.location_id not in seen:
             seen[slot.location_id] = slot.location

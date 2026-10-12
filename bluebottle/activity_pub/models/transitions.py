@@ -16,7 +16,8 @@ class Transition(Activity):
 
     @property
     def has_target(self):
-        return True
+        """Transitions should only happen when the object is adopted on the platform"""
+        return bool(self.object.adopted or getattr(self.object, 'link', None))
 
     def save(self, *args, **kwargs):
         if not self.is_local and not self.transitioned and self.has_target:
@@ -32,13 +33,7 @@ class Transition(Activity):
         raise NotImplementedError()
 
 
-class ActivityTransitionMixin:
-    @property
-    def has_target(self):
-        return bool(self.object.adopted or getattr(self.object, 'link', None))
-
-
-class Delete(ActivityTransitionMixin, Transition):
+class Delete(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.cancel(save=True)
@@ -47,7 +42,7 @@ class Delete(ActivityTransitionMixin, Transition):
             self.object.link.delete()
 
 
-class Start(ActivityTransitionMixin, Transition):
+class Start(Transition):
     def transition(self):
         if self.object.adopted:
             if self.object.adopted.status == 'cancelled':
@@ -59,7 +54,7 @@ class Start(ActivityTransitionMixin, Transition):
             self.object.link.states.start(save=True)
 
 
-class Cancel(ActivityTransitionMixin, Transition):
+class Cancel(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.cancel(save=True)
@@ -68,7 +63,7 @@ class Cancel(ActivityTransitionMixin, Transition):
             self.object.link.states.cancel(save=True)
 
 
-class Finish(ActivityTransitionMixin, Transition):
+class Finish(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.succeed(save=True)
@@ -77,7 +72,7 @@ class Finish(ActivityTransitionMixin, Transition):
             self.object.link.states.succeed(save=True)
 
 
-class Lock(ActivityTransitionMixin, Transition):
+class Lock(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.lock(save=True)

@@ -295,6 +295,22 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
 
         self.assertStatus(contribution, 'new')
 
+    def test_schedule_succeeded_contribution_never_scheduled_is_set_to_new(self):
+        """
+        BB-30016: contributions that were auto-succeeded while the participant
+        was still unscheduled must be reset to 'new'.
+        """
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        self.assertStatus(participant, 'accepted')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'succeeded')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
     def test_schedule_failed_contribution_without_slot_is_set_to_new(self):
         participant = self.register(
             self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory

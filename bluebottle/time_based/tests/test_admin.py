@@ -36,11 +36,11 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         super().setUp()
         self.app.set_user(self.staff_member)
 
-    def test_activity_inline_shows_activity_level_interests_only(self):
+    def test_activity_inline_shows_activity_and_slot_interests(self):
         activity = DateActivityFactory.create()
         activity_interest = InterestFactory.create(activity=activity, slot=None)
         slot = DateActivitySlotFactory.create(activity=activity)
-        InterestFactory.create(activity=activity, slot=slot)
+        slot_interest = InterestFactory.create(activity=activity, slot=slot)
 
         url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
         page = self.app.get(url)
@@ -48,6 +48,7 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         self.assertEqual(page.status_code, 200)
         self.assertIn('Interested members', page.text)
         self.assertIn(str(activity_interest.user), page.text)
+        self.assertIn(str(slot_interest.user), page.text)
 
         inline = ActivityInterestAdminInline(InterestFactory._meta.model, AdminSite())
         request = RequestFactory().get('/')
@@ -55,7 +56,7 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         queryset = inline.get_queryset(request).filter(
             activity=activity
         )
-        self.assertEqual(list(queryset), [activity_interest])
+        self.assertCountEqual(list(queryset), [activity_interest, slot_interest])
 
     def test_slot_inline_shows_slot_interests(self):
         activity = DateActivityFactory.create()

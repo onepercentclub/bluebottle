@@ -11,8 +11,9 @@ from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
+from bluebottle.bluebottle_dashboard.utils import get_menu_items
 from bluebottle.time_based.admin import (
-    ActivityInterestAdminInline,
+    DateActivityInterestAdminInline,
     ScheduleActivityAdmin,
     SkillAdmin,
     SlotInterestAdminInline,
@@ -50,7 +51,9 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         self.assertIn(str(activity_interest.user), page.text)
         self.assertIn(str(slot_interest.user), page.text)
 
-        inline = ActivityInterestAdminInline(InterestFactory._meta.model, AdminSite())
+        inline = DateActivityInterestAdminInline(
+            InterestFactory._meta.model, AdminSite()
+        )
         request = RequestFactory().get('/')
         request.user = self.staff_member
         queryset = inline.get_queryset(request).filter(
@@ -98,6 +101,39 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         self.assertFalse(
             InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
         )
+
+    def test_delete_slot_interest_from_date_activity_inline(self):
+        activity = DateActivityFactory.create()
+        slot = DateActivitySlotFactory.create(activity=activity)
+        interest = InterestFactory.create(activity=activity, slot=slot)
+
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+        form = page.forms['dateactivity_form']
+        delete_field = next(
+            name for name in form.fields if name.endswith('-DELETE')
+            and name.startswith('interests-')
+        )
+        form[delete_field] = True
+        page = form.submit()
+        if 'confirm' in page.forms:
+            page = page.forms['confirm'].submit()
+
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_side_menu_shows_waiting_list(self):
+        request = RequestFactory().get(reverse('admin:index'))
+        request.user = self.superuser
+        menu_groups = get_menu_items(
+            {'user': self.superuser, 'request': request}
+        )
+        time_based = next(
+            group for group in menu_groups if group['app_label'] == 'time_based'
+        )
+        labels = [str(item['label']) for item in time_based['items']]
+        self.assertIn('Waiting list', labels)
 
 
 class ScheduleActivityAdminRegistrationFieldsTest(BluebottleTestCase):

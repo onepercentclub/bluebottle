@@ -645,10 +645,7 @@ class ActivityInterestAdminInline(BaseInterestAdminInline):
     verbose_name = _('Interested member')
     verbose_name_plural = _('Interested members')
     readonly_fields = ['edit', 'created', 'slot']
-    fields = ['edit', 'created', 'user', 'slot']
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('slot')
+    fields = ['edit', 'created', 'user']
 
     def save_new(self, form, commit=True):
         interest = super().save_new(form, commit=False)
@@ -656,6 +653,16 @@ class ActivityInterestAdminInline(BaseInterestAdminInline):
         if commit:
             interest.save()
         return interest
+
+
+class DateActivityInterestAdminInline(ActivityInterestAdminInline):
+    fields = ActivityInterestAdminInline.fields + ['slot']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('slot')
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class SlotInterestAdminInline(BaseInterestAdminInline):
@@ -677,7 +684,7 @@ class DateActivityAdmin(TimeBasedAdmin):
     inlines = (
         DateActivitySlotInline,
         DateRegistrationAdminInline,
-        ActivityInterestAdminInline,
+        DateActivityInterestAdminInline,
     ) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
     save_as = True

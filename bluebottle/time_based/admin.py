@@ -1500,7 +1500,10 @@ class ParticipantSlotFormSet(BaseInlineFormSet):
         if 'data' not in kwargs:
             instance = kwargs['instance']
             new = []
-            for slot in instance.activity.slots.exclude(participants__registration=instance).all():
+            slots = instance.activity.slots.exclude(
+                participants__registration=instance
+            ).exclude(status='cancelled')
+            for slot in slots:
                 new.append({
                     'slot': slot,
                     'checked': False
@@ -1545,7 +1548,7 @@ class ParticipantSlotInline(admin.TabularInline):
 
     def get_extra(self, request, obj=None, **kwargs):
         ids = [sp.slot_id for sp in obj.participants.all()]
-        return obj.activity.slots.exclude(id__in=ids).count()
+        return obj.activity.slots.exclude(id__in=ids).exclude(status='cancelled').count()
 
     fields = ['slot', 'checked']
 

@@ -60,6 +60,8 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     def validate(self, data):
         email = data.get('email', None)
+        if not data['slot'].accepts_participants:
+            raise ValidationError('Participants cannot sign up for cancelled slots')
         if data['slot'].status != 'open' and not email:
             raise ValidationError('Participants cannot sign up for full slots')
 

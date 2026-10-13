@@ -1,7 +1,9 @@
+from django.db.models import Q
 from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect, TransitionEffect
+from bluebottle.time_based.models import DateActivitySlot
 from bluebottle.time_based.states.slots import DateActivitySlotStateMachine
 
 
@@ -105,3 +107,62 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
             all(slot.status == 'full' for slot in joinable)
         ):
             activity.states.lock(save=True)
+
+
+class CancelUpcomingSlotsEffect(Effect):
+    """
+    Cancel the slots that haven't started yet when the activity is cancelled.
+    """
+    display = False
+    transition = DateActivitySlotStateMachine.auto_cancel
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.slots = []
+        self.transitioned_slots = []
+        if self.instance.pk:
+            self.slots = list(self.get_slots())
+
+    def get_slots(self):
+        return self.instance.slots.filter(
+            status__in=['draft', 'open', 'full', 'registration_closed']
+        )
+
+    def pre_save(self, effects):
+        handled = [
+            effect.instance.pk for effect in effects
+            if isinstance(effect.instance, DateActivitySlot)
+        ]
+        for slot in self.slots:
+            if slot.pk in handled:
+                continue
+            effect = TransitionEffect(self.transition)(
+                slot, parent=self.instance, **self.options
+            )
+            if effect.is_valid and effect not in effects:
+                effect.pre_save(effects=effects)
+                effects.append(effect)
+                slot.execute_triggers(effects=effects)
+                self.transitioned_slots.append(slot)
+
+    def post_save(self, **kwargs):
+        for slot in self.transitioned_slots:
+            slot.save()
+
+    def __str__(self):
+        return _('Cancel upcoming slots')
+
+
+class RestoreUpcomingSlotsEffect(CancelUpcomingSlotsEffect):
+    """
+    Reopen the cancelled slots that haven't started yet when the activity is restored.
+    """
+    transition = DateActivitySlotStateMachine.restore
+
+    def get_slots(self):
+        return self.instance.slots.filter(status='cancelled').filter(
+            Q(start__gt=now()) | Q(start__isnull=True)
+        )
+
+    def __str__(self):
+        return _('Reopen upcoming slots')

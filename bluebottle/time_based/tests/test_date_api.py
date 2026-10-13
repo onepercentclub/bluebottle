@@ -12,7 +12,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import APITestCase, JSONAPITestClient
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
@@ -41,6 +41,7 @@ from bluebottle.time_based.tests.factories import (
     DateRegistrationFactory,
     DateActivitySlotFactory,
 )
+from bluebottle.time_based.tests.steps import api_user_joins_slot
 
 
 class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase):
@@ -1100,3 +1101,35 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
         self.assertEqual(date_info['capacity'], 25)  # 15 + 10 = 25
         # Only accepted and succeeded participants in upcoming slots
         self.assertEqual(date_info['spots_left'], 17)  # 25 - (5 + 3) = 17
+
+
+class DateParticipantCancelledSlotAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory.create()
+        self.activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+            slots=[]
+        )
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.other_slot = DateActivitySlotFactory.create(activity=self.activity)
+
+    def test_join_open_slot(self):
+        api_user_joins_slot(self, self.slot, self.user)
+
+    def test_join_cancelled_slot(self):
+        self.slot.states.cancel(save=True)
+        api_user_joins_slot(self, self.slot, self.user, status_code=400)
+        self.assertEqual(self.slot.participants.count(), 0)
+
+    def test_join_cancelled_activity(self):
+        self.activity.states.cancel(save=True)
+        self.other_slot.refresh_from_db()
+        self.other_slot.status = 'open'
+        self.other_slot.save()
+
+        api_user_joins_slot(self, self.other_slot, self.user, status_code=400)
+        self.assertEqual(self.other_slot.participants.count(), 0)

@@ -112,7 +112,7 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
         return self.model.objects.filter(
             end__lt=timezone.now(),
             status='new',
-            contributor__status__in=('accepted', 'stopped')
+            contributor__status__in=('accepted', 'stopped', 'succeeded')
         )
 
     effects = [

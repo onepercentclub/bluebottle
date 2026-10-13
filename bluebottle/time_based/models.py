@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 import datetime
 
 import pytz
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
@@ -423,6 +424,8 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
     @property
     def durations(self):
+        if not self.pk:
+            return TimeContribution.objects.none()
         return TimeContribution.objects.filter(
             contributor__dateparticipant__slot=self
         )
@@ -456,6 +459,10 @@ class DateActivitySlot(ActivitySlot):
     @property
     def owners(self):
         return self.activity.owners
+
+    @property
+    def accepts_participants(self):
+        return self.status != 'cancelled' and self.activity.accepts_participants
 
     @property
     def required_fields(self):
@@ -1036,6 +1043,13 @@ class DateParticipant(Participant):
     def answer(self):
         return self.registration.answer
 
+    def clean(self):
+        super().clean()
+        if not self.pk and self.slot_id and not self.slot.accepts_participants:
+            raise ValidationError(
+                _('Participants cannot be added to a cancelled slot or activity.')
+            )
+
     class Meta(Participant.Meta):
         verbose_name = _("Participant to date activity slot")
         verbose_name_plural = _("Participants to date activity slot")
@@ -1199,6 +1213,13 @@ class Registration(TriggerMixin, PolymorphicModel):
         if self.activity_id:
             return _('Candidate {name} for {activity}').format(name=self.user, activity=self.activity)
         return _('Candidate {name}').format(name=self.user)
+
+    def clean(self):
+        super().clean()
+        if not self.pk and self.activity_id and not self.activity.accepts_participants:
+            raise ValidationError(
+                _('Participants cannot be added to a cancelled activity.')
+            )
 
     class Meta:
         ordering = ('-created',)

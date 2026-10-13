@@ -97,6 +97,8 @@ class RegistrationSerializer(ModelSerializer):
         return result
 
     def validate(self, data):
+        if not self.instance and 'activity' in data and not data['activity'].accepts_participants:
+            raise ValidationError(_('Participants cannot sign up for cancelled activities'))
         if 'activity' in data and data['activity'].registration_flow == 'question':
             if not data.get('answer'):
                 raise ValidationError({'answer': [_('This field is required')]})

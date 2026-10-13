@@ -927,13 +927,11 @@ class SlotCancelledNotification(TransitionMessage):
 
     def get_recipients(self):
         """participants that signed up"""
-        return [
-            self.obj.activity.owner
-        ] + [
-            participant.user for participant
-            in self.obj.participants.all()
-            if participant.status == 'accepted'
-        ]
+        recipients = [self.obj.activity.owner]
+        for participant in self.obj.participants.filter(status__in=['accepted', 'cancelled']):
+            if participant.user not in recipients:
+                recipients.append(participant.user)
+        return recipients
 
     @property
     def action_link(self):

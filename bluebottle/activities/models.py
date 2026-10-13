@@ -209,6 +209,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         return None
 
     @property
+    def accepts_participants(self):
+        return self.status not in ('cancelled', 'rejected', 'deleted')
+
+    @property
     def event(self):
         from bluebottle.activity_pub.models import Event
         return Event.objects.get(object=self)

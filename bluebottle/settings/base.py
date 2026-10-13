@@ -528,6 +528,10 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO',
         },
+        'bluebottle.clients.signals': {
+            'handlers': ['mail_admins'],
+            'propagate': True,
+        },
         "django.security.DisallowedHost": {
             "handlers": ["null"],
             "propagate": False,

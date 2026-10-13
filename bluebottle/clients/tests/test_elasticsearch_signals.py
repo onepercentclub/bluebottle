@@ -6,6 +6,8 @@ from bluebottle.activities.models import Activity
 from bluebottle.clients.signals import (
     TenantCelerySignalProcessor,
     registry_delete_related_task,
+    registry_update_related_task,
+    registry_update_task,
 )
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.models import DateActivity
@@ -139,3 +141,58 @@ class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
             mock_doc = MagicMock()
             registry_delete_related_task(mock_doc, related, tenant)
             self._assert_update_is_delete_action(mock_doc.update)
+
+
+class IndexErrorLoggingTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.activity = DateActivityFactory.create()
+        self.model_info = {
+            'app_label': 'time_based',
+            'model_name': 'dateactivity',
+            'pk': self.activity.pk,
+        }
+
+    def test_update_failure_is_logged_and_reraised(self):
+        with patch(
+            "bluebottle.clients.signals.registry.update",
+            side_effect=Exception('index unavailable'),
+        ), patch("bluebottle.clients.signals.logger") as logger_mock:
+            with self.assertRaises(Exception):
+                registry_update_task(self.model_info, connection.tenant)
+
+        logger_mock.exception.assert_called_once_with(
+            'Elasticsearch %s failed for %s on tenant %s',
+            'update',
+            f'time_based.dateactivity {self.activity.pk}',
+            connection.tenant.client_name,
+        )
+
+    def test_related_update_failure_is_logged(self):
+        with patch(
+            "bluebottle.clients.signals.registry.update_related",
+            side_effect=Exception('index unavailable'),
+        ), patch("bluebottle.clients.signals.logger") as logger_mock:
+            with self.assertRaises(Exception):
+                registry_update_related_task(self.model_info, connection.tenant)
+
+        self.assertEqual(logger_mock.exception.call_args[0][1], 'related update')
+
+    def test_related_delete_failure_is_logged(self):
+        doc_instance = MagicMock()
+        doc_instance.update.side_effect = Exception('index unavailable')
+
+        with patch("bluebottle.clients.signals.logger") as logger_mock:
+            with self.assertRaises(Exception):
+                registry_delete_related_task(doc_instance, self.activity, connection.tenant)
+
+        self.assertEqual(logger_mock.exception.call_args[0][1], 'related delete')
+
+    def test_missing_instance_is_not_logged(self):
+        self.model_info['pk'] = self.activity.pk + 1000
+
+        with patch("bluebottle.clients.signals.logger") as logger_mock:
+            registry_update_task(self.model_info, connection.tenant)
+
+        self.assertFalse(logger_mock.exception.called)

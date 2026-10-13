@@ -1,3 +1,6 @@
+import logging
+from contextlib import contextmanager
+
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection, models
@@ -6,6 +9,20 @@ from django_elasticsearch_dsl.signals import RealTimeSignalProcessor
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.celery import app
+
+logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def log_index_errors(action, target, tenant):
+    try:
+        yield
+    except Exception:
+        logger.exception(
+            'Elasticsearch %s failed for %s on tenant %s',
+            action, target, getattr(tenant, 'client_name', tenant)
+        )
+        raise
 
 
 def _instance_exists(instance):
@@ -134,7 +151,8 @@ def registry_delete_related_task(doc_instance, related, tenant):
     also deleted in the same transaction (cascade), re-indexing would put a
     stale document back into ES. Delete those parents from the index instead.
     """
-    with LocalTenant(tenant):
+    target = doc_instance.__class__.__name__
+    with LocalTenant(tenant), log_index_errors('related delete', target, tenant):
         existing, missing = _split_related_instances(related)
 
         if existing:
@@ -150,7 +168,8 @@ def registry_delete_related_task(doc_instance, related, tenant):
 @app.task
 def registry_update_task(model_info, tenant):
     """Handle the update on the registry as a Celery task."""
-    with LocalTenant(tenant):
+    target = '{app_label}.{model_name} {pk}'.format(**model_info)
+    with LocalTenant(tenant), log_index_errors('update', target, tenant):
         # Fetch the instance fresh from the database to avoid pickling issues
         model = apps.get_model(model_info['app_label'], model_info['model_name'])
         try:
@@ -164,7 +183,8 @@ def registry_update_task(model_info, tenant):
 @app.task
 def registry_update_related_task(model_info, tenant):
     """Handle the related update on the registry as a Celery task."""
-    with LocalTenant(tenant):
+    target = '{app_label}.{model_name} {pk}'.format(**model_info)
+    with LocalTenant(tenant), log_index_errors('related update', target, tenant):
         # Fetch the instance fresh from the database to avoid pickling issues
         model = apps.get_model(model_info['app_label'], model_info['model_name'])
         try:

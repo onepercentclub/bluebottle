@@ -723,7 +723,7 @@ class DateActivitySlotTriggers(TriggerManager):
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset),
                 RelatedTransitionEffect(
-                    'participants',
+                    'succeeded_participants',
                     DateParticipantStateMachine.accept,
                     conditions=[slot_is_not_finished]
                 ),

@@ -423,6 +423,13 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
             return []
 
     @property
+    def succeeded_participants(self):
+        if self.pk:
+            return self.participants.filter(status='succeeded')
+        else:
+            return []
+
+    @property
     def durations(self):
         if not self.pk:
             return TimeContribution.objects.none()

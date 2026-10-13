@@ -111,7 +111,7 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
 
 class CancelUpcomingSlotsEffect(Effect):
     """
-    Cancel the slots that haven't started yet when the activity is cancelled.
+    Cancel the slots that haven't finished yet when the activity is cancelled.
     """
     display = False
     transition = DateActivitySlotStateMachine.auto_cancel
@@ -125,7 +125,7 @@ class CancelUpcomingSlotsEffect(Effect):
 
     def get_slots(self):
         return self.instance.slots.filter(
-            status__in=['draft', 'open', 'full', 'registration_closed']
+            status__in=['draft', 'open', 'full', 'registration_closed', 'running']
         )
 
     def pre_save(self, effects):

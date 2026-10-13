@@ -407,10 +407,6 @@ class DateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect(
-                    'accepted_participants',
-                    ParticipantStateMachine.cancel
-                ),
                 CancelUpcomingSlotsEffect,
 
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),

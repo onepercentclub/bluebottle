@@ -443,6 +443,8 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot1, "open")
         self.assertStatus(self.participant, "accepted")
         self.assertStatus(self.participant.contributions.get(), "new")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")
 
         self.slot1.states.finish(save=True)
         self.assertStatus(self.slot1, "finished")
@@ -459,15 +461,46 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.participant.contributions.get(), "failed")
 
     def test_cancel_activity_keeps_finished_slots(self):
+        past_participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot2,
+        )
         self.slot2.start = now() - timedelta(days=2)
         self.slot2.save()
         self.assertStatus(self.slot2, "finished")
+        self.assertStatus(past_participant, "succeeded")
 
         self.activity.states.cancel(save=True)
 
         self.assertStatus(self.activity, "cancelled")
         self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
         self.assertStatus(self.slot2, "finished")
+        self.assertStatus(past_participant, "succeeded")
+        self.assertStatus(past_participant.contributions.get(), "succeeded")
+
+    def test_cancel_activity_cancels_running_slot(self):
+        self.slot1.states.start(save=True)
+        self.assertStatus(self.slot1, "running")
+
+        self.activity.states.cancel(save=True)
+
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+
+    def test_reschedule_keeps_withdrawn_participants(self):
+        self.slot1.start = now() - timedelta(days=2)
+        self.slot1.save()
+        self.assertStatus(self.slot1, "finished")
+
+        self.slot1.start = now() + timedelta(days=5)
+        self.slot1.save()
+
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.splitter, "withdrawn")
 
     def test_cancelled_activity_slot_does_not_finish(self):
         self.activity.states.cancel(save=True)
@@ -554,3 +587,15 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             subjects,
             ['A slot for your activity "{}" has been cancelled'.format(self.activity.title)]
         )
+
+    def test_cancel_past_slot_does_not_notify_participants(self):
+        self.slot1.start = now() - timedelta(days=2)
+        self.slot1.save()
+        self.assertStatus(self.participant, "succeeded")
+        mail.outbox = []
+
+        self.slot1.states.cancel(save=True)
+
+        recipients = [message.to[0] for message in mail.outbox]
+        self.assertIn(self.activity.owner.email, recipients)
+        self.assertNotIn(self.participant.user.email, recipients)

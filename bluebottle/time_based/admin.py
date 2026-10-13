@@ -1497,7 +1497,7 @@ class ParticipantSlotForm(ModelForm):
 class ParticipantSlotFormSet(BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
-        if 'data' not in kwargs:
+        if 'data' not in kwargs and kwargs.get('instance') and kwargs['instance'].activity_id:
             instance = kwargs['instance']
             new = []
             for slot in instance.activity.slots.exclude(participants__registration=instance).all():
@@ -1544,6 +1544,8 @@ class ParticipantSlotInline(admin.TabularInline):
     form = ParticipantSlotForm
 
     def get_extra(self, request, obj=None, **kwargs):
+        if obj is None:
+            return 0
         ids = [sp.slot_id for sp in obj.participants.all()]
         return obj.activity.slots.exclude(id__in=ids).count()
 

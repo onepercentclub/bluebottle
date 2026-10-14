@@ -593,7 +593,7 @@ class SlotTimezoneAdminTestCase(BluebottleAdminTestCase):
             reverse('admin:time_based_team_change', args=(team.pk,))
         )
         self.assertEqual(page.status_code, 200)
-        self.assertIn('Local time in', page.text)
+        self.assertIn('Local time at location', page.text)
         self.assertIn('Europe/Amsterdam', page.text)
 
     def test_slot_inline_no_help_text_for_new_form(self):
@@ -617,7 +617,7 @@ class SlotTimezoneAdminTestCase(BluebottleAdminTestCase):
             reverse('admin:time_based_scheduleslot_change', args=(slot.pk,))
         )
         self.assertEqual(page.status_code, 200)
-        self.assertIn('Local time in', page.text)
+        self.assertIn('Local time at location', page.text)
         self.assertIn('Europe/Amsterdam', page.text)
 
     def test_schedule_participant_slot_info_platform_timezone(self):

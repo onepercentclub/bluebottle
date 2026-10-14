@@ -234,7 +234,7 @@ class GetSlotLocalDatetimesTestCase(BluebottleTestCase):
         )
         help_text = get_local_time_help_text(slot)
         self.assertIsNotNone(help_text)
-        self.assertIn('Local time in', help_text)
+        self.assertIn('Local time at location', help_text)
         self.assertNotIn('1.0 hours', help_text)
         self.assertIn('Europe/Amsterdam', help_text)
 

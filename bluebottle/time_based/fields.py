@@ -69,7 +69,7 @@ def wall_clock_to_utc(naive_or_aware, is_online, location):
 def get_local_time_caption(obj, value=None):
     """
     Caption for admin when a venue location is set.
-    Always notes local time in the location; adds platform offset when it differs.
+    Always notes local time at the location; adds platform datetime when it differs.
     """
     if not obj:
         return None
@@ -81,35 +81,27 @@ def get_local_time_caption(obj, value=None):
 
     start = value if value is not None else getattr(obj, 'start', None)
     if not start:
-        return format_html(
-            '<em>{}</em>',
-            _('Local time in {location}').format(location=location),
-        )
+        return format_html('<i>{}</i>', _('Local time at location'))
 
     local_start = localize_datetime(start, is_online, location)
     platform_start = start.astimezone(get_current_timezone())
     platform_name = _timezone_name(get_current_timezone())
 
-    first = _('Local time in {location}').format(location=location)
+    first = _('Local time at location')
     offset = local_start.utcoffset() - platform_start.utcoffset()
     if offset.total_seconds() == 0:
-        return first
+        return mark_safe('<p class="help">{}</p>'.format(first))
 
-    offset_hours = abs(offset.total_seconds() / 3600.0)
-    relation = _('behind') if offset.total_seconds() > 0 else _('ahead')
     second = _(
-        'Your timezone ({platform}) is {offset} hours {relation}, '
-        'so there it is {platform_datetime}.'
+        '{platform_datetime} in your timezone ({platform})'
     ).format(
         platform=platform_name,
-        offset='{:g}'.format(offset_hours),
-        relation=relation,
         platform_datetime='{} {}'.format(
             defaultfilters.date(platform_start),
             defaultfilters.time(platform_start),
         ),
     )
-    return mark_safe('{}<br/>{}'.format(first, second))
+    return mark_safe('<p class="help">{}<br/>{}</p>'.format(first, second))
 
 
 class LocalDateTimeWidget(AdminSplitDateTime):

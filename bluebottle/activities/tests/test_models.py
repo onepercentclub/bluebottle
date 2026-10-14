@@ -1,11 +1,13 @@
 from django.test import TestCase
 
+from bluebottle.activities.models import Activity
 from bluebottle.deeds.models import Deed
-from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.time_based.tests.factories import DeadlineActivityFactory
 
 
@@ -95,3 +97,46 @@ class ActivitySegmentsTestCase(TestCase):
     def test_office_location_not_required(self):
         activity = DeadlineActivityFactory.create()
         self.assertFalse('office_location' in activity.required_fields)
+
+
+class ActivitySlugTestCase(TestCase):
+
+    def test_long_title_produces_a_slug_that_fits(self):
+        max_length = Activity._meta.get_field('slug').max_length
+        activity = DeedFactory.create(title='a' * 255, slug='new')
+
+        self.assertLessEqual(len(activity.slug), max_length)
+        self.assertTrue(activity.slug.startswith('aaa'))
+
+    def test_transliterated_title_produces_a_slug_that_fits(self):
+        """Non-ASCII titles lengthen under slugify, so test them separately."""
+        max_length = Activity._meta.get_field('slug').max_length
+        activity = DeedFactory.create(title='ä' * 200, slug='new')
+
+        self.assertLessEqual(len(activity.slug), max_length)
+
+    def test_empty_title_still_falls_back_to_new(self):
+        activity = DeedFactory.create(title='', slug='new')
+
+        self.assertEqual(activity.slug, 'new')
+
+    def test_short_title_is_not_truncated(self):
+        activity = DeedFactory.create(title='A normal title', slug='new')
+
+        self.assertEqual(activity.slug, 'a-normal-title')
+
+    def test_truncated_slug_has_no_trailing_hyphen(self):
+        activity = DeedFactory.create(title='word ' * 40, slug='new')
+
+        self.assertLessEqual(
+            len(activity.slug), Activity._meta.get_field('slug').max_length
+        )
+
+    def test_two_long_titles_sharing_a_prefix_both_save(self):
+        """slug is indexed but not unique, so truncation needs no suffix."""
+        prefix = 'a' * 120
+        first = DeedFactory.create(title=prefix + ' one', slug='new')
+        second = DeedFactory.create(title=prefix + ' two', slug='new')
+
+        self.assertEqual(first.slug, second.slug)
+        self.assertNotEqual(first.pk, second.pk)

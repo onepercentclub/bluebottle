@@ -3,13 +3,16 @@ import json
 from datetime import timedelta
 
 from django.contrib.admin.sites import AdminSite
+from django.contrib.gis.geos import Point
 from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.timezone import now
+from pytz import utc
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.bluebottle_dashboard.utils import get_menu_items
 from bluebottle.time_based.admin import (
@@ -24,7 +27,9 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, DateRegistrationFactory,
     DeadlineActivityFactory,
     InterestFactory,
-    ScheduleActivityFactory, ScheduleRegistrationFactory,
+    ScheduleActivityFactory, ScheduleParticipantFactory,
+    ScheduleRegistrationFactory, ScheduleSlotFactory,
+    TeamFactory, TeamScheduleRegistrationFactory,
 )
 
 
@@ -554,3 +559,119 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(self.activity.status, 'open')
+
+
+class SlotTimezoneAdminTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.november_start = datetime.datetime(2025, 11, 5, 8, 30, tzinfo=utc)
+        self.new_york = GeolocationFactory.create(position=Point(-74.006, 40.7128))
+
+    def test_team_slot_inline_help_text_foreign_timezone(self):
+        activity = ScheduleActivityFactory.create(team_activity='teams')
+        registration = TeamScheduleRegistrationFactory.create(
+            activity=activity, status='accepted'
+        )
+        team = TeamFactory.create(
+            activity=activity,
+            registration=registration,
+            user=registration.user,
+        )
+        slot = team.slots.first()
+        self.assertIsNotNone(slot)
+        slot.start = self.november_start
+        slot.location = self.new_york
+        slot.is_online = False
+        slot.save()
+
+        page = self.app.get(
+            reverse('admin:time_based_team_change', args=(team.pk,))
+        )
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('Local time in', page.text)
+        self.assertIn('3:30', page.text)
+
+    def test_slot_inline_no_help_text_for_new_form(self):
+        from bluebottle.time_based.admin import ScheduleSlotAdminInline
+
+        activity = ScheduleActivityFactory.create()
+        inline = ScheduleSlotAdminInline(ScheduleActivity, AdminSite())
+        request = RequestFactory().get('/')
+        request.user = self.staff_member
+        FormSet = inline.get_formset(request, activity)
+        form = FormSet.form()
+        self.assertFalse(getattr(form.fields.get('start'), 'help_text', None))
+
+    def test_schedule_slot_change_foreign_timezone(self):
+        slot = ScheduleSlotFactory.create(
+            start=self.november_start,
+            location=self.new_york,
+            is_online=False,
+        )
+        page = self.app.get(
+            reverse('admin:time_based_scheduleslot_change', args=(slot.pk,))
+        )
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('Local time in', page.text)
+        self.assertIn('3:30', page.text)
+        self.assertIn('Europe/Amsterdam', page.text)
+
+    def test_schedule_participant_slot_info_platform_timezone(self):
+        participant = ScheduleParticipantFactory.create()
+        if participant.registration:
+            participant.registration.status = 'accepted'
+            participant.registration.save()
+        slot = ScheduleSlotFactory.create(
+            activity=participant.activity,
+            start=self.november_start,
+            location=None,
+            is_online=True,
+        )
+        participant.slot = slot
+        participant.save()
+
+        page = self.app.get(
+            reverse(
+                'admin:time_based_scheduleparticipant_change',
+                args=(participant.pk,),
+            )
+        )
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('09:30:00', page.text)
+        self.assertNotIn('08:30:00', page.text)
+
+    def test_team_schedule_participant_links_to_team_slot(self):
+        activity = ScheduleActivityFactory.create(team_activity='teams')
+        registration = TeamScheduleRegistrationFactory.create(
+            activity=activity, status='accepted'
+        )
+        team = TeamFactory.create(
+            activity=activity,
+            registration=registration,
+            user=registration.user,
+        )
+        slot = team.slots.first()
+        self.assertIsNotNone(slot)
+        participant = team.team_members.first().participants.first()
+        self.assertIsNotNone(participant)
+        if participant.slot_id != slot.id:
+            participant.slot = slot
+            participant.save()
+
+        page = self.app.get(
+            reverse(
+                'admin:time_based_teamscheduleparticipant_change',
+                args=(participant.pk,),
+            )
+        )
+        self.assertEqual(page.status_code, 200)
+        expected = reverse(
+            'admin:time_based_teamscheduleslot_change',
+            args=(slot.pk,),
+        )
+        self.assertIn(expected, page.text)

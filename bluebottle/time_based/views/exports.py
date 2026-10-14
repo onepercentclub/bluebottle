@@ -13,6 +13,7 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     DateRegistration, RegisteredDateActivity, RegisteredDateParticipant
 )
+from bluebottle.time_based.utils import get_slot_local_datetimes
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
 
@@ -23,8 +24,17 @@ INTEREST_EXPORT_FIELDS = (
 )
 
 
+def format_slot_start_for_export(slot):
+    start, _end, _is_local = get_slot_local_datetimes(slot)
+    if not start:
+        return ''
+    return start.strftime('%d-%m-%y %H:%M')
+
+
 def format_slot_worksheet_title(slot, prefix=''):
-    title = f"{prefix}{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
+    title = (
+        f"{prefix}{format_slot_start_for_export(slot)} {slot.id} {slot.title or ''}"
+    )
     return re.sub(r"[\[\]\\:*?/]", "", str(title).strip())[:31]
 
 
@@ -164,6 +174,17 @@ class ScheduleParticipantExportView(TimeBasedExportView):
         ("registration__answer", "Registration answer"),
     )
 
+    def get_row(self, instance):
+        row = super().get_row(instance)
+        fields = [field for field, _name in self.get_fields()]
+        if 'slot__start' in fields:
+            index = fields.index('slot__start')
+            row[index] = (
+                format_slot_start_for_export(instance.slot)
+                if instance.slot else ''
+            )
+        return row
+
 
 class TeamScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity
@@ -191,8 +212,26 @@ class TeamScheduleParticipantExportView(TimeBasedExportView):
             .select_related("user")
         )
 
-    def get_team_row(self, team):
-        return [prep_field(self.request, team, field[0]) for field in self.team_fields]
+    def get_row(self, instance):
+        row = super().get_row(instance)
+        fields = [field for field, _name in self.get_fields()]
+        if 'slots__first__start' in fields:
+            index = fields.index('slots__first__start')
+            slot = instance.slots.first() if hasattr(instance, 'slots') else None
+            row[index] = format_slot_start_for_export(slot) if slot else ''
+        return row
+
+    def get_team_row(self, participant):
+        row = []
+        for field, _name in self.team_fields:
+            if field == 'slot__start':
+                row.append(
+                    format_slot_start_for_export(participant.slot)
+                    if participant and participant.slot else ''
+                )
+            else:
+                row.append(prep_field(self.request, participant, field))
+        return row
 
     def get_team_data(self, team):
         return [

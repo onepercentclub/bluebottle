@@ -1,14 +1,30 @@
 
 import datetime
 
+from django.contrib.gis.geos import Point
 from django.utils.timezone import get_current_timezone, make_aware
+from pytz import utc
 
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
-from bluebottle.time_based.utils import duplicate_slot, duration_to_hours
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DeadlineActivityFactory,
+    ScheduleSlotFactory,
+)
+from bluebottle.time_based.utils import (
+    duplicate_slot,
+    duration_to_hours,
+    get_local_time_help_text,
+    get_slot_local_datetimes,
+)
+from bluebottle.time_based.views.exports import format_slot_start_for_export
 
 
 tz = get_current_timezone()
+AMSTERDAM = Point(4.9041, 52.3676)
+NEW_YORK = Point(-74.006, 40.7128)
 
 
 class DuplicateSlotTestCase(BluebottleTestCase):
@@ -127,3 +143,113 @@ class TestDurationToHours(BluebottleTestCase):
         self.assertEqual(
             duration_to_hours(self.activity.duration), 42
         )
+
+
+class GetSlotLocalDatetimesTestCase(BluebottleTestCase):
+    def _utc_start(self, year, month, day, hour=8, minute=30):
+        return datetime.datetime(year, month, day, hour, minute, tzinfo=utc)
+
+    def test_on_site_platform_timezone(self):
+        slot = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            location=GeolocationFactory.create(position=AMSTERDAM),
+            is_online=False,
+        )
+        start, end, is_local = get_slot_local_datetimes(slot)
+        self.assertEqual(start.hour, 9)
+        self.assertEqual(start.minute, 30)
+        self.assertFalse(is_local)
+        self.assertIsNotNone(end)
+
+    def test_on_site_foreign_timezone(self):
+        slot = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            location=GeolocationFactory.create(position=NEW_YORK),
+            is_online=False,
+        )
+        start, end, is_local = get_slot_local_datetimes(slot)
+        self.assertEqual(start.hour, 3)
+        self.assertEqual(start.minute, 30)
+        self.assertTrue(is_local)
+
+    def test_online(self):
+        slot = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            location=None,
+            is_online=True,
+        )
+        start, end, is_local = get_slot_local_datetimes(slot)
+        self.assertEqual(start.hour, 9)
+        self.assertEqual(start.minute, 30)
+        self.assertFalse(is_local)
+
+    def test_no_location(self):
+        slot = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            location=None,
+            is_online=False,
+        )
+        start, end, is_local = get_slot_local_datetimes(slot)
+        self.assertEqual(start.hour, 9)
+        self.assertEqual(start.minute, 30)
+        self.assertFalse(is_local)
+
+    def test_no_start(self):
+        slot = ScheduleSlotFactory.create(start=None, duration=None)
+        self.assertEqual(get_slot_local_datetimes(slot), (None, None, False))
+
+    def test_no_duration(self):
+        slot = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            duration=None,
+            is_online=True,
+            location=None,
+        )
+        start, end, is_local = get_slot_local_datetimes(slot)
+        self.assertEqual(start.hour, 9)
+        self.assertIsNone(end)
+        self.assertFalse(is_local)
+
+    def test_winter_and_summer(self):
+        winter = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            location=None,
+            is_online=True,
+        )
+        summer = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 7, 5),
+            location=None,
+            is_online=True,
+        )
+        winter_start, _, _ = get_slot_local_datetimes(winter)
+        summer_start, _, _ = get_slot_local_datetimes(summer)
+        self.assertEqual(winter_start.hour, 9)
+        self.assertEqual(summer_start.hour, 10)
+
+    def test_help_text_foreign_timezone(self):
+        slot = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            location=GeolocationFactory.create(position=NEW_YORK),
+            is_online=False,
+        )
+        help_text = get_local_time_help_text(slot)
+        self.assertIsNotNone(help_text)
+        self.assertIn('3:30', help_text)
+        self.assertNotIn('1.0 hours', help_text)
+        self.assertIn('Europe/Amsterdam', help_text)
+
+    def test_help_text_online(self):
+        slot = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            location=None,
+            is_online=True,
+        )
+        self.assertIsNone(get_local_time_help_text(slot))
+
+    def test_export_start_uses_platform_timezone(self):
+        slot = ScheduleSlotFactory.create(
+            start=self._utc_start(2025, 11, 5),
+            location=None,
+            is_online=True,
+        )
+        self.assertEqual(format_slot_start_for_export(slot), '05-11-25 09:30')

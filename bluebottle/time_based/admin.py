@@ -7,7 +7,7 @@ from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
-from django.template import defaultfilters, loader
+from django.template import loader
 from django.template.response import TemplateResponse
 from django.urls import path
 from django.urls import reverse
@@ -73,7 +73,13 @@ from bluebottle.time_based.models import (
     Interest,
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
-from bluebottle.time_based.utils import duplicate_slot, nth_weekday
+from bluebottle.time_based.utils import (
+    add_local_time_help_texts,
+    duplicate_slot,
+    get_local_time_help_text,
+    get_slot_local_datetimes,
+    nth_weekday,
+)
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
     TranslatableAdminOrderingMixin,
@@ -1170,61 +1176,6 @@ class DateParticipantInline(admin.TabularInline):
         return obj.registration.states.current_state.name
 
     registration_status.short_description = _('Registered')
-
-
-def get_slot_local_datetimes(slot):
-    """
-    Return (start, end, is_local) in the venue timezone when the slot is
-    on-site in a different timezone than the platform; otherwise platform TZ.
-    """
-    if not slot or not slot.start:
-        return None, None, False
-
-    if not slot.is_online and slot.location and slot.location.timezone:
-        local_tz = timezone(slot.location.timezone)
-        start = slot.start.astimezone(local_tz)
-        end = slot.end.astimezone(local_tz) if slot.end else None
-        platform_start = slot.start.astimezone(get_current_timezone())
-        is_local = start.utcoffset() != platform_start.utcoffset()
-        return start, end, is_local
-
-    return slot.start, slot.end, False
-
-
-def get_local_time_help_text(obj):
-    """
-    When a slot has an on-site location in another timezone, explain the
-    local start time for the start field.
-    """
-    if not obj or obj.is_online or not obj.location or not obj.start:
-        return None
-
-    local_start = obj.start.astimezone(timezone(obj.location.timezone))
-    platform_start = obj.start.astimezone(get_current_timezone())
-    offset = local_start.utcoffset() - platform_start.utcoffset()
-
-    if offset.total_seconds() == 0:
-        return None
-
-    return _(
-        'Local time in "{location}" is {local_time}. '
-        'This is {offset} hours {relation} compared to the '
-        'standard platform timezone ({current_timezone}).'
-    ).format(
-        location=obj.location,
-        local_time=defaultfilters.time(local_start),
-        offset=abs(offset.total_seconds() / 3600.0),
-        relation=_('later') if offset.total_seconds() > 0 else _('earlier'),
-        current_timezone=get_current_timezone()
-    )
-
-
-def add_local_time_help_texts(obj, kwargs):
-    help_text = get_local_time_help_text(obj)
-    if help_text:
-        kwargs = dict(kwargs)
-        kwargs['help_texts'] = {'start': help_text}
-    return kwargs
 
 
 class SlotAdmin(StateMachineAdmin):

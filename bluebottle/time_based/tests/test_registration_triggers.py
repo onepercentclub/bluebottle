@@ -303,7 +303,7 @@ class DeadlineRegistrationTriggerTestCase(
         self.assertEqual(len(self.registration.participants.all()), 1)
 
         participant = self.registration.participants.get()
-        self.assertEqual(participant.status, "succeeded")
+        self.assertEqual(participant.status, "accepted")
 
     def test_initial_review(self):
         super().test_initial_review()
@@ -326,7 +326,7 @@ class DeadlineRegistrationTriggerTestCase(
 
         self.assertEqual(self.registration.status, "accepted")
         participant = self.registration.participants.get()
-        self.assertEqual(participant.status, "succeeded")
+        self.assertEqual(participant.status, "accepted")
 
     def test_initial_remote_review(self):
         from bluebottle.activities.models import RemoteMember
@@ -350,7 +350,7 @@ class DeadlineRegistrationTriggerTestCase(
 
     def test_accept(self):
         super().test_accept()
-        self.assertEqual(self.registration.participants.get().status, "succeeded")
+        self.assertEqual(self.registration.participants.get().status, "accepted")
 
     def test_reject(self):
         super().test_reject()
@@ -360,7 +360,7 @@ class DeadlineRegistrationTriggerTestCase(
         super().test_reject()
         self.registration.states.accept(save=True)
 
-        self.assertEqual(self.registration.participants.get().status, "succeeded")
+        self.assertEqual(self.registration.participants.get().status, "accepted")
 
 
 class PeriodicRegistrationTriggerTestCase(

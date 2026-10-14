@@ -357,6 +357,7 @@ jobs:
           python manage.py test \
             --parallel 8 \
             --keepdb \
+            --traceback \
             --tag=elasticsearch \
             --settings bluebottle.settings.runner \
             -v3

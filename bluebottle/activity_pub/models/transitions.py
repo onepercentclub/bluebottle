@@ -14,8 +14,13 @@ class Transition(Activity):
             for recipient in create.recipients.all():
                 yield recipient.actor
 
+    @property
+    def has_target(self):
+        """Transitions should only happen when the object is adopted on the platform"""
+        return bool(self.object.adopted or getattr(self.object, 'link', None))
+
     def save(self, *args, **kwargs):
-        if not self.is_local and not self.transitioned:
+        if not self.is_local and not self.transitioned and self.has_target:
             try:
                 self.transition()
                 self.transitioned = True

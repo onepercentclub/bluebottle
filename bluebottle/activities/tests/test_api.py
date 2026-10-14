@@ -2078,6 +2078,7 @@ class ContributionListAPITestCase(BluebottleTestCase):
 
         deadline = DeadlineActivityFactory.create(
             start=(now() - timedelta(days=4, hours=1)).date(),
+            deadline=(now() - timedelta(days=1)).date(),
         )
 
         DeadlineParticipantFactory.create(

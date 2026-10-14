@@ -263,7 +263,7 @@ class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
         participants = registration.deadlineparticipant_set
         participant = participants.first()
         self.assertEqual(participants.count(), 1)
-        self.assertEqual(participant.status, 'succeeded')
+        self.assertEqual(participant.status, 'accepted')
         self.assertEqual(participant.contributions.count(), 1)
         self.assertEqual(participant.contributions.first().status, 'succeeded')
 

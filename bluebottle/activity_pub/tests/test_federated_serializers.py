@@ -184,6 +184,7 @@ class PersonSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
 
 class EventSerializerTestCase(FederatedSerializerTestCase):
     contributor_status = 'succeeded'
+
     def test_contributor_count(self):
         self.instance = self.factory.create()
 
@@ -191,14 +192,14 @@ class EventSerializerTestCase(FederatedSerializerTestCase):
         for participant in self.contributor_factory.create_batch(
             3, activity=self.instance, status=self.contributor_status, user=None
         ):
-            participant.remote_user=RemoteMemberFactory.create()
+            participant.remote_user = RemoteMemberFactory.create()
             participant.save()
             PersonFactory.create(source=organization, adopted=participant.remote_user)
 
         for participant in self.contributor_factory.create_batch(
             3, activity=self.instance, status='failed', user=None,
         ):
-            participant.remote_user=RemoteMemberFactory.create()
+            participant.remote_user = RemoteMemberFactory.create()
             participant.save()
             PersonFactory.create(source=organization, adopted=participant.remote_user)
 
@@ -206,7 +207,7 @@ class EventSerializerTestCase(FederatedSerializerTestCase):
         for participant in self.contributor_factory.create_batch(
             3, activity=self.instance, status=self.contributor_status, user=None
         ):
-            participant.remote_user=RemoteMemberFactory.create()
+            participant.remote_user = RemoteMemberFactory.create()
             participant.save()
             PersonFactory.create(source=other_organization, adopted=participant.remote_user)
 
@@ -310,7 +311,6 @@ class DeadlineSerializerTestCase(EventSerializerTestCase, BluebottleTestCase):
         'join_mode': None,
         'event_attendance_mode': 'online'
     }
-
 
 
 class DateSerializerTestCase(EventSerializerTestCase, BluebottleTestCase):

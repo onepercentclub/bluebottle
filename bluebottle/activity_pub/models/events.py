@@ -1,4 +1,4 @@
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.crntrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -44,7 +44,6 @@ class Place(ActivityPubModel):
         return self.name or self.id
 
 
-from django.contrib.postgres.fields import ArrayField
 class Event(ActivityPubModel):
     name = models.CharField(verbose_name=_('Activity title'))
     summary = models.TextField(blank=True, null=True)

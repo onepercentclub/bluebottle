@@ -126,6 +126,75 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
+    def _duplicate_payload(self, answers):
+        data = self.data
+        data['data']['relationships']['answers'] = {
+            'data': [
+                {
+                    'id': str(answer.pk),
+                    'type': answer.JSONAPIMeta.resource_name,
+                }
+                for answer in answers
+            ]
+        }
+        return data
+
+    def test_duplicate_with_answers_succeeds(self):
+        question = TextQuestionFactory.create(required=True)
+        source = DeedFactory.create(
+            initiative=self.defaults['initiative'],
+            owner=self.user,
+            theme=self.defaults['theme'],
+        )
+        answer = TextAnswerFactory.create(
+            question=question,
+            activity=source,
+            answer='Existing answer',
+        )
+
+        self.perform_create(user=self.user, data=self._duplicate_payload([answer]))
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_duplicate_with_answers_keeps_source_answers(self):
+        question = TextQuestionFactory.create(required=True)
+        source = DeedFactory.create(
+            initiative=self.defaults['initiative'],
+            owner=self.user,
+            theme=self.defaults['theme'],
+        )
+        answer = TextAnswerFactory.create(
+            question=question,
+            activity=source,
+            answer='Existing answer',
+        )
+
+        self.perform_create(user=self.user, data=self._duplicate_payload([answer]))
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        source.refresh_from_db()
+        answer.refresh_from_db()
+        self.assertEqual(list(source.answers.values_list('id', flat=True)), [answer.id])
+        self.assertEqual(answer.activity_id, source.id)
+
+    def test_duplicate_with_answers_does_not_inherit_answers(self):
+        question = TextQuestionFactory.create(required=True)
+        source = DeedFactory.create(
+            initiative=self.defaults['initiative'],
+            owner=self.user,
+            theme=self.defaults['theme'],
+        )
+        answer = TextAnswerFactory.create(
+            question=question,
+            activity=source,
+            answer='Existing answer',
+        )
+
+        self.perform_create(user=self.user, data=self._duplicate_payload([answer]))
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.answers.count(), 0)
+        self.assertRequired('answers')
+        self.assertNotTransition('publish')
+
 
 class DeedsDetailViewAPITestCase(APITestCase):
     def setUp(self):

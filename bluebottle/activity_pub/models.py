@@ -142,7 +142,7 @@ class OrganizationManager(ActivityPubManager):
                     url=logo_url,
                     name=model.logo.name
                 ) if logo_url else None,
-                summary=model.description,
+                summary=model.slogan,
                 preferred_username=model.slug
             )
 

@@ -3,28 +3,44 @@ from __future__ import absolute_import
 from builtins import object
 from builtins import str
 
+from colorfield.fields import ColorField
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import ValidatedModelMixin
+from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
-class Organization(ValidatedModelMixin, models.Model):
+class Organization(ValidatedModelMixin, TranslatableModel, models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
     """
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100)
-    description = models.TextField(_('description'), default='', blank=True)
+    translations = TranslatedFields(
+        slogan=models.CharField(
+            _('Slogan'), max_length=255, null=True, blank=True,
+            help_text=_(
+                'A short sentence to explain your organisation. This sentence is directly visible on the page.'
+            )),
+        story=QuillField(
+            _('Story'), blank=True, null=True,
+            help_text=_(
+                'A more detailed story about your organisation. This story can be accessed via a link on the page.'
+            )
+        )
+    )
 
-    created = models.DateTimeField(_('created'), auto_now_add=True)
-    updated = models.DateTimeField(_('updated'), auto_now=True)
+    created = models.DateTimeField(_('Created'), auto_now_add=True)
+    updated = models.DateTimeField(_('Updated'), auto_now=True)
 
     verified = models.BooleanField(_('Verified'), default=False)
 
@@ -38,12 +54,12 @@ class Organization(ValidatedModelMixin, models.Model):
 
     website = models.URLField(_('website'), blank=True)
     logo = ImageField(
-        _('logo'),
+        _('Logo'),
         blank=True,
-        help_text=_('Partner Organization Logo'),
-        max_length=255,
+        help_text=_('Organization logo'),
+        max_length=5000,
         null=True,
-        upload_to='partner_organization_logos/',
+        upload_to='organizations/',
 
         validators=[
             FileMimetypeValidator(
@@ -51,6 +67,27 @@ class Organization(ValidatedModelMixin, models.Model):
             ),
             validate_file_infection
         ]
+    )
+    image = ImageField(
+        _('Main image'),
+        blank=True,
+        help_text=_('Organization image'),
+        max_length=5000,
+        null=True,
+        upload_to='organizations/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+    color = ColorField(
+        _('Colour'),
+        null=True,
+        blank=True,
+        help_text=_('Background colour for the organisation page header.'),
     )
 
     required_fields = ['name']
@@ -65,6 +102,34 @@ class Organization(ValidatedModelMixin, models.Model):
         self.slug = slugify(self.name)
 
         super(Organization, self).save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/organizations/{}/{}/activities/list".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
+
+    @property
+    def background_color(self):
+        from bluebottle.cms.models import SitePlatformSettings
+        from bluebottle.cms.utils.color_contrast import ensure_readable_fill
+
+        if not self.color:
+            return None
+
+        platform = SitePlatformSettings.load()
+        if platform.accessible_colours:
+            return ensure_readable_fill(self.color) or self.color
+        return self.color
+
+    @property
+    def text_color(self):
+        from bluebottle.cms.utils.color_contrast import choose_on_color
+
+        return choose_on_color(self.background_color)
 
     @property
     def activity_pub_url(self):

@@ -182,6 +182,13 @@ class InitiativeDocument(Document):
         }
     )
 
+    organization = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
     office_subregion = fields.NestedField(
         attr='location.subregion',
         properties={
@@ -220,6 +227,7 @@ class InitiativeDocument(Document):
             'place__country',
             'location',
             'location__country',
+            'organization',
             'image',
         ).prefetch_related(
             'activity_managers',
@@ -346,3 +354,12 @@ class InitiativeDocument(Document):
                 for activity in instance.activities.all() if activity.office_location
             ]
         )
+
+    def prepare_organization(self, instance):
+        if not instance.organization:
+            return None
+
+        return {
+            'id': instance.organization.pk,
+            'name': instance.organization.name,
+        }

@@ -2,7 +2,9 @@ from rest_framework import generics
 from rest_framework import filters
 
 from bluebottle.updates.permissions import IsStaffMember
-from bluebottle.utils.permissions import IsAuthenticated, IsOwnerOrReadOnly, IsOwner, OneOf
+from bluebottle.utils.permissions import (
+    IsAuthenticated, IsOwnerOrReadOnly, IsOwner, OneOf, TenantConditionalOpenClose
+)
 
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
@@ -14,7 +16,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 
 from bluebottle.organizations.serializers import (
-    OrganizationSerializer, OrganizationContactSerializer
+    OrganizationSerializer, OrganizationDetailSerializer, OrganizationContactSerializer
 )
 from bluebottle.organizations.models import (
     Organization, OrganizationContact
@@ -80,8 +82,11 @@ class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
 class OrganizationDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
     model = Organization
     queryset = Organization.objects.all()
-    serializer_class = OrganizationSerializer
-    permission_classes = (IsAuthenticated, OneOf(IsOwnerOrReadOnly, IsStaffMember))
+    serializer_class = OrganizationDetailSerializer
+    permission_classes = (
+        TenantConditionalOpenClose,
+        OneOf(IsOwnerOrReadOnly, IsStaffMember),
+    )
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
     authentication_classes = (

@@ -1,3 +1,4 @@
+import json
 from urllib.parse import urlparse
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 
@@ -54,14 +55,19 @@ class OrganizationTestCase(BluebottleTestCase):
         )
 
     def test_from_object(self):
-        organization = BluebottleOrganizationFactory.create()
+        organization = BluebottleOrganizationFactory.create(
+            slogan='Our slogan',
+            story=json.dumps({'html': '<p>Our story</p>', 'delta': ''}),
+        )
 
         model = Organization.objects.from_model(organization)
         self.assertTrue(model.inbox_id)
         self.assertTrue(model.outbox_id)
         self.assertTrue(model.public_key_id)
-        self.assertTrue(model.name, organization.name)
-        self.assertTrue(model.organization, organization)
+        self.assertEqual(model.name, organization.name)
+        self.assertEqual(model.organization, organization)
+        self.assertEqual(model.summary, 'Our slogan')
+        self.assertIn('Our story', model.content)
 
 
 class PublicKeyTestCase(BluebottleTestCase):

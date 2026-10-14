@@ -23,12 +23,12 @@ class OrganizationColorTestCase(BluebottleTestCase):
         self.assertEqual(organization.text_color, DARK_NEUTRAL)
 
     def test_accessible_colours_darkens_light_fill(self):
-        organization = OrganizationFactory.create(color='#CCCCCC')
         SitePlatformSettings.objects.update(accessible_colours=True)
+        organization = OrganizationFactory.create(color='#A2A2A2')
 
-        expected = ensure_readable_fill('#CCCCCC')
+        expected = ensure_readable_fill('#A2A2A2')
         self.assertEqual(organization.background_color, expected)
-        self.assertNotEqual(organization.background_color, '#CCCCCC')
+        self.assertNotEqual(organization.background_color, '#A2A2A2')
         self.assertEqual(organization.text_color, WHITE)
 
     def test_no_color_returns_none(self):

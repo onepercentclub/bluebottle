@@ -2,7 +2,6 @@
 
 from django.db import migrations, connection
 
-from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
 
 
@@ -11,6 +10,7 @@ def move_description_to_slogan(apps, schema_editor):
         return
 
     Client = apps.get_model('clients', 'Client')
+    Language = apps.get_model('utils', 'Language')
     Organization = apps.get_model('organizations', 'Organization')
     OrganizationTranslation = apps.get_model(
         'organizations', 'OrganizationTranslation'
@@ -22,13 +22,21 @@ def move_description_to_slogan(apps, schema_editor):
         return
 
     with LocalTenant(tenant):
-        language = properties.LANGUAGE_CODE
+        language = Language.objects.filter(default=True).first()
+        if not language:
+            return
+
+        language_code = (
+            f'{language.code}-{language.sub_code}'
+            if language.sub_code
+            else language.code
+        )
 
         for organization in Organization.objects.exclude(description=''):
             slogan = organization.description[:255]
             translation, created = OrganizationTranslation.objects.get_or_create(
                 master_id=organization.pk,
-                language_code=language,
+                language_code=language_code,
                 defaults={'slogan': slogan},
             )
             if not created and not translation.slogan:
@@ -41,6 +49,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('organizations', '0024_organizationtranslation'),
         ('clients', '0001_initial'),
+        ('utils', '0007_auto_20210825_1018'),
     ]
 
     operations = [

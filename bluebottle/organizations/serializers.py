@@ -1,15 +1,14 @@
 from builtins import object
+
 from rest_framework import serializers
+from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.utils import get_stats_for_activities
-from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer,
     SorlImageField,
 )
-
-from rest_framework_json_api.serializers import ModelSerializer
-
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.fields import (
     RichTextField,
     ValidationErrorsField,
@@ -28,7 +27,9 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
     name = serializers.CharField(required=True)
     website = serializers.CharField(allow_blank=True, required=False)
     logo = ImageSerializer(required=False, allow_null=True)
-    cover_image = SorlImageField('465x262', crop='center', source='image')
+    cover_image = SorlImageField(
+        '465x262', crop='center', source='image', read_only=True
+    )
     color = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     background_color = serializers.CharField(read_only=True)
     text_color = serializers.CharField(read_only=True)
@@ -63,7 +64,9 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
 
 
 class OrganizationDetailSerializer(OrganizationSerializer):
-    cover_image = SorlImageField('1280x720', crop='center', source='image')
+    cover_image = SorlImageField(
+        '1280x720', crop='center', source='image', read_only=True
+    )
     stats = serializers.SerializerMethodField()
 
     def get_stats(self, obj):

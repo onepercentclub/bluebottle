@@ -12,6 +12,8 @@ from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
+from bluebottle.cms.utils.color_contrast import choose_on_color
+from bluebottle.cms.utils.color_contrast import ensure_readable_fill
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -115,7 +117,6 @@ class Organization(ValidatedModelMixin, TranslatableModel, models.Model):
     @property
     def background_color(self):
         from bluebottle.cms.models import SitePlatformSettings
-        from bluebottle.cms.utils.color_contrast import ensure_readable_fill
 
         if not self.color:
             return None
@@ -127,8 +128,6 @@ class Organization(ValidatedModelMixin, TranslatableModel, models.Model):
 
     @property
     def text_color(self):
-        from bluebottle.cms.utils.color_contrast import choose_on_color
-
         return choose_on_color(self.background_color)
 
     @property

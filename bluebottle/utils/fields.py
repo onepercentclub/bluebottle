@@ -279,9 +279,13 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
 
 class RichTextField(serializers.CharField):
     def to_representation(self, value):
+        if value is None:
+            return None
         return clean_html(super().to_representation(value.html))
 
     def to_internal_value(self, data):
+        if data is None:
+            return None
         return json.dumps({'html': clean_html(super().to_internal_value(data)), 'delta': ''})
 
 

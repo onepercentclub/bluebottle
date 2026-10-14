@@ -132,6 +132,9 @@ class OrganizationManager(ActivityPubManager):
             public_key = PublicKey.objects.create()
             logo_url = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
 
+            story = model.safe_translation_getter('story', any_language=True)
+            content = story.html if story else None
+
             return Organization.objects.create(
                 inbox=inbox,
                 organization=model,
@@ -142,7 +145,8 @@ class OrganizationManager(ActivityPubManager):
                     url=logo_url,
                     name=model.logo.name
                 ) if logo_url else None,
-                summary=model.slogan,
+                summary=model.safe_translation_getter('slogan', any_language=True),
+                content=content,
                 preferred_username=model.slug
             )
 

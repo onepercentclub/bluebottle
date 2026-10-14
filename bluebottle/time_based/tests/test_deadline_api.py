@@ -96,12 +96,52 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
         self.assertMeta("registration-status", {"accepted": 3, "new": 1, "rejected": 2})
 
     def test_contributor_count_uses_remote_total_for_synced_activity(self):
-        DoGoodEventFactory.create(adopted=self.model, contributor_count=6)
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+        contributor_count = [
+            {
+                'source': site_settings.organization.activity_pub_model.pub_url,
+                'count': 2
+            },
+            {
+                'source': 'http://example.com/first-actor',
+                'count': 4
+            },
+            {
+                'source': 'http://example.com/other-actoe',
+                'count': 4
+            }
+        ]
+        DoGoodEventFactory.create(adopted=self.model, contributor_count=contributor_count)
         DeadlineParticipantFactory.create(activity=self.model, status='accepted')
 
         self.perform_get(user=self.model.owner)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertMeta('contributor-count', 6)
+        # There should be 8 contributors. two from each platform
+        self.assertMeta('remote-contributor-count', 8)
+
+    def test_contributor_count_uses_remote_total_for_synced_activity_missing_self(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+        contributor_count = [
+            {
+                'source': 'http://example.com/first-actor',
+                'count': 4
+            },
+            {
+                'source': 'http://example.com/other-actoe',
+                'count': 4
+            }
+        ]
+        DoGoodEventFactory.create(adopted=self.model, contributor_count=contributor_count)
+        DeadlineParticipantFactory.create(activity=self.model, status='accepted')
+
+        self.perform_get(user=self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        # There should be 9 contributors. 8 remote, and 1 local ignoring the count provided by the supplier
+        self.assertMeta('remote-contributor-count', 8)
 
     def test_put_synced_readonly(self):
         site_settings = SitePlatformSettings.load()

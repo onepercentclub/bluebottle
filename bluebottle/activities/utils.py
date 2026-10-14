@@ -260,7 +260,7 @@ class BaseActivitySerializer(ModelSerializer):
     )
 
     translations = TranslationsSerializer(fields=['description', 'title'])
-    contributor_count = serializers.SerializerMethodField()
+    remote_contributor_count = serializers.SerializerMethodField()
     source = SerializerMethodResourceRelatedField(
         many=False,
         read_only=True,
@@ -305,11 +305,17 @@ class BaseActivitySerializer(ModelSerializer):
                 except KeyError:
                     pass
 
-    def get_contributor_count(self, obj):
+    def get_remote_contributor_count(self, obj):
+        from bluebottle.activity_pub.utils import get_platform_actor
+
         if hasattr(obj, 'origin'):
-            return obj.origin.contributor_count
+            local_source = get_platform_actor().pub_url
+            return sum(
+                item['count'] for item in obj.origin.contributor_count
+                if item['source'] != local_source
+            )
         else:
-            return obj.active_contributors.count()
+            return 0
 
     def get_source(self, obj):
         if hasattr(obj, 'origin') and obj.origin.source:
@@ -438,7 +444,7 @@ class BaseActivitySerializer(ModelSerializer):
             'current_status',
             'admin_url',
             'readonly_fields',
-            'contributor_count',
+            'remote_contributor_count',
         )
 
     class JSONAPIMeta(object):
@@ -483,7 +489,7 @@ class BaseActivityListSerializer(ModelSerializer):
     matching_properties = MatchingPropertiesField()
     team_activity = SerializerMethodField()
     current_status = CurrentStatusField(source='states.current_state')
-    contributor_count = serializers.SerializerMethodField()
+    remote_contributor_count = serializers.SerializerMethodField()
 
     def get_team_activity(self, instance):
         if InitiativePlatformSettings.load().team_activities:
@@ -502,10 +508,17 @@ class BaseActivityListSerializer(ModelSerializer):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
-    def get_contributor_count(self, obj):
+    def get_remote_contributor_count(self, obj):
+        from bluebottle.activity_pub.utils import get_platform_actor
+
         if hasattr(obj, 'origin'):
-            return obj.origin.contributor_count
-        return obj.active_contributors.count()
+            local_source = get_platform_actor().pub_url
+            return sum(
+                item['count'] for item in obj.origin.contributor_count
+                if item['source'] != local_source
+            )
+        else:
+            return 0
 
     class Meta(object):
         model = Activity
@@ -531,7 +544,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'updated',
             'matching_properties',
             'current_status',
-            'contributor_count'
+            'remote_contributor_count'
         )
 
     class JSONAPIMeta(object):

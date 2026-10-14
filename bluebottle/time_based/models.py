@@ -492,7 +492,6 @@ class DateActivitySlot(ActivitySlot):
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
-    remote_contributor_count = models.PositiveIntegerField(default=0)
 
     origins = GenericRelation(
         'activity_pub.SubEvent',

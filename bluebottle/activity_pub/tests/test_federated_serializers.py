@@ -7,6 +7,7 @@ from requests import Response
 
 from bluebottle.cms.models import SitePlatformSettings
 
+from bluebottle.activities.tests.factories import RemoteMemberFactory
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.models import Event
 from bluebottle.activity_pub.serializers.base import (
@@ -17,7 +18,9 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DeadlineActivityFactory,
-    ScheduleActivityFactory, PeriodicActivityFactory
+    ScheduleActivityFactory, PeriodicActivityFactory,
+    DeadlineParticipantFactory, DateParticipantFactory,
+    PeriodicRegistrationFactory, ScheduleRegistrationFactory
 )
 
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BlueobttoeOrganizationFactory
@@ -28,8 +31,8 @@ from bluebottle.activity_pub.tests.factories import (
 )
 from bluebottle.activities.models import RemoteMember
 
-from bluebottle.deeds.tests.factories import DeedFactory
-from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 
 
 @httmock.urlmatch(path=r'^/image/1')
@@ -179,15 +182,67 @@ class PersonSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
         )
 
 
-class GoodDeedSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
+class EventSerializerTestCase(FederatedSerializerTestCase):
+    contributor_status = 'succeeded'
+    def test_contributor_count(self):
+        self.instance = self.factory.create()
+
+        organization = OrganizationFactory.create(iri='http://example.com/organization')
+        for participant in self.contributor_factory.create_batch(
+            3, activity=self.instance, status=self.contributor_status, user=None
+        ):
+            participant.remote_user=RemoteMemberFactory.create()
+            participant.save()
+            PersonFactory.create(source=organization, adopted=participant.remote_user)
+
+        for participant in self.contributor_factory.create_batch(
+            3, activity=self.instance, status='failed', user=None,
+        ):
+            participant.remote_user=RemoteMemberFactory.create()
+            participant.save()
+            PersonFactory.create(source=organization, adopted=participant.remote_user)
+
+        other_organization = OrganizationFactory.create(iri='http://example.com/organization-2')
+        for participant in self.contributor_factory.create_batch(
+            3, activity=self.instance, status=self.contributor_status, user=None
+        ):
+            participant.remote_user=RemoteMemberFactory.create()
+            participant.save()
+            PersonFactory.create(source=other_organization, adopted=participant.remote_user)
+
+        self.contributor_factory.create_batch(
+            2, activity=self.instance, status=self.contributor_status, remote_user=None
+        )
+        self.contributor_factory.create_batch(
+            2, activity=self.instance, status='failed', remote_user=None
+        )
+
+        self.serializer = FederatedObjectSerializer(
+            instance=self.instance, context=self.context
+        )
+
+        site_settings = SitePlatformSettings.load()
+        contributor_counts = dict((i['source'], i['count'])for i in self.serializer.data['contributor_count'])
+
+        self.assertEqual(contributor_counts[organization.iri], 3)
+        self.assertEqual(contributor_counts[other_organization.iri], 3)
+        self.assertEqual(contributor_counts[site_settings.organization.activity_pub_model.pub_url], 2)
+
+
+class GoodDeedSerializerTestCase(EventSerializerTestCase, BluebottleTestCase):
     factory = DeedFactory
     activity_pub_factory = GoodDeedFactory
+    contributor_factory = DeedParticipantFactory
 
     def test_to_representation(self):
         super().test_to_representation()
 
         self.assertEqual(
             self.instance.title, self.serializer.data['name']
+        )
+
+        self.assertEqual(
+            [], self.serializer.data['contributor_count']
         )
         self.assertEqual(
             self.instance.description.html, self.serializer.data['summary']
@@ -210,9 +265,10 @@ class GoodDeedSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase
         )
 
 
-class CrowdFundingSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
+class CrowdFundingSerializerTestCase(EventSerializerTestCase, BluebottleTestCase):
     factory = FundingFactory
     activity_pub_factory = CrowdFundingFactory
+    contributor_factory = DonorFactory
 
     def test_to_representation(self):
         super().test_to_representation()
@@ -244,9 +300,10 @@ class CrowdFundingSerializerTestCase(FederatedSerializerTestCase, BluebottleTest
         )
 
 
-class DeadlineSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
+class DeadlineSerializerTestCase(EventSerializerTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
     activity_pub_factory = DoGoodEventFactory
+    contributor_factory = DeadlineParticipantFactory
 
     factory_data = {
         'slot_mode': None,
@@ -255,9 +312,11 @@ class DeadlineSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase
     }
 
 
-class DateSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
+
+class DateSerializerTestCase(EventSerializerTestCase, BluebottleTestCase):
     factory = DateActivityFactory
     activity_pub_factory = DoGoodEventFactory
+    contributor_factory = DateParticipantFactory
 
     def create(self):
         super().create()
@@ -273,18 +332,22 @@ class DateSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
     }
 
 
-class ScheduleSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
+class ScheduleSerializerTestCase(EventSerializerTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
     activity_pub_factory = DoGoodEventFactory
     factory_data = {
         'event_attendance_mode': 'online',
         'slot_mode': 'ScheduledSlotMode'
     }
+    contributor_factory = ScheduleRegistrationFactory
+    contributor_status = 'accepted'
 
 
-class PeriodicSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
+class PeriodicSerializerTestCase(EventSerializerTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
     activity_pub_factory = DoGoodEventFactory
+    contributor_factory = PeriodicRegistrationFactory
+    contributor_status = 'accepted'
 
     factory_data = {
         'slot_mode': 'PeriodicSlotMode',

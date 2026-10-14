@@ -534,7 +534,13 @@ class SyncTestCase(ActivityPubTestCase):
             self.join()
             self.email = self.participant.user.email
             self.adopted.origin.refresh_from_db()
-            self.assertEqual(self.adopted.origin.contributor_count, 1)
+            self.assertEqual(
+                next(
+                    item for item in self.adopted.origin.contributor_count
+                    if item['source'] == get_platform_actor().pub_url
+                )['count'],
+                1
+            )
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()
 
@@ -924,7 +930,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         super().test_join()
 
         self.assertEqual(
-            str(self.synced_participants.registration),
+            str(self.synced_participant.registration),
             f'Candidate {self.synced_participant.remote_user} for {self.model.title}'
         )
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)

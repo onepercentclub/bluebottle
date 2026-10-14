@@ -554,3 +554,47 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(self.activity.status, 'open')
+
+
+class DateSlotBulkAddAdminTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.superuser)
+        self.activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            slots=[]
+        )
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        DateActivitySlotFactory.create(activity=self.activity)
+        self.user = BlueBottleUserFactory.create()
+        self.url = reverse('admin:time_based_dateactivityslot_bulk_add', args=(self.slot.pk,))
+
+    def test_bulk_add_open_slot(self):
+        page = self.app.get(self.url)
+        form = [f for f in page.forms.values() if 'emails' in f.fields][0]
+        form['emails'] = self.user.email
+        form.submit()
+
+        self.assertEqual(self.slot.participants.filter(user=self.user).count(), 1)
+
+    def test_bulk_add_cancelled_slot(self):
+        page = self.app.get(self.url)
+        self.slot.states.cancel(save=True)
+
+        form = [f for f in page.forms.values() if 'emails' in f.fields][0]
+        form['emails'] = self.user.email
+        form.submit()
+
+        self.assertEqual(self.slot.participants.count(), 0)
+
+    def test_change_form_hides_bulk_add_for_cancelled_slot(self):
+        change_url = reverse('admin:time_based_dateactivityslot_change', args=(self.slot.pk,))
+        self.assertIn(self.url, self.app.get(change_url).text)
+
+        self.slot.states.cancel(save=True)
+        self.assertNotIn(self.url, self.app.get(change_url).text)

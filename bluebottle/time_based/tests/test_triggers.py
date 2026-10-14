@@ -1055,23 +1055,26 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
     def test_cancel_with_cancelled_activity(self):
         registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
-        DateParticipantFactory.create(registration=registration, slot=self.activity.slots.get())
-
-        self.activity.states.cancel(save=True)
-        mail.outbox = []
+        participant = DateParticipantFactory.create(registration=registration, slot=self.activity.slots.get())
         self.slot.title = "Session 3"
-        self.slot.states.cancel(save=True)
-        self.assertEqual(self.slot.status, "cancelled")
-        self.assertEqual(len(mail.outbox), 1)
+        self.slot.save()
 
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'A slot for your activity "{}" has been cancelled'.format(
+        mail.outbox = []
+        self.activity.states.cancel(save=True)
+        self.assertStatus(self.slot, "cancelled")
+        self.assertStatus(participant, "cancelled")
+
+        slot_mails = [
+            message for message in mail.outbox
+            if message.subject == 'A slot for your activity "{}" has been cancelled'.format(
                 self.activity.title
-            ),
+            )
+        ]
+        self.assertEqual(
+            sorted(message.to[0] for message in slot_mails),
+            sorted([self.activity.owner.email, participant.user.email])
         )
-
-        self.assertTrue("Session 3" in mail.outbox[0].body)
+        self.assertTrue("Session 3" in slot_mails[0].body)
 
     def test_lock_on_start(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)

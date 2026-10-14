@@ -412,3 +412,190 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.participant.contributions.get(), "succeeded")
         self.assertStatus(self.splitter, "withdrawn")
         self.assertStatus(self.splitter.contributions.get(), "failed")
+
+    def test_finish_early_succeeds_contributions(self):
+        """Manual finish before end should succeed participants and contributions."""
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+        self.assertTrue(self.slot1.end > now())
+
+        self.slot1.states.finish(save=True)
+
+        self.assertStatus(self.slot1, "finished")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.participant.contributions.get(), "succeeded")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")
+
+    def test_finish_after_reschedule_succeeds_contributions(self):
+        """
+        After finish → reschedule to the future → finish again, contributions
+        must succeed even though participants may already be succeeded.
+        """
+        self.slot1.states.finish(save=True)
+        self.assertStatus(self.slot1, "finished")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.participant.contributions.get(), "succeeded")
+
+        self.slot1.start = now() + timedelta(days=5)
+        self.slot1.save()
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")
+
+        self.slot1.states.finish(save=True)
+        self.assertStatus(self.slot1, "finished")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.participant.contributions.get(), "succeeded")
+
+    def test_cancel_activity_cancels_upcoming_slots(self):
+        self.activity.states.cancel(save=True)
+
+        self.assertStatus(self.activity, "cancelled")
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.slot2, "cancelled")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+
+    def test_cancel_activity_keeps_finished_slots(self):
+        past_participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot2,
+        )
+        self.slot2.start = now() - timedelta(days=2)
+        self.slot2.save()
+        self.assertStatus(self.slot2, "finished")
+        self.assertStatus(past_participant, "succeeded")
+
+        self.activity.states.cancel(save=True)
+
+        self.assertStatus(self.activity, "cancelled")
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+        self.assertStatus(self.slot2, "finished")
+        self.assertStatus(past_participant, "succeeded")
+        self.assertStatus(past_participant.contributions.get(), "succeeded")
+
+    def test_cancel_activity_cancels_running_slot(self):
+        self.slot1.states.start(save=True)
+        self.assertStatus(self.slot1, "running")
+
+        self.activity.states.cancel(save=True)
+
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+
+    def test_reschedule_keeps_withdrawn_participants(self):
+        self.slot1.start = now() - timedelta(days=2)
+        self.slot1.save()
+        self.assertStatus(self.slot1, "finished")
+
+        self.slot1.start = now() + timedelta(days=5)
+        self.slot1.save()
+
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.splitter, "withdrawn")
+
+    def test_cancelled_activity_slot_does_not_finish(self):
+        self.activity.states.cancel(save=True)
+        self.slot1.refresh_from_db()
+
+        self.slot1.start = now() - timedelta(days=2)
+        self.slot1.save()
+
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+
+    def test_restore_slot_reopens_cancelled_activity(self):
+        self.activity.states.cancel(save=True)
+        self.slot1.refresh_from_db()
+
+        self.slot1.states.restore(save=True)
+
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.slot2, "cancelled")
+        self.assertStatus(self.activity, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+
+    def test_restore_past_slot_succeeds_cancelled_activity(self):
+        self.activity.states.cancel(save=True)
+        self.slot1.refresh_from_db()
+        self.slot1.start = now() - timedelta(days=2)
+        self.slot1.save()
+        self.assertStatus(self.slot1, "cancelled")
+
+        self.slot1.states.restore(save=True)
+
+        self.assertStatus(self.slot1, "finished")
+        self.assertStatus(self.slot2, "cancelled")
+        self.assertStatus(self.activity, "succeeded")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.participant.contributions.get(), "succeeded")
+
+    def test_restore_activity_reopens_upcoming_slots(self):
+        self.slot2.start = now() - timedelta(days=2)
+        self.slot2.save()
+        self.assertStatus(self.slot2, "finished")
+
+        self.activity.states.cancel(save=True)
+        self.assertStatus(self.slot1, "cancelled")
+
+        self.activity.states.restore(save=True)
+
+        self.assertStatus(self.activity, "needs_work")
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.slot2, "finished")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+
+    def test_restore_activity_keeps_past_cancelled_slots(self):
+        self.activity.states.cancel(save=True)
+        self.slot2.refresh_from_db()
+        self.slot2.start = now() - timedelta(days=2)
+        self.slot2.save()
+        self.assertStatus(self.slot2, "cancelled")
+
+        self.activity.states.restore(save=True)
+
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.slot2, "cancelled")
+
+    def test_cancel_slot_notifies_participants(self):
+        self.slot1.states.cancel(save=True)
+
+        recipients = [message.to[0] for message in mail.outbox]
+        self.assertIn(self.participant.user.email, recipients)
+        self.assertIn(self.activity.owner.email, recipients)
+        self.assertNotIn(self.splitter.user.email, recipients)
+
+    def test_cancel_activity_notifies_participants(self):
+        self.activity.states.cancel(save=True)
+
+        subjects = [
+            message.subject for message in mail.outbox
+            if message.to[0] == self.participant.user.email
+        ]
+        self.assertEqual(
+            subjects,
+            ['A slot for your activity "{}" has been cancelled'.format(self.activity.title)]
+        )
+
+    def test_cancel_past_slot_does_not_notify_participants(self):
+        self.slot1.start = now() - timedelta(days=2)
+        self.slot1.save()
+        self.assertStatus(self.participant, "succeeded")
+        mail.outbox = []
+
+        self.slot1.states.cancel(save=True)
+
+        recipients = [message.to[0] for message in mail.outbox]
+        self.assertIn(self.activity.owner.email, recipients)
+        self.assertNotIn(self.participant.user.email, recipients)

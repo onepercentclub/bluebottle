@@ -443,6 +443,13 @@ def activity_is_not_finished(effect):
     return not activity_is_finished(effect)
 
 
+def activity_is_cancelled(effect):
+    """
+    activity is cancelled
+    """
+    return effect.instance.activity.status == 'cancelled'
+
+
 def activity_has_participants(effect):
     """
     Activity has accepted participants.
@@ -583,6 +590,9 @@ class DateActivitySlotTriggers(TriggerManager):
                     "active_and_new_participants",
                     DateParticipantStateMachine.succeed
                 ),
+                ActiveTimeContributionsTransitionEffect(
+                    TimeContributionStateMachine.succeed
+                ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.succeed,
@@ -645,9 +655,32 @@ class DateActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             DateActivitySlotStateMachine.restore,
             effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.reopen,
+                    conditions=[activity_is_cancelled]
+                ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.finish,
                     conditions=[slot_is_finished]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.succeed,
+                    conditions=[
+                        slot_is_finished,
+                        activity_is_finished,
+                        activity_has_participants
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.expire,
+                    conditions=[
+                        slot_is_finished,
+                        activity_is_finished,
+                        activity_has_no_participants
+                    ]
                 ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.lock,
@@ -689,6 +722,11 @@ class DateActivitySlotTriggers(TriggerManager):
                     conditions=[slot_is_full]
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset),
+                RelatedTransitionEffect(
+                    'succeeded_participants',
+                    DateParticipantStateMachine.accept,
+                    conditions=[slot_is_not_finished]
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     DateStateMachine.reopen

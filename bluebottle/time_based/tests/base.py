@@ -417,6 +417,12 @@ class TimeBasedRegistrationListAPITestCase:
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
+    def test_create_cancelled_activity(self):
+        self.activity.states.cancel(save=True)
+
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
     def test_create_require_answer(self):
         self.activity.registration_flow = 'question'
         self.activity.save()

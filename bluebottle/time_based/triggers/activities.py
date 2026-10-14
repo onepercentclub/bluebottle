@@ -28,7 +28,9 @@ from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffe
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
-from bluebottle.time_based.effects.slots import ReopenRegistrationClosedSlotsEffect
+from bluebottle.time_based.effects.slots import (
+    CancelUpcomingSlotsEffect, ReopenRegistrationClosedSlotsEffect, RestoreUpcomingSlotsEffect
+)
 from bluebottle.time_based.messages.activity_manager import (
     PastActivityRegisteredNotification,
     PastActivityApprovedNotification,
@@ -405,13 +407,17 @@ class DateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect(
-                    'accepted_participants',
-                    ParticipantStateMachine.cancel
-                ),
+                CancelUpcomingSlotsEffect,
 
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
                 CancelEffect
+            ],
+        ),
+
+        TransitionTrigger(
+            TimeBasedStateMachine.restore,
+            effects=[
+                RestoreUpcomingSlotsEffect,
             ],
         ),
 

@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
@@ -927,13 +927,13 @@ class SlotCancelledNotification(TransitionMessage):
 
     def get_recipients(self):
         """participants that signed up"""
-        return [
-            self.obj.activity.owner
-        ] + [
-            participant.user for participant
-            in self.obj.participants.all()
-            if participant.status == 'accepted'
-        ]
+        recipients = [self.obj.activity.owner]
+        if self.obj.end and self.obj.end < now():
+            return recipients
+        for participant in self.obj.participants.filter(status__in=['accepted', 'cancelled']):
+            if participant.user not in recipients:
+                recipients.append(participant.user)
+        return recipients
 
     @property
     def action_link(self):

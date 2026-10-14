@@ -1,11 +1,15 @@
 from datetime import timedelta
 
+from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateActivitySlotFactory, PeriodicActivityFactory
+    DateActivityFactory, DateActivitySlotFactory, PeriodicActivityFactory,
+    DateParticipantFactory, DateRegistrationFactory
 )
+from bluebottle.time_based.models import DateParticipant, DateRegistration
 
 
 class DeadlineActivityModelTestCase(BluebottleTestCase):
@@ -88,3 +92,54 @@ class DateActivityModelTestCase(BluebottleTestCase):
         self.assertEqual(self.slotB.sequence, 1)
         self.assertEqual(self.slotC.sequence, 2)
         self.assertEqual(self.slotD.sequence, 3)
+
+
+class CancelledDateActivityModelTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.activity = DateActivityFactory.create(slots=[], status='open')
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=3)
+        )
+        self.user = BlueBottleUserFactory.create()
+
+    def test_participant_open_slot(self):
+        DateParticipant(slot=self.slot, activity=self.activity, user=self.user).clean()
+
+    def test_participant_cancelled_slot(self):
+        self.slot.status = 'cancelled'
+        self.slot.save()
+
+        with self.assertRaises(ValidationError):
+            DateParticipant(slot=self.slot, activity=self.activity, user=self.user).clean()
+
+    def test_participant_cancelled_activity(self):
+        self.activity.status = 'cancelled'
+        self.activity.save()
+
+        with self.assertRaises(ValidationError):
+            DateParticipant(slot=self.slot, activity=self.activity, user=self.user).clean()
+
+    def test_existing_participant_cancelled_slot(self):
+        participant = DateParticipantFactory.create(slot=self.slot, activity=self.activity)
+        self.slot.status = 'cancelled'
+        self.slot.save()
+
+        participant.clean()
+
+    def test_registration_open_activity(self):
+        DateRegistration(activity=self.activity, user=self.user).clean()
+
+    def test_registration_cancelled_activity(self):
+        self.activity.status = 'cancelled'
+        self.activity.save()
+
+        with self.assertRaises(ValidationError):
+            DateRegistration(activity=self.activity, user=self.user).clean()
+
+    def test_existing_registration_cancelled_activity(self):
+        registration = DateRegistrationFactory.create(activity=self.activity)
+        self.activity.status = 'cancelled'
+        self.activity.save()
+
+        registration.clean()

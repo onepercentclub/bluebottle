@@ -496,6 +496,14 @@ class BulkAddMixin(object):
         if not request.user.is_superuser:
             return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
 
+        if not getattr(activity, 'accepts_participants', True):
+            messages.add_message(
+                request,
+                messages.ERROR,
+                _('Participants cannot be added to a cancelled activity or slot.')
+            )
+            return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
+
         if request.method == "POST":
             form = self.bulk_add_form(data=request.POST)
             if form.is_valid():

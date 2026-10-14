@@ -72,14 +72,24 @@ from bluebottle.time_based.models import (
     TimeContribution, RegisteredDateActivity, RegisteredDateParticipant,
     Interest,
 )
+from bluebottle.time_based.fields import LocalDateTimeModelFormMixin
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import (
-    add_local_time_help_texts,
     duplicate_slot,
-    get_local_time_help_text,
     get_slot_local_datetimes,
     nth_weekday,
 )
+
+
+def _with_local_datetime_form(form_class):
+    if issubclass(form_class, LocalDateTimeModelFormMixin):
+        return form_class
+    return type(
+        str(form_class.__name__) + 'LocalDateTimeAware',
+        (LocalDateTimeModelFormMixin, form_class),
+        {},
+    )
+
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
     TranslatableAdminOrderingMixin,
@@ -262,6 +272,11 @@ class DateActivitySlotInline(TabularInlinePaginated):
         return obj.states.current_state.name
     status_label.short_description = _('Status')
 
+    def get_formset(self, request, obj=None, **kwargs):
+        FormSet = super().get_formset(request, obj, **kwargs)
+        FormSet.form = _with_local_datetime_form(FormSet.form)
+        return FormSet
+
 
 class DeadlineParticipantAdminInline(BaseContributorInline):
     model = DeadlineParticipant
@@ -368,11 +383,10 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
     raw_id_fields = ('location',)
 
     can_delete = True
-    readonly_fields = ('link', 'created', 'activity', 'local_time_info')
+    readonly_fields = ('link', 'created', 'activity')
     fields = (
         'link',
         'start',
-        'local_time_info',
         'duration',
         'created',
         'status',
@@ -394,42 +408,11 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
     verbose_name = _('Time, date & location')
     verbose_name_plural = _('Time, date & location')
 
-    def local_time_info(self, obj):
-        start, end, is_local = get_slot_local_datetimes(obj)
-        if not start:
-            return '-'
-
-        end_time = end.strftime('%H:%M') if end else '-'
-        if is_local:
-            return format_html(
-                '{} {} - {}<br/><em>{}</em>',
-                start.date(),
-                start.strftime('%H:%M'),
-                end_time,
-                _('Local time'),
-            )
-        return format_html(
-            '{} {} - {}',
-            start.date(),
-            start.strftime('%H:%M'),
-            end_time,
-        )
-
-    local_time_info.short_description = _('Local time')
-
     def get_formset(self, request, obj=None, **kwargs):
         FormSet = super().get_formset(request, obj, **kwargs)
-        base_form = FormSet.form
-
-        class SlotInlineForm(base_form):
-            def __init__(self, *args, **form_kwargs):
-                super().__init__(*args, **form_kwargs)
-                help_text = get_local_time_help_text(self.instance)
-                if help_text and 'start' in self.fields:
-                    self.fields['start'].help_text = help_text
-
-        FormSet.form = SlotInlineForm
+        FormSet.form = _with_local_datetime_form(FormSet.form)
         return FormSet
+
 
     def status_label(self, obj):
         return obj.states.current_state.name
@@ -1009,8 +992,8 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         return format_html("<a href='{}'>{}</a>", url, participant)
 
     def get_form(self, request, obj=None, **kwargs):
-        kwargs = add_local_time_help_texts(obj, kwargs)
-        return super().get_form(request, obj, **kwargs)
+        form_class = super().get_form(request, obj, **kwargs)
+        return _with_local_datetime_form(form_class)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -1209,8 +1192,8 @@ class SlotAdmin(StateMachineAdmin):
     activity_link.short_description = _('Activity')
 
     def get_form(self, request, obj=None, **kwargs):
-        kwargs = add_local_time_help_texts(obj, kwargs)
-        return super(SlotAdmin, self).get_form(request, obj, **kwargs)
+        form_class = super(SlotAdmin, self).get_form(request, obj, **kwargs)
+        return _with_local_datetime_form(form_class)
 
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()

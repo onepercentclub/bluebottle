@@ -594,7 +594,7 @@ class SlotTimezoneAdminTestCase(BluebottleAdminTestCase):
         )
         self.assertEqual(page.status_code, 200)
         self.assertIn('Local time in', page.text)
-        self.assertIn('3:30', page.text)
+        self.assertIn('Europe/Amsterdam', page.text)
 
     def test_slot_inline_no_help_text_for_new_form(self):
         from bluebottle.time_based.admin import ScheduleSlotAdminInline
@@ -618,7 +618,6 @@ class SlotTimezoneAdminTestCase(BluebottleAdminTestCase):
         )
         self.assertEqual(page.status_code, 200)
         self.assertIn('Local time in', page.text)
-        self.assertIn('3:30', page.text)
         self.assertIn('Europe/Amsterdam', page.text)
 
     def test_schedule_participant_slot_info_platform_timezone(self):

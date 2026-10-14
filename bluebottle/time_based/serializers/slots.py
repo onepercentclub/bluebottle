@@ -15,6 +15,7 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.serializers.activities import RelatedLinkFieldByStatus
 from bluebottle.time_based.serializers.serializers import DateActivitySlotSerializer
+from bluebottle.time_based.fields import slot_timezone
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
@@ -44,11 +45,7 @@ class ScheduleSlotSerializer(ModelSerializer):
             return {}
 
     def get_timezone(self, instance):
-        return (
-            instance.location.timezone
-            if not instance.is_online and instance.location
-            else None
-        )
+        return slot_timezone(instance)
 
     class Meta:
         model = ScheduleSlot

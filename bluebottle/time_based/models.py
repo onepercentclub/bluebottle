@@ -17,6 +17,7 @@ from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.funding.validators import TosAcceptedValidator
 from bluebottle.geo.models import Geolocation
+from bluebottle.time_based.fields import LocalDateTimeField
 from bluebottle.time_based.validators import (
     PeriodActivityRegistrationDeadlineValidator,
     CompletedSlotsValidator,
@@ -450,7 +451,7 @@ class DateActivitySlot(ActivitySlot):
 
     activity = models.ForeignKey(DateActivity, related_name='slots', on_delete=models.CASCADE)
 
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
+    start = LocalDateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
 
     @property
@@ -2010,7 +2011,7 @@ class PeriodicSlot(TriggerMixin, Slot):
 
 
 class BaseScheduleSlot(TriggerMixin, Slot):
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
+    start = LocalDateTimeField(_('start date and time'), null=True, blank=True)
 
     duration = models.DurationField(_("duration"), null=True, blank=True)
 

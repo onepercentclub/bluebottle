@@ -25,6 +25,7 @@ from bluebottle.time_based.serializers.interest_link_field import (
 from bluebottle.time_based.serializers.interest_validators import (
     PARTICIPATING_DATE_SLOT_PARTICIPANT_STATUSES,
 )
+from bluebottle.time_based.fields import slot_timezone
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -61,9 +62,7 @@ class ActivitySlotSerializer(ModelSerializer):
     )
 
     def get_timezone(self, instance):
-        is_online = getattr(instance, 'is_online', False)
-        has_location = getattr(instance, 'location', False)
-        return instance.location.timezone if not is_online and has_location else None
+        return slot_timezone(instance)
 
     class Meta:
         fields = (

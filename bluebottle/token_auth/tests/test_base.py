@@ -2,11 +2,10 @@ from mock import patch
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import Member, MemberPlatformSettings, UserSegment
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
-from bluebottle.members.models import UserSegment
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
 
 
@@ -18,6 +17,29 @@ class TestBaseTokenAuthentication(TestCase):
     def setUp(self):
         with self.settings(TOKEN_AUTH={}):
             self.auth = BaseTokenAuthentication(None, settings={})
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'sso-id-for-duplicate',
+            'email': 'test@example.com'
+        }
+    )
+    def test_duplicate_email_uses_existing_member(self, authenticate_request):
+        first = BlueBottleUserFactory.create(
+            email='test@example.com', remote_id='existing-remote'
+        )
+        BlueBottleUserFactory.create(
+            email='Test@example.com', remote_id='other-remote'
+        )
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+        self.assertFalse(created)
+        self.assertEqual(user.pk, first.pk)
+        self.assertEqual(Member.objects.filter(email__iexact='test@example.com').count(), 2)
 
     @patch.object(
         BaseTokenAuthentication,

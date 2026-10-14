@@ -989,6 +989,7 @@ class SpotOpenedNotification(TransitionMessage):
             if context['is_online']:
                 location = None
         context['title'] = activity.title
+        context['review'] = activity.review
         context['location'] = location.formatted_address if location else None
         return context
 
@@ -1016,4 +1017,5 @@ class InterestRegisteredNotification(TransitionMessage):
         context = super().get_context(recipient)
         activity = self.obj.activity
         context['title'] = activity.title
+        context['review'] = activity.review
         return context

@@ -57,9 +57,8 @@ class LocalDateTimeFieldTestCase(BluebottleTestCase):
             location=GeolocationFactory.create(position=AMSTERDAM),
         )
         caption = get_local_time_caption(slot)
-        self.assertIn('Local time in', str(caption))
-        self.assertNotIn('ahead', str(caption))
-        self.assertNotIn('behind', str(caption))
+        self.assertIn('Local time at location', str(caption))
+        self.assertNotIn('in your timezone', str(caption))
 
     def test_caption_with_offset(self):
         slot = ScheduleSlotFactory.create(
@@ -68,9 +67,8 @@ class LocalDateTimeFieldTestCase(BluebottleTestCase):
             location=GeolocationFactory.create(position=NEW_YORK),
         )
         caption = str(get_local_time_caption(slot))
-        self.assertIn('Local time in', caption)
-        self.assertIn('Europe/Amsterdam', caption)
-        self.assertTrue('ahead' in caption or 'behind' in caption)
+        self.assertIn('Local time at location', caption)
+        self.assertIn('in your timezone (Europe/Amsterdam)', caption)
 
     def test_form_preserves_wall_clock_when_location_changes(self):
         amsterdam = GeolocationFactory.create(position=AMSTERDAM)

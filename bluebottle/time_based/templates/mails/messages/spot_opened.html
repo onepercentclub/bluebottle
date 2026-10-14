@@ -18,7 +18,11 @@
         {% endif %}
     </p>
     <p>
-        {% blocktrans context 'platform-email' %}Head to the activity page to join. Spots are first-come, first-served. If the spot has been taken, you'll still be notified when another spot opens up.{% endblocktrans %}
+        {% if review %}
+            {% blocktrans context 'platform-email' %}Head to the activity page to apply. You'll need to wait to be approved before you can participate. If the spot has been taken, you'll still be notified when another spot opens up.{% endblocktrans %}
+        {% else %}
+            {% blocktrans context 'platform-email' %}Head to the activity page to join. Spots are first-come, first-served. If the spot has been taken, you'll still be notified when another spot opens up.{% endblocktrans %}
+        {% endif %}
     </p>
 {% endblock %}
 

@@ -1,6 +1,7 @@
 from django.urls import reverse
 
 from bluebottle.organizations.models import Organization
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
 
@@ -34,3 +35,38 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
         page = form.submit().follow()
         self.assertEqual(Organization.objects.count(), 1)
         self.assertIsNone(page.html.find("p", {'class': 'errornote'}))
+
+    def test_view_on_site_link(self):
+        organization = OrganizationFactory.create(
+            name='Dharma Initiative',
+            website='http://dharma.in',
+        )
+        url = reverse(
+            'admin:organizations_organization_change',
+            args=(organization.pk,),
+        )
+        page = self.app.get(url)
+        self.assertIn('View on site', page.text)
+        self.assertTrue(page.html.find('a', {'class': 'viewsitelink'}))
+        self.assertEqual(
+            organization.get_absolute_url(),
+            'http://test.localhost/en/organizations/{}/{}/activities/list'.format(
+                organization.pk,
+                organization.slug,
+            ),
+        )
+
+    def test_color_contrast_preview(self):
+        organization = OrganizationFactory.create(
+            name='Dharma Initiative',
+            website='http://dharma.in',
+            color='#00305E',
+        )
+        url = reverse(
+            'admin:organizations_organization_change',
+            args=(organization.pk,),
+        )
+        page = self.app.get(url)
+        self.assertTrue(page.html.find(id='organization-color-contrast-panel'))
+        self.assertTrue(page.html.find(id='id_color'))
+        self.assertIn('organization_color_contrast.js', page.text)

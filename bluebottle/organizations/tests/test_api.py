@@ -238,7 +238,7 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
                 'id': self.organization_1.pk,
                 'attributes': {
                     'name': 'Hacked',
-                    'description': 'nope',
+                    'slogan': 'nope',
                 }
             }
         }
@@ -286,7 +286,8 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
                 'attributes': {
                     'name': '1%Club',
                     'slug': 'hm',
-                    'description': 'some description',
+                    'slogan': 'some slogan',
+                    'story': '<p>some story</p>',
                     'website': 'http://onepercentclub.com',
                 }
             }
@@ -318,9 +319,10 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         organization = Organization.objects.get(pk=org_id)
         self.assertEqual(organization.name, '1%Club')
         self.assertEqual(organization.slug, '1club')
-        self.assertEqual(organization.description, 'some description')
+        self.assertEqual(organization.slogan, 'some slogan')
+        self.assertIn('some story', organization.story.html)
 
-    def test_api_manage_organizations_update_description(self):
+    def test_api_manage_organizations_update_slogan(self):
         """
         Tests POSTing new data to the endpoint.
         """
@@ -330,10 +332,10 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Update description
+        # Update slogan
         org_id = response.data['id']
         self.post_data['data']['id'] = org_id
-        self.post_data['data']['attributes']['description'] = 'Bla bla'
+        self.post_data['data']['attributes']['slogan'] = 'Bla bla'
         url = reverse('organization_detail', kwargs={'pk': org_id})
 
         response = self.client.put(
@@ -344,7 +346,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check the data.
         organization = Organization.objects.get(pk=org_id)
-        self.assertEqual(organization.description, 'Bla bla')
+        self.assertEqual(organization.slogan, 'Bla bla')
 
     def test_api_manage_organizations_update_other_user(self):
         """
@@ -356,17 +358,16 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Update description
+        # Update slogan
         org_id = response.data['id']
         self.post_data['data']['id'] = org_id
-        self.post_data['data']['attributes']['description'] = 'Bla bla'
+        self.post_data['data']['attributes']['slogan'] = 'Bla bla'
         url = reverse('organization_detail', kwargs={'pk': org_id})
 
         response = self.client.put(
             url,
             json.dumps(self.post_data),
             user=BlueBottleUserFactory.create())
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.patch(

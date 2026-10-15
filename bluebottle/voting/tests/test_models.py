@@ -24,6 +24,11 @@ class PollModelTestCase(BluebottleTestCase):
         self.option.title = 'Blue'
         self.option.save()
 
+        self.second_option = PollOption(poll=self.poll)
+        self.second_option.set_current_language('en')
+        self.second_option.title = 'Red'
+        self.second_option.save()
+
         page = PageFactory.create()
         placeholder = Placeholder.objects.create_for_object(page, 'blog_contents')
         self.block = PollContent.objects.create_for_placeholder(
@@ -48,3 +53,24 @@ class PollModelTestCase(BluebottleTestCase):
                 PollVoteFactory.create(
                     poll=self.poll, option=self.option, owner=user
                 )
+
+    def test_winner(self):
+        PollVoteFactory.create(poll=self.poll, option=self.option, owner=BlueBottleUserFactory.create())
+        PollVoteFactory.create(poll=self.poll, option=self.option, owner=BlueBottleUserFactory.create())
+        PollVoteFactory.create(poll=self.poll, option=self.second_option, owner=BlueBottleUserFactory.create())
+
+        self.assertTrue(self.option.winner)
+        self.assertFalse(self.second_option.winner)
+
+    def test_winner_tie(self):
+        PollVoteFactory.create(poll=self.poll, option=self.option, owner=BlueBottleUserFactory.create())
+        PollVoteFactory.create(poll=self.poll, option=self.option, owner=BlueBottleUserFactory.create())
+        PollVoteFactory.create(poll=self.poll, option=self.second_option, owner=BlueBottleUserFactory.create())
+        PollVoteFactory.create(poll=self.poll, option=self.second_option, owner=BlueBottleUserFactory.create())
+
+        self.assertTrue(self.option.winner)
+        self.assertTrue(self.second_option.winner)
+
+    def test_winner_no_vote(self):
+        self.assertFalse(self.option.winner)
+        self.assertFalse(self.second_option.winner)

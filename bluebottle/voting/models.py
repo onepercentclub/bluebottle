@@ -67,7 +67,7 @@ class PollOption(SortableMixin, TranslatableModel):
         help_text=_(
             'Use a wide image (16:9) for the best result. Other shapes will be cropped to fit. '
             'JPEG or PNG files are accepted.'
-        )
+        ),
         max_length=255,
         blank=True,
         null=True,
@@ -81,7 +81,7 @@ class PollOption(SortableMixin, TranslatableModel):
     )
     video_url = models.URLField(
         _('video URL'),
-        help_text=_('Enter a link to a YouTube or Vimeo video.')
+        help_text=_('Enter a link to a YouTube or Vimeo video.'),
         max_length=255,
         blank=True,
         null=True,

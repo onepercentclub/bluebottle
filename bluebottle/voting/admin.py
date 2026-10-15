@@ -89,6 +89,8 @@ class PollAdmin(
         'title',
         'subtitle',
         'end_date',
+        'show_vote_count',
+        'highlight_winning_option',
         'status',
         'states',
         'pages',

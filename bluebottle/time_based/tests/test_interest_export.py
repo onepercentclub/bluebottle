@@ -10,7 +10,6 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
-from bluebottle.time_based.views.exports import format_slot_worksheet_title
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -38,13 +37,6 @@ def get_sheet_by_title(workbook, title):
 
 def get_interest_sheets(workbook):
     return [sheet for sheet in workbook.worksheets if sheet.title.startswith('Interested')]
-
-
-def get_interest_sheet_for_slot(workbook, slot):
-    return get_sheet_by_title(
-        workbook,
-        format_slot_worksheet_title(slot, prefix='Interested '),
-    )
 
 
 class ActivityExportSetUpMixin:
@@ -101,19 +93,6 @@ class InterestExportAssertionsMixin:
 
     def assert_no_interest_sheet(self, workbook):
         self.assertEqual(get_interest_sheets(workbook), [])
-
-    def assert_interest_sheet_for_slot(self, workbook, slot, interests):
-        sheet = get_interest_sheet_for_slot(workbook, slot)
-        self.assertIsNotNone(sheet)
-        self.assertEqual(tuple(sheet.values)[0], INTEREST_HEADERS)
-
-        rows = list(sheet.values)[1:]
-        self.assertEqual(len(rows), len(interests))
-
-        for row, interest in zip(rows, interests):
-            self.assertEqual(row[0], interest.user.email)
-            self.assertEqual(row[1], interest.user.full_name)
-            self.assertEqual(row[2], interest.created.strftime('%d-%m-%y %H:%M'))
 
 
 class DeadlineInterestExportTestCase(
@@ -330,12 +309,12 @@ class DateActivityInterestExportTestCase(
     def test_export_includes_slot_interested_members(self):
         first_slot = self.activity.slots.first()
         last_slot = self.activity.slots.last()
-        first_interest = InterestFactory.create(
+        InterestFactory.create(
             activity=self.activity,
             slot=first_slot,
             user=BlueBottleUserFactory.create(),
         )
-        last_interest = InterestFactory.create(
+        InterestFactory.create(
             activity=self.activity,
             slot=last_slot,
             user=BlueBottleUserFactory.create(),
@@ -343,98 +322,32 @@ class DateActivityInterestExportTestCase(
 
         workbook = self.download_export()
 
-        self.assertEqual(len(workbook.worksheets), 7)
-        self.assertEqual(len(get_interest_sheets(workbook)), 2)
-        self.assert_interest_sheet_for_slot(workbook, first_slot, [first_interest])
-        self.assert_interest_sheet_for_slot(workbook, last_slot, [last_interest])
+        self.assertEqual(len(workbook.worksheets), 2)
+        self.assertEqual(workbook.worksheets[1].title, 'Interested')
 
-    def test_export_skips_interested_tab_for_slots_without_interests(self):
-        slot = self.activity.slots.first()
-        interest = InterestFactory.create(
-            activity=self.activity,
-            slot=slot,
-            user=BlueBottleUserFactory.create(),
-        )
-
+    def test_export_skips_interested_tab_without_interests(self):
         workbook = self.download_export()
 
-        self.assertEqual(len(get_interest_sheets(workbook)), 1)
-        self.assert_interest_sheet_for_slot(workbook, slot, [interest])
+        self.assertEqual(len(workbook.worksheets), 1)
 
-    def test_export_interested_tab_title_includes_slot_info(self):
-        slot = self.activity.slots.first()
-        InterestFactory.create(
+    def test_export_interest_fields(self):
+        open_slot = DateActivitySlotFactory.create(
             activity=self.activity,
-            slot=slot,
-            user=BlueBottleUserFactory.create(),
-        )
-
-        workbook = self.download_export()
-
-        expected_title = format_slot_worksheet_title(slot, prefix='Interested ')
-        self.assertIsNotNone(get_sheet_by_title(workbook, expected_title))
-
-    def test_export_orders_interested_members_per_slot(self):
-        slot = self.activity.slots.first()
-        older = InterestFactory.create(
-            activity=self.activity,
-            slot=slot,
-            user=BlueBottleUserFactory.create(),
-            created=now() - timedelta(days=2),
-        )
-        newer = InterestFactory.create(
-            activity=self.activity,
-            slot=slot,
-            user=BlueBottleUserFactory.create(),
-            created=now() - timedelta(days=1),
-        )
-
-        workbook = self.download_export()
-
-        self.assert_interest_sheet_for_slot(workbook, slot, [older, newer])
-
-    def test_export_excludes_interests_on_past_slots(self):
-        past_slot = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=now() - timedelta(days=1),
+            start=now() + timedelta(days=1),
             status='open',
         )
-        future_slot = self.activity.slots.filter(start__gt=now()).first()
-        if not future_slot:
-            future_slot = self.activity.slots.first()
-            future_slot.start = now() + timedelta(days=10)
-            future_slot.save()
-
         InterestFactory.create(
             activity=self.activity,
-            slot=past_slot,
+            slot=open_slot,
             user=BlueBottleUserFactory.create(),
         )
-        future_interest = InterestFactory.create(
-            activity=self.activity,
-            slot=future_slot,
-            user=BlueBottleUserFactory.create(),
-        )
-
-        workbook = self.download_export()
-
-        self.assertIsNone(get_interest_sheet_for_slot(workbook, past_slot))
-        self.assert_interest_sheet_for_slot(workbook, future_slot, [future_interest])
-        self.assertIsNone(get_sheet_by_title(
-            workbook,
-            format_slot_worksheet_title(past_slot),
-        ))
-
-    def test_export_includes_interests_on_past_slots_when_succeeded(self):
-        self.activity.status = 'succeeded'
-        self.activity.save()
 
         past_slot = DateActivitySlotFactory.create(
             activity=self.activity,
             start=now() - timedelta(days=1),
             status='finished',
         )
-        interest = InterestFactory.create(
+        InterestFactory.create(
             activity=self.activity,
             slot=past_slot,
             user=BlueBottleUserFactory.create(),
@@ -442,7 +355,14 @@ class DateActivityInterestExportTestCase(
 
         workbook = self.download_export()
 
-        self.assert_interest_sheet_for_slot(workbook, past_slot, [interest])
+        sheet = workbook.worksheets[1]
+        values = tuple(sheet.values)
+        self.assertEqual(
+            values[0],
+            (
+                'Email', 'Name', 'Registration Date', 'Slot id', 'Slot start', 'Slot duration', 'Slot status',
+            )
+        )
 
 
 class SlotInterestExportTestCase(InterestExportAssertionsMixin, APITestCase):

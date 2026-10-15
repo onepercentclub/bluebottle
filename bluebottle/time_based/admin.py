@@ -7,7 +7,7 @@ from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
-from django.template import defaultfilters, loader
+from django.template import loader
 from django.template.response import TemplateResponse
 from django.urls import path
 from django.urls import reverse
@@ -72,6 +72,7 @@ from bluebottle.time_based.models import (
     TimeContribution, RegisteredDateActivity, RegisteredDateParticipant,
     Interest,
 )
+from bluebottle.time_based.fields import LocalDateTimeModelFormMixin
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
@@ -81,6 +82,16 @@ from bluebottle.utils.admin import (
     export_as_csv_action,
 )
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
+
+
+def _with_local_datetime_form(form_class):
+    if issubclass(form_class, LocalDateTimeModelFormMixin):
+        return form_class
+    return type(
+        str(form_class.__name__) + 'LocalDateTimeAware',
+        (LocalDateTimeModelFormMixin, form_class),
+        {},
+    )
 
 
 class DateParticipantAdminInline(BaseContributorInline):
@@ -256,6 +267,11 @@ class DateActivitySlotInline(TabularInlinePaginated):
         return obj.states.current_state.name
     status_label.short_description = _('Status')
 
+    def get_formset(self, request, obj=None, **kwargs):
+        FormSet = super().get_formset(request, obj, **kwargs)
+        FormSet.form = _with_local_datetime_form(FormSet.form)
+        return FormSet
+
 
 class DeadlineParticipantAdminInline(BaseContributorInline):
     model = DeadlineParticipant
@@ -390,6 +406,11 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
 
     def has_add_permission(self, request, obj):
         return True
+
+    def get_formset(self, request, obj=None, **kwargs):
+        FormSet = super().get_formset(request, obj, **kwargs)
+        FormSet.form = _with_local_datetime_form(FormSet.form)
+        return FormSet
 
     formfield_overrides = {
         models.DurationField: {
@@ -961,6 +982,10 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         url = reverse('admin:time_based_scheduleparticipant_change', args=(participant.id,))
         return format_html("<a href='{}'>{}</a>", url, participant)
 
+    def get_form(self, request, obj=None, **kwargs):
+        form_class = super().get_form(request, obj, **kwargs)
+        return _with_local_datetime_form(form_class)
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         if request.user.is_superuser:
@@ -1158,28 +1183,8 @@ class SlotAdmin(StateMachineAdmin):
     activity_link.short_description = _('Activity')
 
     def get_form(self, request, obj=None, **kwargs):
-        if obj and not obj.is_online and obj.location:
-            local_start = obj.start.astimezone(timezone(obj.location.timezone))
-            platform_start = obj.start.astimezone(get_current_timezone())
-            offset = local_start.utcoffset() - platform_start.utcoffset()
-
-            if offset.total_seconds() != 0:
-                timezone_text = _(
-                    'Local time in "{location}" is {local_time}. '
-                    'This is {offset} hours {relation} compared to the '
-                    'standard platform timezone ({current_timezone}).'
-                ).format(
-                    location=obj.location,
-                    local_time=defaultfilters.time(local_start),
-                    offset=abs(offset.total_seconds() / 3600.0),
-                    relation=_('later') if offset.total_seconds() > 0 else _('earlier'),
-                    current_timezone=get_current_timezone()
-                )
-
-                help_texts = {'start': timezone_text}
-                kwargs.update({'help_texts': help_texts})
-
-        return super(SlotAdmin, self).get_form(request, obj, **kwargs)
+        form_class = super(SlotAdmin, self).get_form(request, obj, **kwargs)
+        return _with_local_datetime_form(form_class)
 
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()

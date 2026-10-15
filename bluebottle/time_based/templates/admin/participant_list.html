@@ -18,10 +18,11 @@
                 </div>
             {% endif %}
 
-            {% if original.is_adopted and original.origin.contributor_count %}
+            {% if original.is_adopted and original.origin.remote_contributor_count %}
+
                 <div class="description">
-                    {% blocktrans with count=original.origin.contributor_count local=original.participants.count %}
-                        A total of  <b>{{ count }}</b> participants registered for this activity. <b>{{local}}</b> registered on this platform.
+                    {% blocktrans with remote=original.origin.remote_contributor_count|add:original.participants.count local=original.participants.count %}
+                        A total of  <b>{{ remote }}</b> participants registered for this activity. <b>{{local}}</b> registered on this platform.
                     {% endblocktrans %}
                 </div>
             {% endif %}

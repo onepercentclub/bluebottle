@@ -9,6 +9,9 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from django.core.files import File
 from django.db import connection
+from django.db.models import F, Count, Value
+from django.db.models.functions import Coalesce
+
 from django.urls import reverse
 from djmoney.money import Money
 from rest_framework import exceptions
@@ -47,6 +50,8 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.models import get_default_language
+
+from bluebottle.activity_pub.utils import get_platform_actor
 
 logger = logging.getLogger(__name__)
 
@@ -371,8 +376,20 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
 
     contributor_count = serializers.SerializerMethodField(required=False, allow_null=True)
 
+    def get_contributors(self, obj):
+        return obj.active_contributors
+
     def get_contributor_count(self, obj):
-        return obj.active_contributors.count()
+        """
+        A mapping from source iri to contributor count for that source
+        """
+        return list(self.get_contributors(obj).annotate(
+            source=Coalesce(F('remote_user__origin__source__iri'), Value(get_platform_actor().pub_url))
+        ).values(
+            'source'
+        ).annotate(
+            count=Count('source')
+        ))
 
     def get_url(self, obj):
         return connection.tenant.build_absolute_url(
@@ -708,18 +725,7 @@ class DateSlotsSerializer(FederatedObjectBaseSerializer):
     online_meeting_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     parent = RelatedParentField(source='activity')
 
-    contributor_count = serializers.IntegerField(
-        source='remote_contributor_count',
-        required=False,
-        allow_null=True,
-    )
-
-    def to_representation(self, instance):
-        # Supplier platform should sent `contributor_count`
-        # Consumer should store it in `remote_contributor_count`
-        data = super().to_representation(instance)
-        data['contributor_count'] = instance.contributor_count
-        return data
+    contributor_count = serializers.SerializerMethodField(required=False, allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivitySlot
@@ -729,6 +735,21 @@ class DateSlotsSerializer(FederatedObjectBaseSerializer):
             'status', 'location_hint', 'online_meeting_url',
             'parent', 'contributor_count',
         )
+
+    def get_contributors(self, obj):
+        return obj.participants.filter(status__in=['accepted', 'succeeded'])
+
+    def get_contributor_count(self, obj):
+        """
+        A mapping from source iri to contributor count for that source
+        """
+        return list(self.get_contributors(obj).annotate(
+            source=Coalesce(F('remote_user__origin__source__iri'), Value(get_platform_actor().pub_url))
+        ).values(
+            'source'
+        ).annotate(
+            count=Count('source')
+        ))
 
 
 class ScheduleSlotsSerializer(FederatedObjectBaseSerializer):
@@ -801,8 +822,8 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
             'capacity', 'sub_event', 'review', 'join_mode', 'application_deadline',
         )
 
-    def get_contributor_count(self, obj):
-        return obj.participants.filter(status__in=['accepted', 'new', 'succeeded']).count()
+    def get_contributors(self, obj):
+        return obj.participants.filter(status__in=['accepted', 'new', 'succeeded'])
 
     def create(self, validated_data):
         slots = validated_data.pop('publishable_slots', None)
@@ -854,8 +875,8 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     def get_slot_mode(self, obj):
         return SlotModeChoices.periodic
 
-    def get_contributor_count(self, obj):
-        return obj.registrations.filter(status__in=['new', 'accepted']).count()
+    def get_contributors(self, obj):
+        return obj.registrations.filter(status__in=['accepted', 'new'])
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = PeriodicActivity
@@ -884,10 +905,11 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
     def get_slot_mode(self, obj):
         return SlotModeChoices.scheduled
 
-    def get_contributor_count(self, obj):
+    def get_contributors(self, obj):
         if obj.team_activity == 'teams':
-            return obj.registrations.filter(status__in=['new', 'accepted']).count()
-        return obj.active_participants.count()
+            return obj.registrations.filter(status__in=['new', 'accepted'])
+        else:
+            return obj.active_participants
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = ScheduleActivity

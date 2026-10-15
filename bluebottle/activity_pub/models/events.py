@@ -78,9 +78,10 @@ class Event(ActivityPubModel):
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
     )
-    contributor_count = models.PositiveIntegerField(
-        default=0,
-        help_text=_('Total contributors from all platforms')
+
+    contributor_count = models.JSONField(
+        help_text=_('Contributor counts per platform'),
+        default=list
     )
 
     @classmethod
@@ -95,6 +96,10 @@ class Event(ActivityPubModel):
             actor = get_platform_actor()
             if actor and not self.create_set.exists():
                 Create.objects.create(actor=actor, object=self)
+
+    @property
+    def remote_contributor_count(self):
+        return sum(item['count'] for item in self.contributor_count if item['source'] != get_platform_actor().pub_url)
 
     @property
     def source(self):
@@ -309,10 +314,11 @@ class SubEvent(ActivityPubModel):
         related_name='sub_events',
         help_text=_('Team this schedule slot belongs to (team-mode activities).'),
     )
-    contributor_count = models.PositiveIntegerField(
-        default=0,
-        help_text=_('Accepted participants for this slot.'),
+    contributor_count = models.JSONField(
+        help_text=_('Contributor counts per platform'),
+        default=list
     )
+
     capacity = models.PositiveIntegerField(
         _('Capacity'),
         null=True,
@@ -331,6 +337,10 @@ class SubEvent(ActivityPubModel):
     @property
     def title(self):
         return self.name
+
+    @property
+    def remote_contributor_count(self):
+        return sum(item['count'] for item in self.contributor_count if item['source'] != get_platform_actor().pub_url)
 
     class Meta:
         verbose_name = _("Sub event")

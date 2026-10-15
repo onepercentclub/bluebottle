@@ -166,6 +166,19 @@ class PlaceSerializer(BaseActivityPubSerializer):
         )
 
 
+class ContributurCountSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    source = serializers.CharField()
+
+
+class ContributorCountField(serializers.ListField):
+    def to_internal_value(self, value):
+        if not isinstance(value, (tuple, list)):
+            value = [value]
+
+        return super().to_internal_value(value)
+
+
 class BaseEventSerializer(BaseActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField(allow_null=True, allow_blank=True, required=False)
@@ -174,8 +187,9 @@ class BaseEventSerializer(BaseActivityPubSerializer):
     url = serializers.URLField(required=False, allow_null=True)
     video_url = serializers.URLField(required=False, allow_null=True, allow_blank=True)
 
-    contributor_count = serializers.IntegerField(
-        required=False, allow_null=True, default=0
+    contributor_count = ContributorCountField(
+        required=False, allow_null=True,
+        child=ContributurCountSerializer()
     )
 
     class Meta(BaseActivityPubSerializer.Meta):
@@ -301,7 +315,10 @@ class SubEventSerializer(BaseActivityPubSerializer):
         allow_null=True,
     )
     duration = serializers.DurationField(required=False, allow_null=True)
-    contributor_count = serializers.IntegerField(required=False, allow_null=True, default=0)
+    contributor_count = ContributorCountField(
+        required=False, allow_null=True,
+        child=ContributurCountSerializer()
+    )
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
     parent = RelatedParentField(allow_null=True)

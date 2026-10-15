@@ -185,7 +185,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity)
         DateActivitySlotFactory.create(
-            status='succeeded', activity=activity, start=now() - timedelta(days=10)
+            status='finished', activity=activity, start=now() - timedelta(days=10)
         )
         response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
@@ -205,6 +205,28 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             attributes['expertise'],
             activity.expertise.name
         )
+        self.assertEqual(attributes['slot-count'], 3)
+        self.assertEqual(
+            dateutil.parser.parse(attributes['start']),
+            min([slot.start for slot in activity.slots.all() if slot.start > now()])
+        )
+
+        self.assertEqual(
+            dateutil.parser.parse(attributes['end']),
+            min([slot.end for slot in activity.slots.all() if slot.start > now()])
+        )
+        self.assertEqual(attributes['has-multiple-locations'], True)
+        self.assertIsNone(attributes['location'])
+
+    def test_date_preview_multiple_slots_highlight(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        DateActivitySlotFactory.create_batch(3, activity=activity)
+        DateActivitySlotFactory.create(
+            status='finished', activity=activity, start=now() - timedelta(days=10)
+        )
+        response = self.client.get(self.url + '?filter[hightlight]=1', user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
+        attributes = response.json()['data'][0]['attributes']
+
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(
             dateutil.parser.parse(attributes['start']),

@@ -118,7 +118,7 @@ def geolocation_for_activity(instance):
     return None
 
 
-CONTRIBUTOR_STATUSES = ('accepted', 'succeeded')
+CONTRIBUTOR_STATUSES = ('accepted', 'scheduled', 'succeeded')
 # Registration count keys and the status they count; a new registration is pending review.
 REGISTRATION_STATUSES = {
     'pending': 'new',

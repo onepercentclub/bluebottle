@@ -82,5 +82,5 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.assertEqual(count, 0)
         self.assertFalse(any(contributors.values()))
         self.assertFalse(any(registrations.values()))
-        self.assertEqual(set(contributors), {'accepted', 'succeeded'})
+        self.assertEqual(set(contributors), {'accepted', 'scheduled', 'succeeded'})
         self.assertEqual(set(registrations), {'pending', 'accepted'})

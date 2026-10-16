@@ -170,7 +170,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(attributes['contributor-count'], 2)
         self.assertEqual(attributes['contributor-stats']['succeeded'], 2)
-        self.assertEqual(attributes['contributor-stats'], {'accepted': 0, 'succeeded': 2})
+        self.assertEqual(attributes['contributor-stats'], {'accepted': 0, 'scheduled': 0, 'succeeded': 2})
         self.assertEqual(attributes['registration-stats'], {'pending': 1, 'accepted': 0})
         self.assertEqual(attributes['review'], True)
 

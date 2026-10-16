@@ -93,6 +93,9 @@ class LinkedActivityDocument(ActivityDocument):
     def prepare_contributor_count(self, instance):
         return 0
 
+    def prepare_contributor_stats(self, instance):
+        return None
+
     def prepare_donation_count(self, instance):
         return 0
 

@@ -1,12 +1,15 @@
 from builtins import str
+from collections import Counter
 
+from django.contrib.contenttypes.models import ContentType
 from django_elasticsearch_dsl import Document, fields
 from elasticsearch_dsl.field import DateRange
 
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, Organizer
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
 from bluebottle.geo.models import Location
+from bluebottle.grant_management.models import GrantDonor
 from bluebottle.initiatives.documents import (
     deduplicate,
     get_translated_country_list,
@@ -115,6 +118,36 @@ def geolocation_for_activity(instance):
     return None
 
 
+# Contributor statuses across all activity types (participants, donors).
+PARTICIPANT_STATUSES = (
+    'new', 'pending', 'accepted', 'scheduled', 'succeeded', 'rejected', 'withdrawn',
+    'removed', 'cancelled', 'failed', 'refunded', 'activity_refunded', 'expired',
+)
+# Registration statuses; a new registration is waiting for review.
+REGISTRATION_STATUSES = {
+    'to_review': 'new',
+    'accepted': 'accepted',
+    'rejected': 'rejected',
+    'withdrawn': 'withdrawn',
+    'stopped': 'stopped',
+    'removed': 'removed',
+}
+
+
+def participant_status_counts(instance):
+    # Organizers (activity owners) and granted amounts are contributors, but not participants.
+    excluded = {
+        ContentType.objects.get_for_model(Organizer).pk,
+        ContentType.objects.get_for_model(GrantDonor).pk,
+    }
+    counts = Counter(
+        contributor.status for contributor in instance.contributors.all()
+        if contributor.polymorphic_ctype_id not in excluded
+    )
+    counts['succeeded'] += instance.deleted_successful_contributors or 0
+    return counts
+
+
 class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = TextField(fielddata=True)
@@ -148,6 +181,7 @@ class ActivityDocument(Document):
             'initiative__categories',
             'initiative__activity_managers',
             'contributors',
+            'registrations',
         )
 
     def get_indexing_queryset(self):
@@ -323,7 +357,17 @@ class ActivityDocument(Document):
     )
 
     contributors = fields.KeywordField()
-    contributor_count = fields.IntegerField(attr='succeeded_contributor_count')
+    contributor_count = fields.IntegerField()
+    contributor_stats = fields.ObjectField(
+        properties={
+            'participants': fields.ObjectField(
+                properties={status: fields.IntegerField() for status in PARTICIPANT_STATUSES}
+            ),
+            'registrations': fields.ObjectField(
+                properties={key: fields.IntegerField() for key in REGISTRATION_STATUSES}
+            ),
+        }
+    )
     capacity = fields.IntegerField()
     donation_count = fields.IntegerField()
     activity_type = fields.KeywordField()
@@ -419,7 +463,20 @@ class ActivityDocument(Document):
         ]
 
     def prepare_contributor_count(self, instance):
-        return instance.contributors.filter(status__in=('succeeded', 'accepted')).count()
+        counts = participant_status_counts(instance)
+        return counts['accepted'] + counts['succeeded']
+
+    def prepare_contributor_stats(self, instance):
+        participants = participant_status_counts(instance)
+        registrations = Counter(
+            registration.status for registration in instance.registrations.all()
+        )
+        return {
+            'participants': {status: participants[status] for status in PARTICIPANT_STATUSES},
+            'registrations': {
+                key: registrations[status] for key, status in REGISTRATION_STATUSES.items()
+            },
+        }
 
     def prepare_donation_count(self, instance):
         return instance.contributors.instance_of(Donor).filter(status='succeeded').count()

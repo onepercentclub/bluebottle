@@ -118,19 +118,11 @@ def geolocation_for_activity(instance):
     return None
 
 
-# Contributor statuses across all activity types (participants and donors).
-CONTRIBUTOR_STATUSES = (
-    'new', 'pending', 'accepted', 'scheduled', 'succeeded', 'rejected', 'withdrawn',
-    'removed', 'cancelled', 'failed', 'refunded', 'activity_refunded', 'expired',
-)
+CONTRIBUTOR_STATUSES = ('accepted', 'succeeded')
 # Registration count keys and the status they count; a new registration is pending review.
 REGISTRATION_STATUSES = {
     'pending': 'new',
     'accepted': 'accepted',
-    'rejected': 'rejected',
-    'withdrawn': 'withdrawn',
-    'stopped': 'stopped',
-    'removed': 'removed',
 }
 
 

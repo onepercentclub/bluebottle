@@ -161,8 +161,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         Contributor.objects.filter(pk__in=[p.pk for p in participants[:2]]).update(status='succeeded')
         Contributor.objects.filter(pk=participants[2].pk).update(status='withdrawn')
         registrations = Registration.objects.filter(activity=activity)
-        Registration.objects.filter(pk=registrations[0].pk).update(status='new')
-        Registration.objects.filter(pk=registrations[1].pk).update(status='rejected')
+        registrations.update(status='rejected')
+        Registration.objects.filter(pk=registrations.first().pk).update(status='new')
         registry.update(Activity.objects.get(pk=activity.pk))
 
         response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
@@ -170,10 +170,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(attributes['contributor-count'], 2)
         self.assertEqual(attributes['contributor-stats']['succeeded'], 2)
-        self.assertEqual(attributes['contributor-stats']['withdrawn'], 1)
-        self.assertEqual(attributes['contributor-stats']['activity_refunded'], 0)
-        self.assertEqual(attributes['registration-stats']['pending'], 1)
-        self.assertEqual(attributes['registration-stats']['rejected'], 1)
+        self.assertEqual(attributes['contributor-stats'], {'accepted': 0, 'succeeded': 2})
+        self.assertEqual(attributes['registration-stats'], {'pending': 1, 'accepted': 0})
         self.assertEqual(attributes['review'], True)
 
     def test_date_preview(self):

@@ -45,9 +45,6 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.assertEqual(count, 2 + 1 + 2)
         self.assertEqual(contributors['accepted'], 2)
         self.assertEqual(contributors['succeeded'], 3)
-        self.assertEqual(contributors['new'], 1)
-        self.assertEqual(contributors['withdrawn'], 1)
-        self.assertEqual(contributors['rejected'], 0)
         self.assertEqual(registrations['pending'], 1)
         self.assertEqual(registrations['accepted'], len(registration_ids) - 1)
 
@@ -76,8 +73,6 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
 
         self.assertEqual(count, 2)
         self.assertEqual(contributors['succeeded'], 2)
-        self.assertEqual(contributors['failed'], 1)
-        self.assertEqual(contributors['refunded'], 1)
 
     def test_without_contributors(self):
         activity = DeedFactory.create()
@@ -87,5 +82,5 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.assertEqual(count, 0)
         self.assertFalse(any(contributors.values()))
         self.assertFalse(any(registrations.values()))
-        self.assertIn('activity_refunded', contributors)
-        self.assertEqual(set(registrations), {'pending', 'accepted', 'rejected', 'withdrawn', 'stopped', 'removed'})
+        self.assertEqual(set(contributors), {'accepted', 'succeeded'})
+        self.assertEqual(set(registrations), {'pending', 'accepted'})

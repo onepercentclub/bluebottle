@@ -7,12 +7,27 @@ from bluebottle.time_based.documents import (
     deduplicate_positions,
     unique_slot_geolocations,
 )
+from bluebottle.time_based.models import DateActivity, DateActivitySlot
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
 
 
 class DateActivityDocumentTestCase(BluebottleTestCase):
     def create_geolocation(self, **kwargs):
         return save_built_geolocation(GeolocationFactory.build(**kwargs))
+
+    def test_prepare_slot_stats(self):
+        activity = DateActivityFactory.create(slots=[])
+        slots = DateActivitySlotFactory.create_batch(5, activity=activity)
+        statuses = ['open', 'full', 'finished', 'finished', 'cancelled']
+        for slot, status in zip(slots, statuses):
+            DateActivitySlot.objects.filter(pk=slot.pk).update(status=status)
+
+        activity = DateActivity.objects.get(pk=activity.pk)
+
+        self.assertEqual(
+            DateActivityDocument().prepare_slot_stats(activity),
+            {'upcoming': 2, 'succeeded': 2},
+        )
 
     def test_unique_slot_geolocations_deduplicates_by_location(self):
         location = self.create_geolocation(locality='Leiden')

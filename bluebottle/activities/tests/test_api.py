@@ -150,6 +150,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['review'], None)
+        self.assertEqual(attributes['slots'], None)
         self.assertEqual(
             attributes['theme'],
             activity.theme.name
@@ -195,6 +196,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             activity.expertise.name
         )
         self.assertEqual(attributes['slot-count'], 1)
+        self.assertEqual(
+            attributes['slots'], {'upcoming': 1 if activity.slots.first().status == 'open' else 0, 'succeeded': 0}
+        )
         self.assertEqual(dateutil.parser.parse(attributes['start']), activity.slots.first().start)
         self.assertEqual(dateutil.parser.parse(attributes['end']), activity.slots.first().end)
         self.assertEqual(attributes['has-multiple-locations'], False)

@@ -99,6 +99,9 @@ def slot_location_entry(geolocation, location_hint=None):
     }
 
 
+UPCOMING_SLOT_STATUSES = ('open', 'full', 'registration_closed', 'running')
+
+
 @registry.register_document
 @activity.document
 class DateActivityDocument(TimeBasedActivityDocument):
@@ -120,6 +123,18 @@ class DateActivityDocument(TimeBasedActivityDocument):
         'is_online': fields.BooleanField(),
         'location_id': fields.LongField(),
     })
+
+    slot_stats = fields.ObjectField(properties={
+        'upcoming': fields.IntegerField(),
+        'succeeded': fields.IntegerField(),
+    })
+
+    def prepare_slot_stats(self, instance):
+        statuses = [slot.status for slot in instance.slots.all()]
+        return {
+            'upcoming': sum(status in UPCOMING_SLOT_STATUSES for status in statuses),
+            'succeeded': statuses.count('finished'),
+        }
 
     def get_queryset(self):
         queryset = super().get_queryset()

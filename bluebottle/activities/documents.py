@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django_elasticsearch_dsl import Document, fields
 from elasticsearch_dsl.field import DateRange
 
-from bluebottle.activities.models import Activity, Organizer
+from bluebottle.activities.models import Activity, Contributor, Organizer
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
 from bluebottle.geo.models import Location
@@ -18,6 +18,7 @@ from bluebottle.initiatives.documents import (
 )
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.segments.models import Segment
+from bluebottle.time_based.models import Registration
 from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.search import Search
 
@@ -386,6 +387,8 @@ class ActivityDocument(Document):
             return model.objects.filter(office_location=related_instance)
         if isinstance(related_instance, Theme.translations.field.model):
             return model.objects.filter(initiative__theme=related_instance.master)
+        if isinstance(related_instance, (Contributor, Registration)):
+            return model.objects.filter(pk=related_instance.activity_id)
 
     class Django:
         related_models = (

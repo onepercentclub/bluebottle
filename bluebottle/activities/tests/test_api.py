@@ -55,6 +55,11 @@ from bluebottle.time_based.tests.factories import (
     DeadlineParticipantFactory,
     SkillFactory,
     DateRegistrationFactory,
+    DeadlineRegistrationFactory,
+    PeriodicActivityFactory,
+    PeriodicRegistrationFactory,
+    ScheduleActivityFactory,
+    ScheduleRegistrationFactory,
 )
 
 
@@ -174,6 +179,42 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['contributor-stats'], {'accepted': 0, 'scheduled': 0, 'succeeded': 2})
         self.assertEqual(attributes['registration-stats'], {'pending': 1, 'accepted': 0})
         self.assertEqual(attributes['review'], True)
+
+    def preview_attributes(self, activity):
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
+        for data in response.json()['data']:
+            if data['id'] == str(activity.pk):
+                return data['attributes']
+
+    def assert_registration_updates_index(self, activity, registration_factory):
+        registration = registration_factory.create(activity=activity)
+        attributes = self.preview_attributes(activity)
+        self.assertEqual(attributes['registration-stats'], {'pending': 1, 'accepted': 0})
+
+        registration.states.accept(save=True)
+        attributes = self.preview_attributes(activity)
+        self.assertEqual(attributes['registration-stats'], {'pending': 0, 'accepted': 1})
+        self.assertEqual(attributes['contributor-count'], 1)
+
+    def test_deadline_registration_updates_index(self):
+        activity = DeadlineActivityFactory.create(status='open', review=True)
+        self.assert_registration_updates_index(activity, DeadlineRegistrationFactory)
+
+    def test_periodic_registration_updates_index(self):
+        activity = PeriodicActivityFactory.create(status='open', review=True)
+        self.assert_registration_updates_index(activity, PeriodicRegistrationFactory)
+
+    def test_schedule_registration_updates_index(self):
+        activity = ScheduleActivityFactory.create(status='open', review=True)
+        self.assert_registration_updates_index(activity, ScheduleRegistrationFactory)
+
+    def test_participant_status_change_updates_index(self):
+        activity = DeedFactory.create(status='open')
+        participant = DeedParticipantFactory.create(activity=activity)
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['accepted'], 1)
+
+        participant.states.withdraw(save=True)
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['accepted'], 0)
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')

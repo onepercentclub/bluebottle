@@ -149,13 +149,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
+        self.assertEqual(attributes['review'], None)
         self.assertEqual(
             attributes['theme'],
             activity.theme.name
         )
 
     def test_preview_contributor_and_registration_stats(self):
-        activity = DeadlineActivityFactory.create(status='open')
+        activity = DeadlineActivityFactory.create(status='open', review=True)
         participants = DeadlineParticipantFactory.create_batch(3, activity=activity)
         Contributor.objects.filter(pk__in=[p.pk for p in participants[:2]]).update(status='succeeded')
         Contributor.objects.filter(pk=participants[2].pk).update(status='withdrawn')
@@ -173,6 +174,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['contributor-stats']['activity_refunded'], 0)
         self.assertEqual(attributes['registration-stats']['pending'], 1)
         self.assertEqual(attributes['registration-stats']['rejected'], 1)
+        self.assertEqual(attributes['review'], True)
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')

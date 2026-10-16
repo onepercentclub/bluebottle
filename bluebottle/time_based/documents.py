@@ -35,6 +35,7 @@ INDEXABLE_SLOT_STATUSES = ('open', 'full', 'registration_closed', 'finished')
 
 
 class TimeBasedActivityDocument(ActivityDocument):
+    review = fields.BooleanField()
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)

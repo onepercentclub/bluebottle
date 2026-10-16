@@ -20,7 +20,11 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
     def prepare(self, activity):
         activity = Activity.objects.get(pk=activity.pk)
         document = ActivityDocument()
-        return document.prepare_contributor_count(activity), document.prepare_contributor_stats(activity)
+        return (
+            document.prepare_contributor_count(activity),
+            document.prepare_contributor_stats(activity),
+            document.prepare_registration_stats(activity),
+        )
 
     def test_deadline_activity(self):
         activity = DeadlineActivityFactory.create()
@@ -32,20 +36,20 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.set_status(participants[4:], 'withdrawn')
         Activity.objects.filter(pk=activity.pk).update(deleted_successful_contributors=2)
 
-        registrations = Registration.objects.filter(activity=activity)
-        Registration.objects.filter(pk__in=[r.pk for r in registrations[:1]]).update(status='new')
-        Registration.objects.filter(pk__in=[r.pk for r in registrations[1:]]).update(status='accepted')
+        registration_ids = list(Registration.objects.filter(activity=activity).values_list('pk', flat=True))
+        Registration.objects.filter(pk__in=registration_ids[:1]).update(status='new')
+        Registration.objects.filter(pk__in=registration_ids[1:]).update(status='accepted')
 
-        count, stats = self.prepare(activity)
+        count, contributors, registrations = self.prepare(activity)
 
         self.assertEqual(count, 2 + 1 + 2)
-        self.assertEqual(stats['participants']['accepted'], 2)
-        self.assertEqual(stats['participants']['succeeded'], 3)
-        self.assertEqual(stats['participants']['new'], 1)
-        self.assertEqual(stats['participants']['withdrawn'], 1)
-        self.assertEqual(stats['participants']['rejected'], 0)
-        self.assertEqual(stats['registrations']['to_review'], 1)
-        self.assertEqual(stats['registrations']['accepted'], registrations.count() - 1)
+        self.assertEqual(contributors['accepted'], 2)
+        self.assertEqual(contributors['succeeded'], 3)
+        self.assertEqual(contributors['new'], 1)
+        self.assertEqual(contributors['withdrawn'], 1)
+        self.assertEqual(contributors['rejected'], 0)
+        self.assertEqual(registrations['pending'], 1)
+        self.assertEqual(registrations['accepted'], len(registration_ids) - 1)
 
     def test_deed_excludes_organizer(self):
         activity = DeedFactory.create()
@@ -54,11 +58,11 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.set_status(participants[:1], 'accepted')
         self.set_status(participants[1:], 'succeeded')
 
-        count, stats = self.prepare(activity)
+        count, contributors, registrations = self.prepare(activity)
 
         self.assertEqual(count, 3)
-        self.assertEqual(stats['participants']['succeeded'], 2)
-        self.assertEqual(stats['registrations']['to_review'], 0)
+        self.assertEqual(contributors['succeeded'], 2)
+        self.assertEqual(registrations['pending'], 0)
 
     def test_funding_counts_succeeded_donors(self):
         activity = FundingFactory.create()
@@ -68,19 +72,20 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.set_status(donors[2:3], 'failed')
         self.set_status(donors[3:], 'refunded')
 
-        count, stats = self.prepare(activity)
+        count, contributors, registrations = self.prepare(activity)
 
         self.assertEqual(count, 2)
-        self.assertEqual(stats['participants']['succeeded'], 2)
-        self.assertEqual(stats['participants']['failed'], 1)
-        self.assertEqual(stats['participants']['refunded'], 1)
+        self.assertEqual(contributors['succeeded'], 2)
+        self.assertEqual(contributors['failed'], 1)
+        self.assertEqual(contributors['refunded'], 1)
 
     def test_without_contributors(self):
         activity = DeedFactory.create()
 
-        count, stats = self.prepare(activity)
+        count, contributors, registrations = self.prepare(activity)
 
         self.assertEqual(count, 0)
-        self.assertEqual(set(stats), {'participants', 'registrations'})
-        self.assertFalse(any(stats['participants'].values()))
-        self.assertFalse(any(stats['registrations'].values()))
+        self.assertFalse(any(contributors.values()))
+        self.assertFalse(any(registrations.values()))
+        self.assertIn('activity_refunded', contributors)
+        self.assertEqual(set(registrations), {'pending', 'accepted', 'rejected', 'withdrawn', 'stopped', 'removed'})

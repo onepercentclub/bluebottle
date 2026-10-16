@@ -118,14 +118,14 @@ def geolocation_for_activity(instance):
     return None
 
 
-# Contributor statuses across all activity types (participants, donors).
-PARTICIPANT_STATUSES = (
+# Contributor statuses across all activity types (participants and donors).
+CONTRIBUTOR_STATUSES = (
     'new', 'pending', 'accepted', 'scheduled', 'succeeded', 'rejected', 'withdrawn',
     'removed', 'cancelled', 'failed', 'refunded', 'activity_refunded', 'expired',
 )
-# Registration statuses; a new registration is waiting for review.
+# Registration count keys and the status they count; a new registration is pending review.
 REGISTRATION_STATUSES = {
-    'to_review': 'new',
+    'pending': 'new',
     'accepted': 'accepted',
     'rejected': 'rejected',
     'withdrawn': 'withdrawn',
@@ -134,7 +134,7 @@ REGISTRATION_STATUSES = {
 }
 
 
-def participant_status_counts(instance):
+def contributor_status_counts(instance):
     # Organizers (activity owners) and granted amounts are contributors, but not participants.
     excluded = {
         ContentType.objects.get_for_model(Organizer).pk,
@@ -359,14 +359,10 @@ class ActivityDocument(Document):
     contributors = fields.KeywordField()
     contributor_count = fields.IntegerField()
     contributor_stats = fields.ObjectField(
-        properties={
-            'participants': fields.ObjectField(
-                properties={status: fields.IntegerField() for status in PARTICIPANT_STATUSES}
-            ),
-            'registrations': fields.ObjectField(
-                properties={key: fields.IntegerField() for key in REGISTRATION_STATUSES}
-            ),
-        }
+        properties={status: fields.IntegerField() for status in CONTRIBUTOR_STATUSES}
+    )
+    registration_stats = fields.ObjectField(
+        properties={key: fields.IntegerField() for key in REGISTRATION_STATUSES}
     )
     capacity = fields.IntegerField()
     donation_count = fields.IntegerField()
@@ -463,20 +459,16 @@ class ActivityDocument(Document):
         ]
 
     def prepare_contributor_count(self, instance):
-        counts = participant_status_counts(instance)
+        counts = contributor_status_counts(instance)
         return counts['accepted'] + counts['succeeded']
 
     def prepare_contributor_stats(self, instance):
-        participants = participant_status_counts(instance)
-        registrations = Counter(
-            registration.status for registration in instance.registrations.all()
-        )
-        return {
-            'participants': {status: participants[status] for status in PARTICIPANT_STATUSES},
-            'registrations': {
-                key: registrations[status] for key, status in REGISTRATION_STATUSES.items()
-            },
-        }
+        counts = contributor_status_counts(instance)
+        return {status: counts[status] for status in CONTRIBUTOR_STATUSES}
+
+    def prepare_registration_stats(self, instance):
+        counts = Counter(registration.status for registration in instance.registrations.all())
+        return {key: counts[status] for key, status in REGISTRATION_STATUSES.items()}
 
     def prepare_donation_count(self, instance):
         return instance.contributors.instance_of(Donor).filter(status='succeeded').count()

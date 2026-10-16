@@ -13,11 +13,12 @@ from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
+from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
 
-from bluebottle.activities.models import Activity, ActivityMessage
+from bluebottle.activities.models import Activity, ActivityMessage, Contributor
 from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory,
@@ -45,6 +46,7 @@ from bluebottle.test.factory_models.geo import (
 )
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
+from bluebottle.time_based.models import Registration
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -151,6 +153,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             attributes['theme'],
             activity.theme.name
         )
+
+    def test_preview_contributor_and_registration_stats(self):
+        activity = DeadlineActivityFactory.create(status='open')
+        participants = DeadlineParticipantFactory.create_batch(3, activity=activity)
+        Contributor.objects.filter(pk__in=[p.pk for p in participants[:2]]).update(status='succeeded')
+        Contributor.objects.filter(pk=participants[2].pk).update(status='withdrawn')
+        registrations = Registration.objects.filter(activity=activity)
+        Registration.objects.filter(pk=registrations[0].pk).update(status='new')
+        Registration.objects.filter(pk=registrations[1].pk).update(status='rejected')
+        registry.update(Activity.objects.get(pk=activity.pk))
+
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['contributor-count'], 2)
+        self.assertEqual(attributes['contributor-stats']['succeeded'], 2)
+        self.assertEqual(attributes['contributor-stats']['withdrawn'], 1)
+        self.assertEqual(attributes['contributor-stats']['activity_refunded'], 0)
+        self.assertEqual(attributes['registration-stats']['pending'], 1)
+        self.assertEqual(attributes['registration-stats']['rejected'], 1)
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')

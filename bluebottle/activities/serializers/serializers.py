@@ -214,6 +214,10 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     capacity = serializers.SerializerMethodField()
     contributor_count = serializers.SerializerMethodField()
+    contributor_stats = serializers.SerializerMethodField()
+    registration_stats = serializers.SerializerMethodField()
+    review = serializers.SerializerMethodField()
+    slots = serializers.SerializerMethodField()
 
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
@@ -483,6 +487,21 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_contributor_count(self, obj):
         return obj.contributor_count
 
+    def get_contributor_stats(self, obj):
+        stats = getattr(obj, 'contributor_stats', None)
+        return stats.to_dict() if stats else None
+
+    def get_registration_stats(self, obj):
+        stats = getattr(obj, 'registration_stats', None)
+        return stats.to_dict() if stats else None
+
+    def get_review(self, obj):
+        return getattr(obj, 'review', None)
+
+    def get_slots(self, obj):
+        stats = getattr(obj, 'slot_stats', None)
+        return stats.to_dict() if stats else None
+
     def get_capacity(self, obj):
         return obj.capacity
 
@@ -526,6 +545,10 @@ class ActivityPreviewSerializer(ModelSerializer):
             "activity",
             "capacity",
             "contributor_count",
+            "contributor_stats",
+            "registration_stats",
+            "review",
+            "slots",
             "translations"
         )
         meta_fields = (

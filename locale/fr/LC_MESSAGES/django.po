@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 11:46+0200\n"
-"PO-Revision-Date: 2026-10-15 09:47\n"
+"POT-Creation-Date: 2026-10-19 11:05+0200\n"
+"PO-Revision-Date: 2026-10-19 09:07\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -43,7 +43,7 @@ msgstr "Anonyme"
 #: bluebottle/activity_links/admin.py:20 bluebottle/funding_stripe/admin.py:203
 #: bluebottle/funding_stripe/admin.py:275 bluebottle/geo/admin.py:177
 #: bluebottle/geo/admin.py:178 bluebottle/time_based/admin.py:319
-#: bluebottle/time_based/admin.py:467 bluebottle/voting/admin.py:100
+#: bluebottle/time_based/admin.py:467 bluebottle/voting/admin.py:102
 msgid "Details"
 msgstr "Détails du produit"
 
@@ -57,7 +57,7 @@ msgstr "Détails du produit"
 #: bluebottle/time_based/admin.py:323 bluebottle/time_based/admin.py:471
 #: bluebottle/time_based/admin.py:920 bluebottle/time_based/admin.py:967
 #: bluebottle/time_based/admin.py:1241 bluebottle/time_based/admin.py:1909
-#: bluebottle/voting/admin.py:104
+#: bluebottle/voting/admin.py:106
 msgid "Super admin"
 msgstr "Super administrateur"
 
@@ -768,7 +768,7 @@ msgstr "-vide-"
 msgid "Old team"
 msgstr "Ancienne équipe"
 
-#: bluebottle/activities/models.py:363 bluebottle/voting/models.py:147
+#: bluebottle/activities/models.py:363 bluebottle/voting/models.py:162
 msgid "user"
 msgstr "utilisateur"
 
@@ -2802,7 +2802,7 @@ msgstr "date de connexion"
 #: bluebottle/bb_accounts/models.py:128 bluebottle/clients/models.py:15
 #: bluebottle/funding/models.py:688 bluebottle/organizations/models.py:27
 #: bluebottle/organizations/models.py:98 bluebottle/terms/models.py:14
-#: bluebottle/voting/models.py:150
+#: bluebottle/voting/models.py:165
 msgid "updated"
 msgstr "Mis à jour"
 
@@ -3398,7 +3398,7 @@ msgid "slug"
 msgstr "Slug"
 
 #: bluebottle/categories/models.py:21 bluebottle/categories/models.py:113
-#: bluebottle/geo/models.py:163 bluebottle/voting/models.py:66
+#: bluebottle/geo/models.py:163 bluebottle/voting/models.py:81
 msgid "image"
 msgstr "image"
 
@@ -3432,7 +3432,7 @@ msgstr "Nom"
 #: bluebottle/geo/models.py:123 bluebottle/geo/models.py:161
 #: bluebottle/initiatives/models.py:648 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:24
-#: bluebottle/time_based/models.py:1151 bluebottle/voting/models.py:62
+#: bluebottle/time_based/models.py:1151 bluebottle/voting/models.py:77
 msgid "description"
 msgstr "Libellé"
 
@@ -3447,7 +3447,7 @@ msgstr "Catégories"
 #: bluebottle/categories/models.py:87 bluebottle/funding/models.py:427
 #: bluebottle/initiatives/models.py:38 bluebottle/pages/models.py:58
 #: bluebottle/time_based/models.py:297 bluebottle/voting/models.py:16
-#: bluebottle/voting/models.py:61
+#: bluebottle/voting/models.py:76
 msgid "title"
 msgstr "Titre:"
 
@@ -3488,7 +3488,7 @@ msgstr "blocs de contenu"
 #: bluebottle/clients/models.py:14 bluebottle/files/models.py:26
 #: bluebottle/funding/models.py:687 bluebottle/organizations/models.py:26
 #: bluebottle/organizations/models.py:97 bluebottle/terms/models.py:13
-#: bluebottle/updates/models.py:59 bluebottle/voting/models.py:149
+#: bluebottle/updates/models.py:59 bluebottle/voting/models.py:164
 msgid "created"
 msgstr "créé"
 
@@ -14848,11 +14848,11 @@ msgid_plural "Seconds"
 msgstr[0] "Seconde"
 msgstr[1] "Secondes"
 
-#: bluebottle/voting/admin.py:50 bluebottle/voting/admin.py:111
+#: bluebottle/voting/admin.py:50 bluebottle/voting/admin.py:113
 msgid "votes"
 msgstr "votes"
 
-#: bluebottle/voting/admin.py:143
+#: bluebottle/voting/admin.py:145
 msgid "Pages with this poll"
 msgstr "Pages avec ce sondage"
 
@@ -14864,58 +14864,74 @@ msgstr "sous-titre"
 msgid "end date"
 msgstr "date de fin"
 
-#: bluebottle/voting/models.py:26 bluebottle/voting/models.py:57
-#: bluebottle/voting/models.py:135
+#: bluebottle/voting/models.py:25
+msgid "Show vote count per option"
+msgstr "Afficher le nombre de votes par option"
+
+#: bluebottle/voting/models.py:27
+msgid "When enabled, each option's vote count is shown while the poll is open and after it closes. The total number of votes on the poll is always visible, regardless of this setting."
+msgstr "Lorsque cette option est activée, le nombre de votes pour chaque option est affiché pendant que le vote est ouvert et après sa fermeture. Le nombre total de votes sur le sondage est toujours visible, quelle que soit cette option."
+
+#: bluebottle/voting/models.py:33
+msgid "Highlight the winning option"
+msgstr "Mettre en évidence l'option gagnante"
+
+#: bluebottle/voting/models.py:35
+msgid "When enabled, the winning option will be highlighted when the poll is closed."
+msgstr "Lorsque cette option est activée, l'option gagnante sera mise en évidence lorsque le sondage sera fermé."
+
+#: bluebottle/voting/models.py:41 bluebottle/voting/models.py:72
+#: bluebottle/voting/models.py:150
 msgid "poll"
 msgstr "sondage"
 
-#: bluebottle/voting/models.py:27
+#: bluebottle/voting/models.py:42
 msgid "polls"
 msgstr "sondages"
 
-#: bluebottle/voting/models.py:49
+#: bluebottle/voting/models.py:64
 #, python-brace-format
 msgid "Poll {pk}"
 msgstr "Sondage {pk}"
 
-#: bluebottle/voting/models.py:68
+#: bluebottle/voting/models.py:83
 msgid "Use a wide image (16:9) for the best result. Other shapes will be cropped to fit. JPEG or PNG files are accepted."
 msgstr "Utilisez une image large (16:9) pour le meilleur résultat. D'autres formes seront recadrées pour s'adapter. Les fichiers JPEG ou PNG sont acceptés."
 
-#: bluebottle/voting/models.py:83
+#: bluebottle/voting/models.py:98
 msgid "video URL"
 msgstr "uRL de la vidéo"
 
-#: bluebottle/voting/models.py:84
+#: bluebottle/voting/models.py:99
 msgid "Enter a link to a YouTube or Vimeo video."
 msgstr "Entrez un lien vers une vidéo YouTube ou Vimeo."
 
-#: bluebottle/voting/models.py:114
+#: bluebottle/voting/models.py:129
 msgid "poll option"
 msgstr "option de sondage"
 
-#: bluebottle/voting/models.py:115
+#: bluebottle/voting/models.py:130
 msgid "poll options"
 msgstr "options de sondage"
 
-#: bluebottle/voting/models.py:127
+#: bluebottle/voting/models.py:142
 #, python-brace-format
 msgid "Option {pk}"
 msgstr "Option {pk}"
 
-#: bluebottle/voting/models.py:141
+#: bluebottle/voting/models.py:156
 msgid "option"
 msgstr "option"
 
-#: bluebottle/voting/models.py:153
+#: bluebottle/voting/models.py:168
 msgid "poll vote"
 msgstr "vote de sondage"
 
-#: bluebottle/voting/models.py:154
+#: bluebottle/voting/models.py:169
 msgid "poll votes"
 msgstr "votes de sondage"
 
-#: bluebottle/voting/models.py:174
+#: bluebottle/voting/models.py:189
 #, python-brace-format
 msgid "Vote {pk}"
 msgstr "Vote {pk}"
@@ -14924,11 +14940,11 @@ msgstr "Vote {pk}"
 msgid "Close the poll when the deadline has passed"
 msgstr "Fermez le sondage lorsque la date limite est passée"
 
-#: bluebottle/voting/serializers.py:81
+#: bluebottle/voting/serializers.py:84
 msgid "This option does not belong to this poll"
 msgstr "Cette option n’appartient pas à ce sondage"
 
-#: bluebottle/voting/serializers.py:86 bluebottle/voting/views.py:68
+#: bluebottle/voting/serializers.py:89 bluebottle/voting/views.py:68
 msgid "This poll is not open for voting"
 msgstr "Ce sondage n'est pas ouvert au vote"
 

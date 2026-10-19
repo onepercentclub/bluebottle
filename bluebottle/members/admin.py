@@ -26,6 +26,14 @@ from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from parler.admin import TranslatableAdmin
 from rest_framework.authtoken.models import Token
 
+from polymorphic.admin import (
+    PolymorphicChildModelAdmin,
+    PolymorphicChildModelFilter,
+    PolymorphicInlineSupportMixin,
+    PolymorphicParentModelAdmin,
+    StackedPolymorphicInline,
+)
+
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
@@ -62,7 +70,7 @@ from bluebottle.utils.admin import (
 )
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from .models import Member, SocialLoginSettings, UserSegment
+from .models import AuthenticationMethod, FacebookAuthentication, GoogleAuthentication, Member, PasswordAuthentication, SAMLAuthentication, SAMLSegmentMapping, SocialLoginSettings, UserSegment
 from ..grant_management.models import GrantApplication
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
@@ -123,18 +131,75 @@ class MemberCreationForm(MemberForm):
         return user
 
 
-class SocialLoginSettingsInline(admin.TabularInline):
-    extra = 1
-    model = SocialLoginSettings
+@admin.register(AuthenticationMethod)
+class AuthenticationMethodAdmin(PolymorphicParentModelAdmin):
+    base_model = AuthenticationMethod
+    child_models = (
+        PasswordAuthentication,
+        FacebookAuthentication,
+        GoogleAuthentication,
+        SAMLAuthentication
+    )
+    list_display = ['polymorphic_ctype', 'enabled']
+
+
+class AuthenticationMethodChildAdmin(PolymorphicChildModelAdmin):
+    base_model = AuthenticationMethod
+    list_display = ['polymorphic_ctype', 'enabled']
+
+
+@admin.register(PasswordAuthentication)
+class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
+    model = PasswordAuthentication
+
+    fields = ['enabled', 'confirm_signup', 'account_creation_rules', 'email_domains', 'request_access_method']
+
+
+@admin.register(FacebookAuthentication)
+class FacwbookAuthenticationAdmin(AuthenticationMethodChildAdmin):
+    model = FacebookAuthentication
+    fields = ['enabled', 'secret', 'client_id']
+
+
+@admin.register(GoogleAuthentication)
+class GoogleAuthenticationAdmin(AuthenticationMethodChildAdmin):
+    model = GoogleAuthentication
+    fields = ['enabled', 'secret', 'client_id']
+
+
+class SAMLSegmentMappingInline(admin.TabularInline):
+    model = SAMLSegmentMapping
+
+
+@admin.register(SAMLAuthentication)
+class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
+    model = SAMLAuthentication
+
+    inlines = [SAMLSegmentMappingInline]
+
+    fieldsets = (
+        ('Settings', {'fields': ['enabled', 'admin_login_enabled', 'provision', 'debug', 'strict']}),
+        ('SAML conffiguration', {
+            'fields': [
+                'metadata_file', 'entity_id', 'local_entity_id', 'certificate', 'single_sign_on_url', 'name_id_format'
+            ]
+        }),
+        ('Attribute mapping', {
+            'fields': [
+                'remote_id_attribute', 'email_attribute', 'last_name_attribute', 'first_name_attribute',
+                'work_location_attribute'
+            ]
+        })
+    )
+
 
 
 @admin.register(MemberPlatformSettings)
 class MemberPlatformSettingsAdmin(
-    DynamicArrayMixin, TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
+    DynamicArrayMixin, TranslatableLabelAdminMixin, TranslatableAdmin,
+    BasePlatformSettingsAdmin,
     NonSortableParentAdmin,
 ):
-    inlines = [SocialLoginSettingsInline]
-
     def reminder_info(self, obj):
         return admin_info_box(
             _('Quarterly emails will only be sent at the beginning of each '

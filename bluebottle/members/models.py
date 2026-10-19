@@ -15,6 +15,10 @@ from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
+from polymorphic.models import PolymorphicModel
+
+
+from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser as MetadataParser
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.files.fields import ImageField
@@ -592,6 +596,110 @@ class UserActivity(models.Model):
         verbose_name = _('User activity')
         verbose_name_plural = _('User activities')
         ordering = ['-created']
+
+
+class AuthenticationMethod(PolymorphicModel):
+    enabled = models.BooleanField(_('Enabled'), default=True)
+
+
+class PasswordAuthentication(AuthenticationMethod):
+    ACCOUNT_CREATION_RULES = (
+        ('anyone', _('Anyone can create an account')),
+        ('whitelist', _('Only people with a whitelisted domain can create an account')),
+        (
+            'whitelist_and_request',
+            _('People with a whitelisted domain can create an account; all others can request access')
+        ),
+    )
+
+    REQUEST_ACCESS_METHODS = (
+        ('email', _('People request access by entering their email address')),
+        ('instructions', _('People request access by following your instructions')),
+    )
+
+    confirm_signup = CheckboxField(
+        _('verify email on sign up'),
+        default=False,
+        inline_label=_('Require users to verify their email on sign-up'),
+        help_text=_('This rule only applies to the email + password method.'),
+    )
+
+    account_creation_rules = CharField(
+        _('account creation rules'),
+        choices=ACCOUNT_CREATION_RULES,
+        default='anyone',
+    )
+
+    email_domains = ArrayField(
+        models.CharField(),
+        verbose_name=_('Whitelisted email domains'),
+        blank=True, null=True,
+        default=list,
+    )
+
+    request_access_method = models.CharField(
+        _('request access method'),
+        help_text=_('This rule only applies when requesting access is allowed.'),
+        choices=REQUEST_ACCESS_METHODS,
+        default='email',
+    )
+
+
+class FacebookAuthentication(AuthenticationMethod):
+    secret = models.CharField(_('Secret'))
+    client_id = models.CharField(_('Client id'))
+
+
+class GoogleAuthentication(AuthenticationMethod):
+    secret = models.CharField(_('Secret'))
+    client_id = models.CharField(_('Client id'))
+
+
+class SAMLAuthentication(AuthenticationMethod):
+    entity_id = models.CharField(_('Entity id'))
+    local_entity_id = models.CharField(_('Local entity id'))
+
+    certificate = models.CharField(_('x509 certificate'))
+    single_sign_on_url = models.CharField(_('Single sign on url'))
+    single_logout_url = models.CharField(_('Single logout url'))
+    name_id_format = models.CharField(_('Name id format'))
+
+    remote_id_attribute = models.CharField(_('Remote id attribute'))
+    email_attribute = models.CharField(_('Email attribute'))
+    last_name_attribute = models.CharField(_('Last name attribute'))
+    first_name_attribute = models.CharField(_('First name attribute'))
+    work_location_attribute = models.CharField(_('Work location attribute'))
+
+    metadata_file = models.FileField(upload_to='members/saml-metadata', null=True)
+
+    admin_login_enabled = models.BooleanField(_('Admin login enabled'), default=True)
+    provision = models.BooleanField(_('Provision users'), default=True)
+    debug = models.BooleanField(_('Debug'), default=True)
+    strict = models.BooleanField(_('Strict'), default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.metadata_file._committed:
+            __import__('ipdb').set_trace()
+            parsed = MetadataParser.parse(self.metadata_file.read())
+            self.entity_id = parsed['idp']['entityId']
+            self.single_sign_on_url = parsed['idp']['singleSignOnService']['url']
+            self.single_logout_url = parsed['idp']['singleLogoutService']['url']
+            self.certificate = parsed['idp']['x509cert']
+
+
+            self.metadata_file.seek(0)
+
+        super().save(*args, **kwargs)
+
+
+    def from_metadata(self, metadata):
+        __import__('ipdb').set_trace()
+
+
+class SAMLSegmentMapping(models.Model):
+    authentication_method = models.ForeignKey(SAMLAuthentication, on_delete=models.CASCADE)
+    source_attribute = models.CharField(_('Source attribute'))
+    segment = models.ForeignKey('segments.segment', on_delete=models.CASCADE)
 
 
 from . import signals  # noqa

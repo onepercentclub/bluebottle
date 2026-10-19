@@ -307,6 +307,10 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["cms.change_siteplatformsettings"],
             },
             {
+                "name": "members.authenticationmethod",
+                "permissions": ["members.change_authenticationmethod"],
+            },
+            {
                 "name": "members.memberplatformsettings",
                 "permissions": ["members.change_memberplatformsettings"],
             },

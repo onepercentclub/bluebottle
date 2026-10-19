@@ -570,7 +570,10 @@ class SyncTestCase(ActivityPubTestCase):
         with LocalTenant(self.consumer):
             self.participant.states.withdraw(save=True)
             self.adopted.origin.refresh_from_db()
-            self.assertEqual(self.adopted.origin.contributor_count, 0)
+            self.assertEqual(
+                self.adopted.origin.contributor_count,
+                []
+            )
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
@@ -584,7 +587,10 @@ class SyncTestCase(ActivityPubTestCase):
             self.participant.states.reapply(save=True)
 
             self.adopted.origin.refresh_from_db()
-            self.assertEqual(self.adopted.origin.contributor_count, 1)
+            self.assertEqual(
+                self.adopted.origin.contributor_count,
+                [{'count': 1, 'source': self.follow.actor.pub_url}]
+            )
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(

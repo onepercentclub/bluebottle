@@ -672,6 +672,42 @@ class SendTeamMemberLeaveEffect(Effect):
         return str(_('Notify source platform of team member leave'))
 
 
+class SendTeamMemberRemoveEffect(Effect):
+    """
+    Member is removed a team — Remove targeting the Team object.
+    """
+    template = 'admin/activity_pub/send_remove_effect.html'
+
+    def post_save(self, **kwargs):
+        team = self.instance.team
+        if hasattr(team, 'origin') and team.origin:
+            target = team.origin
+        elif hasattr(team, 'activity_pub_model'):
+            target = team.activity_pub_model
+        else:
+            return
+
+        if hasattr(self.instance.user, 'activity_pub_model'):
+            actor = self.instance.user.activity_pub_model
+        else:
+            actor = self.instance.remote_user.origin
+
+        Remove.objects.create(
+            actor=actor,
+            object=target,
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of team member remove'))
+
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('local') and
+            (self.instance.remote_user is not None or hasattr(self.instance.team.activity, 'origin'))
+        )
+
+
 def participant_is_not_local(effect):
     return effect.instance.remote_user is not None
 

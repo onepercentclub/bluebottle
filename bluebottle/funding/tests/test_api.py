@@ -487,8 +487,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(
-            response.json()['data']['meta']['contributor-count'],
-            5
+            response.json()['data']['relationships']['donations']['links']['succeeded']['meta']['count'], 5
         )
 
         co_financers = response.json()['data']['relationships']['co-financers']['data']
@@ -1071,7 +1070,9 @@ class DonationTestCase(FundingStripeMixin, BluebottleTestCase):
         donation.save()
 
         response = self.client.get(self.funding_url, user=self.user)
-        self.assertEqual(response.json()['data']['meta']['contributor-count'], 1)
+        self.assertEqual(
+            response.json()['data']['relationships']['donations']['links']['succeeded']['meta']['count'], 1
+        )
 
     def test_update(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)

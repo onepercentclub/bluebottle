@@ -187,7 +187,11 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
         self.perform_get(user=self.user)
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertMeta('contributor-count', 4)
+        self.assertAttribute('realized', 100)
+        self.assertEqual(
+            self.response.json()['data']['relationships']['contributors']['links']['active']['meta']['count'],
+            4
+        )
 
     def test_get_with_contributor(self):
         contributor = CollectContributorFactory.create(activity=self.model, user=self.user)

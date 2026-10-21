@@ -30,7 +30,7 @@ class Leave(Transition):
         yield self.object.source
 
 
-class RegistrationLeave(Leave):
+class PeriodicLeave(Leave):
     @classmethod
     def matches(cls, object, actor):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'PeriodicActivity'

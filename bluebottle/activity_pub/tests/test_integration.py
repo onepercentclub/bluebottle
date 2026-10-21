@@ -1169,7 +1169,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         with LocalTenant(self.consumer):
             self.participant.states.stop(save=True)
             self.adopted.origin.refresh_from_db()
-            self.assertEqual(self.adopted.origin.contributor_count, 0)
+            self.assertEqual(self.adopted.origin.contributor_count, [])
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
@@ -1183,7 +1183,10 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.participant.states.start(save=True)
 
             self.adopted.origin.refresh_from_db()
-            self.assertEqual(self.adopted.origin.contributor_count, 1)
+            self.assertEqual(
+                self.adopted.origin.contributor_count,
+                [{'count': 1, 'source': self.follow.actor.pub_url}]
+            )
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
@@ -1214,7 +1217,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             slot.activity_pub_model.pub_url for slot in self.model.slots.order_by('start')
         ]
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.adopted.refresh_from_db()
             consumer_slots = list(self.adopted.slots.order_by('start'))
 
@@ -1247,7 +1250,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         with mock.patch.object(BaseJoin, 'save', defer_slot_join):
             self.test_adopt()
 
-            with LocalTenant(self.other_tenant):
+            with LocalTenant(self.consumer):
                 self.join()
                 self.participant.refresh_from_db()
                 self.assertEqual(self.participant.status, 'accepted')
@@ -1257,7 +1260,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.assertEqual(len(deferred_slot_joins), 1)
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             for join in deferred_slot_joins:
                 if join.contributor:
                     join.reapply()
@@ -1266,13 +1269,13 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.assert_consumer_slots_match_supplier()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             self.assertEqual(self.participant.participants.count(), 1)
 
     def test_finish_slot_consumer_does_not_create_next_slot(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
+        with LocalTenant(self.consumer):
             slot = self.adopted.slots.get()
             slot.states.start(save=True)
             slot.states.finish(save=True)
@@ -2050,12 +2053,18 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         event = self.model.activity_pub_model
         sub_event = event.sub_event.order_by('start_time', 'id').first()
         self.assertIsNotNone(sub_event)
-        self.assertEqual(sub_event.contributor_count, 1)
+        self.assertEqual(
+            sub_event.contributor_count,
+            [{'count': 1, 'source': self.follow.actor.pub_url}]
+        )
 
         with LocalTenant(self.consumer):
             consumer_slot = self.adopted.slots.order_by('start', 'id').first()
             consumer_slot.origin.refresh_from_db()
-            self.assertEqual(consumer_slot.origin.contributor_count, 1)
+            self.assertEqual(
+                consumer_slot.origin.contributor_count,
+                [{'count': 1, 'source': self.follow.actor.pub_url}]
+            )
 
     def test_join_additional_slot(self):
         self.test_join()
@@ -2313,7 +2322,10 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.join()
             self.email = self.captain.email
             self.adopted.origin.refresh_from_db()
-            self.assertEqual(self.adopted.origin.contributor_count, 1)
+            self.assertEqual(
+                self.adopted.origin.contributor_count,
+                [{'count': 1, 'source': self.follow.actor.pub_url}]
+            )
 
         self.synced_registration = TeamScheduleRegistration.objects.get()
         self.synced_team = Team.objects.get()
@@ -2348,7 +2360,10 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.team.states.rejoin(save=True)
             self.participant.refresh_from_db()
             self.adopted.origin.refresh_from_db()
-            self.assertEqual(self.adopted.origin.contributor_count, 1)
+            self.assertEqual(
+                self.adopted.origin.contributor_count,
+                [{'count': 1, 'source': self.follow.actor.pub_url}]
+            )
             self.assertEqual(self.team.status, 'accepted')
             self.assertEqual(self.participant.status, 'accepted')
 
@@ -2514,7 +2529,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         with LocalTenant(self.consumer):
             self.team.states.withdraw(save=True)
             self.adopted.origin.refresh_from_db()
-            self.assertEqual(self.adopted.origin.contributor_count, 0)
+            self.assertEqual(self.adopted.origin.contributor_count, [])
 
         self.synced_team.refresh_from_db()
         self.synced_registration.refresh_from_db()

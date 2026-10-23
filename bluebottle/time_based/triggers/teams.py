@@ -12,6 +12,7 @@ from bluebottle.activity_pub.effects import (
     SendTeamMemberJoinEffect,
     SendTeamLeaveEffect,
     SendTeamMemberLeaveEffect,
+    SendTeamMemberRemoveEffect,
     SyncRelatedEvent,
     SendRemoveTeamEffect,
 )
@@ -298,6 +299,7 @@ class TeamMemberTriggers(TriggerManager):
                 NotificationEffect(
                     UserTeamMemberRemovedNotification
                 ),
+                SendTeamMemberRemoveEffect,
             ],
         ),
         TransitionTrigger(

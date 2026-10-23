@@ -22,6 +22,7 @@ from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event, Place,
     Recipient, RepetitionModeChoices, GoodDeed, Reject
 )
+from bluebottle.activity_pub.models.removes import Remove
 from bluebottle.activity_pub.tasks import publish_to_recipient
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -2378,25 +2379,29 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         )
 
     def test_remove_supplier(self):
-        self.test_join()
+        self.test_member_join()
 
         self.synced_team.states.remove(save=True)
         self.assertStatus(self.synced_team, self.removed_status)
+        self.assertEqual(len(Remove.objects.all()), 1)
 
         with LocalTenant(self.consumer):
+            self.assertEqual(len(Remove.objects.all()), 1)
             self.team.refresh_from_db()
             self.assertStatus(self.team, self.removed_status)
 
     def test_remove_consumer(self):
-        self.test_join()
+        self.test_member_join()
 
         with LocalTenant(self.consumer):
             self.team.refresh_from_db()
             self.team.states.remove(save=True)
             self.assertEqual(self.team.status, self.removed_status)
+            self.assertEqual(len(Remove.objects.all()), 1)
 
         self.synced_team.refresh_from_db()
         self.assertStatus(self.synced_team, self.removed_status)
+        self.assertEqual(len(Remove.objects.all()), 1)
 
     def test_join_with_review(self):
         self.test_adopt()
@@ -2449,10 +2454,29 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.assertEqual(self.team.team_members.count(), 2)
 
         self.assertEqual(TeamMember.objects.count(), 2)
-        remote_member = TeamMember.objects.exclude(
+        self.remote_member = TeamMember.objects.exclude(
             remote_user=self.synced_team.remote_user
         ).get()
-        self.assertEqual(remote_member.remote_user.email, member.email)
+        self.assertEqual(self.remote_member.remote_user.email, member.email)
+
+    def test_member_remove(self):
+        self.test_member_join()
+        with LocalTenant(self.consumer):
+            self.team_member.states.remove(save=True)
+            self.assertEqual(self.team.team_members.filter(status='active').count(), 1)
+
+        self.remote_member.refresh_from_db()
+        self.assertEqual(self.remote_member.status, 'removed')
+
+    def test_member_remove_supplier(self):
+        self.test_member_join()
+
+        self.remote_member.states.remove(save=True)
+        self.assertEqual(self.remote_member.status, 'removed')
+
+        with LocalTenant(self.consumer):
+            self.team_member.refresh_from_db()
+            self.assertEqual(self.team_member.status, 'removed')
 
     def test_schedule(self):
         self.test_join()

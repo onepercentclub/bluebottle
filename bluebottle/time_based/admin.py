@@ -345,6 +345,9 @@ class TeamScheduleParticipantAdminInline(BaseContributorInline):
     readonly_fields = BaseContributorInline.readonly_fields + ['team_name']
     fields = BaseContributorInline.fields + ['team_name']
 
+    def has_add_permission(self, request, obj):
+        return False
+
     def team_name(self, obj):
         return obj.team_member.team
 

@@ -162,3 +162,28 @@ class TeamRemove(Remove):
     @property
     def remote_recipients(self):
         yield self.object.source
+
+
+class TeamMemberRemove(Remove):
+    @classmethod
+    def matches(self, object, actor):
+        return isinstance(object, Team)
+
+    class Meta:
+        proxy = True
+
+    @property
+    def local_contributor(self):
+        return self.object.origin.team_members.get(user=self.actor.origin)
+
+    @property
+    def remote_contributor(self):
+        return self.object.adopted.team_members.get(remote_user=self.actor.adopted)
+
+    @property
+    def local_recipients(self):
+        yield self.object.origin.activity.origin.source
+
+    @property
+    def remote_recipients(self):
+        yield self.object.captain.source

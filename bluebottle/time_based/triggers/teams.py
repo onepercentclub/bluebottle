@@ -284,7 +284,6 @@ class TeamMemberTriggers(TriggerManager):
                     "participants",
                     TeamScheduleParticipantStateMachine.auto_remove,
                 ),
-                SendTeamMemberRemoveEffect,
             ],
         ),
         TransitionTrigger(

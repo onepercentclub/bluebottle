@@ -1,10 +1,11 @@
 import io
 
+from django.db.models.functions import Coalesce
 import qrcode
 from PIL import Image, UnidentifiedImageError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.db.models import F, Q
+from django.db.models import F, Q, Value
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
 from rest_framework import response, filters
@@ -34,6 +35,7 @@ from bluebottle.activities.serializers.serializers import (
     ActivityMessageSerializer,
 )
 from bluebottle.activities.utils import InviteSerializer
+from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.files.models import RelatedImage
@@ -138,13 +140,43 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
+        links = list(LinkedActivity.objects.filter(
+            status__in=("succeeded", "open", "full", "running")
+        ).annotate(
+            deadline_position=F('linkeddeadlineactivity__location__position'),
+            collect_position=F('linkedcollectcampaign__location__position'),
+            schedule_position=F('linkedscheduleactivity__location__position'),
+            periodic_position=F('linkedperiodicactivity__location__position'),
+            funding_position=F('linkedfunding__location__position'),
+            date_position=F('linkeddateactivity__slots__location__position'),
+
+            deadline_location_id=F('linkeddeadlineactivity__location__pk'),
+            collect_location_id=F('linkedcollectcampaign__location__pk'),
+            schedule_location_id=F('linkedscheduleactivity__location__pk'),
+            periodic_location_id=F('linkedperiodicactivity__location__pk'),
+            funding_location_id=F('linkedfunding__location__pk'),
+            date_location_id=F('linkeddateactivity__slots__location__pk'),
+        ).annotate(
+            position=Coalesce(
+                'deadline_position', 'collect_position', 'schedule_position', 'periodic_position',
+                'funding_position', 'date_position'
+            ),
+            location_id=Coalesce(
+                'deadline_location_id', 'collect_location_id', 'schedule_location_id', 'periodic_location_id',
+                'funding_location_id', 'date_location_id'
+            ),
+            linked=Value(True)
+        ).exclude(position=Point(0, 0)).filter(
+            position__isnull=False
+        ))
+
         locations = list(set(
             ActivityLocation(
-                pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}-{model.location_id}',
-                created=model.created,
+                pk=f'{model.__class__.__name__}-{model.pk}-{model.location_id}',
+                created=model.created if hasattr(model, 'created') else now(),
                 position=model.position,
                 activity=model,
-            ) for model in collects + dates + periodics + schedules + deadlines + fundings
+            ) for model in collects + dates + periodics + schedules + deadlines + fundings + links
         ))
 
         return sorted(locations, key=lambda location: location.created, reverse=True)

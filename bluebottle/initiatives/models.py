@@ -339,7 +339,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
         ("grantapplication", _("Grant Application")),
-        ("periodactivity", _("Activity during a period")),
         ("dateactivity", _("Activity on a specific date")),
         ("deadlineactivity", _("Activity within a deadline")),
         ("scheduleactivity", _("Scheduled activity")),

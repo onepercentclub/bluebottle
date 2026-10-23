@@ -538,6 +538,11 @@ class FollowingAdmin(FollowAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly = ['object', 'accepted', 'iri', 'actor']
+        if obj and self.accepted(obj):
+            # Do not let user change the adoption type after the follow request was accepted.
+            # This makes things very complicated
+            readonly.append('adoption_type')
+
         return readonly
 
     def get_fieldsets(self, request, obj=None):

@@ -490,7 +490,7 @@ class FollowingAdminForm(EnabledActivityTypesFormMixin, forms.ModelForm):
 
         if (
             result.get('automatic_adoption_activity_types') and
-            result['adoption_type'] in ('template', 'sync', ) and
+            result.get('adoption_type', self.instance.adoption_type) in ('template', 'sync', ) and
             not result['default_owner']
         ):
             raise ValidationError({
@@ -539,8 +539,6 @@ class FollowingAdmin(FollowAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly = ['object', 'accepted', 'iri', 'actor']
         if obj and self.accepted(obj):
-            # Do not let user change the adoption type after the follow request was accepted.
-            # This makes things very complicated
             readonly.append('adoption_type')
 
         return readonly
@@ -598,7 +596,9 @@ class FollowingAdmin(FollowAdmin):
         """Use custom form for adding new Following objects"""
         if obj is None:
             return FollowingAddForm
-        return FollowingAdminForm
+        # Use the default get_form so readonly fields (like adoption_type after
+        # acceptance) are removed from the form
+        return super().get_form(request, obj, form=FollowingAdminForm, **kwargs)
 
     def save_model(self, request, obj, form, change):
         if not change:

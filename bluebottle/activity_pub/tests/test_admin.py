@@ -173,6 +173,51 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('automatic_adoption_activity_types', form.errors)
 
+    def get_following_change_page(self, follow):
+        return self.app.get(
+            reverse('admin:activity_pub_following_change', args=(follow.pk,)),
+            user=self.superuser
+        )
+
+    def test_following_admin_add_adoption_type_editable(self):
+        page = self.app.get(reverse('admin:activity_pub_following_add'), user=self.superuser)
+
+        self.assertIn('adoption_type', page.forms['following_form'].fields)
+
+    def test_following_admin_change_adoption_type_editable_before_accept(self):
+        self.submit_following_form(adoption_type='link')
+        follow = Following.objects.get()
+        Accept.objects.filter(object=follow).delete()
+
+        page = self.get_following_change_page(follow)
+        form = page.forms['following_form']
+        self.assertIn('adoption_type', form.fields)
+
+        form['adoption_type'] = 'clone'
+        form.submit()
+
+        follow.refresh_from_db()
+        self.assertEqual(follow.adoption_type, 'clone')
+
+    def test_following_admin_change_adoption_type_read_only_after_accept(self):
+        self.submit_following_form(adoption_type='link')
+        follow = Following.objects.get()
+        if not Accept.objects.filter(object=follow).exists():
+            Accept.objects.create(actor=follow.object, object=follow)
+
+        page = self.get_following_change_page(follow)
+        form = page.forms['following_form']
+        self.assertNotIn('adoption_type', form.fields)
+
+        readonly_field = page.html.find(class_='field-adoption_type')
+        self.assertIsNotNone(readonly_field)
+        self.assertIn(follow.get_adoption_type_display(), readonly_field.text)
+
+        form.submit()
+
+        follow.refresh_from_db()
+        self.assertEqual(follow.adoption_type, 'link')
+
     def test_following_admin_add_connection_invalid_platform_url(self):
         url = reverse('admin:activity_pub_following_add')
         page = self.app.get(url, user=self.superuser)

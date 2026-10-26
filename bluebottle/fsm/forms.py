@@ -43,7 +43,7 @@ class StateMachineModelForm(forms.ModelForm, metaclass=StateMachineModelFormMeta
         super(StateMachineModelForm, self).__init__(*args, **kwargs)
         for field in self.state_machine_fields:
             machine = getattr(self.instance, field)
-            transitions = machine.possible_transitions()
+            transitions = machine.possible_transitions() if self.instance.pk else []
 
             self.fields[field].widget.attrs['obj'] = self.instance
             self.fields[field].label = _('Transitions')

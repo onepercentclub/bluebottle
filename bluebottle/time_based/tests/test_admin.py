@@ -399,6 +399,14 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(page.status, '200 OK')
         self.assertTrue('This field is required.' in page.text)
 
+    def test_add_form(self):
+        for model in [
+            'dateparticipant', 'periodicparticipant', 'scheduleparticipant',
+            'deadlineparticipant', 'teamscheduleparticipant', 'teammember',
+        ]:
+            page = self.app.get(reverse('admin:time_based_{}_add'.format(model)))
+            self.assertEqual(page.status, '200 OK')
+
     def test_document(self):
         self.registration.document = PrivateDocumentFactory.create()
         self.registration.save()

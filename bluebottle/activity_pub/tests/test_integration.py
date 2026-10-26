@@ -511,6 +511,10 @@ class SyncTestCase(ActivityPubTestCase):
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
+                    if hasattr(self.model, 'location'):
+                        self.assertEqual(
+                            self.adopted.location.formatted_address, self.model.location.formatted_address
+                        )
 
                     self.complete()
                     self.adopted.states.submit(save=True)

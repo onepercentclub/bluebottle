@@ -401,7 +401,10 @@ class ParticipantCreatedNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        return [self.obj.activity.owner]
+        if not self.obj.activity.is_adopted:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
 
 class NewParticipantNotification(TransitionMessage):
@@ -425,7 +428,7 @@ class NewParticipantNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        if self.obj.user:
+        if self.obj.user and not self.obj.activity.is_adopted:
             return [self.obj.activity.owner]
         else:
             return []
@@ -733,7 +736,10 @@ class ParticipantWithdrewNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        return [self.obj.activity.owner]
+        if not self.obj.slot.activity.is_adopted:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
 
 class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
@@ -760,7 +766,10 @@ class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        return [self.obj.slot.activity.owner]
+        if not self.obj.slot.activity.is_adopted:
+            return [self.obj.slot.activity.owner]
+        else:
+            return []
 
 
 class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
@@ -794,8 +803,10 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-
-        return [self.obj.slot.activity.owner]
+        if not self.obj.slot.activity.is_adopted:
+            return [self.obj.slot.activity.owner]
+        else:
+            return []
 
 
 class ManagerSlotParticipantRemovedNotification(TransitionMessage):
@@ -823,8 +834,10 @@ class ManagerSlotParticipantRemovedNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-
-        return [self.obj.slot.activity.owner]
+        if not self.obj.slot.activity.is_adopted:
+            return [self.obj.slot.activity.owner]
+        else:
+            return []
 
 
 class ParticipantSlotParticipantRemovedNotification(TransitionMessage):
@@ -910,7 +923,7 @@ class ManagerParticipantAddedOwnerNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        if self.obj.user:
+        if self.obj.user and not self.obj.activity.is_adopted:
             return [self.obj.activity.owner]
         else:
             return []
@@ -933,7 +946,7 @@ class ManagerTeamAddedOwnerNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        if self.obj.user:
+        if self.obj.user and not self.obj.activity.is_adopted:
             return [self.obj.activity.owner]
         else:
             return []
@@ -958,7 +971,10 @@ class ParticipantRemovedOwnerNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        return [self.obj.activity.owner]
+        if not self.obj.activity.is_adopted:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
 
 class SlotCancelledNotification(TransitionMessage):

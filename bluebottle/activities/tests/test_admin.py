@@ -76,3 +76,29 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url)
         form = page.forms['dateactivity_form']
         self.assertTrue('office_location' in form.fields)
+
+
+class PolymorphicParentAdminInvalidIdTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.superuser)
+
+    def test_contribution_change_non_numeric_id(self):
+        for object_id in ['foo', 'https://example.com/en/admin/time_based/dateactivity/6134']:
+            url = reverse('admin:activities_contribution_change', args=(object_id,))
+            self.app.get(url, status=404)
+
+    def test_activity_change_non_numeric_id(self):
+        url = reverse('admin:activities_activity_change', args=('foo',))
+        self.app.get(url, status=404)
+
+    def test_activity_change_redirects_to_child_admin(self):
+        activity = DateActivityFactory.create()
+        url = reverse('admin:activities_activity_change', args=(activity.id,))
+        page = self.app.get(url)
+        self.assertIn('dateactivity_form', page.forms)

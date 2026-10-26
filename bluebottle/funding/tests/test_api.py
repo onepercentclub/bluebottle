@@ -4,6 +4,7 @@ from io import BytesIO
 
 import mock
 import munch
+import requests
 import stripe
 from django.contrib.auth.models import Group
 from django.test.utils import override_settings
@@ -18,6 +19,7 @@ from bluebottle.funding.models import (
     Donor,
     Funding,
     FundingPlatformSettings,
+    IbanCheck,
     PaymentCurrency,
 )
 from bluebottle.funding.serializers import IbanCheckSerializer
@@ -2106,6 +2108,61 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
         )
         # Check that the name was updated with the suggestion
         self.assertEqual(data["attributes"]["name"], "Nadine Bok")
+
+    def _surepay_error(self, status_code, body):
+        response = requests.Response()
+        response.status_code = status_code
+        response._content = body.encode()
+        return response
+
+    def test_surepay_bad_request(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL78RABO5394792070',
+                    'name': 'Nadine Bok'
+                }
+            }
+        }
+
+        with mock.patch(
+            "bluebottle.funding.adapters.rabobank.requests.post",
+            return_value=self._surepay_error(400, '{"code": "INVALID_ACCOUNT_ID"}')
+        ):
+            with mock.patch('bluebottle.funding.views.logger') as logger:
+                self.perform_create(user=self.user, data=data)
+
+        self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/iban'
+        )
+        log_args = logger.warning.call_args[0]
+        self.assertIn(400, log_args)
+        self.assertIn('INVALID_ACCOUNT_ID', log_args[2])
+        self.assertNotIn('NL78RABO5394792070', str(log_args))
+        self.assertFalse(IbanCheck.objects.exists())
+
+    def test_surepay_unavailable(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL78RABO5394792070',
+                    'name': 'Nadine Bok'
+                }
+            }
+        }
+
+        with mock.patch(
+            "bluebottle.funding.adapters.rabobank.requests.post",
+            side_effect=requests.ConnectionError()
+        ):
+            self.perform_create(user=self.user, data=data)
+
+        self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(IbanCheck.objects.exists())
 
 
 class FundingDeadlineValidationTestCase(BluebottleTestCase):

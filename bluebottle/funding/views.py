@@ -1,8 +1,13 @@
 import hashlib
+import logging
 import re
 
+import requests
+from django.db import transaction
 from django.http.response import HttpResponse
+from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -35,6 +40,8 @@ from bluebottle.utils.views import (
     CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
 )
 from bluebottle.utils.xlsx import generate_xlsx_response
+
+logger = logging.getLogger(__name__)
 
 
 class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -161,6 +168,7 @@ class IbanCheckView(JsonApiViewMixin, CreateAPIView):
         normalized = iban.replace(" ", "").upper()
         return hashlib.sha256(normalized.encode()).hexdigest()
 
+    @transaction.atomic
     def perform_create(self, serializer):
         iban = serializer.validated_data.pop('iban')
         hashed_iban = self.hash_iban(iban)
@@ -168,7 +176,16 @@ class IbanCheckView(JsonApiViewMixin, CreateAPIView):
             hashed_iban=hashed_iban,
         )
         instance.iban = iban
-        instance.check_iban()
+        try:
+            instance.check_iban()
+        except requests.RequestException as e:
+            response = e.response
+            logger.warning(
+                'IBAN check failed: status=%s body=%s',
+                getattr(response, 'status_code', None),
+                getattr(response, 'text', str(e)),
+            )
+            raise ValidationError({'iban': [_('This IBAN and name could not be verified.')]})
 
 
 class FundingTransitionList(TransitionList):

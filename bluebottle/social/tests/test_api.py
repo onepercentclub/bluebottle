@@ -193,3 +193,45 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         with httmock.HTTMock(facebook_me_mock):
             response = self.client.post(self.token_url)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @mock.patch(
+        "bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request",
+        return_value=None,
+    )
+    def test_token_unparseable_signed_request(self, _mock):
+        response = self.client.post(
+            self.token_url,
+            {
+                "data": {
+                    "type": "social/tokens",
+                    "attributes": {
+                        "backend": "facebook",
+                        "access-token": "test_token",
+                        "signed-request": "garbage",
+                    },
+                }
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json()["errors"][0]["code"], "failed")
+
+    def test_token_google_token_endpoint_error(self):
+        @httmock.all_requests
+        def google_error_mock(url, request):
+            return httmock.response(500, "error", request=request)
+
+        with httmock.HTTMock(google_error_mock):
+            response = self.client.post(
+                self.token_url,
+                {
+                    "data": {
+                        "type": "social/tokens",
+                        "attributes": {
+                            "backend": "google",
+                            "code": "test-code",
+                        },
+                    }
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json()["errors"][0]["code"], "failed")

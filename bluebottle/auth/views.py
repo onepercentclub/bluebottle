@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django import forms
@@ -14,14 +15,17 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from requests import RequestException
 from rest_framework.exceptions import AuthenticationFailed
-from social_core.exceptions import AuthCanceled
+from social_core.exceptions import AuthCanceled, AuthException
 from social_core.utils import get_strategy
 from social_django.utils import psa, STORAGE
 from two_factor.views import SetupView
 
 from bluebottle.auth.serializers import SocialLoginSerializer
 from bluebottle.utils.views import CreateAPIView, JsonApiViewMixin
+
+logger = logging.getLogger(__name__)
 
 
 def load_drf_strategy(request=None):
@@ -36,6 +40,12 @@ def complete(request, backend):
         raise AuthenticationFailed(
             _('Authentication was cancelled'),
             code="cancelled"
+        )
+    except (AuthException, RequestException, TypeError) as e:
+        logger.warning('Social login with %s failed: %r', backend, e)
+        raise AuthenticationFailed(
+            _('Logging in failed, please try again'),
+            code="failed"
         )
     if not user.email:
         if user.date_joined > now() - timedelta(hours=1):

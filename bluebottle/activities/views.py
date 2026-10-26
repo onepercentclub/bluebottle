@@ -67,8 +67,8 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
 
+        type_filter = self.request.query_params.get('filter[type]')
         if self.request.user:
-            type_filter = self.request.query_params.get('filter[type]')
             if (
                 type_filter == 'office_subregion' and
                 self.request.user.location and
@@ -140,40 +140,44 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
-        links = list(LinkedActivity.objects.filter(
-            status__in=("succeeded", "open", "full", "running")
-        ).annotate(
-            deadline_position=F('linkeddeadlineactivity__location__position'),
-            collect_position=F('linkedcollectcampaign__location__position'),
-            schedule_position=F('linkedscheduleactivity__location__position'),
-            periodic_position=F('linkedperiodicactivity__location__position'),
-            funding_position=F('linkedfunding__location__position'),
-            date_position=F('linkeddateactivity__slots__location__position'),
+        if not type_filter:
+            links = list(LinkedActivity.objects.filter(
+                status__in=("succeeded", "open", "full", "running"),
+                archived=False
+            ).annotate(
+                deadline_position=F('linkeddeadlineactivity__location__position'),
+                collect_position=F('linkedcollectcampaign__location__position'),
+                schedule_position=F('linkedscheduleactivity__location__position'),
+                periodic_position=F('linkedperiodicactivity__location__position'),
+                funding_position=F('linkedfunding__location__position'),
+                date_position=F('linkeddateactivity__slots__location__position'),
 
-            deadline_location_id=F('linkeddeadlineactivity__location__pk'),
-            collect_location_id=F('linkedcollectcampaign__location__pk'),
-            schedule_location_id=F('linkedscheduleactivity__location__pk'),
-            periodic_location_id=F('linkedperiodicactivity__location__pk'),
-            funding_location_id=F('linkedfunding__location__pk'),
-            date_location_id=F('linkeddateactivity__slots__location__pk'),
-        ).annotate(
-            position=Coalesce(
-                'deadline_position', 'collect_position', 'schedule_position', 'periodic_position',
-                'funding_position', 'date_position'
-            ),
-            location_id=Coalesce(
-                'deadline_location_id', 'collect_location_id', 'schedule_location_id', 'periodic_location_id',
-                'funding_location_id', 'date_location_id'
-            ),
-            linked=Value(True)
-        ).exclude(position=Point(0, 0)).filter(
-            position__isnull=False
-        ))
+                deadline_location_id=F('linkeddeadlineactivity__location__pk'),
+                collect_location_id=F('linkedcollectcampaign__location__pk'),
+                schedule_location_id=F('linkedscheduleactivity__location__pk'),
+                periodic_location_id=F('linkedperiodicactivity__location__pk'),
+                funding_location_id=F('linkedfunding__location__pk'),
+                date_location_id=F('linkeddateactivity__slots__location__pk'),
+            ).annotate(
+                position=Coalesce(
+                    'deadline_position', 'collect_position', 'schedule_position', 'periodic_position',
+                    'funding_position', 'date_position'
+                ),
+                location_id=Coalesce(
+                    'deadline_location_id', 'collect_location_id', 'schedule_location_id', 'periodic_location_id',
+                    'funding_location_id', 'date_location_id'
+                ),
+            ).exclude(position=Point(0, 0)).filter(
+                position__isnull=False
+            ))
+        else:
+            links = []
 
+        fallback_created = now()
         locations = list(set(
             ActivityLocation(
                 pk=f'{model.__class__.__name__}-{model.pk}-{model.location_id}',
-                created=model.created if hasattr(model, 'created') else now(),
+                created=model.created if hasattr(model, 'created') else fallback_created,
                 position=model.position,
                 activity=model,
             ) for model in collects + dates + periodics + schedules + deadlines + fundings + links

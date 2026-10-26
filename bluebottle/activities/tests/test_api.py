@@ -2285,7 +2285,7 @@ class ActivityLocationAPITestCase(APITestCase):
         self.url += '?filter[type]=office_region'
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(10)
+        self.assertTotal(4)
         self.assertAttribute('position')
         self.assertRelationship('activity')
 
@@ -2293,7 +2293,7 @@ class ActivityLocationAPITestCase(APITestCase):
         self.url += '?filter[type]=office_subregion'
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(8)
+        self.assertTotal(2)
         self.assertAttribute('position')
         self.assertRelationship('activity')
 

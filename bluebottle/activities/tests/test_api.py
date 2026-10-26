@@ -2284,6 +2284,33 @@ class ActivityLocationAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
 
+class ActivityListAPITestCase(APITestCase):
+    model = Activity
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        DeedFactory.create(owner=self.user)
+        DeedFactory.create(initiative=InitiativeFactory.create(owner=self.user))
+        DeedFactory.create()
+
+        self.url = reverse('activity-list')
+
+    def test_get(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
+
+    def test_get_anon(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_platform_anon(self):
+        with self.closed_site():
+            self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
 class ActivityMessageAPITestCase(BluebottleTestCase):
     def setUp(self):
         super(ActivityMessageAPITestCase, self).setUp()

@@ -5,7 +5,7 @@ import qrcode
 from PIL import Image, UnidentifiedImageError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.db.models import F, Q, Value
+from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
 from rest_framework import response, filters

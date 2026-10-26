@@ -13,6 +13,7 @@ from bluebottle.activity_links.tests.factories import (
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 
@@ -65,6 +66,18 @@ class LinkDetailAPITestMixin:
             'name': 'Open',
             'description': self.model.states.current_state.description,
         })
+
+    def test_get_included(self):
+        self.model.image = ImageFactory.create()
+        self.model.host_organization = OrganizationFactory.create()
+        self.model.save()
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('image', [self.model.image])
+        self.assertIncluded('image', self.model.image)
+        self.assertRelationship('host-organization', [self.model.host_organization])
+        self.assertIncluded('host-organization', self.model.host_organization)
 
     def test_get_logged_in(self):
         self.perform_get(user=self.user)

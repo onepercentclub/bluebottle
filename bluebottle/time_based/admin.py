@@ -1158,7 +1158,7 @@ class SlotAdmin(StateMachineAdmin):
     activity_link.short_description = _('Activity')
 
     def get_form(self, request, obj=None, **kwargs):
-        if obj and not obj.is_online and obj.location:
+        if obj and not obj.is_online and obj.location and obj.location.timezone:
             local_start = obj.start.astimezone(timezone(obj.location.timezone))
             platform_start = obj.start.astimezone(get_current_timezone())
             offset = local_start.utcoffset() - platform_start.utcoffset()
@@ -1297,7 +1297,7 @@ class SlotDuplicateForm(forms.Form):
 
     def __init__(self, slot, data=None, *args, **kwargs):
         start = slot.start
-        if slot.location:
+        if slot.location and slot.location.timezone:
             start = start.astimezone(timezone(slot.location.timezone))
         if data:
             super(SlotDuplicateForm, self).__init__(data)
@@ -1414,7 +1414,7 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
                 slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
                 return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
 
-        if slot.location:
+        if slot.location and slot.location.timezone:
             start = slot.start.astimezone(timezone(slot.location.timezone))
         else:
             start = slot.start

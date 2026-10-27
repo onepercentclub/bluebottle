@@ -33,6 +33,7 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
+from bluebottle.members.utils import jwt_is_impersonated
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
@@ -157,6 +158,9 @@ class CurrentMemberSerializer(MemberSerializer):
 
     def get_has_initiatives(self, obj):
         return obj.is_initiator
+
+    def get_impersonated(self, obj):
+        return jwt_is_impersonated(self.context.get('request'))
 
     def get_has_votes(self, obj):
         return obj.poll_votes.exists()

@@ -7,12 +7,13 @@ from rest_framework import status
 from bluebottle.funding.tests.factories import (
     DonorFactory, FundingFactory
 )
-from bluebottle.funding_stripe.models import StripePaymentProvider
+from bluebottle.funding_stripe.effects import OpenActivitiesOnHoldEffect, PutActivitiesOnHoldEffect
+from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount
 from bluebottle.funding_stripe.tests.factories import StripeSourcePaymentFactory, ExternalAccountFactory, \
     StripePaymentProviderFactory
 from bluebottle.funding_stripe.tests.utils import generate_stripe_payout_account
 from bluebottle.funding_stripe.tests.base import FundingStripeMixin
-from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 
 
 class StripeSourcePaymentAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
@@ -140,3 +141,11 @@ class StripeSourcePaymentAdminTestCase(FundingStripeMixin, BluebottleAdminTestCa
         self.donation.refresh_from_db()
         self.assertEqual(self.payment.status, 'refunded')
         self.assertEqual(self.donation.status, 'refunded')
+
+
+class StripePayoutAccountEffectsRenderTestCase(BluebottleTestCase):
+    def test_render_effects(self):
+        account = StripePayoutAccount()
+        for effect_class in (PutActivitiesOnHoldEffect, OpenActivitiesOnHoldEffect):
+            rendered = effect_class.render([effect_class(account)])
+            self.assertIn('<h3>', rendered)

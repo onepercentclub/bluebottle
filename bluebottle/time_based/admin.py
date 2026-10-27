@@ -23,7 +23,6 @@ from polymorphic.admin import (
     PolymorphicInlineSupportMixin,
     PolymorphicParentModelAdmin,
 )
-from pytz import timezone
 
 from bluebottle.activities.admin import (
     ActivityBulkAddForm,
@@ -80,6 +79,7 @@ from bluebottle.utils.admin import (
     admin_info_box,
     export_as_csv_action,
 )
+from bluebottle.utils.utils import get_current_timezone_for_location
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
@@ -1158,8 +1158,8 @@ class SlotAdmin(StateMachineAdmin):
     activity_link.short_description = _('Activity')
 
     def get_form(self, request, obj=None, **kwargs):
-        if obj and not obj.is_online and obj.location and obj.location.timezone:
-            local_start = obj.start.astimezone(timezone(obj.location.timezone))
+        if obj and obj.start:
+            local_start = obj.start.astimezone(get_current_timezone_for_location(obj.location, obj.is_online))
             platform_start = obj.start.astimezone(get_current_timezone())
             offset = local_start.utcoffset() - platform_start.utcoffset()
 
@@ -1296,9 +1296,7 @@ class SlotDuplicateForm(forms.Form):
     title = _('Duplicate slot')
 
     def __init__(self, slot, data=None, *args, **kwargs):
-        start = slot.start
-        if slot.location and slot.location.timezone:
-            start = start.astimezone(timezone(slot.location.timezone))
+        start = slot.start.astimezone(get_current_timezone_for_location(slot.location, slot.is_online))
         if data:
             super(SlotDuplicateForm, self).__init__(data)
         else:
@@ -1414,10 +1412,7 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
                 slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
                 return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
 
-        if slot.location and slot.location.timezone:
-            start = slot.start.astimezone(timezone(slot.location.timezone))
-        else:
-            start = slot.start
+        start = slot.start.astimezone(get_current_timezone_for_location(slot.location, slot.is_online))
 
         settings = MemberPlatformSettings.load()
 

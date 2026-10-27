@@ -2,7 +2,9 @@ from datetime import date
 
 from django.utils.timezone import now
 
-from bluebottle.activity_pub.effects import SendJoinTeamSlotEffect, SyncEffect, SyncSlotEffect, UnpublishAdoptionEffect
+from bluebottle.activity_pub.effects import (
+    CancelEffect, SendJoinTeamSlotEffect, SyncEffect, SyncSlotEffect, UnpublishAdoptionEffect
+)
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register,
@@ -644,6 +646,7 @@ class DateActivitySlotTriggers(TriggerManager):
                     conditions=[all_slots_cancelled]
                 ),
                 UnpublishAdoptionEffect,
+                CancelEffect,
             ],
         ),
         TransitionTrigger(

@@ -298,7 +298,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
             slug = slugify(self.title) if self.title else ""
             if slug:
                 max_length = self._meta.get_field("slug").max_length
-                self.slug = slug[:max_length]
+                self.slug = slug[:max_length].rstrip("-")
             else:
                 self.slug = "new"
 

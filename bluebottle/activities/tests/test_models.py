@@ -109,7 +109,6 @@ class ActivitySlugTestCase(TestCase):
         self.assertTrue(activity.slug.startswith('aaa'))
 
     def test_transliterated_title_produces_a_slug_that_fits(self):
-        """Non-ASCII titles lengthen under slugify, so test them separately."""
         max_length = Activity._meta.get_field('slug').max_length
         activity = DeedFactory.create(title='ä' * 200, slug='new')
 
@@ -124,6 +123,14 @@ class ActivitySlugTestCase(TestCase):
         activity = DeedFactory.create(title='A normal title', slug='new')
 
         self.assertEqual(activity.slug, 'a-normal-title')
+
+    def test_truncated_slug_has_no_trailing_hyphen(self):
+        activity = DeedFactory.create(title='word ' * 40, slug='new')
+
+        self.assertLessEqual(
+            len(activity.slug), Activity._meta.get_field('slug').max_length
+        )
+        self.assertFalse(activity.slug.endswith('-'))
 
     def test_two_long_titles_sharing_a_prefix_both_save(self):
         """slug is indexed but not unique, so truncation needs no suffix."""

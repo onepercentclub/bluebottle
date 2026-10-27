@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-10-27 13:41+0100\n"
-"PO-Revision-Date: 2026-10-27 12:42\n"
+"PO-Revision-Date: 2026-10-27 12:54\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -5381,7 +5381,7 @@ msgstr "Sem correspondência"
 
 #: bluebottle/funding/models.py:905
 msgid "Could not match"
-msgstr ""
+msgstr "Não foi possível corresponder"
 
 #: bluebottle/funding/models.py:916
 msgid "Hashed IBAN to check against"
@@ -5397,11 +5397,11 @@ msgstr "Nome do titular da conta"
 
 #: bluebottle/funding/models.py:959
 msgid "The name does not match the account number."
-msgstr ""
+msgstr "O nome não corresponde ao número da conta."
 
 #: bluebottle/funding/models.py:966
 msgid "Unknown error"
-msgstr ""
+msgstr "Erro desconhecido"
 
 #: bluebottle/funding/periodic_tasks.py:50
 #: bluebottle/funding/periodic_tasks.py:66

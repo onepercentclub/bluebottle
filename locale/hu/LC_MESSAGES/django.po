@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-10-27 13:41+0100\n"
-"PO-Revision-Date: 2026-10-27 12:42\n"
+"PO-Revision-Date: 2026-10-27 12:54\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -5379,7 +5379,7 @@ msgstr "Nincs egyezés"
 
 #: bluebottle/funding/models.py:905
 msgid "Could not match"
-msgstr ""
+msgstr "Nem sikerült egyezést találni"
 
 #: bluebottle/funding/models.py:916
 msgid "Hashed IBAN to check against"
@@ -5395,11 +5395,11 @@ msgstr "A számlatulajdonos neve"
 
 #: bluebottle/funding/models.py:959
 msgid "The name does not match the account number."
-msgstr ""
+msgstr "A név nem egyezik a fiók számával."
 
 #: bluebottle/funding/models.py:966
 msgid "Unknown error"
-msgstr ""
+msgstr "Ismeretlen hiba"
 
 #: bluebottle/funding/periodic_tasks.py:50
 #: bluebottle/funding/periodic_tasks.py:66

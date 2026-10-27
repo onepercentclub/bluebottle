@@ -3,11 +3,13 @@ import json
 from datetime import timedelta
 
 from django.contrib.admin.sites import AdminSite
+from django.contrib.gis.geos import Point
 from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.timezone import now
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
+from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
@@ -558,6 +560,16 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
             [s.start.date() for s in self.activity.slots.all()],
             [datetime.date.today() + timedelta(days=offset) for offset in range(-1, 5)]
         )
+
+    def test_location_without_timezone(self):
+        Geolocation.objects.filter(pk=self.slot.location.pk).update(position=Point(51.44, 5.47))
+        self.slot.refresh_from_db()
+        self.assertIsNone(self.slot.location.timezone)
+
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+        page = page.click('Repeat this slot')
+        self.assertEqual(page.status, '200 OK')
 
     def test_duplicate_reopen(self):
         self.assertEqual(self.activity.status, 'expired')

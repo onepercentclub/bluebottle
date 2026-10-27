@@ -18,6 +18,7 @@ from bluebottle.funding.models import (
     Donor,
     Funding,
     FundingPlatformSettings,
+    IbanCheck,
     PaymentCurrency,
 )
 from bluebottle.funding.serializers import IbanCheckSerializer
@@ -2059,12 +2060,38 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
             ):
                 self.perform_create(user=self.user, data=data)
 
-        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
-        data = self.response.json()['data']
+        self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            data['attributes']['matched'],
-            'no_match'
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/name'
         )
+        self.assertEqual(IbanCheck.objects.get().matched, 'no_match')
+
+    def test_could_not_match(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL91ABNA0417164300',
+                    'name': 'Test Persoon'
+                }
+            }
+        }
+
+        with mock.patch(
+                "bluebottle.funding.adapters.rabobank.requests.post"
+        ) as mock_rabobank:
+            mock_rabobank.return_value.json.return_value = {"nameMatchResult": "COULD_NOT_MATCH"}
+            mock_rabobank.return_value.raise_for_status.return_value = None
+            with mock.patch("stripe.Token.create") as create_token:
+                self.perform_create(user=self.user, data=data)
+
+        self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/name'
+        )
+        create_token.assert_not_called()
 
     def test_close_match(self):
         # Mock ABN Amro API response for close match

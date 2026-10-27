@@ -133,3 +133,5 @@ elasticsearch-data
 postgres-data
 
 **/*.code-workspace
+
+bluebottle/fsm/static/fsm/vendor/

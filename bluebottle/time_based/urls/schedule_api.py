@@ -11,6 +11,7 @@ from bluebottle.time_based.views import (
     ScheduleParticipantExportView,
     TeamScheduleParticipantExportView,
     ScheduleRelatedParticipantList,
+    ScheduleRelatedInterestList,
     ScheduleParticipantDetail,
 
     ScheduleSlotListView,
@@ -94,6 +95,11 @@ urlpatterns = [
         "/<int:activity_id>/participants",
         ScheduleRelatedParticipantList.as_view(),
         name='schedule-participants'
+    ),
+    path(
+        '/<int:activity_id>/interests',
+        ScheduleRelatedInterestList.as_view(),
+        name='schedule-interests'
     ),
     path(
         '/participants/transitions',

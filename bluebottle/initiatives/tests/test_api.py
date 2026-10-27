@@ -206,6 +206,26 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_list_anonymous(self):
+        open_initiative = InitiativeFactory.create(owner=self.owner, is_open=True)
+        InitiativeFactory.create(owner=self.owner, is_open=False)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [item['id'] for item in response.json()['data']]
+        self.assertEqual(ids, [str(open_initiative.pk)])
+
+    def test_list_owner(self):
+        InitiativeFactory.create(owner=self.owner, is_open=True)
+        InitiativeFactory.create(owner=self.owner, is_open=False)
+        InitiativeFactory.create(owner=self.visitor, is_open=False)
+
+        response = self.client.get(self.url, user=self.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 2)
+
 
 class InitiativeDetailAPITestCase(InitiativeAPITestCase):
     def setUp(self):
@@ -586,6 +606,35 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
 
+    def _admin_url(self, user=None):
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response.json()['data']['meta'].get('admin-url')
+
+    def test_admin_url_anonymous(self):
+        self.assertIsNone(self._admin_url())
+
+    def test_admin_url_owner(self):
+        self.assertIsNone(self._admin_url(self.owner))
+
+    def test_admin_url_staff(self):
+        expected = reverse(
+            'admin:initiatives_initiative_change', args=(self.initiative.pk,)
+        )
+        self.assertEqual(
+            self._admin_url(BlueBottleUserFactory.create(is_staff=True)),
+            expected
+        )
+
+    def test_admin_url_superuser(self):
+        expected = reverse(
+            'admin:initiatives_initiative_change', args=(self.initiative.pk,)
+        )
+        self.assertEqual(
+            self._admin_url(BlueBottleUserFactory.create(is_superuser=True)),
+            expected
+        )
+
     def test_get_story_safe(self):
         self.initiative.story = json.dumps({
             'html': (
@@ -775,8 +824,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_country(self):
         matching_country = CountryFactory.create(alpha2_code='NL')
         other_country = CountryFactory.create(alpha2_code='DE')
-
-        matching = InitiativeFactory.create_batch(2, status='approved')
+        matching_location = GeolocationFactory.create(country=matching_country)
+        other_location = GeolocationFactory.create(country=other_country)
+        matching = InitiativeFactory.create_batch(2, status='approved', place=matching_location)
         for initiative in matching:
             DeadlineActivityFactory.create(
                 status='open',
@@ -784,7 +834,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 office_location=LocationFactory.create(country=matching_country)
             )
 
-        other = InitiativeFactory.create_batch(3, status='approved')
+        other = InitiativeFactory.create_batch(3, status='approved', place=other_location)
         for initiative in other:
             DeadlineActivityFactory.create(
                 status='open',

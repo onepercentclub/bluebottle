@@ -587,7 +587,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         # Setup: get the password reset token and url.
         token_regex = re.compile(
-            '\?token=(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,32})',
+            r'\?token=(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,32})',
             re.DOTALL)
         token_matches = token_regex.search(mail.outbox[0].body)
         reset_confirm_url = reverse('password-reset-confirm')
@@ -678,6 +678,26 @@ class UserApiIntegrationTest(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(b'Password should at least be 10 characters.' in response.content)
+
+    def test_password_reset_confirm_invalid_uid(self):
+        client = JSONAPITestClient()
+        token = default_token_generator.make_token(self.user_1)
+        reset_confirm_url = reverse('password-reset-confirm')
+
+        for uidb36 in [int_to_base36(self.user_1.pk + 1000), 'x!y', 'z' * 20]:
+            attributes = {'password': 'test-password', 'token': f'{uidb36}-{token}'}
+            response = client.post(
+                reset_confirm_url,
+                {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+            )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        attributes = {'password': 'test-password', 'token': f'{int_to_base36(self.user_1.pk)}-{token}'}
+        response = client.post(
+            reset_confirm_url,
+            {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_deactivate(self):
         response = self.client.delete(

@@ -1,7 +1,7 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
-
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.options import IncorrectLookupParameters
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import translation
@@ -18,7 +18,7 @@ from bluebottle.initiatives.models import (
     Initiative,
     InitiativePlatformSettings,
     InitiativeSearchFilter,
-    Theme,
+    Theme, ActivityCardLocationChoices,
 )
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
@@ -48,12 +48,18 @@ class InitiativeReviewerFilter(admin.SimpleListFilter):
         ]
 
     def queryset(self, request, queryset):
-        if self.value() == "me":
-            return queryset.filter(reviewer=request.user)
-        elif self.value():
-            return queryset.filter(reviewer__id=self.value())
-        else:
+        value = self.value()
+        if not value:
             return queryset
+        if value == "me":
+            return queryset.filter(reviewer=request.user)
+        try:
+            reviewer_id = int(value)
+        except (TypeError, ValueError):
+            raise IncorrectLookupParameters(
+                "Invalid reviewer id: {!r}".format(value)
+            )
+        return queryset.filter(reviewer__id=reviewer_id)
 
 
 class InitiativeCountryFilter(admin.SimpleListFilter):
@@ -321,6 +327,12 @@ class InitiativePlatformSettingsForm(forms.ModelForm):
         label=_('Available work location restrictions')
     )
 
+    card_location_display = forms.ChoiceField(
+        choices=ActivityCardLocationChoices.choices,
+        widget=forms.RadioSelect,
+        label=_('Activity card location'),
+    )
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -393,6 +405,7 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "restrict_updates",
+                    "card_location_display",
                 )
             },
         ),

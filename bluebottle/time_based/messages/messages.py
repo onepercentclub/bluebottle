@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+from urllib.parse import urlencode
+
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
-from django.utils.timezone import get_current_timezone
 from django.utils.translation import pgettext_lazy as pgettext
-from pytz import timezone
 
 from bluebottle.activities.ical import ActivityIcal
 from bluebottle.clients.utils import tenant_url
@@ -13,13 +13,11 @@ from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
     DateParticipant, PeriodParticipant, DateActivitySlot
 )
+from bluebottle.utils.utils import get_current_timezone_for_location
 
 
 def get_slot_info(slot):
-    if slot.location and not slot.is_online:
-        tz = timezone(slot.location.timezone)
-    else:
-        tz = get_current_timezone()
+    tz = get_current_timezone_for_location(slot.location, slot.is_online)
 
     if not slot.end:
         return
@@ -938,3 +936,82 @@ class SlotCancelledNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('platform-email', 'View this activity')
+
+
+class SpotOpenedNotification(TransitionMessage):
+    """
+    A spot opened on a previously full activity or date slot.
+    Interested members are notified on a first-come, first-served basis.
+    """
+    subject = pgettext(
+        'platform-email',
+        'A spot has opened up for an activity on {site_name}.'
+    )
+    template = 'messages/spot_opened'
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        url = self.obj.get_absolute_url()
+        separator = '&' if '?' in url else '?'
+        return '{}{}{}'.format(url, separator, urlencode({'spotOpened': 'true'}))
+
+    def get_recipients(self):
+        """interested members"""
+        if isinstance(self.obj, DateActivitySlot):
+            interests = self.obj.interests.all()
+        else:
+            interests = self.obj.interests.filter(slot__isnull=True)
+        return [interest.user for interest in interests]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj, DateActivitySlot):
+            activity = self.obj.activity
+            slot_info = get_slot_info(self.obj)
+            if slot_info:
+                slot_info = dict(slot_info)
+                slot_info['online_meeting_url'] = None
+                context['slots'] = [slot_info]
+            else:
+                context['slots'] = []
+            context['is_online'] = self.obj.is_online
+            location = self.obj.location if not self.obj.is_online else None
+        else:
+            activity = self.obj
+            context['slots'] = []
+            context['is_online'] = getattr(activity, 'is_online', None)
+            location = getattr(activity, 'location', None)
+            if context['is_online']:
+                location = None
+        context['title'] = activity.title
+        context['review'] = activity.review
+        context['location'] = location.formatted_address if location else None
+        return context
+
+
+class InterestRegisteredNotification(TransitionMessage):
+    """
+    A member joined the interested list for a full activity or date slot.
+    """
+    subject = pgettext(
+        'platform-email',
+        "You'll be notified if a spot opens up for {title}"
+    )
+    template = 'messages/interest_registered'
+    context = {'title': 'activity.title'}
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    def get_recipients(self):
+        return [self.obj.user]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        activity = self.obj.activity
+        context['title'] = activity.title
+        context['review'] = activity.review
+        return context

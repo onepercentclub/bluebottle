@@ -80,6 +80,11 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["time_based.change_scheduleactivity"],
             },
             {"name": "time_based.skill", "permissions": ["time_based.change_skill"]},
+            {
+                "name": "time_based.interest",
+                "label": _("Waiting list"),
+                "permissions": ["time_based.change_interest"]
+            },
         ],
     },
     {
@@ -264,9 +269,8 @@ JET_SIDE_MENU_ITEMS = [
             },
             {"name": "slides.slide", "permissions": ["slides.change_slide"]},
             {
-                "name": "cms.resultpage",
-                "label": _("Result page"),
-                "permissions": ["cms.change_resultpage"],
+                "name": "voting.poll",
+                "permissions": ["voting.change_poll"],
             },
             {
                 "name": "cms.sitelinks",

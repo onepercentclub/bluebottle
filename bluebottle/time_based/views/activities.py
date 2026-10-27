@@ -18,7 +18,7 @@ from bluebottle.time_based.serializers import (
     PeriodicActivitySerializer, PeriodicTransitionSerializer, PeriodActivitySerializer, ScheduleActivitySerializer,
     ScheduleTransitionSerializer, RegisteredDateActivitySerializer, RegisteredDateTransitionSerializer
 )
-from bluebottle.time_based.views.mixins import CreatePermissionMixin
+from bluebottle.time_based.views.mixins import CreatePermissionMixin, prefetch_my_interests
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
@@ -35,6 +35,10 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView, CreatePermi
         OneOf(ResourcePermission, ActivityOwnerPermission, IsStaffMember),
     )
 
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        return prefetch_my_interests(qs, self.request.user, activity_level=True)
+
 
 class TimeBasedActivityDetailView(ActivityDetailView):
     permission_classes = (
@@ -48,7 +52,7 @@ class TimeBasedActivityDetailView(ActivityDetailView):
         qs = super().get_queryset(*args, **kwargs)
         if issubclass(qs.model, TimeBasedActivity):
             qs = qs.select_related('expertise')
-        return qs
+        return prefetch_my_interests(qs, self.request.user, activity_level=True)
 
 
 class DateActivityListView(TimeBasedActivityListView):

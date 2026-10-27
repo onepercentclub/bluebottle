@@ -3,21 +3,139 @@ import json
 from datetime import timedelta
 
 from django.contrib.admin.sites import AdminSite
+from django.contrib.gis.geos import Point
 from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.timezone import now
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
+from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
-from bluebottle.time_based.admin import ScheduleActivityAdmin, SkillAdmin
-from bluebottle.time_based.models import DateActivity, ScheduleActivity, Skill
+from bluebottle.bluebottle_dashboard.utils import get_menu_items
+from bluebottle.time_based.admin import (
+    DateActivityInterestAdminInline,
+    ScheduleActivityAdmin,
+    SkillAdmin,
+    SlotInterestAdminInline,
+)
+from bluebottle.time_based.models import DateActivity, DateParticipant, ScheduleActivity, Skill
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
     DateParticipantFactory, DateRegistrationFactory,
+    DeadlineActivityFactory,
+    InterestFactory,
     ScheduleActivityFactory, ScheduleRegistrationFactory,
 )
+
+
+class InterestAdminInlineTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+
+    def test_activity_inline_shows_activity_and_slot_interests(self):
+        activity = DateActivityFactory.create()
+        activity_interest = InterestFactory.create(activity=activity, slot=None)
+        slot = DateActivitySlotFactory.create(activity=activity)
+        slot_interest = InterestFactory.create(activity=activity, slot=slot)
+
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('Interested members', page.text)
+        self.assertIn(str(activity_interest.user), page.text)
+        self.assertIn(str(slot_interest.user), page.text)
+
+        inline = DateActivityInterestAdminInline(
+            InterestFactory._meta.model, AdminSite()
+        )
+        request = RequestFactory().get('/')
+        request.user = self.staff_member
+        queryset = inline.get_queryset(request).filter(
+            activity=activity
+        )
+        self.assertCountEqual(list(queryset), [activity_interest, slot_interest])
+
+    def test_slot_inline_shows_slot_interests(self):
+        activity = DateActivityFactory.create()
+        slot = DateActivitySlotFactory.create(activity=activity)
+        slot_interest = InterestFactory.create(activity=activity, slot=slot)
+        InterestFactory.create(activity=activity, slot=None)
+
+        url = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
+        page = self.app.get(url)
+
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('Interested members', page.text)
+        self.assertIn(str(slot_interest.user), page.text)
+
+        inline = SlotInterestAdminInline(InterestFactory._meta.model, AdminSite())
+        request = RequestFactory().get('/')
+        request.user = self.staff_member
+        queryset = inline.get_queryset(request).filter(
+            slot=slot
+        )
+        self.assertEqual(list(queryset), [slot_interest])
+
+    def test_delete_interest_from_activity_inline(self):
+        activity = DeadlineActivityFactory.create()
+        interest = InterestFactory.create(activity=activity, slot=None)
+
+        url = reverse('admin:time_based_deadlineactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+        form = page.forms['deadlineactivity_form']
+        delete_field = next(
+            name for name in form.fields if name.endswith('-DELETE')
+            and name.startswith('interests-')
+        )
+        form[delete_field] = True
+        page = form.submit()
+        if 'confirm' in page.forms:
+            page = page.forms['confirm'].submit()
+
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_delete_slot_interest_from_date_activity_inline(self):
+        activity = DateActivityFactory.create()
+        slot = DateActivitySlotFactory.create(activity=activity)
+        interest = InterestFactory.create(activity=activity, slot=slot)
+
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+        form = page.forms['dateactivity_form']
+        delete_field = next(
+            name for name in form.fields if name.endswith('-DELETE')
+            and name.startswith('interests-')
+        )
+        form[delete_field] = True
+        page = form.submit()
+        if 'confirm' in page.forms:
+            page = page.forms['confirm'].submit()
+
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_side_menu_shows_waiting_list(self):
+        request = RequestFactory().get(reverse('admin:index'))
+        request.user = self.superuser
+        menu_groups = get_menu_items(
+            {'user': self.superuser, 'request': request}
+        )
+        time_based = next(
+            group for group in menu_groups if group['app_label'] == 'time_based'
+        )
+        labels = [str(item['label']) for item in time_based['items']]
+        self.assertIn('Waiting list', labels)
 
 
 class ScheduleActivityAdminRegistrationFieldsTest(BluebottleTestCase):
@@ -283,6 +401,28 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(page.status, '200 OK')
         self.assertTrue('This field is required.' in page.text)
 
+    def test_add_form(self):
+        for model in [
+            'dateparticipant', 'periodicparticipant', 'scheduleparticipant',
+            'deadlineparticipant', 'teamscheduleparticipant', 'teammember',
+        ]:
+            with self.subTest(model=model):
+                page = self.app.get(reverse('admin:time_based_{}_add'.format(model)))
+                self.assertEqual(page.status, '200 OK')
+
+    def test_add_date_participant(self):
+        slot = self.registration.activity.slots.first()
+        page = self.app.get(reverse('admin:time_based_dateparticipant_add'), user=self.staff_member)
+        form = page.forms[1]
+        form['user'] = self.supporter.pk
+        form['slot'] = slot.pk
+        page = form.submit(user=self.staff_member).follow(user=self.staff_member)
+        self.assertEqual(page.status, '200 OK')
+
+        participant = DateParticipant.objects.get(user=self.supporter)
+        self.assertEqual(participant.slot, slot)
+        self.assertEqual(participant.activity, slot.activity)
+
     def test_document(self):
         self.registration.document = PrivateDocumentFactory.create()
         self.registration.save()
@@ -420,6 +560,16 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
             [s.start.date() for s in self.activity.slots.all()],
             [datetime.date.today() + timedelta(days=offset) for offset in range(-1, 5)]
         )
+
+    def test_location_without_timezone(self):
+        Geolocation.objects.filter(pk=self.slot.location.pk).update(position=Point(51.44, 5.47))
+        self.slot.refresh_from_db()
+        self.assertIsNone(self.slot.location.timezone)
+
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+        page = page.click('Repeat this slot')
+        self.assertEqual(page.status, '200 OK')
 
     def test_duplicate_reopen(self):
         self.assertEqual(self.activity.status, 'expired')

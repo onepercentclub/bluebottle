@@ -150,6 +150,12 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         _('The number of people needed is reached and people can no longer register.')
     )
 
+    registration_closed = State(
+        _('Registration closed'),
+        'registration_closed',
+        _('The registration deadline has passed and people can no longer register.')
+    )
+
     running = State(
         _('running'),
         'running',
@@ -204,7 +210,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        [draft, running, full, finished, open],
+        [draft, running, full, registration_closed, finished, open],
         cancelled,
         name=_('Cancel'),
         automatic=False,
@@ -215,7 +221,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
     )
 
     auto_cancel = Transition(
-        [draft, running, full, finished, open],
+        [draft, running, full, registration_closed, finished, open],
         cancelled,
         automatic=True,
         name=_("Auto cancel"),
@@ -255,8 +261,30 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         )
     )
 
+    close_registration = Transition(
+        [open, full],
+        registration_closed,
+        name=_("Close registration"),
+        description=_(
+            "People can no longer join the slot. "
+            "Triggered when the registration deadline has passed."
+        ),
+        automatic=True,
+    )
+
+    reopen = Transition(
+        registration_closed,
+        open,
+        name=_("Reopen"),
+        description=_(
+            "The registration deadline was extended or removed. "
+            "People can sign up again for the slot."
+        ),
+        automatic=True,
+    )
+
     start = Transition(
-        [open, finished, full],
+        [open, finished, full, registration_closed],
         running,
         name=_("Start"),
         description=_(
@@ -264,7 +292,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         )
     )
     finish = Transition(
-        [open, running, full],
+        [open, running, full, registration_closed],
         finished,
         name=_("Finish"),
         description=_(

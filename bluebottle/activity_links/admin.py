@@ -99,19 +99,19 @@ class LinkedDateActivityAdmin(LinkedBaseAdmin):
 
 @admin.register(LinkedDeadlineActivity)
 class LinkedDeadlineActivityAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration']
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'location']
     fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedPeriodicActivity)
 class LinkedPeriodicActivityAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'period']
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'period', 'location']
     fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedScheduleActivity)
 class LinkedScheduleActivityAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration']
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'location']
     fields = readonly_fields + ['archived']
 
 

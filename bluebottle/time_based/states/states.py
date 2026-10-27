@@ -24,6 +24,12 @@ class TimeBasedStateMachine(ActivityStateMachine):
         _('The number of people needed is reached and people can no longer register.')
     )
 
+    registration_closed = State(
+        _('Registration closed'),
+        'registration_closed',
+        _('The registration deadline has passed and people can no longer register.')
+    )
+
     lock = Transition(
         [
             ActivityStateMachine.open,
@@ -46,9 +52,25 @@ class TimeBasedStateMachine(ActivityStateMachine):
         )
     )
 
+    close_registration = Transition(
+        [
+            ActivityStateMachine.open,
+            full,
+        ],
+        registration_closed,
+        name=_("Close registration"),
+        description=_(
+            "People can no longer join the event. "
+            "Triggered when the registration deadline has passed."
+        ),
+        automatic=True,
+        hide_from_admin=True,
+    )
+
     reopen = Transition(
         [
             full,
+            registration_closed,
             ActivityStateMachine.succeeded,
             ActivityStateMachine.expired,
             ActivityStateMachine.cancelled
@@ -82,6 +104,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             ActivityStateMachine.open,
             ActivityStateMachine.expired,
             full,
+            registration_closed,
         ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
@@ -100,6 +123,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
             full,
+            registration_closed,
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),
@@ -122,7 +146,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
             ActivityStateMachine.open,
             ActivityStateMachine.submitted,
             ActivityStateMachine.succeeded,
-            full
+            full,
+            registration_closed,
         ],
         ActivityStateMachine.expired,
         name=_('Expire'),
@@ -152,7 +177,11 @@ class RegistrationActivityStateMachine(TimeBasedStateMachine):
         return len(self.instance.active_participants) > 0
 
     succeed_manually = Transition(
-        [ActivityStateMachine.open, TimeBasedStateMachine.full],
+        [
+            ActivityStateMachine.open,
+            TimeBasedStateMachine.full,
+            TimeBasedStateMachine.registration_closed,
+        ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=False,

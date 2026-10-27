@@ -49,6 +49,13 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
 )
 
+_real_geolocation_save = Geolocation.save
+
+
+def _geolocation_save_skip_mapbox(self, *args, **kwargs):
+    kwargs['skip_mapbox_sync'] = True
+    return _real_geolocation_save(self, *args, **kwargs)
+
 
 class ActivityPubClient(TestClient):
     def _base_environ(self, **request):
@@ -319,7 +326,9 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
@@ -351,7 +360,9 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
@@ -406,6 +417,49 @@ class LinkTestCase(ActivityPubTestCase):
             self.assertTrue(link.image)
             accept = Accept.objects.get(object=link.event)
             self.assertEqual(accept.actor, Follow.objects.get().actor)
+
+    @property
+    def source_location(self):
+        location = (
+            getattr(self.model, 'location', None) or
+            getattr(self.model, 'impact_location', None)
+        )
+        if not location and hasattr(self.model, 'slots') and self.model.slots.count() == 1:
+            location = self.model.slots.get().location
+        return location
+
+    def test_link_location(self):
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
+            self.test_publish()
+
+        location = self.source_location
+        if not location:
+            return
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+            link = LinkedActivity.objects.get()
+
+            if hasattr(event, 'sub_event') and event.sub_event.exists():
+                # Date activities carry their location on the slots
+                event_location = event.sub_event.get().location
+                link_location = link.slots.get().location
+            else:
+                event_location = event.location
+                link_location = link.location
+
+            # Geo points are stored as (longitude, latitude)
+            self.assertIsNotNone(event_location)
+            self.assertEqual(event_location.latitude, location.position.y)
+            self.assertEqual(event_location.longitude, location.position.x)
+
+            self.assertIsNotNone(link_location)
+            self.assertEqual(link_location.position.y, location.position.y)
+            self.assertEqual(link_location.position.x, location.position.x)
 
     def test_link_notifies_source_platform(self):
         self.test_link()
@@ -687,8 +741,8 @@ class FundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
             self.assertEqual(self.event.target, self.model.target.amount)
             self.assertEqual(self.event.target_currency, str(self.model.target.currency))
             self.assertEqual(self.event.end_time, self.model.deadline)
-            self.assertEqual(self.event.location.latitude, self.model.impact_location.position.x)
-            self.assertEqual(self.event.location.longitude, self.model.impact_location.position.y)
+            self.assertEqual(self.event.location.latitude, self.model.impact_location.position.y)
+            self.assertEqual(self.event.location.longitude, self.model.impact_location.position.x)
             self.assertEqual(self.event.location.name, self.model.impact_location.formatted_address)
             self.assertEqual(
                 self.event.location.address.country, self.model.impact_location.country.code
@@ -778,8 +832,8 @@ class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
             self.assertEqual(self.event.target, self.model.target.amount)
             self.assertEqual(self.event.target_currency, str(self.model.target.currency))
             self.assertEqual(self.event.start_time, self.model.started)
-            self.assertEqual(self.event.location.latitude, self.model.impact_location.position.x)
-            self.assertEqual(self.event.location.longitude, self.model.impact_location.position.y)
+            self.assertEqual(self.event.location.latitude, self.model.impact_location.position.y)
+            self.assertEqual(self.event.location.longitude, self.model.impact_location.position.x)
             self.assertEqual(self.event.location.name, self.model.impact_location.formatted_address)
             self.assertEqual(
                 self.event.location.address.country, self.model.impact_location.country.code

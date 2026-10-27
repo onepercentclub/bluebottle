@@ -23,7 +23,6 @@ from polymorphic.admin import (
     PolymorphicInlineSupportMixin,
     PolymorphicParentModelAdmin,
 )
-from pytz import timezone
 
 from bluebottle.activities.admin import (
     ActivityBulkAddForm,
@@ -70,6 +69,7 @@ from bluebottle.time_based.models import (
     TeamScheduleRegistration,
     TeamScheduleSlot,
     TimeContribution, RegisteredDateActivity, RegisteredDateParticipant,
+    Interest,
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
@@ -79,6 +79,7 @@ from bluebottle.utils.admin import (
     admin_info_box,
     export_as_csv_action,
 )
+from bluebottle.utils.utils import get_current_timezone_for_location
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
@@ -614,12 +615,76 @@ class PeriodicRegistrationAdminInline(BaseRegistrationAdminInline):
     model = PeriodicRegistration
 
 
+class BaseInterestAdminInline(TabularInlinePaginated):
+    model = Interest
+    raw_id_fields = ['user']
+    readonly_fields = ['edit', 'created']
+    fields = ['edit', 'created', 'user']
+    extra = 0
+    per_page = 10
+    ordering = ['-created']
+    can_delete = True
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def edit(self, obj):
+        if not obj.pk:
+            return '-'
+        url = reverse('admin:time_based_interest_change', args=(obj.pk,))
+        return format_html('<a href="{}">{}</a>', url, _('Edit'))
+
+    edit.short_description = _('Edit')
+
+
+class ActivityInterestAdminInline(BaseInterestAdminInline):
+    fk_name = 'activity'
+    verbose_name = _('Interested member')
+    verbose_name_plural = _('Interested members')
+    readonly_fields = ['edit', 'created', 'slot']
+    fields = ['edit', 'created', 'user']
+
+    def save_new(self, form, commit=True):
+        interest = super().save_new(form, commit=False)
+        interest.slot = None
+        if commit:
+            interest.save()
+        return interest
+
+
+class DateActivityInterestAdminInline(ActivityInterestAdminInline):
+    fields = ActivityInterestAdminInline.fields + ['slot']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('slot')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class SlotInterestAdminInline(BaseInterestAdminInline):
+    fk_name = 'slot'
+    verbose_name = _('Interested member')
+    verbose_name_plural = _('Interested members')
+
+    def save_new(self, form, commit=True):
+        interest = super().save_new(form, commit=False)
+        interest.activity = interest.slot.activity
+        if commit:
+            interest.save()
+        return interest
+
+
 @admin.register(DateActivity)
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     inlines = (
         DateActivitySlotInline,
         DateRegistrationAdminInline,
+        DateActivityInterestAdminInline,
     ) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
     save_as = True
@@ -653,7 +718,10 @@ class DateActivityAdmin(TimeBasedAdmin):
 class DeadlineActivityAdmin(TimeBasedAdmin):
     base_model = DeadlineActivity
 
-    inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (
+        DeadlineParticipantAdminInline,
+        ActivityInterestAdminInline,
+    ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     list_filter = TimeBasedAdmin.list_filter + [
@@ -745,6 +813,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
+        interest_inline = (ActivityInterestAdminInline,)
         if obj and obj.id:
             # get the stored object, so you can switch between teams/individuals
             # without getting a form error, because of switching inlines
@@ -753,10 +822,10 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
                 return (
                     TeamAdminInline,
                     TeamScheduleParticipantAdminInline,
-                ) + inlines
+                ) + inlines + interest_inline
             else:
-                return (ScheduleParticipantAdminInline,) + inlines
-        return inlines
+                return (ScheduleParticipantAdminInline,) + inlines + interest_inline
+        return inlines + interest_inline
 
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
@@ -979,7 +1048,11 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         PeriodicSlot,
     ]
 
-    inlines = (PeriodicRegistrationAdminInline, PeriodicSlotAdminInline) + TimeBasedAdmin.inlines
+    inlines = (
+        PeriodicRegistrationAdminInline,
+        PeriodicSlotAdminInline,
+        ActivityInterestAdminInline,
+    ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     list_filter = TimeBasedAdmin.list_filter + [
@@ -1085,8 +1158,8 @@ class SlotAdmin(StateMachineAdmin):
     activity_link.short_description = _('Activity')
 
     def get_form(self, request, obj=None, **kwargs):
-        if obj and not obj.is_online and obj.location:
-            local_start = obj.start.astimezone(timezone(obj.location.timezone))
+        if obj and obj.start:
+            local_start = obj.start.astimezone(get_current_timezone_for_location(obj.location, obj.is_online))
             platform_start = obj.start.astimezone(get_current_timezone())
             offset = local_start.utcoffset() - platform_start.utcoffset()
 
@@ -1223,9 +1296,7 @@ class SlotDuplicateForm(forms.Form):
     title = _('Duplicate slot')
 
     def __init__(self, slot, data=None, *args, **kwargs):
-        start = slot.start
-        if slot.location:
-            start = start.astimezone(timezone(slot.location.timezone))
+        start = slot.start.astimezone(get_current_timezone_for_location(slot.location, slot.is_online))
         if data:
             super(SlotDuplicateForm, self).__init__(data)
         else:
@@ -1282,7 +1353,7 @@ class SlotBulkAddForm(forms.Form):
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(BulkAddMixin, SlotAdmin):
     model = DateActivitySlot
-    inlines = [DateParticipantInline, MessageAdminInline]
+    inlines = [DateParticipantInline, SlotInterestAdminInline, MessageAdminInline]
     save_as = True
 
     date_hierarchy = 'start'
@@ -1341,10 +1412,7 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
                 slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
                 return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
 
-        if slot.location:
-            start = slot.start.astimezone(timezone(slot.location.timezone))
-        else:
-            start = slot.start
+        start = slot.start.astimezone(get_current_timezone_for_location(slot.location, slot.is_online))
 
         settings = MemberPlatformSettings.load()
 
@@ -1889,3 +1957,21 @@ class SkillAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, Tr
         )
 
     member_link.short_description = _('Users with this skill')
+
+
+@admin.register(Interest)
+class InterestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'activity', 'slot', 'activity_status', 'created', 'activity_type')
+    raw_id_fields = ('user', 'activity', 'slot')
+    readonly_fields = ('created', 'activity_status', 'activity_type')
+    search_fields = ('user__email', 'user__first_name', 'user__last_name', 'activity__title')
+
+    def activity_status(self, obj):
+        return obj.activity.get_real_instance().states.current_state.name
+
+    activity_status.short_description = _('Activity status')
+
+    def activity_type(self, obj):
+        return obj.activity.get_real_instance_class()._meta.verbose_name
+
+    activity_type.short_description = _('Activity type')

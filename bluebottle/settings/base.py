@@ -398,7 +398,7 @@ TENANT_APPS = (
     'bluebottle.statistics',
     'bluebottle.suggestions',
     'bluebottle.terms',
-    'bluebottle.votes',
+    'bluebottle.voting',
     'bluebottle.social',
     'bluebottle.rewards',
     'bluebottle.scim',

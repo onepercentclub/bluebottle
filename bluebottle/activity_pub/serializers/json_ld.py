@@ -32,7 +32,7 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
 )
-from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
+from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField, IdentifierField
 
 
 class InboxSerializer(ActivityPubSerializer):
@@ -138,12 +138,16 @@ class PlaceSerializer(ActivityPubSerializer):
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
     name = serializers.CharField()
+    place_type = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    identifier = IdentifierField(required=False, allow_null=True)
 
     address = AddressSerializer(allow_null=True, include=True, required=False)
 
     class Meta(ActivityPubSerializer.Meta):
         model = Place
-        fields = ActivityPubSerializer.Meta.fields + ('latitude', 'longitude', 'name', 'address', )
+        fields = ActivityPubSerializer.Meta.fields + (
+            'latitude', 'longitude', 'name', 'place_type', 'identifier', 'address',
+        )
 
 
 class BaseEventSerializer(ActivityPubSerializer):

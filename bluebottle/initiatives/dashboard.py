@@ -53,12 +53,17 @@ class RecentlyPublishedInitiatives(DashboardModule):
 
 class MyReviewingInitiatives(DashboardModule):
     title = _("Initiatives I'm reviewing")
-    title_url = "{}?reviewer=True".format(reverse('admin:initiatives_initiative_changelist'))
     template = 'dashboard/recent_initiatives.html'
     limit = 5
     column = 0
 
     def init_with_context(self, context):
+        # Built per request rather than at import time, so the link keeps the
+        # active admin locale instead of freezing whichever one was active
+        # when the module was first imported.
+        self.title_url = "{}?reviewer=me".format(
+            reverse('admin:initiatives_initiative_changelist')
+        )
         if getattr(context, 'request', None):
             user = context.request.user
             self.children = Initiative.objects.filter(reviewer=user).order_by('-created')[:self.limit]

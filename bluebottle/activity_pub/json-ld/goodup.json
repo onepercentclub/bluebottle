@@ -19,6 +19,14 @@
     "country": "schema:addressCountry",
     "locality": "schema:addressLocality",
     "region": "schema:addressRegion",
+    "placeType": "goodup:placeType",
+    "PropertyValue": "schema:PropertyValue",
+    "identifier": {
+      "@id": "schema:identifier",
+      "@container": "@set"
+    },
+    "propertyID": "schema:propertyID",
+    "value": "schema:value",
     "target": "goodup:target",
     "targetCurrency": "goodup:targetCurrency",
     "donated": "goodup:donated",

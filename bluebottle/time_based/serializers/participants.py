@@ -228,9 +228,13 @@ class DateParticipantTransitionSerializer(ParticipantTransitionSerializer):
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         'resource.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+        'resource.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        included_resources = ParticipantTransitionSerializer.JSONAPIMeta.included_resources + [
+            'resource.slot',
+        ]
         resource_name = 'contributors/time-based/date-participant-transitions'
 
 

@@ -152,6 +152,8 @@ class ImageTextItem(ContentItem):
     def full_clean(self, *args, **kwargs):
         # This is called by the form when all values are assigned.
         # The pre filters are applied here, so any errors also appear as ValidationError.
+        if self.ratio in (None, ''):
+            self.ratio = self._meta.get_field('ratio').default
         super(ImageTextItem, self).full_clean(*args, **kwargs)
 
         self.text, self.text_final = apply_filters(self, self.text, field_name='text')
@@ -262,6 +264,7 @@ class Page(PublishableModel):
         'DocumentPlugin',
         'PeopleBlockPlugin',
         'ImagePlainTextBlockPlugin',
+        'PollBlockPlugin',
     ])
     # This should not be nessecary, but fixes deletion of some pages
     # See https://github.com/edoburu/django-fluent-contents/issues/19
@@ -317,6 +320,7 @@ class PlatformPage(TranslatableModel):
             'DocumentPlugin',
             'PeopleBlockPlugin',
             'ImagePlainTextBlockPlugin',
+            'PollBlockPlugin',
         ]
     )
 

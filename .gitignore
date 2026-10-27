@@ -53,6 +53,7 @@ bluebottle/settings/local.py
 bluebottle/settings/secrets.py
 
 mails/++
+mails/*
 
 # Misc stuff
 data
@@ -132,3 +133,6 @@ elasticsearch-data
 postgres-data
 
 **/*.code-workspace
+
+# worktrees
+.claude/worktrees

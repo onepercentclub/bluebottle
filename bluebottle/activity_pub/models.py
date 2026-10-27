@@ -232,6 +232,8 @@ class Place(ActivityPubModel):
     name = models.CharField(max_length=1000)
     latitude = models.FloatField(null=True)
     longitude = models.FloatField(null=True)
+    place_type = models.CharField(max_length=32, null=True, blank=True)
+    identifier = models.JSONField(default=list, blank=True)
 
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 

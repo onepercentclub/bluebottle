@@ -18,6 +18,7 @@ from elasticsearch_dsl.query import (
     Terms,
 )
 from pytz import UTC
+from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.documents import activity
 from bluebottle.categories.models import Category
@@ -106,6 +107,7 @@ class UpcomingFacet(Facet):
             statuses = ["open", "running"]
             if settings.include_full_activities:
                 statuses.append("full")
+                statuses.append("registration_closed")
             return Terms(status=statuses)
         if filter_values == ["0"]:
             return Terms(status=["succeeded", "partially_funded", "refunded"])
@@ -182,6 +184,7 @@ class MatchingFacet(BooleanFacet):
         statuses = ["open", "running"]
         if settings.include_full_activities:
             statuses.append("full")
+            statuses.append("registration_closed")
 
         filters = Terms(status=statuses)
 
@@ -330,7 +333,16 @@ class StatusFacet(Facet):
         if filter_values == ["needs_work"]:
             return Terms(status=["needs_work"])
         if filter_values == ["open"]:
-            return Terms(status=["open", "running", "full", "on_hold", "granted"])
+            return Terms(
+                status=[
+                    "open",
+                    "running",
+                    "full",
+                    "registration_closed",
+                    "on_hold",
+                    "granted",
+                ]
+            )
         if filter_values == ["succeeded"]:
             return Terms(status=["succeeded", "partially_funded"])
         if filter_values == ["failed"]:
@@ -348,7 +360,15 @@ class InitiativeFacet(TermsFacet):
         initiative_filter = Nested(
             path="initiative", query=(Terms(initiative__id=filter_values))
         )
-        open_filter = Terms(status=["succeeded", "open", "full", "partially_funded"])
+        open_filter = Terms(
+            status=[
+                "succeeded",
+                "open",
+                "full",
+                "registration_closed",
+                "partially_funded",
+            ]
+        )
         user = get_current_user()
         if user.is_authenticated:
             return (
@@ -366,21 +386,43 @@ class ActivityDateRangeFacet(Facet):
     def get_values(self, data, filter_values):
         return []
 
-    def get_value_filter(self, filter_value):
-        start, end = filter_value.split(",")
-        start = dateutil.parser.parse(start)
-        end = dateutil.parser.parse(end)
+    def parse_bound(self, value):
+        value = value.strip()
+        if not value:
+            return None
+        try:
+            return dateutil.parser.parse(value)
+        except (ValueError, OverflowError):
+            raise ValidationError(
+                {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+            )
 
-        if start.astimezone(UTC) >= now():
-            return Range(
-                _expand__to_dot=False, **{"duration": {"gte": start, "lt": end}}
+    def get_value_filter(self, filter_value):
+        bounds = filter_value.split(",")
+        if len(bounds) != 2:
+            raise ValidationError(
+                {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
             )
-        else:
-            return Q(
-                "nested",
-                path="dates",
-                query=Q("range", **{"dates.end": {"gt": start, "lt": end}}),
-            )
+
+        start, end = (self.parse_bound(bound) for bound in bounds)
+
+        if start is None and end is None:
+            return MatchAll()
+
+        if start and start.astimezone(UTC) >= now():
+            duration = {}
+            if start:
+                duration["gte"] = start
+            if end:
+                duration["lt"] = end
+            return Range(_expand__to_dot=False, **{"duration": duration})
+
+        dates = {}
+        if start:
+            dates["gt"] = start
+        if end:
+            dates["lt"] = end
+        return Q("nested", path="dates", query=Q("range", **{"dates.end": dates}))
 
 
 class UntranslatedModelFacet(ModelFacet):
@@ -435,6 +477,17 @@ class ActivitySearch(Search):
         "country": ModelFacet("country", Country),
         "theme": ModelFacet("theme", Theme),
     }
+
+    def parse_bound(self, value):
+        value = value.strip()
+        if not value:
+            return None
+        try:
+            return dateutil.parser.parse(value)
+        except (ValueError, OverflowError):
+            raise ValidationError(
+                {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+            )
 
     def sort(self, search):
         search = super().sort(search)
@@ -501,7 +554,13 @@ class ActivitySearch(Search):
                 end = date.max
 
                 if "date" in self.filter_values:
-                    start, end = self.filter_values["date"][0].split(",")
+                    bounds = self.filter_values["date"][0].split(",")
+                    if len(bounds) != 2:
+                        raise ValidationError(
+                            {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+                        )
+
+                    start, end = (self.parse_bound(bound) for bound in bounds)
 
                 search = search.sort(
                     {
@@ -526,7 +585,13 @@ class ActivitySearch(Search):
                 end = now()
 
                 if "date" in self.filter_values:
-                    start, end = self.filter_values["date"][0].split(",")
+                    bounds = self.filter_values["date"][0].split(",")
+                    if len(bounds) != 2:
+                        raise ValidationError(
+                            {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+                        )
+
+                    start, end = (self.parse_bound(bound) for bound in bounds)
 
                 search = search.sort(
                     {
@@ -604,7 +669,14 @@ class ActivitySearch(Search):
         if "initiative.id" not in self._filters and "status" not in self._filters:
             search = search.filter(
                 Terms(
-                    status=["succeeded", "open", "full", "partially_funded", "refunded"]
+                    status=[
+                        "succeeded",
+                        "open",
+                        "full",
+                        "registration_closed",
+                        "partially_funded",
+                        "refunded",
+                    ]
                 )
             )
 

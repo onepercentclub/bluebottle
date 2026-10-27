@@ -325,6 +325,14 @@ def get_office_restriction_values():
     return list(OfficeRestrictionChoices.values.keys())
 
 
+class ActivityCardLocationChoices(models.TextChoices):
+    NEIGHBOURHOOD = 'neighbourhood', _('Neighbourhood')
+    NEIGHBOURHOOD_CITY = 'neighbourhood_city', _('Neighbourhood + city')
+    CITY = 'city', _('City')
+    CITY_REGION = 'city_region', _('City + region')
+    CITY_COUNTRY = 'city_country', _('City + country')
+
+
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
@@ -347,7 +355,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("disabled", _("Disable")),
         ("per_activity", _("Enable")),
     )
-
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
@@ -528,6 +535,17 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_(
             "Review initiatives and activities. Activities created within an initiative will not "
             "need to be reviewed. Crowdfunding activities will always need to be reviewed"
+        ),
+    )
+
+    card_location_display = models.CharField(
+        _('Activity card location'),
+        max_length=32,
+        choices=ActivityCardLocationChoices.choices,
+        default=ActivityCardLocationChoices.CITY_COUNTRY,
+        help_text=_(
+            'Choose how locations appear on activity cards. '
+            'Activity detail pages always show the full location.'
         ),
     )
 

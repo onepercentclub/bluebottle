@@ -23,7 +23,7 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
     theme = factory.SubFactory(ThemeFactory)
     image = factory.SubFactory(ImageFactory)
-    place = factory.SubFactory(GeolocationFactory)
+    place = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
 
     @factory.post_generation
     def activity_managers(self, create, extracted, **kwargs):

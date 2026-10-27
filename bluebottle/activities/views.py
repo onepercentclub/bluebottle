@@ -18,7 +18,7 @@ from bluebottle.activities.models import (
     FileUploadAnswer, ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
-from bluebottle.activities.serializers import (
+from bluebottle.activities.serializers.serializers import (
     ActivityLocation,
     ActivityLocationSerializer,
     ActivitySerializer,

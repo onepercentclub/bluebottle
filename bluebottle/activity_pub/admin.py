@@ -1118,7 +1118,7 @@ class EventAdminMixin:
             )
 
         try:
-            activity = adapter.link(event, request)
+            activity = adapter.link(event)
 
             self.message_user(
                 request,
@@ -1246,9 +1246,26 @@ class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
         return fields
 
     def adopt_info(self, obj):
-        return admin_info_box(
-            _('You can make changes to this activity after you adopt it '
-              'which will create a draft version of this activity.'))
+        adoption_type = obj.source.follow.adoption_type
+
+        if adoption_type == 'sync':
+            message = _(
+                'Adopting creates a draft. '
+                'Fill in the fields that are specific to your platform and publish it. '
+                'The other fields are managed by the organisation, and contributions are shared with them.'
+            )
+        elif adoption_type == 'link':
+            message = _(
+                'Linking shows this activity on your platform straight away. '
+                'People contribute on the organisation’s platform.'
+            )
+        else:
+            message = _(
+                'Adopting creates a draft copy that you can fully edit and publish. '
+                'It’s not connected to the original, so changes and contributions aren’t synced.'
+            )
+
+        return admin_info_box(message)
 
 
 @admin.register(GoodDeed)

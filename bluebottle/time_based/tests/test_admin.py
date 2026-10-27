@@ -27,6 +27,7 @@ from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     InterestFactory,
     ScheduleActivityFactory, ScheduleRegistrationFactory,
+    TimeContributionFactory,
 )
 from bluebottle.time_based.triggers.contributions import should_succeed_instantly
 
@@ -442,6 +443,17 @@ class TimeContributionAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(page.status, '200 OK')
         self.assertTrue('contributor' in page.context['adminform'].form.errors)
         self.assertEqual(page.forms['timecontribution_form']['value'].value, '02:00:00')
+
+    def test_change_without_contributor(self):
+        contribution = TimeContributionFactory.create(contributor=None)
+        page = self.app.get(reverse('admin:time_based_timecontribution_change', args=(contribution.pk,)))
+        form = page.forms['timecontribution_form']
+        form['value'] = '03:00:00'
+        page = form.submit()
+        self.assertEqual(page.status, '302 Found')
+        contribution.refresh_from_db()
+        self.assertIsNone(contribution.contributor)
+        self.assertEqual(contribution.value, timedelta(hours=3))
 
     def test_should_succeed_instantly_without_contributor(self):
         effect = TransitionEffect(TimeContributionStateMachine.succeed)(TimeContribution())

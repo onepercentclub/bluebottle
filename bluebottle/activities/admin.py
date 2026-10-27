@@ -341,7 +341,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        if 'contributor' in form.base_fields:
+        if obj is None and 'contributor' in form.base_fields:
             form.base_fields['contributor'].required = True
         return form
 

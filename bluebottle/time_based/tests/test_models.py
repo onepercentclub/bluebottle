@@ -88,7 +88,7 @@ class PeriodicActivityModelTestCase(BluebottleTestCase):
                 'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
                 'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline',
                 'review', 'review_title', 'review_description', 'review_link', 'preparation', 'is_online',
-                'location', 'location_hint', 'start', 'deadline', 'period', 'duration'
+                'location', 'location_hint', 'start', 'deadline', 'period', 'duration', 'online_meeting_url'
             ]
         )
 
@@ -147,7 +147,8 @@ class DateActivityModelTestCase(BluebottleTestCase):
             [
                 'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
                 'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
-                'review_title', 'review_description', 'review_link', 'preparation', 'start', 'duration'
+                'review_title', 'review_description', 'review_link', 'preparation', 'start', 'duration',
+                'online_meeting_url'
             ]
         )
 

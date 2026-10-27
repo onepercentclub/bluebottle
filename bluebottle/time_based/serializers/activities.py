@@ -289,6 +289,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
             'is_online',
             'location',
             'location_hint',
+            'online_meeting_url',
             'my_interest',
             'interests',
         )

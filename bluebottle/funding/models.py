@@ -948,14 +948,12 @@ class IbanCheck(models.Model):
 
         result = adapter.check_iban_name(self.iban, self.name)
         self.result = result
-        self.matched = result.get('nameMatchResult', 'no_match').lower()
+        matched = result.get('nameMatchResult', 'no_match').lower()
+        self.matched = matched if matched in dict(self.MATCH_CHOICES) else 'no_match'
 
-        if self.matched == 'close_match' or self.matched == 'mistype':
+        if self.matched in ('close_match', 'mistype'):
             self.name = self.result.get('nameSuggestion', self.name)
-            token = self.get_stripe_token()
-            self.token = token.id
-            self.fingerprint = token.bank_account.fingerprint
-        if self.matched == 'match':
+        if self.matched != 'no_match':
             token = self.get_stripe_token()
             self.token = token.id
             self.fingerprint = token.bank_account.fingerprint

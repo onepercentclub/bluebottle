@@ -2092,6 +2092,7 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
             '/data/attributes/name'
         )
         create_token.assert_not_called()
+        self.assertEqual(IbanCheck.objects.get().matched, 'no_match')
 
     def test_close_match(self):
         # Mock ABN Amro API response for close match

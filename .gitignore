@@ -133,3 +133,6 @@ elasticsearch-data
 postgres-data
 
 **/*.code-workspace
+
+# worktrees
+.claude/worktrees

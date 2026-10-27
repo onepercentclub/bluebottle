@@ -3,12 +3,16 @@
 
 <p>
     {% blocktrans %}
-        This activity is cancelled automatically notify these platforms:
+        This activity is cancelled, automatically notify these platforms:
     {% endblocktrans %}
 
 <ul>
-    {% for follower in effects.0.followers %}
-        <li>{{ follower.actor.name }}</li>
+    {% for recipient in effects.0.instance.activity_pub_model.create_set.first.recipients.all %}
+        <li>{{ recipient.actor }}</li>
+    {% endfor %}
+
+    {% for recipient in effects.0.instance.origin.create_set.first.recipients.all %}
+        <li>{{ recipient.actor }}</li>
     {% endfor %}
 </ul>
 <br/>

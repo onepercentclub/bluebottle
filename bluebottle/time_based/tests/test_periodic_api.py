@@ -6,6 +6,7 @@ from rest_framework import status
 from six import BytesIO
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
     PeriodicActivitySerializer,
@@ -49,6 +50,7 @@ class PeriodicActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestC
         self.defaults = {
             'review': False,
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
+            'theme': ThemeFactory.create(),
             'is_online': True,
             'duration': '02:00',
             'period': 'weeks',

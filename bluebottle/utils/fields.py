@@ -1,7 +1,7 @@
+import json
 import mimetypes
 import xml.etree.cElementTree as et
-from builtins import object
-from builtins import str
+from builtins import object, str
 
 import inflection
 import sorl.thumbnail
@@ -11,17 +11,94 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
-from djmoney.forms import MoneyField as MoneyFormField
+from djmoney.forms import MoneyField as DjangoMoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
 from rest_framework.fields import Field
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField,
+    LINKS_PARAMS,
     MANY_RELATION_KWARGS,
-    LINKS_PARAMS
+    PolymorphicResourceRelatedField,
 )
 
 from .utils import clean_html
+from .widgets import CheckboxWithInlineLabelWidget
+
+
+class CheckboxFormField(forms.BooleanField):
+    """Custom BooleanField that supports an inline label next to the checkbox."""
+
+    def __init__(self, *args, inline_label='', **kwargs):
+        self.inline_label = inline_label
+        # Set the custom widget
+        if 'widget' not in kwargs:
+            kwargs['widget'] = CheckboxWithInlineLabelWidget(inline_label=inline_label)
+        super().__init__(*args, **kwargs)
+
+
+class CheckboxField(models.BooleanField):
+    """
+    Custom BooleanField that supports an inline label for Django admin.
+    The inline label appears next to the checkbox, while help_text appears below.
+
+    Usage:
+        closed = CheckboxField(
+            'closed',
+            default=False,
+            help_text='Require login before accessing the platform.',
+            inline_label='Only allow users with approved email domains'
+        )
+    """
+
+    def __init__(self, *args, inline_label='', **kwargs):
+        self.inline_label = inline_label
+        super().__init__(*args, **kwargs)
+
+    def deconstruct(self):
+        """Support for Django migrations."""
+        name, path, args, kwargs = super().deconstruct()
+        if self.inline_label:
+            kwargs['inline_label'] = self.inline_label
+        return name, path, args, kwargs
+
+    def formfield(self, **kwargs):
+        """Return a form field with the custom widget."""
+        defaults = {
+            'form_class': CheckboxFormField,
+            'inline_label': self.inline_label,
+        }
+        defaults.update(kwargs)
+        return super().formfield(**defaults)
+
+
+class MoneyFormField(DjangoMoneyFormField):
+    """
+    A reusable form field for money input that automatically loads
+    available currencies from PaymentProvider and sets the default currency.
+
+    This field encapsulates the logic from MoneyField.formfield() method.
+    """
+
+    def __init__(self, **kwargs):
+        # Get currency choices and default currency from PaymentProvider
+        from bluebottle.funding.models import PaymentProvider
+        kwargs.pop('currency_choices', None)
+        kwargs.pop('default_currency', None)
+        default_currency = PaymentProvider.get_default_currency()
+        currency_choices = PaymentProvider.get_currency_choices()
+        super().__init__(currency_choices=currency_choices, default_currency=default_currency, **kwargs)
+
+    def get_default_currency(self):
+        """Get the default currency from PaymentProvider."""
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_default_currency()
+
+    def get_currency_choices(self):
+        """Get available currency choices from PaymentProvider."""
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_currency_choices()
 
 
 class MoneyField(DjangoMoneyField):
@@ -31,7 +108,7 @@ class MoneyField(DjangoMoneyField):
                  currency_choices=None,
                  **kwargs):
         default_currency = 'EUR'
-        currency_choices = [('EUR', 'Euro')]
+        currency_choices = self.get_currency_choices()
         super(MoneyField, self).__init__(
             verbose_name=verbose_name, name=name,
             max_digits=max_digits, decimal_places=decimal_places, default=default,
@@ -59,12 +136,81 @@ class MoneyField(DjangoMoneyField):
         return name, path, args, kwargs
 
     def formfield(self, **kwargs):
-        # For the form load the actual available currencies from PaymentProviders
-        defaults = {'form_class': MoneyFormField}
+        # Use the new reusable form field
+        defaults = {"form_class": MoneyFormField}
+        defaults["currency_choices"] = self.get_currency_choices()
+        defaults["default_currency"] = self.get_default_currency()
         defaults.update(kwargs)
-        self.default_currency = self.get_default_currency()
-        self.currency_choices = self.get_currency_choices()
-        return super(MoneyField, self).formfield(**kwargs)
+        return super(MoneyField, self).formfield(**defaults)
+
+
+class CurrencyFormField(forms.ChoiceField):
+    """
+    A reusable form field for currency selection.
+
+    This field automatically loads available currencies from PaymentProvider
+    and sets the default currency as the initial value.
+    """
+
+    def __init__(self, **kwargs):
+        # Get currency choices and default currency
+        from bluebottle.funding.models import PaymentProvider
+
+        choices = PaymentProvider.get_currency_choices()
+        initial = PaymentProvider.get_default_currency()
+
+        # Set up the field with currency choices
+        kwargs.setdefault("choices", choices)
+        kwargs.setdefault("initial", initial)
+
+        super().__init__(**kwargs)
+
+    def get_default_currency(self):
+        """Get the default currency from PaymentProvider."""
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_default_currency()
+
+    def get_currency_choices(self):
+        """Get available currency choices from PaymentProvider."""
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_currency_choices()
+
+
+class CurrencyField(models.CharField):
+    currency_choices = [("EUR", "Euro")]
+
+    def __init__(self, verbose_name=None, name=None, max_length=3, **kwargs):
+        super(CurrencyField, self).__init__(
+            verbose_name=verbose_name, name=name, max_length=max_length, **kwargs
+        )
+
+    def get_default_currency(self):
+        from bluebottle.funding.models import PaymentProvider
+        return PaymentProvider.get_default_currency()
+
+    def get_currency_choices(self):
+        from bluebottle.funding.models import PaymentProvider
+        return PaymentProvider.get_currency_choices()
+
+    def deconstruct(self):
+        name, path, args, kwargs = super(CurrencyField, self).deconstruct()
+
+        if self.default != self.get_default_currency():
+            kwargs["default"] = str(self.default)
+        if self.currency_choices != self.get_currency_choices():
+            kwargs["currency_choices"] = self.currency_choices
+        return name, path, args, kwargs
+
+    def formfield(self, **kwargs):
+        defaults = {
+            "form_class": forms.ChoiceField,
+            "choices": self.get_currency_choices(),
+            "initial": self.get_default_currency(),
+        }
+        defaults.update(kwargs)
+        return super(models.CharField, self).formfield(**defaults)
 
 
 class LegacyMoneyField(MoneyField):
@@ -129,6 +275,14 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         except et.ParseError:
             pass
         return tag == '{http://www.w3.org/2000/svg}svg'
+
+
+class RichTextField(serializers.CharField):
+    def to_representation(self, value):
+        return clean_html(super().to_representation(value.html))
+
+    def to_internal_value(self, data):
+        return json.dumps({'html': clean_html(super().to_internal_value(data)), 'delta': ''})
 
 
 class SafeField(serializers.CharField):
@@ -219,7 +373,9 @@ class RequiredErrorsField(serializers.ReadOnlyField):
                 'title': _('This field is required'),
                 'code': 'required',
                 'source': {
-                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(field).replace('.', '/'))
+                    'pointer': '/data/attributes/{}'.format(
+                        inflection.dasherize(field.split('.')[0]).replace('.', '/')
+                    )
                 }
             } for field in value
         ]
@@ -253,13 +409,16 @@ class PolymorphicManySerializerMethodResourceRelatedField(
         # self.child_relation.bind(field_name="", parent=self)
 
     def to_representation(self, value):
-        serializers = [
-            self.polymorphic_serializer(item).to_representation(item) for item in value
-        ]
+        parent = self.polymorphic_serializer
 
         return [
-            {'type': serializer['type'], 'id': force_str(serializer['id'])}
-            for serializer in serializers
+            {
+                'type': parent.get_polymorphic_serializer_for_instance(
+                    item
+                ).JSONAPIMeta.resource_name,
+                'id': force_str(item.pk)
+            }
+            for item in value
         ]
 
 

@@ -1,7 +1,9 @@
 
 import datetime
 from builtins import str
+from unittest.mock import patch
 
+from django.contrib.auth.models import AnonymousUser
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -15,6 +17,7 @@ from bluebottle.impact.tests.factories import (
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.statistics.serializers import UserStatisticSerializer
 from bluebottle.statistics.tests.factories import (
     DatabaseStatisticFactory, ManualStatisticFactory, ImpactStatisticFactory
 )
@@ -23,7 +26,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
-    SlotParticipantFactory,
+    DateRegistrationFactory,
 )
 
 
@@ -56,7 +59,13 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         slot.duration = datetime.timedelta(minutes=6)
         slot.save()
 
-        DateParticipantFactory.create_batch(5, activity=activity)
+        registrations = DateRegistrationFactory.create_batch(5, activity=activity)
+        for registration in registrations:
+            DateParticipantFactory.create(
+                registration=registration,
+                activity=activity,
+                slot=slot
+            )
 
         self.impact_type = ImpactTypeFactory.create()
 
@@ -100,6 +109,24 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 3)
 
+    def test_get_anonymous_office_subregion(self):
+        """Anonymous requests with office filters must not crash on AnonymousUser."""
+        response = self.client.get(
+            self.url + '?filter[type]=office_subregion'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Non-all type filters exclude ManualStatistic
+        self.assertEqual(len(response.json()['data']), 2)
+        for resource in response.json()['data']:
+            self.assertIn('value', resource['attributes'])
+
+    def test_get_anonymous_office_region(self):
+        response = self.client.get(self.url + '?filter[type]=office_region')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 2)
+
     def test_get_only_active(self):
         self.manual.active = False
         self.manual.save()
@@ -125,7 +152,7 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_filter_by_year(self):
-        response = self.client.get(self.url + '?year=' + str(now().year))
+        response = self.client.get(self.url + '?filter[year]=' + str(now().year))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 3)
 
@@ -162,13 +189,21 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         slot2.duration = datetime.timedelta(hours=8)
         slot2.save()
 
-        participants = DateParticipantFactory.create_batch(3, activity=activity1)
-        for participant in participants:
-            SlotParticipantFactory.create(participant=participant, slot=slot1)
+        registrations = DateRegistrationFactory.create_batch(3, activity=activity1)
+        for registration in registrations:
+            DateParticipantFactory.create(
+                activity=activity1,
+                registration=registration,
+                slot=slot1
+            )
 
-        participants = DateParticipantFactory.create_batch(2, activity=activity2)
-        for participant in participants:
-            SlotParticipantFactory.create(participant=participant, slot=slot2)
+        registrations = DateRegistrationFactory.create_batch(2, activity=activity1)
+        for registration in registrations:
+            DateParticipantFactory.create(
+                activity=activity1,
+                registration=registration,
+                slot=slot2
+            )
 
         self.impact_type = ImpactTypeFactory.create()
 
@@ -211,7 +246,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         self.money.save()
 
     def test_filter_by_year_2020(self):
-        response = self.client.get(self.url + '?year=2020')
+        response = self.client.get(self.url + '?filter[year]=2020')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)
@@ -221,7 +256,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         self.assertEqual(data[3]['attributes']['value'], {'amount': 70.0, 'currency': 'EUR'})
 
     def test_filter_by_year_2021(self):
-        response = self.client.get(self.url + '?year=2021')
+        response = self.client.get(self.url + '?filter[year]=2021')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)
@@ -234,7 +269,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         settings = MemberPlatformSettings.load()
         settings.fiscal_month_offset = 4
         settings.save()
-        response = self.client.get(self.url + '?year=2020')
+        response = self.client.get(self.url + '?filter[year]=2020')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)
@@ -247,7 +282,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         settings = MemberPlatformSettings.load()
         settings.fiscal_month_offset = -4
         settings.save()
-        response = self.client.get(self.url + '?year=2021')
+        response = self.client.get(self.url + '?filter[year]=2021')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)
@@ -289,14 +324,20 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         )
         initiative.states.submit(save=True)
         initiative.states.approve(save=True)
-        activity.states.publish(save=True)
 
+        activity.states.publish(save=True)
         slot = activity.slots.get()
+
+        registration = DateRegistrationFactory.create(activity=activity, user=self.user)
+        DateParticipantFactory.create(
+            registration=registration,
+            activity=activity,
+            slot=slot,
+            user=self.user
+        )
         slot.start = timezone.now() - datetime.timedelta(days=8)
         slot.duration = datetime.timedelta(hours=6)
         slot.save()
-        part = DateParticipantFactory.create(activity=activity, user=self.user)
-        SlotParticipantFactory.create(participant=part, slot=slot)
 
         donations = DonorFactory.create_batch(3, user=self.user, created=now() - datetime.timedelta(days=1))
         for donation in donations:
@@ -309,3 +350,32 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         self.assertEqual(len(data), 4)
         self.assertEqual(data[0]['attributes']['value']['amount'], 105)
         self.assertEqual(data[1]['attributes']['value'], 6.0)
+
+    def test_get_anonymous(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_anonymous_user_is_not_passed_to_statistics(self):
+        serializer = UserStatisticSerializer()
+
+        with patch(
+            'bluebottle.statistics.serializers.get_current_user',
+            return_value=AnonymousUser(),
+        ):
+            self.assertIsNone(serializer.get_user())
+
+        with patch(
+            'bluebottle.statistics.serializers.get_current_user',
+            return_value=None,
+        ):
+            self.assertIsNone(serializer.get_user())
+
+    def test_authenticated_user_is_still_passed_to_statistics(self):
+        serializer = UserStatisticSerializer()
+
+        with patch(
+            'bluebottle.statistics.serializers.get_current_user',
+            return_value=self.user,
+        ):
+            self.assertEqual(serializer.get_user(), self.user)

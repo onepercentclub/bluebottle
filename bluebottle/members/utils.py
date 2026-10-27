@@ -5,7 +5,7 @@ from bluebottle.clients import properties
 
 
 def get_jwt_secret(user):
-    return properties.SECRET_KEY + (str(user.last_logout) if user.last_logout else '')
+    return properties.TENANT_JWT_SECRET + (str(user.last_logout) if user.last_logout else '')
 
 
 import uuid

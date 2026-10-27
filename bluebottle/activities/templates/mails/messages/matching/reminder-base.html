@@ -1,0 +1,21 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+{% load message_url %}
+
+{% block content %}
+    <p>
+        {% blocktrans context 'platform-email' %}Hi {{ recipient_name }},{% endblocktrans %}
+    </p>
+    {% block message %}{% endblock %}
+{% endblock %}
+
+{% block action %}
+<a href="{% message_url action_link %}" class="action-email">{{ action_title }}</a>
+{% endblock %}`
+
+{% block end_message %}
+    {% message_url opt_out_link as account_url %}
+    {% blocktrans context "platform-email" %}
+      Don't want to receive these updates? Unsubscribe via the <a href="{{account_url}}">'My account'</a> page.
+    {% endblocktrans %}
+{% endblock %}

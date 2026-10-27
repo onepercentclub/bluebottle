@@ -67,10 +67,6 @@ class Migration(migrations.Migration):
             model_name='organization',
             name='state',
         ),
-        migrations.RemoveField(
-            model_name='organization',
-            name='tags',
-        ),
         migrations.AddField(
             model_name='organization',
             name='owner',

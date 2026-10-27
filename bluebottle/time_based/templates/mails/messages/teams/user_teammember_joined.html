@@ -1,7 +1,7 @@
 {% extends "mails/messages/participant_base.html" %}
 {% load i18n %}
 
-{% block message %}{% blocktrans context 'email' %}
+{% block message %}{% blocktrans context 'platform-email' %}
 <p>Your have joined {{name}}'s team for the activity "{{ title }}".</p>
 {% endblocktrans %}
 
@@ -12,12 +12,6 @@
 
 
 {% block end_message %}
-    <p>
-        <i>
-            {% blocktrans context 'email' %}
-                If you are unable to participate, please withdraw via the activity page so that others can take your place.
-            {% endblocktrans %}
-        </i>
-    </p>
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
 {% endblock %}
 

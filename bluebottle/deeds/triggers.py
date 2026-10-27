@@ -1,15 +1,22 @@
 from datetime import date
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
+    ActivityRestoredNotification
+)
+from bluebottle.activities.messages.participant import (
+    InactiveParticipantAddedNotification,
+    ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import (
-    OrganizerStateMachine, EffortContributionStateMachine
+    OrganizerStateMachine, EffortContributionStateMachine, ActivityStateMachine
 )
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
+)
+from bluebottle.activity_pub.effects import (
+    PublishAdoptionEffect, CancelEffect, StartEffect, UpdateEventEffect, FinishEffect
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -101,6 +108,10 @@ def has_no_end_date(effect):
 class DeedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
+            ['start', 'end', 'description', 'title', 'image'],
+            effects=[UpdateEventEffect]
+        ),
+        ModelChangedTrigger(
             'end',
             effects=[
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
@@ -150,8 +161,17 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+                StartEffect
             ]
         ),
+        TransitionTrigger(
+            ActivityStateMachine.approve,
+            effects=[
+                PublishAdoptionEffect,
+                StartEffect
+            ]
+        ),
+
         TransitionTrigger(
             DeedStateMachine.publish,
             effects=[
@@ -163,6 +183,9 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
+                PublishAdoptionEffect,
+                StartEffect
+
             ]
         ),
 
@@ -187,6 +210,7 @@ class DeedTriggers(ActivityTriggers):
                 ),
                 NotificationEffect(ActivitySucceededNotification),
                 SetEndDateEffect,
+                FinishEffect
             ]
         ),
 
@@ -195,6 +219,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityExpiredNotification),
+                CancelEffect
             ]
         ),
 
@@ -203,6 +228,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityRejectedNotification),
+                CancelEffect
             ]
         ),
 
@@ -211,7 +237,8 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
-            ]
+                CancelEffect
+            ],
         ),
 
         TransitionTrigger(
@@ -269,6 +296,16 @@ def contributor_is_active(effect):
     return effect.instance.status == DeedParticipantStateMachine.new.value
 
 
+def participant_is_active(effect):
+    from bluebottle.members.models import MemberPlatformSettings
+    settings = MemberPlatformSettings.load()
+    return (not settings.closed) and effect.instance.user.is_active
+
+
+def participant_is_inactive(effect):
+    return not participant_is_active(effect)
+
+
 @register(DeedParticipant)
 class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -286,7 +323,11 @@ class DeedParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     ParticipantAddedNotification,
-                    conditions=[is_not_user]
+                    conditions=[is_not_user, participant_is_active]
+                ),
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[is_not_user, participant_is_inactive]
                 ),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,

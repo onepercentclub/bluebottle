@@ -15,11 +15,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='project',
-            name='theme',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='bb_projects.ProjectTheme'),
-        ),
-        migrations.AlterField(
             model_name='projectdocument',
             name='file',
             field=bluebottle.utils.fields.PrivateFileField(max_length=110, upload_to=b'private/projects/documents'),

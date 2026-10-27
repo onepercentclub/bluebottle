@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import path
 
 from bluebottle.terms.views import (
     CurrentTermsDetailView, TermsAgreementListView,
@@ -6,13 +6,19 @@ from bluebottle.terms.views import (
 )
 
 urlpatterns = [
-    url(r'^current$',
+    path(
+        'current',
         CurrentTermsDetailView.as_view(),
-        name='current-terms'),
-    url(r'^agreements/$',
+        name='current-terms'
+    ),
+    path(
+        'agreements/',
         TermsAgreementListView.as_view(),
-        name='terms-agreement-list'),
-    url(r'^agreements/current$',
+        name='terms-agreement-list'
+    ),
+    path(
+        'agreements/current',
         CurrentTermsAgreementDetailView.as_view(),
-        name='current-terms-agreement'),
+        name='current-terms-agreement'
+    ),
 ]

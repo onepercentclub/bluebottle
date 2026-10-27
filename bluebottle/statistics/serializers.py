@@ -8,7 +8,7 @@ from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.statistics.models import (
     BaseStatistic, DatabaseStatistic, ManualStatistic, ImpactStatistic
 )
@@ -29,18 +29,37 @@ class BaseStatisticSerializer(ModelSerializer):
         subregion = None
         user = self.get_user()
 
-        if 'year' in params:
-            year = int(params['year'])
+        if 'filter[year]' in params:
+            year = int(params['filter[year]'])
             settings = MemberPlatformSettings.load()
             start = datetime.datetime(year, 1, 1, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
             end = datetime.datetime(year, 12, 31, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
 
-        if 'office_location__subregion' in params:
-            subregion = params['office_location__subregion']
-        if user:
-            value = obj.get_live_value(start, end, subregion, user)
+        current_user = get_current_user()
+
+        if 'filter[type]' in params and current_user and isinstance(current_user, Member):
+            if (
+                params['filter[type]'] == 'office_region' and
+                current_user.location and
+                current_user.location.subregion and
+                current_user.location.subregion.region
+            ):
+                region = current_user.location.subregion.region
+                value = obj.get_value(start, end, region=region)
+            elif (
+                params['filter[type]'] == 'office_subregion' and
+                current_user.location and
+                current_user.location.subregion
+            ):
+                subregion = current_user.location.subregion
+                value = obj.get_value(start, end, subregion=subregion)
+            else:
+                value = obj.get_value(start, end)
         else:
-            value = obj.get_value(start, end, subregion, user)
+            if user:
+                value = obj.get_live_value(start, end, user=user)
+            else:
+                value = obj.get_value(start, end)
 
         try:
             return {
@@ -109,4 +128,7 @@ class StatisticSerializer(BaseStatisticSerializer):
 class UserStatisticSerializer(StatisticSerializer):
 
     def get_user(self):
-        return get_current_user()
+        user = get_current_user()
+        if getattr(user, 'is_authenticated', False):
+            return user
+        return None

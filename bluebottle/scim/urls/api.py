@@ -1,4 +1,5 @@
-from django.conf.urls import url
+from django.urls import path
+from django.urls import re_path
 from bluebottle.scim.views import (
     ServiceProviderConfigView, SchemaListView, SchemaRetrieveView,
     ResourceTypeRetrieveView, ResourceTypeListView,
@@ -8,47 +9,47 @@ from bluebottle.scim.views import (
 
 
 urlpatterns = [
-    url(
-        r'^ServiceProviderConfig$',
+    path(
+        'ServiceProviderConfig',
         ServiceProviderConfigView.as_view(),
         name='scim-service-provider-config'
     ),
-    url(
-        r'^Schemas$',
+    path(
+        'Schemas',
         SchemaListView.as_view(),
         name='scim-schema-list'
     ),
-    url(
+    re_path(
         r'^Schemas/(?P<id>[\:\.\w-]+)$',
         SchemaRetrieveView.as_view(),
         name='scim-schema-detail'
     ),
-    url(
-        r'^ResourceTypes$',
+    path(
+        'ResourceTypes',
         ResourceTypeListView.as_view(),
         name='scim-resource-type-list'
     ),
-    url(
+    re_path(
         r'^ResourceTypes/(?P<id>[\w]+)$',
         ResourceTypeRetrieveView.as_view(),
         name='scim-resource-type-detail'
     ),
-    url(
-        r'^Users$',
+    path(
+        'Users',
         UserListView.as_view(),
         name='scim-user-list'
     ),
-    url(
+    re_path(
         r'^Users/goodup-user-(?P<pk>[\w]+)$',
         UserDetailView.as_view(),
         name='scim-user-detail'
     ),
-    url(
-        r'^Groups$',
+    path(
+        'Groups',
         GroupListView.as_view(),
         name='scim-group-list'
     ),
-    url(
+    re_path(
         r'^Groups/goodup-group-(?P<pk>[\w]+)$',
         GroupDetailView.as_view(),
         name='scim-group-detail'

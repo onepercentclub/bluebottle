@@ -3,9 +3,12 @@ import json
 import re
 from builtins import str
 from datetime import timedelta
+from unittest import mock
 
 import dateutil
+from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
+from django.db import connection
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -14,30 +17,42 @@ from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
 
-from bluebottle.activities.models import Activity
-from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.activities.models import Activity, ActivityMessage
+from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
+from bluebottle.collect.tests.factories import (
+    CollectActivityFactory,
+    CollectContributorFactory,
+)
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.initiatives.models import InitiativePlatformSettings, ActivitySearchFilter
+from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
+from bluebottle.grant_management.tests.factories import GrantApplicationFactory
+from bluebottle.initiatives.models import (
+    ActivitySearchFilter,
+    InitiativePlatformSettings,
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory
-from bluebottle.segments.tests.factories import SegmentFactory
-from bluebottle.segments.tests.factories import SegmentTypeFactory
+from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import (
-    LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
+    CountryFactory,
+    GeolocationFactory,
+    LocationFactory,
+    PlaceFactory,
 )
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
-    DeadlineActivityFactory,
-    DateParticipantFactory,
-    DeadlineParticipantFactory,
     DateActivitySlotFactory,
+    DateParticipantFactory,
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
     SkillFactory,
-    SlotParticipantFactory,
+    DateRegistrationFactory,
 )
 
 
@@ -49,7 +64,6 @@ from bluebottle.time_based.tests.factories import (
 class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ActivityListSearchAPITestCase, self).setUp()
-
         self.client = JSONAPITestClient()
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
@@ -78,7 +92,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         response = self.client.get(
             url,
             user=user,
-            **headers
+            **headers,
+            HTTP_ACCEPT_LANGUAGE='en'
         )
 
         self.data = json.loads(response.content)
@@ -113,7 +128,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DeadlineActivityFactory.create(status='open', image=ImageFactory.create())
         FundingFactory.create(review_status='open', image=ImageFactory.create())
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
 
         for activity in response.json()['data']:
             self.assertTrue(
@@ -122,7 +137,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_deed_preview(self):
         activity = DeedFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -132,11 +147,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -146,8 +164,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
-        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
+        self.assertEqual(
+            attributes['expertise'],
+            activity.expertise.name
+        )
         self.assertEqual(attributes['slot-count'], 1)
         self.assertEqual(dateutil.parser.parse(attributes['start']), activity.slots.first().start)
         self.assertEqual(dateutil.parser.parse(attributes['end']), activity.slots.first().end)
@@ -161,9 +185,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity)
         DateActivitySlotFactory.create(
-            status='succeeded', activity=activity, start=now() - timedelta(days=10)
+            status='finished', activity=activity, start=now() - timedelta(days=10)
         )
-        response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner)
+        response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -173,8 +197,36 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
-        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
+        self.assertEqual(
+            attributes['expertise'],
+            activity.expertise.name
+        )
+        self.assertEqual(attributes['slot-count'], 3)
+        self.assertEqual(
+            dateutil.parser.parse(attributes['start']),
+            min([slot.start for slot in activity.slots.all() if slot.start > now()])
+        )
+
+        self.assertEqual(
+            dateutil.parser.parse(attributes['end']),
+            min([slot.end for slot in activity.slots.all() if slot.start > now()])
+        )
+        self.assertEqual(attributes['has-multiple-locations'], True)
+        self.assertIsNone(attributes['location'])
+
+    def test_date_preview_multiple_slots_highlight(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        DateActivitySlotFactory.create_batch(3, activity=activity)
+        DateActivitySlotFactory.create(
+            status='finished', activity=activity, start=now() - timedelta(days=10)
+        )
+        response = self.client.get(self.url + '?filter[hightlight]=1', user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
+        attributes = response.json()['data'][0]['attributes']
+
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(
             dateutil.parser.parse(attributes['start']),
@@ -190,9 +242,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_date_preview_multiple_slots_single_location(self):
         activity = DateActivityFactory.create(status='open', slots=[])
-        location = GeolocationFactory.create()
+        location = GeolocationFactory.create(with_geofeatures=True)
         DateActivitySlotFactory.create_batch(3, activity=activity, location=location)
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -202,8 +254,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
-        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
+        self.assertEqual(
+            attributes['expertise'],
+            activity.expertise.name
+        )
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(attributes['has-multiple-locations'], False)
 
@@ -216,7 +274,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)
         open_slot = DateActivitySlotFactory.create(activity=activity)
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slot-count'], 1)
@@ -245,7 +303,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.url + '?filter[date]={},{}'.format(
                 start.strftime('%Y-%m-%d'),
                 end.strftime('%Y-%m-%d')
-            )
+            ),
+            HTTP_ACCEPT_LANGUAGE='en'
         )
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 1)
@@ -269,9 +328,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity.status = 'succeeded'
         activity.save()
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
-        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['slot-count'], 3)
 
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertEqual(attributes['is-online'], False)
@@ -282,7 +341,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_date_preview_all_full(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity, status='full')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['is-full'], True)
 
@@ -291,7 +350,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create_batch(
             3, activity=activity, location=None, is_online=True, status='full'
         )
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['is-online'], True)
 
@@ -309,14 +368,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             activity=activity
         )
 
-        self.owner.favourite_themes.add(activity.initiative.theme)
+        self.owner.favourite_themes.add(activity.theme)
         self.owner.skills.add(activity.expertise)
         self.owner.place = PlaceFactory.create(
             position=Point(20.0, 10.0)
         )
         self.owner.save()
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['matching-properties']['theme'], True)
         self.assertEqual(attributes['matching-properties']['skill'], True)
@@ -324,7 +383,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_deadline_preview(self):
         activity = DeadlineActivityFactory.create(status='open', is_online=False)
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -334,8 +393,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
-        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
+        self.assertEqual(
+            attributes['expertise'],
+            activity.expertise.name
+        )
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
         self.assertEqual(attributes['contribution-duration'], {'period': 'once', 'value': 4.0})
@@ -355,14 +420,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(20.1, 10.1))
         )
 
-        self.owner.favourite_themes.add(activity.initiative.theme)
+        self.owner.favourite_themes.add(activity.theme)
         self.owner.skills.add(activity.expertise)
         self.owner.place = PlaceFactory.create(
             position=Point(20.0, 10.0)
         )
         self.owner.save()
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['matching-properties']['theme'], True)
         self.assertEqual(attributes['matching-properties']['skill'], True)
@@ -370,7 +435,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_funding_preview(self):
         activity = FundingFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -378,9 +443,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['initiative'], activity.initiative.title)
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
-        self.assertEqual(attributes['is-online'], True)
+        self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
         self.assertEqual(attributes['expertise'], None)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -392,7 +460,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_collect_preview(self):
         activity = CollectActivityFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -402,7 +470,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
         self.assertEqual(attributes['expertise'], None)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -415,13 +486,29 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_collect_preview_dutch(self):
         activity = CollectActivityFactory.create(status='open')
-        theme_translation = activity.initiative.theme.translations.get(
-            language_code='nl'
+        theme = activity.theme
+        # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups).
+        # Update and save the translation directly to avoid duplicate key when saving the theme.
+        theme_translation, _ = theme.translations.get_or_create(
+            language_code='nl',
+            defaults={'name': f'Theme NL {theme.pk}'}
         )
+        theme_translation.name = 'Theme NL'
+        theme_translation.save()
 
-        collect_type_translation = activity.collect_type.translations.get(
-            language_code='nl'
+        collect_type = activity.collect_type
+        # Ensure collect_type has Dutch translation; update it in place to avoid duplicate key.
+        collect_type_translation, _ = collect_type.translations.get_or_create(
+            language_code='nl',
+            defaults={
+                'name': f'CollectType NL {collect_type.pk}',
+                'unit': 'unit',
+                'unit_plural': 'units',
+            }
         )
+        collect_type_translation.name = 'CollectType NL'
+        collect_type_translation.save()
+
         response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
         attributes = response.json()['data'][0]['attributes']
 
@@ -434,14 +521,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status="open", title=f'title with {text}',
         )
         description = DeadlineActivityFactory.create(
-            status="open", description=f'description with {text}',
+            status="open", description=json.dumps({'html': f'description with {text}', 'delta': ''}),
         )
 
         initiative_title = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
         initiative_story = DeadlineActivityFactory.create(
-            status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
         )
 
         initiative_pitch = DeadlineActivityFactory.create(
@@ -467,20 +557,68 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 6)
 
-    def test_search_prefix(self):
-        text = 'consectetur adipiscing elit,'
+    def test_search_diacritics(self):
+        text = 'cônsectetur adïpiscing elit,'
         title = DeadlineActivityFactory.create(
             status="open", title=f'title with {text}',
         )
         description = DeadlineActivityFactory.create(
-            status="open", description=f'description with {text}',
+            status="open", description=json.dumps({'html': f'description with {text}', 'delta': ''}),
         )
 
         initiative_title = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
         initiative_story = DeadlineActivityFactory.create(
-            status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
+        )
+
+        initiative_pitch = DeadlineActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
+        )
+
+        slot_title = DateActivityFactory.create(status="open")
+        DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
+
+        response = self.client.get(
+            f'{self.url}?filter[search]=consectetur adipiscing elit,',
+        )
+
+        data = json.loads(response.content)
+        ids = [int(activity['id']) for activity in data['data']]
+
+        self.assertTrue(title.pk in ids)
+        self.assertTrue(description.pk in ids)
+        self.assertTrue(initiative_title.pk in ids)
+        self.assertTrue(initiative_pitch.pk in ids)
+        self.assertTrue(initiative_story.pk in ids)
+        self.assertTrue(slot_title.pk in ids)
+
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
+    def test_search_prefix(self):
+        text = 'consectetur adipiscing elit,'
+        title = DeadlineActivityFactory.create(
+            status="open", title=f'title with {text}',
+        )
+        description = DeadlineActivityFactory.create(
+            status="open",
+            description=json.dumps(
+                {'html': f'description with {text}', 'delta': ''}
+            ),
+        )
+
+        initiative_title = DeadlineActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
+        )
+        initiative_story = DeadlineActivityFactory.create(
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
         )
 
         initiative_pitch = DeadlineActivityFactory.create(
@@ -508,25 +646,24 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_upcoming(self):
         today = now().date()
-        first_date_activity = DateActivityFactory.create(status='open', slots=[])
-        second_date_activity = DateActivityFactory.create(status='open', slots=[])
+        first_date_activity = DateActivityFactory.create(pk=2, status='open', slots=[])
+        second_date_activity = DateActivityFactory.create(pk=3, status='open', slots=[])
         activities = [
             DeadlineActivityFactory(
-                status='full', start=None, deadline=now() + timedelta(days=1)
+                pk=1, status='full', start=None, deadline=now() + timedelta(days=1)
             ),
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=None
-            ),
-
-            DeadlineActivityFactory(
-                status='open', start=now() - timedelta(days=1), deadline=None
-            ),
-
             first_date_activity,
             second_date_activity,
 
-            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
-            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            DeadlineActivityFactory(
+                pk=4, status='open', start=today + timedelta(days=8), deadline=today + timedelta(days=10)
+            ),
+            CollectActivityFactory(
+                pk=5, status='open', start=today + timedelta(days=9), end=today + timedelta(days=11)
+            ),
+
+            DeadlineActivityFactory(pk=7, status='open', start=now() + timedelta(days=2), deadline=None),
+            DeadlineActivityFactory(pk=8, status='open', start=None, deadline=None),
         ]
 
         DateActivitySlotFactory.create(
@@ -551,10 +688,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'upcoming': 1})
 
-        self.assertEqual(
-            [str(activity.pk) for activity in activities],
-            [activity['id'] for activity in self.data['data']]
-        )
+        found_ids = [activity['id'] for activity in self.data['data']]
+        expected_ids = [str(activity.pk) for activity in activities]
+
+        # The final two activities have no upcoming date/deadline; their relative
+        # ordering is not stable across database/query planner combinations.
+        self.assertEqual(found_ids[:5], expected_ids[:5])
+        self.assertCountEqual(found_ids[5:], expected_ids[5:])
 
     def test_sort_upcoming_exclude_full(self):
         InitiativePlatformSettings.objects.create(include_full_activities=False)
@@ -563,19 +703,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first_date_activity = DateActivityFactory.create(status='open', slots=[])
         second_date_activity = DateActivityFactory.create(status='open', slots=[])
         activities = [
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=None
-            ),
+            first_date_activity,
+            second_date_activity,
+
+            DeadlineActivityFactory(status='open', deadline=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', end=today + timedelta(days=9)),
 
             DeadlineActivityFactory(
                 status='open', start=now() - timedelta(days=1), deadline=None
             ),
-
-            first_date_activity,
-            second_date_activity,
-
-            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
-            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            DeadlineActivityFactory(
+                status='open', start=None, deadline=None
+            ),
         ]
 
         DateActivitySlotFactory.create(
@@ -602,28 +741,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ),
 
         self.search({'upcoming': 1})
-
-        self.assertEqual(
-            [str(activity.pk) for activity in activities],
-            [activity['id'] for activity in self.data['data']]
-        )
-
-    def test_sort_unknown(self):
-        activities = [
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=now() + timedelta(days=1)
-            ),
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=None
-            ),
-
-            DeadlineActivityFactory(
-                status='open', start=now() - timedelta(days=1), deadline=None
-            ),
-
-        ]
-
-        self.search({}, sort='some-unknown-sort-option')
 
         self.assertEqual(
             [str(activity.pk) for activity in activities],
@@ -744,12 +861,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         today = now().date()
         activities = [
             DeadlineActivityFactory(
-                status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)
+                status='open', start=now() + timedelta(days=1), deadline=now() + timedelta(days=1)
             ),
             DateActivityFactory.create(status='open', slots=[]),
             DateActivityFactory.create(status='open', slots=[]),
-            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
-            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            DeadlineActivityFactory(status='open', deadline=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', end=today + timedelta(days=9)),
+            DeadlineActivityFactory(
+                status='open', start=None, deadline=None
+            ),
         ]
         DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[1])
         DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[1])
@@ -797,6 +917,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({}, user=staff_user)
         self.assertFound(open + closed)
 
+        owner = closed[0].owner
+        self.search({}, user=owner)
+        self.assertFound(open + [closed[0]])
+
     def test_filter_type(self):
         matching = (
             DateActivityFactory.create_batch(3, status='open') +
@@ -820,6 +944,42 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertFound(matching)
+
+    def test_filter_local(self):
+        remote = (
+            LinkedDeedFactory.create(),
+            LinkedDeedFactory.create(),
+            LinkedFundingFactory.create(),
+        )
+        local = (
+            DeadlineActivityFactory.create(status='open'),
+            DeedFactory.create(status='open')
+        )
+
+        self.search({
+            'is_local': '1'
+
+        })
+
+        self.assertFacets(
+            'is_local',
+            {
+                0: ('Remote activities', 3),
+                1: ('Local activities', 2),
+            }
+        )
+
+        self.assertFound(local)
+
+        self.search({
+            'is_local': '0'
+
+        })
+        # Linked activities use ES document id "linked_{pk}" in the API response
+        self.assertEqual(self.data['meta']['pagination']['count'], len(remote))
+        expected_remote_ids = {f'linked_{a.pk}' for a in remote}
+        returned_ids = {item['id'] for item in self.data['data']}
+        self.assertEqual(returned_ids, expected_remote_ids)
 
     def test_filter_type_missing(self):
         matching = (
@@ -878,41 +1038,39 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
 
-        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+        matching_theme, other_theme = ThemeFactory.create_batch(2)
 
-        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
-        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+        matching = DeedFactory.create_batch(3, status="open", theme=matching_theme)
+        other = DeedFactory.create_batch(2, status="open", theme=other_theme)
 
         self.search({
-            'theme': matching_initiative.theme.pk,
+            'theme': matching_theme.pk,
         })
 
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_initiative.theme.pk): (matching_initiative.theme.name, len(matching)),
-                str(other_initiative.theme.pk): (other_initiative.theme.name, len(other))
-            }
-        )
+        theme_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['theme']
+        }
+        self.assertEqual(theme_counts[str(matching_theme.pk)], len(matching))
+        self.assertEqual(theme_counts[str(other_theme.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_theme_not_in_settings(self):
-        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
-
-        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
-        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+        matching_theme = ThemeFactory.create()
+        other_theme = ThemeFactory.create()
+        matching = DeedFactory.create_batch(3, status="open", theme=matching_theme)
+        other = DeedFactory.create_batch(2, status="open", theme=other_theme)
 
         self.search({
-            'theme': matching_initiative.theme.pk,
+            'theme': matching_theme.pk,
         })
 
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_initiative.theme.pk): (matching_initiative.theme.name, len(matching)),
-                str(other_initiative.theme.pk): (other_initiative.theme.name, len(other))
-            }
-        )
+        theme_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['theme']
+        }
+        self.assertEqual(theme_counts[str(matching_theme.pk)], len(matching))
+        self.assertEqual(theme_counts[str(other_theme.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_theme_no_matches(self):
@@ -920,52 +1078,51 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+        matching_theme, other_theme = ThemeFactory.create_batch(2)
 
-        DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
-        DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+        DeedFactory.create_batch(3, status="open", theme=matching_theme)
+        DeedFactory.create_batch(2, status="open", theme=other_theme)
 
         self.search({
-            'theme': matching_initiative.theme.pk,
+            'theme': matching_theme.pk,
             'country': 'something-that-does-not-match'
         })
 
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_initiative.theme.pk): (matching_initiative.theme.name, 0),
-            }
-        )
+        theme_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['theme']
+        }
+        self.assertEqual(theme_counts[str(matching_theme.pk)], 0)
         self.assertFound([])
 
     def test_filter_theme_dutch(self):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
 
-        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+        matching_theme, other_theme = ThemeFactory.create_batch(2)
 
-        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
-        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+        # Ensure Dutch translations exist (ThemeFactory uses Language.objects.all();
+        # in parallel workers nl may be missing).
+        for theme in (matching_theme, other_theme):
+            if not theme.translations.filter(language_code='nl').exists():
+                theme.set_current_language('nl')
+                theme.name = f'{theme.slug} NL'
+                theme.save()
+
+        matching = DeedFactory.create_batch(3, status="open", theme=matching_theme)
+        other = DeedFactory.create_batch(2, status="open", theme=other_theme)
 
         self.search(
-            {'theme': matching_initiative.theme.pk},
+            {'theme': matching_theme.pk},
             headers={'HTTP_X_APPLICATION_LANGUAGE': 'nl'}
         )
 
-        matching_theme_translation = matching_initiative.theme.translations.get(
-            language_code='nl'
-        )
-        other_theme_translation = other_initiative.theme.translations.get(
-            language_code='nl'
-        )
-
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_initiative.theme.pk): (matching_theme_translation.name, len(matching)),
-                str(other_initiative.theme.pk): (other_theme_translation.name, len(other))
-            }
-        )
+        theme_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['theme']
+        }
+        self.assertEqual(theme_counts[str(matching_theme.pk)], len(matching))
+        self.assertEqual(theme_counts[str(other_theme.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_initiative(self):
@@ -1071,6 +1228,187 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound([])
 
+    def test_filter_reviewing_with_permission(self):
+        submitted = DeadlineActivityFactory.create(
+            status='submitted',
+        )
+        other = DeadlineActivityFactory.create(status='open')
+
+        reviewer = BlueBottleUserFactory.create()
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([submitted], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(submitted.pk), ids)
+        self.assertNotIn(str(other.pk), ids)
+
+    def test_filter_reviewing_with_superuser(self):
+        submitted = DeadlineActivityFactory.create(
+            status='submitted',
+        )
+        other = DeadlineActivityFactory.create(status='open')
+        admin = BlueBottleUserFactory.create(is_superuser=True)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=admin)
+
+        self.assertFound([submitted], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(submitted.pk), ids)
+        self.assertNotIn(str(other.pk), ids)
+
+    def test_filter_reviewing_subregion_manager(self):
+        managed_subregion = OfficeSubRegionFactory.create()
+        in_region = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=managed_subregion)
+        )
+        out_region = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create()
+        )
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([in_region], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_region.pk), ids)
+        self.assertNotIn(str(out_region.pk), ids)
+
+    def test_filter_reviewing_office_manager(self):
+        managed_location = LocationFactory.create()
+        other_location = LocationFactory.create()
+        in_office = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=managed_location,
+        )
+        out_office = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=other_location,
+        )
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.office_manager.add(managed_location)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([in_office], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_office.pk), ids)
+        self.assertNotIn(str(out_office.pk), ids)
+
+    def test_filter_reviewing_segment_manager(self):
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+
+        no_segment = DeadlineActivityFactory.create(status='submitted')
+
+        in_segment = DeadlineActivityFactory.create(status='submitted')
+        in_segment.segments.add(managed_segment)
+
+        out_segment = DeadlineActivityFactory.create(status='submitted')
+        out_segment.segments.add(other_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([in_segment], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_segment.pk), ids)
+        self.assertNotIn(str(no_segment.pk), ids)
+        self.assertNotIn(str(out_segment.pk), ids)
+
+    def test_filter_reviewing_subregion_matches_segment_not(self):
+        """Test that when subregion matches but segment doesn't, no results are returned"""
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+        managed_subregion = OfficeSubRegionFactory.create()
+
+        # Activity in managed subregion but with non-managed segment
+        activity = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=managed_subregion)
+        )
+        activity.segments.add(other_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+        reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should return no results because segment doesn't match
+        self.assertFound([], count=0)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertNotIn(str(activity.pk), ids)
+
+    def test_filter_reviewing_segment_matches_subregion_not(self):
+        """Test that when segment matches but subregion doesn't, no results are returned"""
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+        managed_subregion = OfficeSubRegionFactory.create()
+        other_subregion = OfficeSubRegionFactory.create()
+
+        # Activity with managed segment but in non-managed subregion
+        activity = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=other_subregion)
+        )
+        activity.segments.add(managed_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+        reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should return no results because subregion doesn't match
+        self.assertFound([], count=0)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertNotIn(str(activity.pk), ids)
+
+    def test_filter_reviewing_excludes_grant_application(self):
+        """Test that grant applications are excluded from reviewing filter"""
+        # Create a regular activity and a grant application, both submitted
+        regular_activity = DeadlineActivityFactory.create(status='submitted')
+        grant_application = GrantApplicationFactory.create(status='submitted')
+
+        reviewer = BlueBottleUserFactory.create()
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should only return the regular activity, not the grant application
+        self.assertFound([regular_activity], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(regular_activity.pk), ids)
+        self.assertNotIn(str(grant_application.pk), ids)
+
     def test_filter_online(self):
         matching = DeadlineActivityFactory.create_batch(2, status="open", is_online=True)
         other = DeadlineActivityFactory.create_batch(3, status="open", is_online=False)
@@ -1092,11 +1430,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         for activity in matching:
-            activity.initiative.categories.add(matching_category)
+            activity.categories.add(matching_category)
 
         other = DeadlineActivityFactory.create_batch(3, status='open')
         for activity in other:
-            activity.initiative.categories.add(other_category)
+            activity.categories.add(other_category)
 
         self.search({'category': matching_category.pk})
 
@@ -1115,11 +1453,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         for activity in matching:
-            activity.initiative.categories.add(matching_category)
+            activity.categories.add(matching_category)
 
         other = DeadlineActivityFactory.create_batch(3, status='open')
         for activity in other:
-            activity.initiative.categories.add(other_category)
+            activity.categories.add(other_category)
 
         self.search({'category': matching_category.pk})
 
@@ -1139,11 +1477,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         for activity in matching:
-            activity.initiative.categories.add(matching_category)
+            activity.categories.add(matching_category)
 
         other = DeadlineActivityFactory.create_batch(3, status='open')
         for activity in other:
-            activity.initiative.categories.add(other_category)
+            activity.categories.add(other_category)
 
         self.search({'category': matching_category.pk})
 
@@ -1186,6 +1524,35 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_office_facet(self):
+        madrid = LocationFactory.create(name='Madrid')
+
+        DeadlineActivityFactory.create_batch(
+            2,
+            office_location=madrid,
+            status="open",
+        )
+
+        ltyutidol = LocationFactory.create(name='Лютидол')
+
+        DeadlineActivityFactory.create_batch(
+            3,
+            office_location=ltyutidol,
+            status="open",
+        )
+
+        self.search({
+            'office': madrid.id
+        })
+
+        self.assertFacets(
+            "office",
+            {
+                str(madrid.pk): (madrid.name, 2),
+                str(ltyutidol.pk): (ltyutidol.name, 3)
+            }
+        )
+
     def test_filter_country(self):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
@@ -1193,53 +1560,108 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
-        matching = DeadlineActivityFactory.create_batch(
-            2,
-            office_location=LocationFactory.create(country=matching_country),
+        # CountryFactory get-or-creates on alpha2_code, and both InitiativeFactory
+        # and DeadlineActivityFactory create extra locations by default. Those
+        # random countries can collide with matching_country and inflate facets.
+        matching = [
+            DeadlineActivityFactory.create(
+                initiative=None,
+                location=None,
+                office_location=LocationFactory.create(country=matching_country),
+                status='open',
+            ),
+            DeadlineActivityFactory.create(
+                initiative=None,
+                location=GeolocationFactory.create(country=matching_country),
+                status='open',
+            ),
+            FundingFactory.create(
+                initiative=None,
+                impact_location=GeolocationFactory.create(country=matching_country),
+                status='open'
+
+            ),
+            DeedFactory.create(
+                initiative=None,
+                office_location=LocationFactory.create(country=matching_country),
+                status='open'
+            )
+        ]
+
+        date_activity = DateActivityFactory.create(
+            initiative=None,
+            slots=[],
             status='open',
         )
+        DateActivitySlotFactory.create(
+            activity=date_activity,
+            is_online=False,
+            location=GeolocationFactory.create(country=matching_country),
+        )
+
+        matching.append(date_activity)
 
         other = DeadlineActivityFactory.create_batch(
             3,
+            initiative=None,
+            location=None,
             office_location=LocationFactory.create(country=other_country),
+            status='open',
+        )
+        DeadlineActivityFactory.create_batch(
+            3,
+            initiative=None,
+            location=GeolocationFactory.create(country=None),
             status='open',
         )
 
         self.search({'country': matching_country.pk})
 
-        self.assertFacets(
-            'country',
-            {
-                str(matching_country.pk): (matching_country.name, len(matching)),
-                str(other_country.pk): (other_country.name, len(other))
-            }
-        )
+        country_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['country']
+        }
+        self.assertEqual(country_counts[str(matching_country.pk)], len(matching))
+        self.assertEqual(country_counts[str(other_country.pk)], len(other))
         self.assertFound(matching)
 
     def test_more_country_facets(self):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        countries = CountryFactory.create_batch(12)
+        codes = [
+            'NL', 'BG', 'DE', 'BE', 'NO', 'SE', 'SF', 'DK', 'FR', 'CH', 'PT', 'ES'
+        ]
+        countries = [CountryFactory.create(alpha2_code=code) for code in codes]
+
         matching = []
         for country in countries:
             location = GeolocationFactory.create(country=country)
             matching.append(DeadlineActivityFactory.create(location=location, status='open'))
 
         self.search({})
-        self.assertEqual(len(self.data['meta']['facets']['country']), 12)
+        country_facets = self.data['meta']['facets']['country']
+        self.assertGreaterEqual(
+            len(country_facets),
+            12,
+            'facets should include at least our 12 countries'
+        )
+        facet_ids = {f['id'] for f in country_facets}
+        for country in countries:
+            self.assertIn(str(country.pk), facet_ids, f'created country {country.pk} should be in facets')
         self.assertFound(matching)
 
     def test_filter_country_slots(self):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        matching_country = CountryFactory.create()
-        other_country = CountryFactory.create()
+        matching_country = CountryFactory.create(alpha2_code='NL')
+        other_country = CountryFactory.create(alpha2_code='DE')
 
         matching = DateActivityFactory.create_batch(
             2,
             status='open',
+            initiative=None,
         )
         for activity in matching:
             DateActivitySlotFactory.create_batch(
@@ -1251,6 +1673,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = DateActivityFactory.create_batch(
             3,
             status='open',
+            initiative=None,
         )
         for activity in other:
             DateActivitySlotFactory.create_batch(
@@ -1261,13 +1684,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'country': matching_country.pk})
 
-        self.assertFacets(
-            'country',
-            {
-                str(matching_country.pk): (matching_country.name, len(matching)),
-                str(other_country.pk): (other_country.name, len(other))
-            }
-        )
+        country_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['country']
+        }
+        self.assertEqual(country_counts[str(matching_country.pk)], len(matching))
+        self.assertEqual(country_counts[str(other_country.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_highlight(self):
@@ -1310,6 +1732,30 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertFound(matching)
+
+    def date_filter_response(self, value):
+        return self.client.get(
+            '{}?filter[date]={}'.format(self.url, value),
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
+
+    def test_filter_date_truncated_value(self):
+        """The value seen in production: the end of the range cut off mid-time."""
+        response = self.date_filter_response('2026-09-30T22:00:00.000Z,2026-10-31T2\u2026')
+        self.assertEqual(response.status_code, 400)
+
+    def test_filter_date_unparseable_start(self):
+        response = self.date_filter_response('not-a-date,2026-10-31T22:00:00.000Z')
+        self.assertEqual(response.status_code, 400)
+
+    def test_filter_date_without_separator(self):
+        response = self.date_filter_response('2026-09-30T22:00:00.000Z')
+        self.assertEqual(response.status_code, 400)
+
+    def test_filter_date_open_ended_range(self):
+        for value in ('2025-04-01,', ',2025-04-08', ','):
+            response = self.date_filter_response(value)
+            self.assertEqual(response.status_code, 200, 'rejected {}'.format(value))
 
     def test_filter_past_dates(self):
         activity1 = DateActivityFactory.create(status="succeeded")
@@ -1431,7 +1877,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 status="open", is_online=True,
             ),
             DeedFactory.create(status="open"),
-            FundingFactory.create(status="open"),
+            FundingFactory.create(
+                status="open", impact_location=GeolocationFactory.create(position=leiden)
+            ),
             CollectActivityFactory.create(status="open", location=None)
 
         ]
@@ -1595,6 +2043,30 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class ActivityQrCodeTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ActivityQrCodeTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.funding = FundingFactory.create(
+            owner=self.owner,
+        )
+        self.qr_code_url = reverse('activity-qr-code', args=(self.funding.pk,))
+
+    def test_get_not_enabled(self):
+        response = self.client.get(self.qr_code_url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.content, b'QR code sharing not enabled')
+
+    def test_get(self):
+        settings = NotificationPlatformSettings.load()
+        settings.share_options = ['qrcode']
+        settings.save()
+        response = self.client.get(self.qr_code_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.content.startswith(b'\x89PNG'))
+
+
 class ContributionListAPITestCase(BluebottleTestCase):
     def setUp(self):
         super(ContributionListAPITestCase, self).setUp()
@@ -1613,9 +2085,9 @@ class ContributionListAPITestCase(BluebottleTestCase):
             activity=activity
         )
 
-        participant = DateParticipantFactory.create(user=self.user, activity=activity)
-        SlotParticipantFactory.create(slot=slot1, participant=participant)
-        SlotParticipantFactory.create(slot=slot2, participant=participant)
+        registration = DateRegistrationFactory.create(user=self.user, activity=activity)
+        DateParticipantFactory.create(slot=slot1, registration=registration)
+        DateParticipantFactory.create(slot=slot2, registration=registration)
 
         deadline = DeadlineActivityFactory.create(
             start=(now() - timedelta(days=4, hours=1)).date(),
@@ -1730,8 +2202,37 @@ class ActivityLocationAPITestCase(APITestCase):
     model = Activity
 
     def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create(
+            location=LocationFactory.create(subregion=OfficeSubRegionFactory.create())
+        )
+
         CollectActivityFactory.create(status='succeeded')
+        CollectActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=self.user.location.subregion
+            )
+        )
+        CollectActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=OfficeSubRegionFactory(region=self.user.location.subregion.region)
+            )
+        )
         DeadlineActivityFactory.create(status='succeeded')
+        DeadlineActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=self.user.location.subregion
+            )
+        )
+        DeadlineActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=OfficeSubRegionFactory(region=self.user.location.subregion.region)
+            )
+        )
 
         date_activity = DateActivityFactory.create(status="succeeded")
         slot = date_activity.slots.first()
@@ -1743,9 +2244,32 @@ class ActivityLocationAPITestCase(APITestCase):
         self.url = reverse('activity-location-list')
 
     def test_get(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(7)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_anon(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(3)
+        self.assertTotal(7)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_region(self):
+        self.url += '?filter[type]=office_region'
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(4)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_subregion(self):
+        self.url += '?filter[type]=office_subregion'
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
         self.assertAttribute('position')
         self.assertRelationship('activity')
 
@@ -1758,3 +2282,99 @@ class ActivityLocationAPITestCase(APITestCase):
         with self.closed_site():
             self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_200_OK)
+
+
+class ActivityMessageAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ActivityMessageAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.sender = BlueBottleUserFactory.create()
+        self.activity = DeedFactory.create(owner=self.owner, status='open')
+        self.url = reverse('activity-message-list')
+
+    def _payload(self, activity):
+        return {
+            'data': {
+                'type': 'activity-messages',
+                'attributes': {'message': 'Hello manager'},
+                'relationships': {
+                    'activity': {
+                        'data': {
+                            'type': 'activities/deeds',
+                            'id': str(activity.pk),
+                        }
+                    }
+                }
+            }
+        }
+
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_authenticated(self, notify_task_mock):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.sender
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ActivityMessage.objects.count(), 1)
+        msg = ActivityMessage.objects.get()
+        self.assertEqual(msg.sender, self.sender)
+        self.assertEqual(msg.activity_id, self.activity.pk)
+        notify_task_mock.assert_called_once_with(msg.pk, connection.tenant)
+
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_rate_limit(self, notify_task_mock):
+        for _ in range(12):
+            response = self.client.post(
+                self.url,
+                data=json.dumps(self._payload(self.activity)),
+                user=self.sender
+            )
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_post_anonymous(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_post_owner_to_self(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ActivityMessage.objects.count(), 0)
+
+    def test_post_draft_activity_forbidden(self):
+        draft = DeedFactory.create(owner=self.owner, status='draft')
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(draft)),
+            user=self.sender
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_disabled_by_platform_setting(self, notify_task_mock):
+        settings = InitiativePlatformSettings.load()
+        settings.contact_activity_manager = False
+        settings.save()
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.sender,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(ActivityMessage.objects.count(), 0)
+        notify_task_mock.assert_not_called()

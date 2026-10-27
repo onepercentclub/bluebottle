@@ -1,11 +1,12 @@
 from __future__ import absolute_import
-from builtins import str
+
 from builtins import object
+from builtins import str
+
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
-
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -25,8 +26,14 @@ class Organization(ValidatedModelMixin, models.Model):
     created = models.DateTimeField(_('created'), auto_now_add=True)
     updated = models.DateTimeField(_('updated'), auto_now=True)
 
+    verified = models.BooleanField(_('Verified'), default=False)
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
+    )
+
+    origin = models.ForeignKey(
+        'activity_pub.Organization', null=True, related_name="organizations", on_delete=models.SET_NULL
     )
 
     website = models.URLField(_('website'), blank=True)
@@ -49,17 +56,28 @@ class Organization(ValidatedModelMixin, models.Model):
     required_fields = ['name']
 
     def __str__(self):
-        return self.name
+        if self.verified:
+            return f'{self.name} (verified)'
+        else:
+            return self.name
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
 
         super(Organization, self).save(*args, **kwargs)
 
+    @property
+    def activity_pub_url(self):
+        from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+        try:
+            return self.activity_pub_organization.iri
+        except ActivityPubOrganization.DoesNotExist:
+            return None
+
     class Meta(object):
         ordering = ['name']
-        verbose_name = _("partner organization")
-        verbose_name_plural = _("partner organizations")
+        verbose_name = _("organisation")
+        verbose_name_plural = _("organisations")
 
     class JSONAPIMeta:
         resource_name = 'organizations'

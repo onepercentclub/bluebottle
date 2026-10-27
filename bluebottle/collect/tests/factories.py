@@ -3,12 +3,15 @@ from builtins import object
 import factory.fuzzy
 from pytz import UTC
 
+from bluebottle.test.factory_models import generate_rich_text
+
 from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.utils.models import Language
 
 
@@ -22,7 +25,7 @@ class CollectTypeFactory(factory.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs):
         obj = super(CollectTypeFactory, cls)._create(model_class, *args, **kwargs)
         for language in Language.objects.all():
-            obj.set_current_language(language.code)
+            obj.set_current_language(language.full_code)
             obj.name = "Name {} {}".format(language.code, obj.id)
         obj.save()
         return obj
@@ -37,14 +40,15 @@ class CollectActivityFactory(factory.DjangoModelFactory):
 
     title = factory.Faker('sentence')
     slug = factory.Faker('slug')
-    description = factory.Faker('text')
+    description = factory.LazyFunction(generate_rich_text)
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
     collect_type = factory.SubFactory(CollectTypeFactory)
-    location = factory.SubFactory(GeolocationFactory)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
     start = factory.Faker('future_date', end_date="+20d", tzinfo=UTC)
     end = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
+    theme = factory.SubFactory(ThemeFactory)
 
 
 class CollectContributorFactory(FSMModelFactory):

@@ -4,6 +4,7 @@ from builtins import object
 from django.db.models import Q
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodResourceRelatedField, HyperlinkedRelatedField
@@ -11,7 +12,7 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivityListSerializer
+from bluebottle.activities.serializers.serializers import ActivityListSerializer
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.activities.utils import get_stats_for_activities
 from bluebottle.bluebottle_drf2.serializers import (
@@ -21,7 +22,7 @@ from bluebottle.categories.models import Category
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import (
-    AvailableTransitionsField, TransitionSerializer, CurrentStatusField
+    AvailableTransitionsField, CurrentStatusField, TransitionSerializer
 )
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding_stripe.models import StripePayoutAccount
@@ -29,13 +30,15 @@ from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
     InitiativeSearchFilter
+from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import (
-    SafeField,
+    RichTextField,
     ValidationErrorsField,
     RequiredErrorsField,
     FSMField
@@ -47,7 +50,6 @@ from bluebottle.utils.utils import get_current_language
 
 
 class ThemeSerializer(ModelSerializer):
-
     class Meta(object):
         model = Theme
         fields = ('id', 'slug', 'name', 'description')
@@ -89,7 +91,8 @@ class MemberSerializer(ModelSerializer):
         fields = (
             'id', 'first_name', 'last_name', 'initials',
             'full_name', 'short_name', 'is_active', 'date_joined',
-            'about_me', 'is_co_financer', 'is_anonymous', 'avatar'
+            'about_me', 'is_co_financer', 'is_anonymous', 'avatar',
+            'is_staff'
         )
 
     class JSONAPIMeta(object):
@@ -108,13 +111,15 @@ class MemberSerializer(ModelSerializer):
         representation = super().to_representation(instance)
 
         if (
-            self.context.get('display_member_names') == 'first_name' and
+            self.context.get('display_member_names') in ['first_name', 'first_name_strict'] and
             instance not in self.context.get('owners', []) and
             not user.is_staff and
             not user.is_superuser
         ):
-            del representation['last_name']
-            representation['full_name'] = representation['first_name']
+            representation['last_name'] = None
+            first_name = representation.get('first_name') or ''
+            representation['initials'] = first_name[:1]
+            representation['full_name'] = representation.get('first_name')
 
         return representation
 
@@ -126,7 +131,7 @@ class ProfileLinkField(HyperlinkedRelatedField):
         super().__init__(*args, source='*', read_only=True, **kwargs)
 
     def get_url(self, rel, link_view_name, self_kwargs, request):
-        return reverse(self.related_link_view_name, args=(self_kwargs['pk'], ))
+        return reverse(self.related_link_view_name, args=(self_kwargs['pk'],))
 
 
 class CurrentMemberSerializer(MemberSerializer):
@@ -136,6 +141,7 @@ class CurrentMemberSerializer(MemberSerializer):
     )
     segments = ResourceRelatedField(many=True, read_only=True)
     has_initiatives = serializers.SerializerMethodField()
+    has_votes = serializers.SerializerMethodField()
     can_pledge = serializers.BooleanField(read_only=True)
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
 
@@ -151,19 +157,24 @@ class CurrentMemberSerializer(MemberSerializer):
     def get_has_initiatives(self, obj):
         return obj.is_initiator
 
+    def get_has_votes(self, obj):
+        return obj.poll_votes.exists()
+
     class Meta(MemberSerializer.Meta):
         fields = MemberSerializer.Meta.fields + (
             "hours_spent",
             "hours_planned",
             "has_initiatives",
+            "has_votes",
             "segments",
-            "has_initiatives",
             "profile",
             "can_pledge",
             "can_do_bank_transfer",
             "payout_account",
+            "primary_language",
+            "translate_user_content"
         )
-        meta_fields = ('permissions', )
+        meta_fields = ('permissions',)
 
     class JSONAPIMeta:
         resource_name = 'members'
@@ -222,12 +233,22 @@ class InitiativePreviewSerializer(ModelSerializer):
     image = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()
     activity_count = serializers.SerializerMethodField()
-    current_status = CurrentStatusField(source='states.current_state')
+    current_status = serializers.SerializerMethodField()
+    translations = TranslationsSerializer(fields=['title', 'pitch'])
+
+    def get_current_status(self, obj):
+        state = getattr(ReviewStateMachine, obj.current_status.value)
+
+        return {
+            'value': state.value,
+            'name': state.name,
+            'description': state.description
+        }
 
     def get_image(self, obj):
         if obj.image:
             hash = hashlib.md5(obj.image.file.encode('utf-8')).hexdigest()
-            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'],))
 
             return f'{url}?_={hash}'
 
@@ -251,9 +272,9 @@ class InitiativePreviewSerializer(ModelSerializer):
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count'
+            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count', 'translations'
         )
-        meta_fields = ('current_status',)
+        meta_fields = ('current_status', 'translations')
 
     class JSONAPIMeta(object):
         resource_name = 'initiatives/preview'
@@ -276,6 +297,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     reviewer = ResourceRelatedField(read_only=True)
     promoter = ResourceRelatedField(read_only=True)
     current_status = CurrentStatusField(source='states.current_state')
+    translations = TranslationsSerializer(
+        fields=['title', 'pitch', 'story']
+    )
 
     activities = ActivitiesField()
 
@@ -286,7 +310,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         read_only=True
     )
     slug = serializers.CharField(read_only=True)
-    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    story = RichTextField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
 
     errors = ValidationErrorsField()
@@ -294,6 +318,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     stats = serializers.SerializerMethodField()
     transitions = AvailableTransitionsField(source='states')
+    admin_url = serializers.SerializerMethodField()
 
     is_open = serializers.ReadOnlyField()
 
@@ -330,15 +355,19 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         return activities
 
     def get_segments(self, instance):
-        segments = []
-        for activity in self.get_activities(instance):
-            for segment in activity.segments.all():
-                if segment not in segments:
-                    segments.append(segment)
-        return segments
+        activities = self.get_activities(instance)
+        return Segment.objects.filter(activities__in=activities).distinct()
 
     def get_stats(self, obj):
-        return get_stats_for_activities(obj.activities)
+        return get_stats_for_activities(self.get_activities(obj))
+
+    def get_admin_url(self, obj):
+        user = get_current_user()
+        if user and user.is_authenticated and (user.is_staff or user.is_superuser):
+            return reverse(
+                'admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name),
+                args=[obj.pk]
+            )
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -374,11 +403,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'activities', 'segments',
             'errors', 'required', 'stats', 'is_open', 'status', 'is_global',
+            'translations', 'admin_url'
         )
 
         meta_fields = (
             'permissions', 'transitions', 'status', 'created', 'required',
-            'errors', 'stats', 'current_status'
+            'errors', 'stats', 'current_status', 'translations', 'admin_url'
         )
 
     class JSONAPIMeta(object):
@@ -402,7 +432,7 @@ class InitiativeListSerializer(ModelSerializer):
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     activity_managers = ResourceRelatedField(read_only=True, many=True)
     slug = serializers.CharField(read_only=True)
-    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    story = RichTextField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
@@ -457,7 +487,7 @@ class RelatedInitiativeImageSerializer(ModelSerializer):
 
     class Meta(object):
         model = RelatedImage
-        fields = ('image', 'resource', )
+        fields = ('image', 'resource',)
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -481,7 +511,7 @@ class OrganizationSubmitSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Organization
-        fields = ('name', )
+        fields = ('name',)
 
 
 class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
@@ -496,7 +526,7 @@ class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = OrganizationContact
-        fields = ('name', 'email', 'phone', )
+        fields = ('name', 'email', 'phone',)
 
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
@@ -512,14 +542,12 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class ActivitySearchFilterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ActivitySearchFilter
         fields = ['type', 'name', 'highlight', 'placeholder']
 
 
 class InitiativeSearchFilterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = InitiativeSearchFilter
         fields = ['type', 'name', 'highlight', 'placeholder']
@@ -542,6 +570,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'activity_search_filters',
+            'contact_activity_manager',
             'search_filters_activities',
             'search_filters_initiatives',
             'include_full_activities',
@@ -551,12 +580,18 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_impact',
             'enable_office_regions',
             'enable_office_restrictions',
+            'available_office_restrictions',
             'default_office_restriction',
+            "allow_disable_office_filter",
             'enable_multiple_dates',
             'enable_participant_exports',
             'enable_open_initiatives',
             'has_locations',
-            'enable_matching_emails'
+            'enable_matching_emails',
+            'terms_of_service',
+            'restrict_updates',
+            'hour_registration',
+            'hour_registration_data',
         )
 
 

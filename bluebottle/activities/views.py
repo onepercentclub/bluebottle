@@ -1,18 +1,24 @@
+import io
+
+import qrcode
+from PIL import Image, UnidentifiedImageError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.db.models import Q, F
+from django.db.models import F, Q
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
 from rest_framework_json_api.views import AutoPrefetchMixin
-from django.core.validators import validate_email
-from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contributor, Invite, Contribution
+from bluebottle.activities.models import (
+    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer,
+    FileUploadAnswer, ActivityMessage,
+)
 from bluebottle.activities.permissions import ActivityOwnerPermission
-from bluebottle.activities.serializers import (
+from bluebottle.activities.serializers.serializers import (
     ActivityLocation,
     ActivityLocationSerializer,
     ActivitySerializer,
@@ -20,19 +26,30 @@ from bluebottle.activities.serializers import (
     RelatedActivityImageSerializer,
     RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
-    ActivityImageSerializer, ContributionSerializer, )
+    ActivityImageSerializer,
+    ContributionSerializer,
+    ActivityQuestionSerializer,
+    FileUploadAnswerDocumentSerializer,
+    ActivityAnswerSerializer,
+    ActivityMessageSerializer,
+)
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.members.models import MemberPlatformSettings, Member
+from bluebottle.initiatives.permissions import ContactActivityManagerPermission
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.notifications.models import NotificationPlatformSettings
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView, JsonApiElasticSearchPagination, JsonApiPagination
+    CreateAPIView, RetrieveAPIView, JsonApiElasticSearchPagination, JsonApiPagination,
+    PrivateFileView
 )
 
 
@@ -47,9 +64,29 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        params = self.request.query_params
-        if 'office_location__subregion' in params:
-            queryset = queryset.filter(office_location__subregion__id=params['office_location__subregion'])
+
+        if self.request.user:
+            type_filter = self.request.query_params.get('filter[type]')
+            if (
+                type_filter == 'office_subregion' and
+                self.request.user.location and
+                self.request.user.location.subregion
+
+            ):
+                subregion = self.request.user.location.subregion
+                queryset = queryset.filter(
+                    office_location__subregion=subregion
+                )
+            elif (
+                type_filter == 'office_region' and
+                self.request.user.location and
+                self.request.user.location.subregion and
+                self.request.user.location.subregion.region
+            ):
+                region = self.request.user.location.subregion.region
+                queryset = queryset.filter(
+                    office_location__subregion__region=region
+                )
 
         queryset = queryset.filter(status__in=("succeeded", "open", "full", "running"))
 
@@ -139,11 +176,10 @@ class ActivityPreviewList(JsonApiViewMixin, ListAPIView):
     )
 
 
-class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):
+class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
     model = Activity
-    lookup_field = 'pk'
 
     permission_classes = (
         OneOf(ResourcePermission, ActivityOwnerPermission),
@@ -155,6 +191,58 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
         'owner': ['owner'],
         'contributors': ['contributors']
     }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            raise PermissionError()
+        return queryset.filter(
+            Q(owner=user) |
+            Q(initiative__owner=user) |
+            Q(initiative__activity_managers=user)
+        )
+
+
+class ActivityDetailView(
+    JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView
+):
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+    lookup_field = 'pk'
+
+    @property
+    def model(self):
+        return self.queryset.model
+
+    permission_classes = (
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.select_related(
+            'owner',
+            'initiative',
+            'theme',
+            'organization',
+            'host_organization',
+            'office_location',
+            'initiative__owner',
+            'initiative__reviewer',
+            'initiative__promoter',
+            'initiative__theme',
+            'initiative__place',
+            'initiative__location',
+            'initiative__image',
+            'initiative__organization',
+            'initiative__organization_contact',
+        ).prefetch_related(
+            'categories',
+            'initiative__categories',
+            'initiative__activity_managers',
+        )
+        return qs
 
 
 class ContributionPagination(JsonApiPagination):
@@ -186,25 +274,16 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         if upcoming:
             queryset = queryset.filter(
                 Q(start__gte=now())
-                | Q(contributor__deadlineparticipant__status__in=['new'])
-                | Q(contributor__teamscheduleparticipant__slot__status__in=['new'])
-                | Q(contributor__scheduleparticipant__slot__status__in=['new'])
-                | Q(contributor__periodicparticipant__status='new')
-                | Q(contributor__periodicparticipant__slot__status__in=['new', 'running'])
+                | Q(contributor__status__in=['new', 'accepted'])
+                | Q(contributor__participant__slot__status__in=['new', 'running'])
             ).order_by("start")
         else:
             queryset = queryset.filter(
                 start__lte=now(),
             ).exclude(
-                contributor__scheduleparticipant__slot__status__in=['new']
+                contributor__participant__slot__status__in=['new', 'running']
             ).exclude(
-                contributor__deadlineparticipant__status__in=['new']
-            ).exclude(
-                contributor__teamscheduleparticipant__slot__status__in=['new']
-            ).exclude(
-                contributor__periodicparticipant__status='new'
-            ).exclude(
-                contributor__periodicparticipant__slot__status__in=['new', 'running']
+                contributor__status__in=['new', 'accepted']
             ).order_by("-start")
 
         return queryset
@@ -215,52 +294,63 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
     permission_classes = (IsAuthenticated,)
 
 
-class ParticipantCreateMixin:
-
-    def perform_create(self, serializer):
-        email = serializer.validated_data.pop('email', None)
-        send_messages = serializer.validated_data.pop('send_messages', True)
-        if email:
-            user = Member.objects.filter(email__iexact=email).first()
-            if not user:
-                try:
-                    validate_email(email)
-                except Exception:
-                    raise ValidationError(_('Not a valid email address'), code="invalid")
-                member_settings = MemberPlatformSettings.load()
-                if member_settings.closed:
-                    try:
-                        user = Member.create_by_email(email.strip())
-                    except Exception:
-                        raise ValidationError(_('Not a valid email address'), code="invalid")
-                else:
-                    raise ValidationError(_('User with email address not found'), code="not_found")
-        else:
-            user = self.request.user
-
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        if not email:
-            if self.request.user.required:
-                raise ValidationError('Required fields', code="required")
-
-        if self.queryset.filter(user=user, activity=serializer.validated_data['activity']).exists():
-            raise ValidationError(_('Already participating'), code="exists")
-
-        serializer.save(user=user, send_messages=send_messages)
-
-
 class ActivityImage(ImageContentView):
     queryset = Activity.objects
     field = 'image'
     allowed_sizes = ActivityImageSerializer.sizes
+
+
+class ActivityQrCode(RetrieveAPIView):
+
+    queryset = Activity.objects
+
+    def get(self, request, *args, **kwargs):
+        notification_settings = NotificationPlatformSettings.load()
+        if 'qrcode' not in notification_settings.share_options:
+            return HttpResponseBadRequest('QR code sharing not enabled')
+        activity = self.get_object()
+        data = activity.get_absolute_url() + "?utm_source=qr_code"
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+
+        try:
+            settings = SitePlatformSettings.load()
+            favicon = settings.favicon
+            if favicon:
+                try:
+                    logo = Image.open(favicon.path)
+                    qr_width, qr_height = img.size
+                    logo_size = qr_width // 5
+                    logo.thumbnail((logo_size, logo_size), Image.LANCZOS)
+
+                    # Create a white background and paste the logo onto it
+                    if logo.mode in ("RGBA", "LA"):
+                        white_bg = Image.new("RGB", logo.size, (255, 255, 255))
+                        white_bg.paste(logo, mask=logo.split()[-1])
+                        logo = white_bg
+
+                    xpos = (qr_width - logo.width) // 2
+                    ypos = (qr_height - logo.height) // 2
+
+                    img.paste(logo, (xpos, ypos))
+                except UnidentifiedImageError:
+                    pass
+        except FileNotFoundError:
+            pass
+
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        return HttpResponse(buffer, content_type="image/png")
 
 
 class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -320,10 +410,12 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
-        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+        context['display_member_names'] = MemberPlatformSettings.load().display_member_names
 
         activity = Activity.objects.get(pk=self.kwargs['activity_id'])
-        context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
+        context['owners'] = [activity.owner]
+        if activity.initiative:
+            context['owners'] += list(activity.initiative.activity_managers.all())
 
         if self.request.user and self.request.user.is_authenticated and (
                 self.request.user in context['owners'] or
@@ -364,3 +456,77 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
         )
+
+
+class ActivityQuestionList(JsonApiViewMixin, ListAPIView):
+    model = ActivityQuestion
+    serializer_class = ActivityQuestionSerializer
+
+    permission_classes = (
+        TenantConditionalOpenClose,
+    )
+
+    def get_queryset(self):
+        return ActivityQuestion.objects.filter(
+            activity_types__contains=self.kwargs['type']
+        )
+
+
+class ActivityAnswerList(JsonApiViewMixin, CreateAPIView):
+    queryset = ActivityAnswer.objects.all()
+    serializer_class = ActivityAnswerSerializer
+
+    permission_classes = (
+        TenantConditionalOpenClose,
+    )
+
+    related_permission_classes = {
+        'activity': [
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+        ]
+    }
+
+
+class ActivityMessageThrottle(UserRateThrottle):
+    def allow_request(self, request, view):
+        if request.user.is_superuser:
+            return True
+        return super().allow_request(request, view)
+
+
+class ActivityMessageList(JsonApiViewMixin, CreateAPIView):
+    queryset = ActivityMessage.objects.all()
+    serializer_class = ActivityMessageSerializer
+
+    permission_classes = (
+        IsAuthenticated,
+        ContactActivityManagerPermission
+    )
+    throttle_classes = [ActivityMessageThrottle]
+
+    def perform_create(self, serializer):
+        serializer.validated_data['sender'] = self.request.user
+        super().perform_create(serializer)
+
+
+class ActivityAnswerDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    queryset = ActivityAnswer.objects.all()
+    serializer_class = ActivityAnswerSerializer
+
+    permission_classes = (
+        TenantConditionalOpenClose,
+    )
+
+    related_permission_classes = {
+        'activity': [
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+        ]
+    }
+
+
+class FileUploadAnswerDocumentView(PrivateFileView):
+    max_age = 15 * 60  # 15 minutes
+    relation = 'file'
+    field = 'file'
+    queryset = FileUploadAnswer.objects
+    serializer_class = FileUploadAnswerDocumentSerializer

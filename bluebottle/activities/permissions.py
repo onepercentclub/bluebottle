@@ -1,6 +1,5 @@
 from rest_framework import permissions
 
-from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
@@ -8,45 +7,29 @@ from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermis
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
     def has_object_action_permission(self, action, user, obj):
-        try:
-            owner = obj.owner
-        except Activity.owner.RelatedObjectDoesNotExist:
-            owner = None
-
-        is_owner = user in [
-            owner,
-            obj.initiative.owner,
-        ] or user in obj.initiative.activity_managers.all()
+        is_owner = user in obj.owners
+        can_approve = user_can_review_activity(user, obj)
 
         if action == 'POST':
-            return is_owner or (obj.initiative.status == 'approved' and obj.initiative.is_open)
+            if is_owner:
+                return True
+            if obj.initiative:
+                if obj.initiative.status == 'approved' and obj.initiative.is_open:
+                    return True
+            elif not obj.id:
+                return True
         else:
-            return is_owner
+            return is_owner or can_approve
 
 
 class RelatedActivityOwnerPermission(ResourceOwnerPermission):
     def has_object_action_permission(self, action, user, obj):
-        activity = obj.activity
-        try:
-            owner = activity.owner
-        except Activity.owner.RelatedObjectDoesNotExist:
-            owner = None
-
-        is_owner = (
-            user
-            in [
-                owner,
-                activity.initiative.owner,
-            ]
-            or user in activity.initiative.activity_managers.all()
-        )
-
-        return is_owner
+        return user in obj.activity.owners
 
 
 class ActivityTypePermission(ResourcePermission):
     def has_permission(self, request, view):
-        (settings, _) = InitiativePlatformSettings.objects.get_or_create()
+        settings = InitiativePlatformSettings.load()
 
         if request.method == 'POST':
             activity_type = view.model.__name__.lower()
@@ -59,9 +42,11 @@ class ActivityTypePermission(ResourcePermission):
 
 class ActivityStatusPermission(ResourcePermission):
     def has_object_action_permission(self, action, user, obj):
+        can_review = user_can_review_activity(user, obj)
         if (
             action in ('PATCH', 'PUT') and
-            obj.status in ('rejected', 'deleted')
+            obj.status in ('rejected', 'deleted', 'submitted') and
+            not can_review
         ):
             return False
         else:
@@ -110,10 +95,7 @@ class ContributorPermission(ResourcePermission):
         if action in permissions.SAFE_METHODS:
             return user.has_perms(perms)
         else:
-            return user.has_perms(perms) and user in [
-                obj.activity.owner,
-                obj.activity.initiative.owner,
-            ] or user in obj.activity.initiative.activity_managers.all()
+            return user.has_perms(perms) and user in obj.activity.owners
 
 
 class ContributionPermission(ResourcePermission):
@@ -122,10 +104,16 @@ class ContributionPermission(ResourcePermission):
         return True
 
     def has_object_action_permission(self, action, user, obj):
-        return user in [
-            obj.contributor.activity.owner,
-            obj.contributor.activity.initiative.owner,
-        ] or user in obj.contributor.activity.initiative.activity_managers.all()
+        return user in obj.contributor.activity.owners
+
+
+class ActivityManagerPermission(ResourcePermission):
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+    def has_object_action_permission(self, action, user, obj):
+        return user in obj.activity.owners
 
 
 class IsAdminPermission(ResourcePermission):
@@ -155,10 +143,43 @@ class CanExportTeamParticipantsPermission(IsOwner):
     """ Allows access only to team owner or activity manager. """
     def has_object_action_permission(self, action, user, obj):
         return (
-            obj.owner == user or
-            obj.activity.owner == user or
-            user in obj.activity.initiative.activity_managers.all()
-        ) and InitiativePlatformSettings.load().enable_participant_exports
+            (user in obj.activity.owner or obj.owner == user) and
+            InitiativePlatformSettings.load().enable_participant_exports
+        )
 
     def has_action_permission(self, action, user, model_cls):
         return True
+
+
+def user_can_review_activity(user, activity):
+    if not user.has_perm('activities.api_review_activity'):
+        return False
+
+    has_subregions = user.subregion_manager.exists()
+    has_segments = user.segment_manager.exists()
+
+    if not has_subregions and not has_segments:
+        return True
+
+    if has_subregions:
+        office_location = getattr(activity, "office_location", None)
+        activity_subregion = getattr(office_location, "subregion", None) if office_location else None
+
+        if not activity_subregion:
+            return False
+
+        if user.subregion_manager.filter(id=activity_subregion.id).exists():
+            return True
+
+    if has_segments:
+        activity_segments = getattr(activity, "segments", None)
+
+        if not activity_segments:
+            return False
+
+        if activity_segments.filter(
+            id__in=user.segment_manager.values_list("id", flat=True)
+        ).exists():
+            return True
+
+    return False

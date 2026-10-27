@@ -32,11 +32,10 @@ class TimeBasedActivityStatesTestCase():
         self.assertEqual(
             self.activity.status, 'draft'
         )
-        if self.activity.states.submit:
-            self.assertTrue(
-                TimeBasedStateMachine.submit in
-                self.activity.states.possible_transitions()
-            )
+        self.assertTrue(
+            TimeBasedStateMachine.publish in
+            self.activity.states.possible_transitions()
+        )
 
         self.assertTrue(
             TimeBasedStateMachine.delete in
@@ -70,6 +69,11 @@ class TimeBasedActivityStatesTestCase():
         self.activity.states.reject()
         self.assertTrue(
             TimeBasedStateMachine.restore in
+            self.activity.states.possible_transitions()
+        )
+
+        self.assertFalse(
+            TimeBasedStateMachine.reject in
             self.activity.states.possible_transitions()
         )
 
@@ -150,6 +154,30 @@ class DateActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTest
             delta=timedelta(minutes=2)
         )
 
+    def test_initial_only_incomplete_slots(self):
+        slot = self.activity.slots.first()
+        slot.duration = None
+        slot.save()
+        DateActivitySlotFactory.create(
+            activity=self.activity,
+            duration=None
+        )
+
+        self.assertTrue(
+            DateStateMachine.publish not in
+            self.activity.states.possible_transitions()
+        )
+
+    def test_initial_one_complete_slot(self):
+        DateActivitySlotFactory.create(
+            activity=self.activity,
+            duration=timedelta(hours=2)
+        )
+        self.assertTrue(
+            DateStateMachine.publish in
+            self.activity.states.possible_transitions()
+        )
+
 
 class DateActivitySlotStatesTestCase(BluebottleTestCase):
     def setUp(self):
@@ -180,13 +208,13 @@ class DateActivitySlotStatesTestCase(BluebottleTestCase):
             self.slot.status, 'cancelled'
         )
         self.assertTrue(
-            DateActivitySlotStateMachine.reopen in
+            DateActivitySlotStateMachine.restore in
             self.slot.states.possible_transitions()
         )
 
     def test_reopen(self):
         self.test_cancel()
-        self.slot.states.reopen(save=True)
+        self.slot.states.restore(save=True)
         self.assertEqual(
             self.slot.status, 'open'
         )

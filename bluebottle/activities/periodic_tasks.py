@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.messages import PublishActivityReminderNotification
+from bluebottle.activities.messages.activity_manager import PublishActivityReminderNotification
 from bluebottle.activities.models import Activity
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect

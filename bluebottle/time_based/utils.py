@@ -1,10 +1,11 @@
 from datetime import timedelta
 
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, make_aware
 from bluebottle.time_based.models import DateActivitySlot
 
 from bluebottle.members.models import Member
-from bluebottle.time_based.models import DateParticipant, SlotParticipant
+from bluebottle.time_based.models import DateParticipant, DateRegistration
+from bluebottle.utils.widgets import get_time_factors
 
 
 def nth_weekday(date):
@@ -39,8 +40,9 @@ def duplicate_slot(slot, interval, end):
     )
 
     for date in dates:
-        start = tz.localize(
-            start.replace(tzinfo=None, day=date.day, month=date.month, year=date.year)
+        start = make_aware(
+            start.replace(tzinfo=None, day=date.day, month=date.month, year=date.year),
+            tz
         )
 
         slot = DateActivitySlot(start=start, **fields)
@@ -55,11 +57,11 @@ def bulk_add_slot_participants(slot, emails):
     for email in emails:
         try:
             user = Member.objects.get(email__iexact=email.strip())
-            participant, _created = DateParticipant.objects.get_or_create(
+            registration, _created = DateRegistration.objects.get_or_create(
                 user=user, activity=activity
             )
-            slot_participant, created = SlotParticipant.objects.get_or_create(
-                participant=participant,
+            participant, created = DateParticipant.objects.get_or_create(
+                registration=registration,
                 slot=slot
             )
             if created:
@@ -67,3 +69,10 @@ def bulk_add_slot_participants(slot, emails):
         except Member.DoesNotExist:
             pass
     return count
+
+
+def duration_to_hours(value):
+    days, hours, minutes, seconds = get_time_factors(value)
+    total_hours = days * 24 + hours + (minutes / 60) + (seconds / 3600)
+
+    return round(total_hours)

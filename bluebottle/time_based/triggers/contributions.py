@@ -11,7 +11,6 @@ from bluebottle.fsm.triggers import (
     register, TransitionTrigger
 )
 from bluebottle.time_based.models import (
-    PeriodActivity,
     ScheduleActivity,
     TimeContribution, DeadlineActivity
 )
@@ -27,11 +26,6 @@ def should_succeed_instantly(effect):
     activity = effect.instance.contributor.activity
     if (
         effect.instance.contribution_type == 'preparation' and
-        effect.instance.contributor.status in ('accepted', 'succeeded')
-    ):
-        return True
-    elif (
-        isinstance(activity, PeriodActivity) and
         effect.instance.contributor.status in ('accepted', 'succeeded')
     ):
         return True

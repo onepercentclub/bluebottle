@@ -5,6 +5,7 @@ import factory
 
 from urllib.parse import urlencode
 from builtins import object
+from uuid import uuid4
 
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.test.utils import override_settings
 
 from bluebottle.members.models import Member
+from bluebottle.geo.models import Location
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.scim.models import SCIMPlatformSettings, SCIMSegmentSetting
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -21,16 +23,24 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 
 class SCIMEndpointTestCaseMixin(object):
     def setUp(self):
+        settings = SCIMPlatformSettings.load()
+        settings.enabled = True
+        settings.save()
+
         self.token = 'Bearer {}'.format(
-            SCIMPlatformSettings.objects.get().bearer_token
+            settings.bearer_token
         )
         super(SCIMEndpointTestCaseMixin, self).setUp()
 
 
 class AuthenticatedSCIMEndpointTestCaseMixin(object):
     def setUp(self):
+        settings = SCIMPlatformSettings.load()
+        settings.enabled = True
+        settings.save()
+
         self.token = 'Bearer {}'.format(
-            SCIMPlatformSettings.objects.get().bearer_token
+            settings.bearer_token
         )
         super(AuthenticatedSCIMEndpointTestCaseMixin, self).setUp()
 
@@ -75,6 +85,24 @@ class AuthenticatedSCIMEndpointTestCaseMixin(object):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(data['status'], 401)
+        self.assertTrue('details' in data)
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
+
+    def test_disabled(self):
+        settings = SCIMPlatformSettings.load()
+        settings.enabled = False
+        settings.save()
+
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(
+            self.url,
+            token="JWT {0}".format(user.get_jwt_token())
+        )
+        data = response.data
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(data['status'], 403)
         self.assertTrue('details' in data)
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
@@ -322,6 +350,15 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
     def test_get_filtered(self):
         response = self.client.get(
             self.url + f"?filter=userName eq {self.users[0].remote_id}",
+            token=self.token
+        )
+        data = response.json()
+        self.assertEqual(data['totalResults'], 1)
+        self.assertEqual(data['startIndex'], 1)
+
+    def test_get_filtered_with_quotes(self):
+        response = self.client.get(
+            self.url + f"?filter=userName eq \"{self.users[0].remote_id}\"",
             token=self.token
         )
         data = response.json()
@@ -611,6 +648,84 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(user.first_name, data['name']['givenName'])
         self.assertEqual(user.last_name, data['name']['familyName'])
 
+    @override_settings(SEND_WELCOME_MAIL=True)
+    def test_post_existing_email(self):
+        """
+        Test creating a user twice request
+        """
+        user = BlueBottleUserFactory.create(
+            email='test@example.com', remote_id=None, scim_external_id=None
+        )
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': 'some-remote-id',
+            'externalId': 'some-external-id',
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        user.refresh_from_db()
+        self.assertEqual(user.scim_external_id, data['externalId'])
+        self.assertEqual(user.email, data['emails'][0]['value'])
+        self.assertEqual(user.first_name, data['name']['givenName'])
+        self.assertEqual(user.last_name, data['name']['familyName'])
+
+    @override_settings(SEND_WELCOME_MAIL=True)
+    def test_post_existing_email_diffent_case(self):
+        """
+        Test creating a user twice request
+        """
+        user = BlueBottleUserFactory.create(
+            email='Test@example.com', remote_id=None, scim_external_id=None
+        )
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': 'some-remote-id',
+            'externalId': 'some-external-id',
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        user.refresh_from_db()
+        self.assertEqual(user.scim_external_id, data['externalId'])
+        self.assertEqual(user.email, data['emails'][0]['value'])
+        self.assertEqual(user.first_name, data['name']['givenName'])
+        self.assertEqual(user.last_name, data['name']['familyName'])
+
     def test_post_location(self):
         """
         Create a user with a location
@@ -684,6 +799,45 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
         self.assertEqual(user.location.name, location_name)
 
+    def test_post_duplicate_location(self):
+        """
+        Locations are not unique by slug, so two rows can match one locality.
+        """
+        first = LocationFactory.create(name='Utrecht', slug='utrecht')
+        LocationFactory.create(name='Utrecht', slug='utrecht')
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': '123',
+            'externalId': 'some-external-id',
+            'addresses': [{
+                'type': 'work',
+                'locality': 'Utrecht',
+            }],
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
+        self.assertEqual(user.location, first)
+        self.assertEqual(Location.objects.filter(slug='utrecht').count(), 2)
+
     def test_post_segment(self):
         """
         Create a user with a location that does not exist yet.
@@ -701,7 +855,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             segment_type=country
         )
         country_name = 'NL'
-        department_name = 'Engineering'
+        department_name = f'Engineering {uuid4().hex[:8]}'
 
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
@@ -1195,6 +1349,35 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.location.name, location_name)
+
+    def test_patch_duplicate_location(self):
+        """
+        Locations are not unique by slug, so two rows can match one locality.
+        """
+        first = LocationFactory.create(name='Utrecht', slug='utrecht')
+        LocationFactory.create(name='Utrecht', slug='utrecht')
+
+        request_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    'op': 'Add',
+                    'path': 'addresses[type eq "work"].locality',
+                    'value': 'Utrecht'
+                },
+            ]
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.location, first)
 
     def test_delete(self):
         response = self.client.delete(

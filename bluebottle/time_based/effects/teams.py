@@ -17,11 +17,17 @@ class CreateTeamRegistrationEffect(Effect):
         raise ValueError(f'No registration defined for activity model {self.instance.activity.__class__.__name__}')
 
     def post_save(self, **kwargs):
-        registration = self.get_registration_model().objects.create(
-            activity=self.instance.activity,
-            user=self.instance.user,
-            status='accepted'
-        )
+        registration = self.instance.activity.registrations.filter(
+            user=self.instance.user
+        ).first()
+
+        if not registration:
+            registration = self.get_registration_model().objects.create(
+                activity=self.instance.activity,
+                user=self.instance.user,
+                status='accepted'
+            )
+
         self.instance.registration = registration
         self.instance.save()
 
@@ -35,7 +41,7 @@ class CreateCaptainTeamMemberEffect(Effect):
     template = 'admin/create_captain_team_member.html'
 
     def without_team_members(self):
-        return not self.instance.team_members.exists()
+        return not self.instance.pk or not self.instance.team_members.exists()
 
     def post_save(self, **kwargs):
         TeamMember.objects.create(
@@ -53,7 +59,7 @@ class CreateTeamSlotEffect(Effect):
     template = 'admin/create_team_slot.html'
 
     def without_slot(self):
-        return not self.instance.slots.exists()
+        return not self.instance.pk or not self.instance.slots.exists()
 
     def get_slot_model(self):
         if isinstance(self.instance.activity, ScheduleActivity):

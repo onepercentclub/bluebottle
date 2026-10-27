@@ -1,0 +1,8 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+{% blocktrans context 'platform-email' %}
+Good news, your activity "{{title}}" has been approved and the participants contributions have been recorded.<br>
+{% endblocktrans %}
+{% endblock %}

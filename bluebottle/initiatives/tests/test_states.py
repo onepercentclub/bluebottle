@@ -3,9 +3,11 @@ from django.core import mail
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
+from bluebottle.funding_stripe.models import StripePaymentProvider
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
-    ExternalAccountFactory,
+    ExternalAccountFactory, StripePaymentProviderFactory,
 )
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -16,11 +18,13 @@ from bluebottle.time_based.states import DateStateMachine
 from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
-class InitiativeReviewStateMachineTests(BluebottleTestCase):
+class InitiativeReviewStateMachineTests(FundingStripeMixin, BluebottleTestCase):
 
     def setUp(self):
         super(InitiativeReviewStateMachineTests, self).setUp()
         self.user = BlueBottleUserFactory.create(first_name='Bart', last_name='Lacroix')
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create(
             has_organization=False,
             owner=self.user,
@@ -165,13 +169,14 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_approve(self):
-        self.initiative.states.submit()
+        self.initiative.states.submit(save=True)
+        mail.outbox = []
         self.initiative.states.approve(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.approved.value
         )
         self.assertEqual(len(mail.outbox), 1)
-        subject = 'Your initiative "{}" has been approved!'.format(self.initiative.title)
+        subject = 'Your initiative on Test has been approved!'
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
 
@@ -207,7 +212,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
         self.assertEqual(len(mail.outbox), 1)
 
-        subject = 'Your initiative "{}" has been rejected.'.format(self.initiative.title)
+        subject = 'Your initiative on Test has been rejected'
 
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)

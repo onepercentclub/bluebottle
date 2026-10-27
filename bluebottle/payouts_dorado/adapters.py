@@ -9,6 +9,7 @@ from requests.exceptions import MissingSchema
 
 from bluebottle.clients import properties
 from bluebottle.fsm.state import TransitionNotPossible
+from bluebottle.grant_management.models import GrantPayout
 
 
 class PayoutValidationError(Exception):
@@ -27,10 +28,15 @@ class DoradoPayoutAdapter(object):
         self.tenant = connection.tenant
 
     def trigger_payout(self):
+        payout_type = 'crowdfunding'
+        if isinstance(self.payout, GrantPayout):
+            payout_type = 'grant'
+
         # Send the signal to Dorado
         data = {
             'payout_id': self.payout.pk,
             'tenant': self.tenant.client_name,
+            'payout_type': payout_type,
         }
         try:
             response = requests.post(self.settings['url'], data)

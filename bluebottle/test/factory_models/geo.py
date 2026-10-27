@@ -26,10 +26,23 @@ class SubRegionFactory(factory.DjangoModelFactory):
 class CountryFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Country
+        django_get_or_create = ("alpha2_code",)
 
     name = factory.Faker('country')
     alpha2_code = factory.Faker('country_code')
     subregion = factory.SubFactory(SubRegionFactory)
+
+    @classmethod
+    def _get_or_create(cls, model_class, *args, **kwargs):
+        try:
+            return super(CountryFactory, cls)._get_or_create(model_class, *args, **kwargs)
+        except model_class.MultipleObjectsReturned:
+            lookup = {
+                field: kwargs[field]
+                for field in cls._meta.django_get_or_create
+                if field in kwargs
+            }
+            return model_class.objects.filter(**lookup).first(), False
 
 
 class LocationGroupFactory(factory.DjangoModelFactory):
@@ -70,6 +83,13 @@ class GeolocationFactory(factory.DjangoModelFactory):
     mapbox_id = 'some-mapbox-id'
     formatted_address = factory.LazyAttribute(
         lambda o: '{} {} {} {}'.format(
-            o.street, o.street_number, o.locality, o.country.name
+            o.street, o.street_number, o.locality, o.country.name if o.country else ''
         )
     )
+
+    @factory.post_generation
+    def with_geofeatures(obj, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        from bluebottle.test.geo_utils import ensure_geolocation_geofeatures
+        ensure_geolocation_geofeatures(obj)

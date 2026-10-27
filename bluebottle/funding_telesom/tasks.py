@@ -1,7 +1,7 @@
 import requests
-from celery import shared_task
 from django.utils.timezone import now
 
+from bluebottle.celery import app
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.funding_telesom.models import TelesomPaymentProvider
 
@@ -11,7 +11,7 @@ def get_credentials():
     return provider.private_settings
 
 
-@shared_task
+@app.task
 def start_payment(payment, tenant):
     with LocalTenant(tenant, clear_tenant=True):
         credentials = get_credentials()

@@ -57,7 +57,7 @@ class Category(TranslatableModel):
         )
 
     class JSONAPIMeta:
-        resource_name = 'pages/blocks/categories/categories'
+        resource_name = 'categories'
 
     def __str__(self):
         return self.title

@@ -8,12 +8,12 @@ from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
-from memoize import memoize
 from parler.models import TranslatedFields, TranslatableModel
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.impact.models import ICONS
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.utils.cache import memoize
 from bluebottle.utils.managers import TranslatablePolymorphicManager
 from bluebottle.utils.models import get_language_choices
 
@@ -59,13 +59,13 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
 
     timeout = 3600
 
-    def get_value(self, start=None, end=None, subregion=None, user=None):
+    def get_value(self, start=None, end=None, subregion=None, region=None, user=None):
         return self.value
 
     unit = None
 
     class JSONAPIMeta(object):
-        resource_name = 'statistics/manual-statistics'
+        resource_name = 'statistics'
 
     def __str__(self):
         return str(self.translations.name)
@@ -147,17 +147,23 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         return mapping.get(self.query)
 
     @memoize(timeout=3600)
-    def get_value(self, start=None, end=None, subregion=None, user=None):
-        return getattr(Statistics(start, end, subregion, user), self.query)
+    def get_value(self, start=None, end=None, subregion=None, region=None, user=None):
+        return getattr(
+            Statistics(start, end, subregion=subregion, region=region, user=user),
+            self.query
+        )
 
-    def get_live_value(self, start=None, end=None, subregion=None, user=None):
-        return getattr(Statistics(start, end, subregion, user), self.query)
+    def get_live_value(self, start=None, end=None, subregion=None, region=None, user=None):
+        return getattr(
+            Statistics(start, end, subregion=subregion, region=region, user=user),
+            self.query
+        )
 
     def __str__(self):
         return str(self.query)
 
     class JSONAPIMeta(object):
-        resource_name = 'statistics/database-statistics'
+        resource_name = 'statistics'
 
     class Meta(object):
         verbose_name = _('Engagement statistic')
@@ -167,7 +173,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
 class ImpactStatistic(BaseStatistic):
     impact_type = models.ForeignKey('impact.ImpactType', on_delete=models.CASCADE)
 
-    def get_value(self, start=None, end=None, subregion=None, user=None):
+    def get_value(self, start=None, end=None, subregion=None, region=None, user=None):
         goals = self.impact_type.goals.filter(
             activity__status='succeeded',
         )
@@ -200,7 +206,7 @@ class ImpactStatistic(BaseStatistic):
         return str(self.impact_type.name)
 
     class JSONAPIMeta(object):
-        resource_name = 'statistics/impact-statistics'
+        resource_name = 'statistics'
 
     class Meta(object):
         verbose_name = _('Impact statistic')

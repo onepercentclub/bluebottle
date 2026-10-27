@@ -3,22 +3,6 @@
 from django.db import migrations
 
 
-def migrate_periodic_messages(apps, schema_editor):
-    ContentType = apps.get_model("contenttypes", "ContentType")
-    PeriodicActivity = apps.get_model("time_based", "PeriodicActivity")
-    PeriodActivity = apps.get_model("time_based", "PeriodActivity")
-
-    Message = apps.get_model("notifications", "Message")
-
-    periodic_activity_ctype = ContentType.objects.get_for_model(PeriodicActivity)
-    period_activity_ctype = ContentType.objects.get_for_model(PeriodActivity)
-
-    messages = Message.objects.filter(
-        content_type=period_activity_ctype, object_id__in=PeriodicActivity.objects.all()
-    )
-    messages.update(content_type_id=periodic_activity_ctype)
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -27,5 +11,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_periodic_messages, migrations.RunPython.noop)
     ]

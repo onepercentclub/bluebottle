@@ -1,3 +1,4 @@
+import hashlib
 import re
 
 from django.http.response import HttpResponse
@@ -10,22 +11,21 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ActivitySegmentPermission
 )
+from bluebottle.activities.views import ActivityDetailView
 from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
-    Payout
+    Payout, IbanCheck
 )
 from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSucceededPermission
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
-    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
-    PayoutSerializer
+    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer, PayoutSerializer, IbanCheckSerializer,
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.filters import SearchFilterBackend
@@ -111,24 +111,14 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner'],
     }
 
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
 
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
+class FundingDetail(ActivityDetailView):
+    queryset = Funding.objects.all()
 
-        serializer.save(owner=self.request.user)
-
-
-class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Funding.objects.select_related(
-        'initiative', 'initiative__owner',
-    ).prefetch_related('rewards')
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.prefetch_related('rewards')
+        return qs
 
     serializer_class = FundingSerializer
     permission_classes = (
@@ -137,38 +127,48 @@ class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefet
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
-    prefetch_for_includes = {
-        'initiative': ['initiative'],
-        'owner': ['owner'],
-        'rewards': ['reward'],
-        'budgetlines': ['budgetlines'],
-        'payment_methods': ['payment_methods'],
-        'fundraisers': ['fundraisers']
-    }
-
 
 class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Payout.objects.all()
     serializer_class = PayoutSerializer
 
     authentication_classes = (TokenAuthentication,)
-
     permission_classes = (IsFinancialMember,)
 
     def perform_update(self, serializer):
         status = serializer.validated_data.pop('status')
-        if status == 'reset':
+        current_status = serializer.instance.status
+        if status == 'reset' and current_status != 'new':
             serializer.instance.states.reset()
-        elif status in ['new', 'scheduled', 're_scheduled']:
+        elif status in ['new', 'scheduled', 're_scheduled'] and current_status != 'scheduled':
             serializer.instance.states.schedule()
-        elif status == 'started':
+        elif status == 'started' and current_status != 'started':
             serializer.instance.states.start()
-        elif status in ['success', 'succeeded', 'confirmed']:
+        elif status in ['success', 'succeeded', 'confirmed'] and current_status != 'succeeded':
             serializer.instance.states.succeed()
-        elif status in ['failed']:
+        elif status in ['failed'] and current_status != 'failed':
             serializer.instance.states.fail()
         serializer.instance.save()
         return HttpResponse(200)
+
+
+class IbanCheckView(JsonApiViewMixin, CreateAPIView):
+    serializer_class = IbanCheckSerializer
+    queryset = IbanCheck.objects.all()
+    permission_classes = [IsAuthenticated, ]
+
+    def hash_iban(self, iban):
+        normalized = iban.replace(" ", "").upper()
+        return hashlib.sha256(normalized.encode()).hexdigest()
+
+    def perform_create(self, serializer):
+        iban = serializer.validated_data.pop('iban')
+        hashed_iban = self.hash_iban(iban)
+        instance = serializer.save(
+            hashed_iban=hashed_iban,
+        )
+        instance.iban = iban
+        instance.check_iban()
 
 
 class FundingTransitionList(TransitionList):
@@ -258,9 +258,6 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'fundraiser': ['fundraiser'],
     }
 
-    def perform_create(self, serializer):
-        serializer.save(user=(self.request.user if self.request.user.is_authenticated else None))
-
 
 class ActivityDonationList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     queryset = Donor.objects.all()
@@ -325,7 +322,7 @@ class SupportersExportView(PrivateFileView):
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
-        filename = re.sub("[^\w\s\d]+", '-', activity.title)
+        filename = re.sub(r"[^\w\s\d]+", '-', activity.title)
         filename = 'participants for {}.xlsx'.format(filename)
 
         sheet = []
@@ -341,9 +338,9 @@ class SupportersExportView(PrivateFileView):
             for segment_type in self.get_segment_types():
                 if donor.user:
                     segments = ", ".join(
-                        donor.user.segments.filter(
-                            segment_type=segment_type
-                        ).values_list('name', flat=True)
+                        [
+                            s.name for s in donor.user.segments.filter(segment_type=segment_type)
+                        ]
                     )
                     row.append(segments)
             sheet.append(row)

@@ -38,9 +38,7 @@ class SlotStateMachine(ModelStateMachine):
     def is_activity_owner(self, user):
         """Is manager of related activity"""
         return (
-            user == self.instance.activity.owner or
-            user == self.instance.activity.initiative.owner or
-            user in self.instance.activity.initiative.activity_managers.all() or
+            user in self.instance.activity.owners or
             user.is_staff or
             user.is_superuser
         )
@@ -99,11 +97,11 @@ class SlotStateMachine(ModelStateMachine):
     )
 
     auto_cancel = Transition(
-        [new, running, scheduled],
+        [new, running, scheduled, finished, scheduled],
         cancelled,
         automatic=True,
         name=_("Auto cancel"),
-        description=_("The slot was cancelled because a parent object was cancelled"),
+        description=_("The slot was cancelled because the activity was cancelled"),
     )
 
     restore = Transition(
@@ -152,6 +150,12 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         _('The number of people needed is reached and people can no longer register.')
     )
 
+    registration_closed = State(
+        _('Registration closed'),
+        'registration_closed',
+        _('The registration deadline has passed and people can no longer register.')
+    )
+
     running = State(
         _('running'),
         'running',
@@ -159,7 +163,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
     )
 
     finished = State(
-        _('succeeded'),
+        _('finished'),
         'finished',
         _('The slot has ended.')
     )
@@ -173,9 +177,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
     def is_activity_owner(self, user):
         """Is manager of related activity"""
         return (
-            user == self.instance.activity.owner or
-            user == self.instance.activity.initiative.owner or
-            user in self.instance.activity.initiative.activity_managers.all() or
+            user in self.instance.activity.owners or
             user.is_staff or
             user.is_superuser
         )
@@ -208,7 +210,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        [open, finished, full],
+        [draft, running, full, registration_closed, finished, open],
         cancelled,
         name=_('Cancel'),
         automatic=False,
@@ -218,7 +220,15 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         ),
     )
 
-    reopen = Transition(
+    auto_cancel = Transition(
+        [draft, running, full, registration_closed, finished, open],
+        cancelled,
+        automatic=True,
+        name=_("Auto cancel"),
+        description=_("The slot was cancelled because the activity was cancelled"),
+    )
+
+    restore = Transition(
         cancelled,
         open,
         name=_('Reopen'),
@@ -251,8 +261,30 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         )
     )
 
+    close_registration = Transition(
+        [open, full],
+        registration_closed,
+        name=_("Close registration"),
+        description=_(
+            "People can no longer join the slot. "
+            "Triggered when the registration deadline has passed."
+        ),
+        automatic=True,
+    )
+
+    reopen = Transition(
+        registration_closed,
+        open,
+        name=_("Reopen"),
+        description=_(
+            "The registration deadline was extended or removed. "
+            "People can sign up again for the slot."
+        ),
+        automatic=True,
+    )
+
     start = Transition(
-        [open, finished, full],
+        [open, finished, full, registration_closed],
         running,
         name=_("Start"),
         description=_(
@@ -260,7 +292,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         )
     )
     finish = Transition(
-        [open, running, full],
+        [open, running, full, registration_closed],
         finished,
         name=_("Finish"),
         description=_(

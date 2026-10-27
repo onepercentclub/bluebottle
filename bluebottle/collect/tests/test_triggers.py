@@ -1,9 +1,13 @@
 from datetime import timedelta, date
 
 from bluebottle.activities.effects import SetContributionDateEffect
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification, ActivitySucceededNotification,
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivityRestoredNotification
+)
+from bluebottle.activities.messages.participant import (
+    InactiveParticipantAddedNotification,
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import OrganizerStateMachine
@@ -42,38 +46,40 @@ class CollectTriggersTestCase(TriggerTestCase):
 
     def test_submit(self):
         self.create()
-        self.model.states.submit()
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(CollectActivityStateMachine.auto_approve)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
-    def test_submit_started(self):
+    def test_publish_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)
         self.create()
-        self.model.states.submit()
+        self.assertStatus(self.model, 'draft')
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(CollectActivityStateMachine.auto_approve)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+        self.model.save()
+        self.assertStatus(self.model, 'open')
 
-    def test_submit_finished(self):
+    def test_publish_finished(self):
         self.defaults['start'] = date.today() - timedelta(days=2)
         self.defaults['end'] = date.today() - timedelta(days=1)
         self.create()
-        self.model.states.submit()
+        self.assertStatus(self.model, 'draft')
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(CollectActivityStateMachine.auto_approve)
-            self.assertTransitionEffect(CollectActivityStateMachine.expire)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+            self.assertTransitionEffect(CollectActivityStateMachine.expire)
+        self.model.save()
+        self.assertStatus(self.model, 'expired')
 
     def test_reject(self):
         self.create()
-        self.model.states.submit(save=True)
         self.model.states.reject()
 
         with self.execute():
@@ -82,7 +88,7 @@ class CollectTriggersTestCase(TriggerTestCase):
 
     def test_cancel(self):
         self.create()
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         self.model.states.cancel()
 
         with self.execute():
@@ -143,7 +149,7 @@ class CollectTriggersTestCase(TriggerTestCase):
     def test_expire(self):
         self.create()
 
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         self.model.end = date.today() - timedelta(days=1)
 
         with self.execute():
@@ -159,7 +165,7 @@ class CollectTriggersTestCase(TriggerTestCase):
     def test_set_end_date(self):
         self.create()
 
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         CollectContributorFactory.create(activity=self.model)
 
         self.model.end = date.today() - timedelta(days=1)
@@ -187,7 +193,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             'user': self.user
 
         }
-        self.defaults['activity'].states.submit(save=True)
+        self.defaults['activity'].states.publish(save=True)
 
         super().setUp()
 
@@ -261,6 +267,27 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             contribution = self.model.contributions.first()
             self.assertStatus(contribution, 'succeeded')
             self.assertNotificationEffect(ParticipantAddedNotification)
+            self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
+
+            self.assertNoNotificationEffect(ParticipantJoinedNotification)
+            self.assertNoNotificationEffect(NewParticipantNotification)
+
+    def test_initiate_other_user_inactive(self):
+        self.user.is_active = False
+        self.user.save()
+
+        self.defaults['activity'].start = date.today() - timedelta(days=10)
+        self.defaults['activity'].save()
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=BlueBottleUserFactory.create()):
+            self.assertEffect(CreateCollectContribution)
+
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.model.save()
+            contribution = self.model.contributions.first()
+            self.assertStatus(contribution, 'succeeded')
+            self.assertNoNotificationEffect(ParticipantAddedNotification)
+            self.assertNotificationEffect(InactiveParticipantAddedNotification)
             self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
             self.assertNoNotificationEffect(ParticipantJoinedNotification)

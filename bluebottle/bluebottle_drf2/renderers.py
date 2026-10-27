@@ -22,6 +22,15 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
     def get_indent(self, *args, **kwargs):
         return 4
 
+    @classmethod
+    def extract_relationships(cls, fields, resource, resource_instance):
+        from bluebottle.time_based.serializers.interest_link_field import (
+            omit_interests_if_unauthorized,
+        )
+
+        fields = omit_interests_if_unauthorized(fields, resource_instance)
+        return super().extract_relationships(fields, resource, resource_instance)
+
     def extract_included(
         cls, fields, resource, resource_instance, included_resources, included_cache
     ):
@@ -35,7 +44,16 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
         current_serializer = fields.serializer
         context = current_serializer.context
-        included_serializers = utils.get_included_serializers(current_serializer)
+
+        from bluebottle.time_based.serializers.interest_link_field import (
+            omit_interests_if_unauthorized,
+        )
+
+        fields = omit_interests_if_unauthorized(fields, resource_instance)
+
+        included_serializers = getattr(
+            current_serializer, "included_serializers", dict()
+        )
         included_resources = copy.copy(included_resources)
         included_resources = [
             inflection.underscore(value) for value in included_resources
@@ -111,13 +129,13 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                     for position in range(len(serializer_data)):
                         serializer_resource = serializer_data[position]
                         nested_resource_instance = relation_queryset[position]
-
                         resource_type = (
-                            serializer_resource.get('type')
-                            or relation_type
+                            serializer_resource.get('block_type')
+                            or serializer_resource.get('type')
                             or utils.get_resource_type_from_instance(
                                 nested_resource_instance
                             )
+                            or relation_type
                         )
                         serializer_fields = utils.get_serializer_fields(
                             serializer.__class__(
@@ -209,6 +227,8 @@ class ElasticSearchJSONAPIRenderer(BluebottleJSONAPIRenderer):
         Builds the resource object (type, id, attributes) and extracts relationships.
         """
         # Determine type from the instance if the underlying model is polymorphic
+
+        resource_instance.pk = resource_instance.meta.id
         if force_type_resolution:
             resource_name = utils.get_resource_type_from_instance(resource_instance)
 
@@ -219,6 +239,8 @@ class ElasticSearchJSONAPIRenderer(BluebottleJSONAPIRenderer):
                 encoding.force_str(resource_instance.meta.id)
             ),
             ("attributes", cls.extract_attributes(fields, resource)),
+            ("relationships", cls.extract_relationships(fields, resource, resource_instance))
+
         ]
 
         meta = cls.extract_meta(serializer, resource)

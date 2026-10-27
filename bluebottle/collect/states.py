@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.forms import ActivityCancelledForm
 from bluebottle.activities.states import (
     ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 )
@@ -48,23 +49,6 @@ class CollectActivityStateMachine(ActivityStateMachine):
         description=_("Succeed the activity.")
     )
 
-    publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_('Publish'),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_submitted
-        ],
-    )
-
     reopen = Transition(
         [
             ActivityStateMachine.expired,
@@ -103,6 +87,7 @@ class CollectActivityStateMachine(ActivityStateMachine):
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
         ),
+        form=ActivityCancelledForm,
         automatic=False,
     )
 
@@ -129,19 +114,17 @@ class CollectContributorStateMachine(ContributorStateMachine):
         """is contributor"""
         return (
             self.instance.user == user or
-            self.instance.activity.owner == user or
-            self.instance.activity.initiative.owner == user or
-            user in self.instance.activity.initiative.activity_managers.all() or
-            user.is_staff
+            user in self.instance.activity.owners or
+            user.is_staff or
+            user.is_superuser
         )
 
     def is_owner(self, user):
         """is contributor"""
         return (
-            self.instance.activity.owner == user or
-            self.instance.activity.initiative.owner == user or
-            user in self.instance.activity.initiative.activity_managers.all() or
-            user.is_staff
+            user in self.instance.activity.owners or
+            user.is_staff or
+            user.is_superuser
         )
 
     def activity_is_open(self):

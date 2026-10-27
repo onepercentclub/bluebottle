@@ -4,12 +4,18 @@ from django_elasticsearch_dsl import Document, fields
 from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
+from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
-from bluebottle.segments.models import Segment
 from bluebottle.geo.models import Location
-from bluebottle.initiatives.documents import deduplicate, get_translated_list
+from bluebottle.initiatives.documents import (
+    deduplicate,
+    get_translated_country_list,
+    get_translated_list,
+    get_translated_segments,
+)
 from bluebottle.initiatives.models import Initiative, Theme
-from bluebottle.utils.documents import MultiTenantIndex
+from bluebottle.segments.models import Segment
+from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.search import Search
 
 
@@ -22,21 +28,139 @@ activity = MultiTenantIndex('activity')
 # See Elasticsearch Indices API reference for available settings
 activity.settings(
     number_of_shards=1,
-    number_of_replicas=0
+    number_of_replicas=0,
+    # Geofeature translations × locations can exceed the ES default (10000).
+    **{'index.mapping.nested_objects.limit': 50000}
 )
+
+
+def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
+    from bluebottle.utils.models import Language
+
+    data = []
+    current_language = geofeature._current_language
+    country_language = country._current_language if country else None
+
+    for lang in Language.objects.all():
+        if not geofeature.has_translation(lang.full_code):
+            continue
+
+        geofeature.set_current_language(lang.full_code)
+        name = geofeature.name
+        place_name = geofeature.place_name
+        if not name and not place_name:
+            continue
+
+        entry = {
+            'id': geofeature.pk,
+            'name': name or '',
+            'place_name': place_name or '',
+            'language': lang.full_code,
+            'feature_type': geofeature.feature_type or '',
+            'is_primary': is_primary,
+        }
+        if country:
+            entry['country_code'] = country.alpha2_code
+            if country.has_translation(lang.full_code):
+                country.set_current_language(lang.full_code)
+                entry['country'] = country.name
+        data.append(entry)
+
+    geofeature._current_language = current_language
+    if country and country_language is not None:
+        country._current_language = country_language
+    return data
+
+
+def locality_from_geolocation(geolocation):
+    if not geolocation:
+        return None
+
+    primary = geolocation.geofeature
+    if primary and primary.feature_type in ('place', 'locality'):
+        return primary.name
+
+    for geofeature in geolocation.geofeatures.all():
+        if geofeature.feature_type in ('place', 'locality'):
+            return geofeature.name
+    return None
+
+
+def geofeatures_for_geolocation(geolocation):
+    if not geolocation:
+        return []
+
+    geofeatures = []
+    primary_id = geolocation.geofeature_id
+    country = geolocation.country
+    for geofeature in geolocation.geofeatures.all():
+        geofeatures.extend(get_translated_geofeature_list(
+            geofeature,
+            country=country,
+            is_primary=geofeature.pk == primary_id,
+        ))
+    return geofeatures
+
+
+def geolocation_for_activity(instance):
+    """Primary geolocation used when indexing an activity."""
+    location = getattr(instance, 'location', None)
+    if location:
+        return location
+    if getattr(instance, 'impact_location', None):
+        return instance.impact_location
+    initiative = getattr(instance, 'initiative', None)
+    if initiative and initiative.place_id:
+        return initiative.place
+    return None
 
 
 class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
-    title = fields.TextField(fielddata=True)
+    title = TextField(fielddata=True)
     slug = fields.KeywordField()
-    description = fields.TextField()
+    description = TextField(attr='description.html')
     highlight = fields.BooleanField()
     is_upcoming = fields.BooleanField()
     status = fields.KeywordField()
+    created = fields.DateField()
 
     type = fields.KeywordField()
+    resource_name = fields.KeywordField()
     manager = fields.KeywordField()
+    link = fields.KeywordField()
+    is_local = fields.BooleanField()
+    archived = fields.BooleanField()
+
+    def get_queryset(self):
+        return super(ActivityDocument, self).get_queryset().select_related(
+            'initiative',
+            'owner',
+            'image',
+            'initiative__owner',
+            'office_location',
+            'office_location__country',
+            'office_location__subregion',
+            'office_location__subregion__region',
+        ).prefetch_related(
+            'segments',
+            'segments__segment_type',
+            'initiative__categories',
+            'initiative__activity_managers',
+            'contributors',
+        )
+
+    def get_indexing_queryset(self):
+        return self.get_queryset()
+
+    def prepare_link(self, instance):
+        return None
+
+    def prepare_is_local(self, instance):
+        return True
+
+    def prepare_archived(self, instance):
+        return False
 
     current_status = fields.NestedField(properties={
         'name': fields.KeywordField(),
@@ -52,14 +176,14 @@ class ActivityDocument(Document):
 
     owner = fields.NestedField(properties={
         'id': fields.KeywordField(),
-        'full_name': fields.TextField()
+        'full_name': TextField()
     })
 
     initiative = fields.NestedField(properties={
         'id': fields.KeywordField(),
-        'title': fields.TextField(),
-        'pitch': fields.TextField(),
-        'story': fields.TextField(),
+        'title': TextField(),
+        'pitch': TextField(),
+        'story': TextField(attr='story.html'),
         'owner': fields.KeywordField(attr='owner.id'),
         'activity_managers': fields.NestedField(
             properties={
@@ -69,7 +193,7 @@ class ActivityDocument(Document):
     })
 
     theme = fields.NestedField(
-        attr='initiative.theme',
+        attr='theme',
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
@@ -78,7 +202,7 @@ class ActivityDocument(Document):
     )
 
     categories = fields.NestedField(
-        attr='initiative.categories',
+        attr='categories',
         properties={
             'id': fields.KeywordField(),
             'title': fields.KeywordField(),
@@ -91,6 +215,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'code': fields.KeywordField(),
             'language': fields.KeywordField(),
         }
     )
@@ -120,10 +245,46 @@ class ActivityDocument(Document):
         attr='location',
         properties={
             'id': fields.LongField(),
+            'name': TextField(),
+            'city': TextField(),
+            'locality': TextField(),
+            'type': fields.KeywordField(),
+            'location_hint': fields.KeywordField(),
+            'country': TextField(attr='country.name'),
+            'country_code': TextField(attr='country.alpha2_code'),
+            'formatted_address': TextField(),
+            'geofeatures': fields.NestedField(properties={
+                'id': fields.LongField(),
+                'name': TextField(),
+                'place_name': TextField(),
+                'language': fields.KeywordField(),
+                'feature_type': fields.KeywordField(),
+                'is_primary': fields.BooleanField(),
+                'country': TextField(),
+                'country_code': TextField(),
+            }),
+        }
+    )
+
+    geofeature = fields.NestedField(
+        properties={
+            'id': fields.LongField(),
+            'name': TextField(),
+            'place_name': TextField(),
+            'language': fields.KeywordField(),
+            'feature_type': fields.KeywordField(),
+            'is_primary': fields.BooleanField(),
+            'country': TextField(),
+            'country_code': TextField(),
+        }
+    )
+
+    host_organization = fields.NestedField(
+        attr='host_organization',
+        properties={
+            'id': fields.LongField(),
             'name': fields.TextField(),
-            'city': fields.TextField(),
-            'country': fields.TextField(attr='country.name'),
-            'country_code': fields.TextField(attr='country.alpha2_code'),
+            'logo': fields.TextField(),
         }
     )
 
@@ -135,10 +296,26 @@ class ActivityDocument(Document):
         }
     )
 
+    office_subregion = fields.NestedField(
+        attr='office_location.subregion',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
+    office_region = fields.NestedField(
+        attr='office_location.subregion.region',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
     office_restriction = fields.NestedField(
         attr='office_restriction',
         properties={
-            'restriction': fields.TextField(),
+            'restriction': TextField(),
             'office': fields.LongField(),
             'office_subregion': fields.LongField(),
             'office_region': fields.LongField(),
@@ -146,7 +323,8 @@ class ActivityDocument(Document):
     )
 
     contributors = fields.KeywordField()
-    contributor_count = fields.IntegerField()
+    contributor_count = fields.IntegerField(attr='succeeded_contributor_count')
+    capacity = fields.IntegerField()
     donation_count = fields.IntegerField()
     activity_type = fields.KeywordField()
 
@@ -185,13 +363,6 @@ class ActivityDocument(Document):
 
     date_field = None
 
-    def get_queryset(self):
-        return super(ActivityDocument, self).get_queryset().select_related(
-            'initiative', 'owner'
-        ).prefetch_related(
-            'contributors'
-        )
-
     @classmethod
     def search(cls, using=None, index=None):
         # Use search class that supports polymorphic models
@@ -217,7 +388,7 @@ class ActivityDocument(Document):
                 'file': instance.image.file.name,
                 'type': 'activity'
             }
-        elif instance.initiative.image:
+        elif instance.initiative and instance.initiative.image:
             return {
                 'id': instance.initiative.pk,
                 'file': instance.initiative.image.file.name,
@@ -227,12 +398,17 @@ class ActivityDocument(Document):
     def prepare_manager(self, instance):
         managers = [
             instance.owner.pk,
-            instance.initiative.owner.pk
         ]
-        for manager in instance.initiative.activity_managers.all():
-            managers.append(manager.pk)
-        if instance.initiative.promoter:
-            managers.append(instance.initiative.promoter.pk)
+        if instance.initiative:
+            managers.append(
+                instance.initiative.owner.pk
+            )
+
+            for manager in instance.initiative.activity_managers.all():
+                managers.append(manager.pk)
+            if instance.initiative.promoter:
+                managers.append(instance.initiative.promoter.pk)
+
         return managers
 
     def prepare_contributors(self, instance):
@@ -251,37 +427,49 @@ class ActivityDocument(Document):
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
 
+    def prepare_resource_name(self, instance):
+        return str(instance.__class__.JSONAPIMeta.resource_name)
+
     def prepare_activity_type(self, instance):
         mapping = {
             "dateactivity": "time",
             "deadlineactivity": "time",
             "periodicactivity": "time",
             "scheduleactivity": "time",
+            "registereddateactivity": "time",
             "funding": "funding",
             "collectactivity": "collect",
             "deed": "deed",
+            "grantapplication": "grantapplication",
         }
         return mapping[str(instance.__class__.__name__.lower())]
 
     def prepare_country(self, instance):
         countries = []
         if instance.office_location and instance.office_location.country:
-            countries += get_translated_list(instance.office_location.country)
+            countries += get_translated_country_list(instance.office_location.country)
         if hasattr(instance, 'place') and instance.place and instance.place.country:
-            countries += get_translated_list(instance.place.country)
-        if instance.initiative.place and instance.initiative.place.country:
-            countries += get_translated_list(instance.initiative.place.country)
+            countries += get_translated_country_list(instance.place.country)
+        if instance.initiative and instance.initiative.place and instance.initiative.place.country:
+            countries += get_translated_country_list(instance.initiative.place.country)
+        if hasattr(instance, 'location') and instance.location and instance.location.country:
+            countries += get_translated_country_list(instance.location.country)
+        if hasattr(instance, 'impact_location') and instance.impact_location and instance.impact_location.country:
+            countries += get_translated_country_list(instance.impact_location.country)
         return deduplicate(countries)
 
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'location') and instance.location:
+            geolocation = instance.location
+            primary = geolocation.geofeature
             locations.append({
-                'id': instance.location.id,
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
-                'country_code': instance.location.country.alpha2_code,
-                'country': instance.location.country.name,
+                'id': geolocation.id,
+                'name': primary.place_name if primary else geolocation.formatted_address,
+                'location_hint': getattr(instance, 'location_hint', None),
+                'locality': locality_from_geolocation(geolocation),
+                'country_code': geolocation.country.alpha2_code if geolocation.country else None,
+                'country': geolocation.country.name if geolocation.country else None,
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:
@@ -299,19 +487,7 @@ class ActivityDocument(Document):
                 ),
                 'type': 'office'
             })
-        elif instance.initiative.place:
-            if instance.initiative.place.country:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'country_code': instance.initiative.place.country.alpha2_code,
-                    'country': instance.initiative.place.country.name,
-                    'type': 'impact_location'
-                })
-            else:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'type': 'impact_location'
-                })
+
         return locations
 
     def prepare_office_restriction(self, instance):
@@ -328,33 +504,35 @@ class ActivityDocument(Document):
             return get_translated_list(instance.expertise)
 
     def prepare_theme(self, instance):
-        if hasattr(instance.initiative, 'theme') and instance.initiative.theme:
-            return get_translated_list(instance.initiative.theme)
+        if instance.theme:
+            return get_translated_list(instance.theme)
+
+    def prepare_geofeature(self, instance):
+        location = geolocation_for_activity(instance)
+        if not location or not location.geofeatures.exists():
+            return []
+        return geofeatures_for_geolocation(location)
 
     def prepare_categories(self, instance):
         categories = []
-        if instance.initiative:
-            for category in instance.initiative.categories.all():
-                categories += get_translated_list(category, 'title')
+        for category in instance.categories.all():
+            categories += get_translated_list(category, 'title')
+
         return categories
 
     def prepare_segments(self, instance):
-        return [
-            {
-                'id': segment.pk,
-                'type': segment.segment_type.slug,
-                'name': segment.name,
-                'closed': segment.closed,
-            }
-            for segment in instance.segments.all()
-        ]
+
+        segments = []
+        for segment in instance.segments.all():
+            segments += get_translated_segments(segment)
+        return segments
 
     def prepare_is_online(self, instance):
         if hasattr(instance, 'is_online'):
             return instance.is_online
 
     def prepare_is_upcoming(self, instance):
-        return instance.status in ['open', 'full']
+        return instance.status in ['open', 'full', 'registration_closed']
 
     def prepare_position(self, instance):
         return []
@@ -364,3 +542,28 @@ class ActivityDocument(Document):
 
     def prepare_start(self, instance):
         return None
+
+    def prepare_created(self, instance):
+        return instance.created
+
+    def prepare_host_organization(self, instance):
+        if not instance.host_organization:
+            return None
+
+        org = instance.host_organization
+        logo_url = None
+        if (
+            org.logo
+            and org.logo.name
+            and org.logo.storage.exists(org.logo.name)
+        ):
+            try:
+                logo_url = tenant_url(org.logo.url)
+            except (ValueError, AttributeError, FileNotFoundError):
+                logo_url = None
+
+        return {
+            'id': org.pk,
+            'name': org.name,
+            'logo': logo_url,
+        }

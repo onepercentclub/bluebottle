@@ -1,5 +1,6 @@
 from django.utils.timezone import now
 
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
@@ -9,32 +10,41 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     TransitionTrigger,
     register,
-    ModelChangedTrigger,
+    ModelChangedTrigger, ModelDeletedTrigger,
 )
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect
+from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect, CreateSlotTimeContributionEffect, \
+    CheckPreparationTimeContributionEffect, SlotParticipantUnFollowActivityEffect
 from bluebottle.time_based.effects.effects import (
     CreateSchedulePreparationTimeContributionEffect,
 )
+from bluebottle.time_based.effects.interests import DeleteInterestEffect
 from bluebottle.time_based.effects.participants import (
     CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
-    CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, )
+    LockScheduleActivityIfFullEffect,
+    CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, CreateDateRegistrationEffect,
+    CreateRegisteredTimeContributionEffect,
+)
+from bluebottle.time_based.effects.registrations import DeleteRegistrationEffect
 from bluebottle.time_based.messages import (
-    ParticipantAddedNotification,
+    ParticipantAddedNotification, ManagerSlotParticipantRegisteredNotification,
+    ParticipantSlotParticipantRegisteredNotification, ParticipantChangedNotification,
+    ManagerSlotParticipantWithdrewNotification,
 )
-from bluebottle.time_based.models import (
-    DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant,
-)
-from bluebottle.time_based.notifications.participants import (
+from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
     UserParticipantWithdrewNotification,
-    ManagerParticipantWithdrewNotification, UserScheduledNotification,
+    ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
+    UserDateParticipantWithdrewNotification,
 )
-from bluebottle.time_based.notifications.registrations import UserReminderNotification
+from bluebottle.time_based.messages.registrations import UserReminderNotification
+from bluebottle.time_based.models import (
+    DeadlineParticipant,
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
+)
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
     DeadlineParticipantStateMachine,
@@ -43,8 +53,12 @@ from bluebottle.time_based.states import (
     PeriodicParticipantStateMachine,
     ScheduleParticipantStateMachine,
     ScheduleActivityStateMachine,
-    TeamScheduleParticipantStateMachine, TeamMemberStateMachine, RegistrationParticipantStateMachine
+    TeamScheduleParticipantStateMachine, TeamMemberStateMachine, RegistrationParticipantStateMachine,
+    DateParticipantStateMachine, TimeContributionStateMachine, DateActivitySlotStateMachine,
+    RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
+    RegistrationStateMachine
 )
+from bluebottle.time_based.triggers.triggers import spots_taken_after_release
 
 
 def activity_is_expired(effect):
@@ -54,10 +68,22 @@ def activity_is_expired(effect):
 
 def activity_will_be_expired(effect):
     """Activity is expired"""
+
     return (
         effect.instance.activity.status == "succeeded"
         and effect.instance.activity.active_participants.count() == 1
     )
+
+
+def participant_is_active(effect):
+    from bluebottle.members.models import MemberPlatformSettings
+
+    settings = MemberPlatformSettings.load()
+    return (not settings.closed) and effect.instance.user.is_active
+
+
+def participant_is_inactive(effect):
+    return not participant_is_active(effect)
 
 
 class RegistrationParticipantTriggers(ContributorTriggers):
@@ -84,7 +110,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 FollowActivityEffect,
                 RelatedTransitionEffect(
                     "activity",
-                    DeadlineActivityStateMachine.succeed,
+                    RegistrationActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
             ],
@@ -99,7 +125,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 ),
                 RelatedTransitionEffect(
                     "activity",
-                    DeadlineActivityStateMachine.expire,
+                    RegistrationActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
             ],
@@ -173,6 +199,10 @@ class RegistrationParticipantTriggers(ContributorTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
                     "activity",
                     DeadlineActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
@@ -211,7 +241,9 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         """ Activity has spots available after this effect """
         if not effect.instance.activity.capacity:
             return True
-        return effect.instance.activity.capacity > effect.instance.activity.accepted_participants.count() - 1
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            effect.instance.activity.accepted_participants, effect.instance
+        )
 
     def activity_has_started(effect):
         """ Activity has started """
@@ -265,7 +297,14 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                NotificationEffect(ParticipantAddedNotification),
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                    conditions=[participant_is_active]
+                ),
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[participant_is_inactive]
+                ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -347,10 +386,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.reapply,
             effects=[
-                RelatedTransitionEffect(
-                    "contributions",
-                    ContributionStateMachine.succeed,
-                ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -608,9 +643,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return True
-        return (
-            effect.instance.activity.capacity
-            > effect.instance.activity.accepted_participants.count() - 1
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            effect.instance.activity.accepted_participants, effect.instance
         )
 
     def has_scheduled_slot(effect):
@@ -646,17 +680,13 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.accept,
                     conditions=[is_accepted],
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
             ScheduleParticipantStateMachine.accept,
             effects=[
                 FollowActivityEffect,
-                RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.reset,
@@ -665,6 +695,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.schedule,
                     conditions=[has_scheduled_slot]
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
@@ -673,24 +704,20 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 NotificationEffect(
                     ParticipantAddedNotification,
-                    conditions=[is_not_self],
+                    conditions=[is_not_self, participant_is_active]
                 ),
-                RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[is_not_self, participant_is_inactive]
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
             ScheduleParticipantStateMachine.readd,
             effects=[
                 FollowActivityEffect,
-                RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
@@ -937,11 +964,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
 class TeamScheduleParticipantTriggers(ContributorTriggers):
     def has_slot(effect):
         """Has a slot"""
-        return effect.instance.slot.status == "scheduled"
+        return effect.instance.slot and effect.instance.slot.status == "scheduled"
 
     def team_is_accepted(effect):
         """Team is accepted"""
-        return effect.instance.team_member.team.status != "new"
+        return effect.instance.team_member and effect.instance.team_member.team.status != "new"
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -1106,5 +1133,478 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                     conditions=[activity_will_be_expired],
                 ),
             ],
+        ),
+    ]
+
+
+@register(DateParticipant)
+class DateParticipantTriggers(RegistrationParticipantTriggers):
+
+    def participant_slot_is_finished(effect):
+        """
+        Slot end date/time has passed
+        """
+        if effect.instance.slot:
+            return effect.instance.slot.status == 'finished'
+
+    def applicant_is_accepted(effect):
+        return effect.instance.registration and effect.instance.registration.status == 'accepted'
+
+    def is_participant(effect):
+        if 'user' not in effect.options:
+            return False
+        return effect.instance.user == effect.options['user']
+
+    def participant_slot_will_be_full(effect):
+        """
+        the slot will be filled
+        """
+        participant_count = effect.instance.slot.participants.filter(
+            status="accepted",
+            registration__status="accepted"
+        ).count()
+
+        if (
+            effect.instance.slot.capacity and
+            effect.instance.status == 'accepted' and
+            participant_count + 1 >= effect.instance.slot.capacity
+        ):
+            return True
+        return False
+
+    def participant_slot_will_be_not_full(effect):
+        """
+        the slot will be unfilled
+        """
+        # Handle case where instance might be in deletion state
+        if not hasattr(effect.instance, 'slot') or not effect.instance.slot:
+            return False
+
+        slot = effect.instance.slot
+        participant_count = spots_taken_after_release(
+            slot.participants.filter(
+                status='accepted',
+                registration__status='accepted'
+            ),
+            effect.instance
+        )
+        if slot.capacity and participant_count < slot.capacity:
+            return True
+        return False
+
+    def is_not_self(self):
+        "Participant is created by other user"
+        user = self.options.get('user')
+
+        return user and self.instance.user != user
+
+    def registration_is_accepted(effect):
+        """Review needed"""
+        return (
+            effect.instance.registration
+            and effect.instance.registration.status in ("accepted",)
+        )
+
+    def registration_is_withdrawn(effect):
+        """Registration is withdrawn"""
+        return (
+            effect.instance.registration
+            and effect.instance.registration.status == "withdrawn"
+        )
+
+    def review_disabled(effect):
+        """Review not needed"""
+        return not effect.instance.activity.review
+
+    def slot_is_in_future(effect):
+        """Check if the slot is in the future."""
+        return effect.instance.slot.start > now()
+
+    def slot_is_in_past(effect):
+        """Check if the slot is in the past."""
+        return effect.instance.slot.start < now()
+
+    def no_active_participation(effect):
+        """Related registration has no active participants"""
+        # Handle case where instance might be in deletion state
+        if not hasattr(effect.instance, 'registration') or not effect.instance.registration:
+            return False
+
+        return not effect.instance.registration.participants.exclude(
+            id=effect.instance.id
+        ).filter(
+            status__in=['accepted', 'new']
+        ).exists()
+
+    triggers = [
+        TransitionTrigger(
+            DateParticipantStateMachine.initiate,
+            effects=[
+                DeleteInterestEffect,
+                CreateDateRegistrationEffect,
+                CreateSlotTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.add,
+                    conditions=[is_not_self],
+                ),
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[review_disabled],
+                ),
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[
+                        is_participant,
+                        registration_is_accepted
+                    ],
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[
+                        review_disabled,
+                        is_participant
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantSlotParticipantRegisteredNotification,
+                    conditions=[
+                        review_disabled,
+                        is_participant
+                    ]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.remove,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.unlock,
+                    conditions=[participant_slot_will_be_not_full]
+                ),
+                NotificationEffect(ParticipantChangedNotification),
+                SlotParticipantUnFollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.accept,
+            effects=[
+                TransitionEffect(
+                    RegistrationParticipantStateMachine.succeed,
+                    conditions=[participant_slot_is_finished]
+
+                ),
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.restore,
+                    conditions=[registration_is_withdrawn]
+                ),
+                CheckPreparationTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                FollowActivityEffect,
+
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.add,
+            effects=[
+                TransitionEffect(
+                    RegistrationParticipantStateMachine.succeed,
+                    conditions=[participant_slot_is_finished]
+
+                ),
+                CheckPreparationTimeContributionEffect,
+                FollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.succeed,
+                    conditions=[activity_is_expired]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.reject,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.unlock,
+                    conditions=[participant_slot_will_be_not_full]
+                ),
+                SlotParticipantUnFollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.withdraw,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.unlock,
+                    conditions=[participant_slot_will_be_not_full]
+                ),
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.withdraw,
+                    conditions=[no_active_participation]
+                ),
+                NotificationEffect(
+                    ManagerSlotParticipantWithdrewNotification,
+                ),
+                NotificationEffect(
+                    UserDateParticipantWithdrewNotification
+                ),
+                SlotParticipantUnFollowActivityEffect,
+            ],
+        ),
+        TransitionTrigger(
+            DateParticipantStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.reapply,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_withdrawn, review_disabled]
+                ),
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.restore,
+                    conditions=[registration_is_withdrawn]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                NotificationEffect(ParticipantChangedNotification),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[applicant_is_accepted]
+                ),
+                FollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.readd,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                NotificationEffect(ParticipantChangedNotification),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[applicant_is_accepted]
+                ),
+                FollowActivityEffect,
+            ],
+        ),
+        TransitionTrigger(
+            DateParticipantStateMachine.restore,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                    conditions=[
+                        slot_is_in_future
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                    conditions=[
+                        slot_is_in_past
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                FollowActivityEffect,
+            ],
+        ),
+        ModelDeletedTrigger(
+            effects=[
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.unlock,
+                    conditions=[participant_slot_will_be_not_full]
+                ),
+                DeleteRegistrationEffect
+            ]
+        )
+    ]
+
+
+@register(RegisteredDateParticipant)
+class RegisteredDateParticipantTriggers(ContributorTriggers):
+
+    def activity_is_succeeded(effect):
+        """Slot has status finished"""
+        return effect.instance.activity and effect.instance.activity.status == "succeeded"
+
+    def activity_is_not_succeeded(effect):
+        """Slot has status finished"""
+        return effect.instance.activity and effect.instance.activity.status != "succeeded"
+
+    triggers = ContributorTriggers.triggers + [
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.initiate,
+            effects=[
+                FollowActivityEffect,
+                CreateRegisteredTimeContributionEffect,
+                TransitionEffect(
+                    RegisteredDateParticipantStateMachine.succeed,
+                    conditions=[activity_is_succeeded],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.succeed,
+            effects=[
+                NotificationEffect(
+                    RegisteredActivityParticipantAddedNotification,
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    RegisteredDateActivityStateMachine,
+                    conditions=[activity_is_expired],
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.readd,
+            effects=[
+                TransitionEffect(
+                    RegisteredDateParticipantStateMachine.succeed,
+                    conditions=[
+                        activity_is_succeeded
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[activity_is_expired],
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    RegisteredDateActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                )
+
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[activity_is_expired],
+                )
+            ]
         ),
     ]

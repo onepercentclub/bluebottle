@@ -11,6 +11,7 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
     PlainPayoutAccountFactory, DonorFactory, PayoutFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripeSourcePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -31,6 +32,12 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.save()
 
     def test_submit(self):
+        with self.assertRaisesMessage(
+                TransitionNotPossible,
+                'Conditions not met for transition'
+        ):
+            self.funding.states.publish(save=True)
+
         self.funding.states.submit()
         self.assertEqual(self.funding.status, 'submitted')
 
@@ -111,20 +118,19 @@ class FundingStateMachineTests(BluebottleTestCase):
     def test_approve(self):
         self.funding.states.submit()
         mail.outbox = []
+
+        with self.assertRaisesMessage(
+                TransitionNotPossible,
+                'Conditions not met for transition'
+        ):
+            self.funding.states.publish(save=True)
+
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'open')
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" is approved and is now open for donations 💸'.format(
-                self.funding.title
-            )
-        )
-        self.assertTrue(
-            u'Congratulations! Your campaign “{}” has been approved.'.format(
-                self.funding.title
-            )
-            in mail.outbox[0].body
+            'Your crowdfunding campaign on Test has been approved!'
         )
 
     def test_cancel(self):
@@ -136,15 +142,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" has been cancelled'.format(
-                self.funding.title
-            )
-        )
-        self.assertTrue(
-            u'Unfortunately your campaign “{}” has been cancelled.'.format(
-                self.funding.title
-            )
-            in mail.outbox[0].body
+            'Your crowdfunding campaign on Test has been cancelled'
         )
 
     def test_approve_organizer_succeed(self):
@@ -212,9 +210,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" is open for new donations 💸'.format(
-                self.funding.title
-            )
+            u'Your crowdfunding campaign on Test is open for new donations 💸'
         )
 
         self.assertTrue(
@@ -282,15 +278,11 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             owner_mail.subject,
-            u'The donations received for your campaign "{}" will be refunded'.format(
-                self.funding.title
-            )
+            u'The donations received for your crowdfunding campaign on Test will be refunded'
         )
 
         self.assertTrue(
-            'All donations received for your campaign "{}" will be refunded to the donors.'.format(
-                self.funding.title
-            ) in owner_mail.body
+            'All donations received for your crowdfunding campaign on Test will be refunded to the donors.'
         )
 
     def test_succeed_owner_message(self):
@@ -300,7 +292,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title)
+            u'Your crowdfunding campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title)
         )
 
     def test_succeed_generate_payouts(self):
@@ -312,7 +304,8 @@ class FundingStateMachineTests(BluebottleTestCase):
 
     def test_reject(self):
         mail.outbox = []
-        self.funding.states.submit()
+        self.funding.states.submit(save=True)
+        mail.outbox = []
         self.funding.states.reject(save=True)
         self.assertEqual(self.funding.status, 'rejected')
         organizer = self.funding.contributors.get()
@@ -320,7 +313,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign has been rejected.'
+            u'Your crowdfunding campaign on Test has been rejected'
         )
 
     def test_close_with_donations(self):
@@ -492,9 +485,10 @@ class DonationStateMachineTests(BluebottleTestCase):
         )
 
 
-class BasePaymentStateMachineTests(BluebottleTestCase):
+class BasePaymentStateMachineTests(FundingStripeMixin, BluebottleTestCase):
 
     def setUp(self):
+        super(BasePaymentStateMachineTests, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
@@ -571,6 +565,8 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
 
     def setUp(self):
         self.account = PlainPayoutAccountFactory.create()
+        self.bank_account = BankAccountFactory.create(connect_account=self.account)
+        self.activity = FundingFactory.create(bank_account=self.bank_account)
 
     def test_initial(self):
         self.assertEqual(self.account.status, 'new')
@@ -582,7 +578,7 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
     def test_accept_mail(self):
         self.account.states.verify(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified')
+        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified on Test')
 
     def test_reject(self):
         self.account.states.reject(save=True)
@@ -591,7 +587,7 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
     def test_reject_mail(self):
         self.account.states.reject(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign')
+        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign on Test')
 
 
 class PayoutStateMachineTests(BluebottleTestCase):
@@ -647,3 +643,18 @@ class PayoutStateMachineTests(BluebottleTestCase):
         self.assertIsNone(self.payout.date_approved)
         self.assertIsNone(self.payout.date_started)
         self.assertIsNone(self.payout.date_completed)
+
+    @patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout')
+    def test_approve_transition_not_available_after_approval(self, mock_trigger_payout):
+        """Test that after approving a Payout, the 'approve' transition is no longer available."""
+        payout = PayoutFactory.create()
+
+        # Initially, approve should be available (status is 'new')
+        self.assertEqual(payout.status, 'new')
+        payout.states.approve(save=True)
+        self.assertEqual(payout.status, 'approved')
+
+        # After approval, approve should not be available
+        payout.refresh_from_db()
+        with self.assertRaises(TransitionNotPossible):
+            payout.states.approve(save=True)

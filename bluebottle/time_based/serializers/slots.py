@@ -1,10 +1,18 @@
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
-from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
+from rest_framework_json_api.serializers import (
+    ModelSerializer,
+    PolymorphicModelSerializer,
+)
 
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
-from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot, PeriodicSlot, Slot
+from bluebottle.time_based.models import (
+    PeriodicSlot,
+    ScheduleSlot,
+    Slot,
+    TeamScheduleSlot,
+)
 from bluebottle.time_based.serializers.activities import RelatedLinkFieldByStatus
 from bluebottle.time_based.serializers.serializers import DateActivitySlotSerializer
 from bluebottle.utils.fields import FSMField
@@ -88,7 +96,7 @@ class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
         related_link_url_kwarg="slot_id",
         statuses={
             "active": ["new", "succeeded", "scheduled", "accepted"],
-            "failed": ["rejected", "withdrawn", "removed", "cancelled"],
+            "failed": ["rejected", "withdrawn", "removed", "cancelled", "withdrawn"],
         },
     )
     ical_view_name = "team-schedule-slot-ical"

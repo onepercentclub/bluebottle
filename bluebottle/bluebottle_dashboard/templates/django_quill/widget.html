@@ -1,0 +1,24 @@
+{% load static %}
+<style>
+    .django-quill-widget-container .select2 {
+        display: none;
+    }
+</style>
+
+<div class="vLargeTextField django-quill-widget-container form-row {{ class }}">
+    <div
+        id="quill-{{ id }}"
+        class="django-quill-widget"
+        data-type="django-quill"
+        data-config="{{ config }}"
+        {% if quill and quill.delta %}data-delta="{{ quill.delta|escape }}"{% endif %}
+        {% if quill and quill.html %}data-html="{{ quill.html|escape }}"{% endif %}
+    ></div>
+    <input
+        id="quill-input-{{ id }}"
+        name="{{ name }}"
+        type="hidden"
+        {% if value %}value="{{ value|escape }}"{% endif %}
+    >
+    <script>initBluebottleQuill("{{ id }}");</script>
+</div>

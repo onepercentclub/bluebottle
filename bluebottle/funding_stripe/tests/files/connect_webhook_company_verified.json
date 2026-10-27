@@ -1,0 +1,356 @@
+{
+  "id": "acct_123456789",
+  "object": "account",
+  "activity": {
+    "status": "active"
+  },
+  "business_profile": {
+    "annual_revenue": null,
+    "customer_regions": null,
+    "estimated_worker_count": null,
+    "funding_source": null,
+    "mcc": "8398",
+    "minority_owned_business_designation": null,
+    "name": "Stichting Doe Leuke Dingen",
+    "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform.",
+    "specified_commercial_transactions_act_url": null,
+    "support_address": null,
+    "support_email": null,
+    "support_phone": null,
+    "support_url": null,
+    "url": null
+  },
+  "business_type": "non_profit",
+  "capabilities": {
+    "bancontact_payments": "inactive",
+    "card_payments": "active",
+    "giropay_payments": "inactive",
+    "ideal_payments": "active",
+    "link_payments": "active",
+    "sepa_debit_payments": "inactive",
+    "transfers": "active"
+  },
+  "charges_enabled": true,
+  "company": {
+    "address": {
+      "city": "Spijkenisse",
+      "country": "NL",
+      "line1": "Jan Straat 1",
+      "line2": null,
+      "postal_code": "3201AA",
+      "state": null
+    },
+    "directors_provided": true,
+    "executives_provided": true,
+    "name": "Stichting Doe Leuke Dingen",
+    "owners_provided": true,
+    "phone": "+316123456789",
+    "structure": "incorporated_non_profit",
+    "tax_id_provided": true,
+    "verification": {
+      "details": null,
+      "details_code": null,
+      "document": {
+        "back": null,
+        "details": null,
+        "details_code": null,
+        "front": null
+      },
+      "status": "verified"
+    }
+  },
+  "controller": {
+    "application": {
+      "loss_liable": true,
+      "onboarding_owner": true,
+      "pricing_controls": true
+    },
+    "dashboard": {
+      "type": "none"
+    },
+    "fees": {
+      "payer": "application_custom"
+    },
+    "is_controller": true,
+    "losses": {
+      "payments": "application"
+    },
+    "requirement_collection": "application",
+    "stripe_dashboard": {
+      "type": "none"
+    },
+    "type": "application"
+  },
+  "country": "NL",
+  "created": 1762781206,
+  "default_currency": "eur",
+  "details_submitted": true,
+  "email": null,
+  "external_accounts": {
+    "object": "list",
+    "data": [
+      {
+        "id": "ba_1123456789",
+        "object": "bank_account",
+        "account": "acct_123456789",
+        "account_holder_name": "Hr D O'Good",
+        "account_holder_type": "individual",
+        "account_type": null,
+        "available_payout_methods": [
+          "standard",
+          "instant"
+        ],
+        "bank_name": "ING BANK N.V.",
+        "country": "NL",
+        "currency": "eur",
+        "debit_agreement": null,
+        "default_for_currency": true,
+        "fingerprint": "123456789",
+        "future_requirements": {
+          "currently_due": [],
+          "errors": [],
+          "past_due": [],
+          "pending_verification": []
+        },
+        "last4": "1234",
+        "metadata": {},
+        "requirements": {
+          "currently_due": [],
+          "errors": [],
+          "past_due": [],
+          "pending_verification": []
+        },
+        "routing_number": "INGBNL2A",
+        "status": "new"
+      }
+    ],
+    "has_more": false,
+    "total_count": 1,
+    "url": "/v1/accounts/acct_123456789/external_accounts"
+  },
+  "future_requirements": {
+    "alternatives": [],
+    "current_deadline": null,
+    "currently_due": [],
+    "detailed_requirement_information": null,
+    "disabled_reason": null,
+    "errors": [],
+    "eventually_due": [],
+    "past_due": [],
+    "pending_verification": [],
+    "requirement_information": null
+  },
+  "metadata": {
+    "member_id": "12",
+    "tenant_domain": "test",
+    "tenant_name": "test"
+  },
+  "payouts_enabled": true,
+  "requirements": {
+    "alternatives": [],
+    "current_deadline": null,
+    "currently_due": [],
+    "detailed_requirement_information": [],
+    "disabled_reason": null,
+    "errors": [],
+    "eventually_due": [],
+    "past_due": [],
+    "pending_verification": [],
+    "requirement_information": []
+  },
+  "risk_controls": {
+    "charges": {
+      "pause_requested": false
+    },
+    "payouts": {
+      "pause_requested": false
+    }
+  },
+  "risk_signals": {
+    "object": "risk_signals",
+    "session_metadata": false
+  },
+  "settings": {
+    "bacs_debit_payments": {
+      "display_name": null,
+      "service_user_number": null
+    },
+    "branding": {
+      "icon": "file_123456789",
+      "logo": "file_123456789",
+      "primary_color": "#5555fe",
+      "secondary_color": "#0074d4"
+    },
+    "card_issuing": {
+      "tos_acceptance": {
+        "date": null,
+        "ip": null
+      },
+      "tos_acceptances": {
+        "account_holder": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/ssa#services-terms"
+        },
+        "apple_pay_celtic": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/issuing/celtic/apple-payment-platform-program-manager-customer-terms-and-conditions#exhibit-c-pass-through-provisions"
+        },
+        "apple_pay_cross_river": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/issuing/crb/apple-payment-platform-program-manager-customer-terms-and-conditions#exhibit-c-pass-through-provisions"
+        },
+        "apple_pay_fifth_third": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/issuing/fifth-third/apple-payment-platform-program-manager-customer-terms-and-conditions#exhibit-c-pass-through-provisions"
+        },
+        "apple_pay_lead": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/issuing/lead-bank/apple-payment-platform-program-manager-customer-terms-and-conditions"
+        },
+        "charge_card_celtic": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/celtic-charge-card"
+        },
+        "charge_card_celtic_platform": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "charge_card_cross_river": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/issuing/crb-charge-card"
+        },
+        "charge_card_cross_river_financing_disclosures": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "charge_card_cross_river_platform": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "charge_card_fifth_third": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/issuing/fifth-third-bank-terms"
+        },
+        "charge_card_fifth_third_financing_disclosures": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "charge_card_fifth_third_platform": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "consumer_revolving_credit_card_celtic": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "consumer_revolving_credit_card_celtic_platform": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "consumer_revolving_credit_card_celtic_privacy_notice": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "consumer_revolving_credit_card_celtic_privacy_notice_platform": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "prepaid_card_lead": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/lead-commercial-prepaid-card"
+        },
+        "prepaid_card_lead_platform": {
+          "date": null,
+          "ip": null,
+          "url": null
+        },
+        "spend_card_celtic": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/celtic-spend-card"
+        },
+        "spend_card_cross_river": {
+          "date": null,
+          "ip": null,
+          "url": "https://stripe.com/legal/issuing/crb-spend-card"
+        },
+        "spend_card_cross_river_financing_disclosures": {
+          "date": null,
+          "ip": null,
+          "url": null
+        }
+      }
+    },
+    "card_payments": {
+      "decline_on": {
+        "avs_failure": false,
+        "cvc_failure": false
+      },
+      "statement_descriptor_prefix": "TEST",
+      "statement_descriptor_prefix_kana": null,
+      "statement_descriptor_prefix_kanji": null
+    },
+    "crypto_payments": {
+      "tos_acceptances": {
+        "date": null,
+        "ip": null
+      }
+    },
+    "dashboard": {
+      "display_name": null,
+      "timezone": "Etc/UTC"
+    },
+    "invoices": {
+      "default_account_tax_ids": null,
+      "hosted_payment_method_save": "offer"
+    },
+    "konbini_payments": {},
+    "payments": {
+      "statement_descriptor": "TEST",
+      "statement_descriptor_kana": null,
+      "statement_descriptor_kanji": null
+    },
+    "payouts": {
+      "debit_negative_balances": false,
+      "schedule": {
+        "delay_days": 7,
+        "interval": "manual"
+      },
+      "statement_descriptor": "Test"
+    },
+    "sepa_debit_payments": {},
+    "tax_forms": {
+      "consented_to_paperless_delivery": false
+    },
+    "treasury": {
+      "tos_acceptance": {
+        "date": null,
+        "ip": null
+      }
+    }
+  },
+  "tos_acceptance": {
+    "date": 1762781541,
+    "ip": "0.0.0.0",
+    "user_agent": null
+  },
+  "type": "custom"
+}

@@ -1,3 +1,4 @@
+import json
 from datetime import date, timedelta
 from io import BytesIO
 
@@ -12,14 +13,16 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 
 
 class TimeBasedActivityListAPITestCase:
-    fields = ['initiative', 'start', 'title', 'description', 'review']
+    fields = ['initiative', 'start', 'title', 'description', 'review', 'theme']
 
     attributes = ['start', 'title', 'description', 'review']
-    relationships = ['initiative', 'owner']
-    included = ['initiative', 'owner']
+    relationships = ['initiative', 'owner', 'theme']
+    included = ['initiative', 'owner', 'theme']
+    defaults = {}
 
     @property
     def model_name(self):
@@ -27,14 +30,22 @@ class TimeBasedActivityListAPITestCase:
 
     def setUp(self):
         self.url = reverse(self.url_name)
+        if self.defaults == {}:
+            self.defaults = {
+                'description': json.dumps({'html': 'test description', 'delta': ''}),
+            }
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append(self.model_name)
         settings.save()
+
+        self.defaults['initiative'] = InitiativeFactory.create(status='approved')
+        self.defaults['theme'] = ThemeFactory.create()
+
         super().setUp()
 
     def test_create_complete(self):
-        self.perform_create(user=self.user)
+        self.perform_create(user=self.defaults['initiative'].owner)
         self.assertStatus(status.HTTP_201_CREATED)
 
         for relationship in self.relationships:
@@ -55,7 +66,7 @@ class TimeBasedActivityListAPITestCase:
 
     def test_create_incomplete(self):
         self.defaults['description'] = ''
-        self.perform_create(user=self.user)
+        self.perform_create(user=self.defaults['initiative'].owner)
 
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertRequired('description')
@@ -84,7 +95,7 @@ class TimeBasedActivityListAPITestCase:
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_disabled_activity_type(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
 
         settings.activity_types = [
             activity_type for activity_type in settings.activity_types
@@ -108,7 +119,7 @@ class TimeBasedActivityDetailAPITestCase:
 
     defaults = {
         'title': 'Test title',
-        'description': 'Test description',
+        'description': json.dumps({'html': 'Test description', 'delta': ''}),
         'review': False,
         'is_online': True,
     }
@@ -297,7 +308,7 @@ class TimeBasedActivityDetailAPITestCase:
 
     def test_put_initiative_owner(self):
         new_description = 'Test description'
-        self.perform_update({'description': new_description}, user=self.model.initiative.owner)
+        self.perform_update({'title': new_description}, user=self.model.initiative.owner)
 
         self.assertStatus(status.HTTP_200_OK)
 
@@ -692,13 +703,17 @@ class TimeBasedRegistrationDetailAPITestCase:
 class TimeBasedRegistrationTransitionListAPITestCase:
     fields = ["resource", "transition", "send_email", "message"]
 
+    activity_defaults = {
+        'start': date.today() + timedelta(days=10),
+        'deadline': date.today() + timedelta(days=20),
+    }
+
     def setUp(self):
         self.activity = self.activity_factory.create(
             initiative=InitiativeFactory.create(status='approved'),
             status='draft',
-            start=date.today() + timedelta(days=10),
-            deadline=date.today() + timedelta(days=20),
-            review=True
+            review=True,
+            **self.activity_defaults
         )
         self.activity.states.publish(save=True)
         self.registration = self.factory.create(activity=self.activity)
@@ -717,6 +732,31 @@ class TimeBasedRegistrationTransitionListAPITestCase:
 
         self.registration.refresh_from_db()
         self.assertEqual(self.defaults['resource'].status, 'accepted')
+
+    def test_accept_manager(self):
+        mail.outbox = []
+        self.perform_create(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.registration.refresh_from_db()
+        self.assertEqual(self.registration.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been selected for the activity "{}"'.format(
+                self.activity.title
+            ),
+        )
+
+    def test_accept_no_mail(self):
+        mail.outbox = []
+        self.defaults["send_email"] = False
+        self.perform_create(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.registration.refresh_from_db()
+        self.assertEqual(self.registration.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_accept_yourself(self):
         self.perform_create(user=self.registration.user)
@@ -942,8 +982,8 @@ class TimeBasedParticipantTransitionListAPITestCase:
             review=False,
             **self.activity_defaults
         )
-        self.participant = self.factory.create(activity=self.activity)
         self.url = reverse(self.url_name)
+        self.participant = self.factory.create(activity=self.activity)
 
         self.defaults = {
             'resource': self.participant,
@@ -951,6 +991,7 @@ class TimeBasedParticipantTransitionListAPITestCase:
         }
 
         self.initial_status = self.participant.status
+
         super().setUp()
 
     def test_transition(self):
@@ -987,6 +1028,7 @@ class TimeBasedParticipantTransitionListAPITestCase:
 
 class TimeBasedActivityAPIExportTestCase:
     def setUp(self):
+        super().setUp()
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
@@ -997,7 +1039,10 @@ class TimeBasedActivityAPIExportTestCase:
             initiative=InitiativeFactory.create(status='approved'),
             status='open',
         )
-        self.participant_factory.create_batch(4, activity=self.activity)
+        self.participants = self.participant_factory.create_batch(
+            4,
+            activity=self.activity,
+        )
 
         response = self.client.get(
             reverse(self.url_name, args=(self.activity.pk, )),

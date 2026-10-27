@@ -1,0 +1,21 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p class="donation-intro">
+        {% blocktrans context 'platform-email' %}
+            You are working on a crowdfunding campaign "{{ title }}".
+            <br/><br/>
+            You submitted some information to verify you or an organisations identity but in some cases we need extra information for a successful verification.
+            <br/><br/>
+            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.
+        {% endblocktrans %}
+    </p>
+
+{% endblock message %}
+
+{% block action %}
+    <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">
+       {% trans 'Provide details' context 'platform-email' %}
+    </a>
+{% endblock %}`

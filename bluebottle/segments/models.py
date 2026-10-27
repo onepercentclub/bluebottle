@@ -2,22 +2,28 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
+from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
+from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
-class SegmentType(models.Model):
-    name = models.CharField(_('name'), max_length=255)
+class SegmentType(TranslatableModel, models.Model):
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=255),
+    )
+
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
 
     inherit = models.BooleanField(
@@ -66,6 +72,18 @@ class SegmentType(models.Model):
         default=False
     )
 
+    admin_user_filter = models.BooleanField(
+        _('Segment manager filter - Members'),
+        help_text=_('When enabled, members managing this segment will only see members linked to this segment.'),
+        default=False,
+    )
+
+    admin_activity_filter = models.BooleanField(
+        _('Segment manager filter - Activities'),
+        help_text=_('When enabled, members managing this segment will only see activities linked to this segment.'),
+        default=False,
+    )
+
     @property
     def field_name(self):
         return 'segment__' + self.slug.replace('-', '_')
@@ -81,16 +99,30 @@ class SegmentType(models.Model):
     def __str__(self):
         return self.name
 
-    class Meta:
-        ordering = ('name',)
+    class Meta(object):
+        ordering = ['pk']
 
     class JSONAPIMeta(object):
         resource_name = 'segment-types'
 
 
 @python_2_unicode_compatible
-class Segment(models.Model):
-    name = models.CharField(_('name'), max_length=255)
+class Segment(TranslatableModel, models.Model):
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=255),
+        slogan=models.CharField(
+            _('Slogan'), max_length=255, null=True, blank=True,
+            help_text=_(
+                'A short sentence to explain your segment. This sentence is directly visible on the page.'
+            )),
+        story=QuillField(
+            _('Story'), blank=True, null=True,
+            help_text=_(
+                'A more detailed story for your segment. This story can be accessed via a link on the page.'
+            )
+        )
+    )
+
     slug = models.CharField(_('slug'), max_length=255)
 
     alternate_names = ArrayField(
@@ -111,20 +143,6 @@ class Segment(models.Model):
         default=list,
         blank=True,
         help_text=_('Users with email addresses for this domain are automatically added to this segment.')
-    )
-
-    tag_line = models.CharField(
-        _('Slogan'), max_length=255, null=True, blank=True,
-        help_text=_(
-            'A short sentence to explain your segment. This sentence is directly visible on the page.'
-        )
-    )
-
-    story = models.TextField(
-        _('Story'), blank=True, null=True,
-        help_text=_(
-            'A more detailed story for your segment. This story can be accessed via a link on the page.'
-        )
     )
 
     logo = ImageField(
@@ -183,15 +201,20 @@ class Segment(models.Model):
         )
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def save(self, *args, **kwargs):
-        if self.name not in self.alternate_names:
-            self.alternate_names.append(self.name)
+        if self.pk:
+            name_value = self.name
+        else:
+            name_value = self.name
 
-        if not self.slug:
-            self.slug = slugify(self.name)
+        if name_value and name_value not in self.alternate_names:
+            self.alternate_names.append(name_value)
 
-        if self.story:
-            self.story = clean_html(self.story)
+        if not self.slug and name_value:
+            self.slug = slugify(name_value)
 
         super().save(*args, **kwargs)
 
@@ -211,7 +234,9 @@ class Segment(models.Model):
 
     @property
     def text_color(self):
-        rgb_background_color = [c / 256.0 for c in ImageColor.getcolor(self.background_color, 'RGB')]
+        rgb_background_color = [
+            c / 256.0 for c in ImageColor.getcolor(self.background_color or '#ffffff', 'RGB')
+        ]
         white = (1, 1, 1)
 
         contrast_with_white = contrast.rgb(rgb_background_color, white)
@@ -222,7 +247,10 @@ class Segment(models.Model):
             return "text"
 
     def __str__(self):
-        return self.name
+        try:
+            return self.name
+        except ObjectDoesNotExist:
+            return '---'
 
     def get_absolute_url(self):
         domain = get_current_host()
@@ -234,7 +262,7 @@ class Segment(models.Model):
         )
 
     class Meta:
-        ordering = ('name',)
+        ordering = ['pk']
         unique_together = (('slug', 'segment_type'), )
 
     class JSONAPIMeta(object):

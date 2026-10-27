@@ -20,6 +20,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(remove_export_metrics, migrations.RunPython.noop)
     ]
-

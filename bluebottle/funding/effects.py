@@ -1,14 +1,13 @@
 import datetime
 
 from django.utils import timezone
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.models import MoneyContribution
-from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.updates.models import Update
 
@@ -97,7 +96,7 @@ class SetDeadlineEffect(Effect):
     def pre_save(self, **kwargs):
         if not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
-            self.instance.deadline = get_current_timezone().localize(
+            self.instance.deadline = make_aware(
                 datetime.datetime(
                     deadline.year,
                     deadline.month,
@@ -105,7 +104,8 @@ class SetDeadlineEffect(Effect):
                     hour=23,
                     minute=59,
                     second=59
-                )
+                ),
+                get_current_timezone()
             )
 
     def __str__(self):
@@ -270,11 +270,33 @@ class RemoveAnonymousRewardEffect(Effect):
 
     @property
     def is_valid(self):
-        settings = FundingPlatformSettings.load()
-        return self.instance.user is None and not settings.allow_anonymous_rewards
+        return self.instance.user is None
 
     def pre_save(self, **kwargs):
         self.instance.reward = None
 
     def __str__(self):
         return _('Remove anonymous donation')
+
+
+class SelectOrCreatePayoutAccountEffect(Effect):
+    conditions = []
+    display = False
+
+    def post_save(self, **kwargs):
+        if self.instance.bank_account:
+            return
+        user = self.instance.owner
+        country = self.instance.country.alpha2_code or 'NL'
+        from bluebottle.funding_stripe.models import StripePayoutAccount
+        payout_account = StripePayoutAccount.objects.filter(
+            owner=user,
+        ).first()
+        if not payout_account:
+            payout_account = StripePayoutAccount.objects.create(
+                owner=user,
+                country=country,
+            )
+
+    def __str__(self):
+        return _('Select or create a payout account')

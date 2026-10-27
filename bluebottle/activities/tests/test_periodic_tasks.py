@@ -3,7 +3,7 @@ from unittest import mock
 
 from django.core import mail
 from django.utils import timezone
-from django.utils.timezone import now
+from django.utils.timezone import now, make_aware
 
 from bluebottle.activities.tasks import do_good_hours_reminder
 from bluebottle.members.models import MemberPlatformSettings, Member
@@ -11,7 +11,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
-    SlotParticipantFactory
+    DateRegistrationFactory
 )
 
 
@@ -53,39 +53,39 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         )
 
         self.active_user = BlueBottleUserFactory.create(first_name='Active')
-        self.part1 = DateParticipantFactory.create(
+        self.registration = DateRegistrationFactory.create(
             user=self.active_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=self.part1,
+        DateParticipantFactory.create(
+            registration=self.registration,
             slot=self.slot1
         )
-        SlotParticipantFactory.create(
-            participant=self.part1,
+        DateParticipantFactory.create(
+            registration=self.registration,
             slot=self.slot2
         )
         self.moderate_user = BlueBottleUserFactory.create(first_name='Moderate')
-        self.part2 = DateParticipantFactory.create(
+        self.registration2 = DateRegistrationFactory.create(
             user=self.moderate_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=self.part2,
+        DateParticipantFactory.create(
+            registration=self.registration2,
             slot=self.slot1
         )
-        SlotParticipantFactory.create(
-            participant=self.part2,
+        DateParticipantFactory.create(
+            registration=self.registration2,
             slot=old_slot
         )
 
         self.tempted_user = BlueBottleUserFactory.create(first_name='Tempted')
-        self.part3 = DateParticipantFactory.create(
+        self.registration3 = DateRegistrationFactory.create(
             user=self.tempted_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=self.part3,
+        DateParticipantFactory.create(
+            registration=self.registration3,
             slot=old_slot
         )
 
@@ -101,7 +101,7 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         mail.outbox = []
 
     def run_task(self, when):
-        with mock.patch('bluebottle.activities.messages.now', return_value=when):
+        with mock.patch('bluebottle.activities.messages.matching.now', return_value=when):
             with mock.patch('bluebottle.activities.tasks.date') as mock_date:
                 mock_date.today.return_value = when.date()
                 mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
@@ -109,50 +109,58 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
 
     @property
     def next_year(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year + 1, 1, 1)
+        return make_aware(
+            datetime(now().year + 1, 1, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def q1(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 1, 1)
+        return make_aware(
+            datetime(now().year, 1, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def fiscal_q1(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 9, 1)
+        return make_aware(
+            datetime(now().year, 9, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def after_q1(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 1, 12)
+        return make_aware(
+            datetime(now().year, 1, 12),
+            timezone.get_current_timezone()
         )
 
     @property
     def after_q2(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 4, 15)
+        return make_aware(
+            datetime(now().year, 4, 15),
+            timezone.get_current_timezone()
         )
 
     @property
     def q2(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 4, 1)
+        return make_aware(
+            datetime(now().year, 4, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def q3(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 7, 1)
+        return make_aware(
+            datetime(now().year, 7, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def q4(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 10, 1)
+        return make_aware(
+            datetime(now().year, 10, 1),
+            timezone.get_current_timezone()
         )
 
     def test_reminder_q1(self):
@@ -166,6 +174,32 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         mail.outbox = []
         self.run_task(self.q1)
         self.assertEqual(len(mail.outbox), 0, "Reminder mail should not be send again.")
+
+    def test_reminder_q1_not_resent_when_previous_message_pending(self):
+        """
+        If a previous run saved Message rows but died before setting `sent`
+        (or before SMTP finished), a retry must not mail again.
+        """
+        from bluebottle.notifications.models import Message
+        from django.contrib.contenttypes.models import ContentType
+
+        settings = MemberPlatformSettings.load()
+        for user in [self.moderate_user, self.passive_user, self.tempted_user]:
+            Message.objects.create(
+                recipient=user,
+                template='messages/matching/reminder-q1',
+                subject='pending',
+                content_type=ContentType.objects.get_for_model(settings),
+                object_id=settings.pk,
+                sent=None,
+            )
+
+        mail.outbox = []
+        self.run_task(self.q1)
+        self.assertEqual(
+            len(mail.outbox), 0,
+            "Reminder mail should not be sent again when a pending Message exists."
+        )
 
     def test_reminder_fiscal_q1(self):
         settings = MemberPlatformSettings.load()
@@ -187,8 +221,8 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_reminder_q2(self):
-        SlotParticipantFactory.create(
-            participant=self.part3,
+        DateParticipantFactory.create(
+            registration=self.registration3,
             slot=self.slot3
         )
         mail.outbox = []
@@ -200,8 +234,8 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         self.assertFalse(self.tempted_user.email in recipients, "Tempted user should not receive email")
 
     def test_reminder_q3(self):
-        SlotParticipantFactory.create(
-            participant=self.part3,
+        DateParticipantFactory.create(
+            registration=self.registration3,
             slot=self.slot3
         )
         mail.outbox = []
@@ -209,11 +243,11 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 0, 'Q3 mails should be disabled')
 
     def test_reminder_q4(self):
-        SlotParticipantFactory.create(
-            participant=self.part3,
+        DateParticipantFactory.create(
+            registration=self.registration3,
             slot=self.slot3
         )
-        self.part3.states.withdraw(save=True)
+        self.registration3.states.reject(save=True)
         mail.outbox = []
         self.run_task(self.q4)
         self.assertEqual(len(mail.outbox), 3)

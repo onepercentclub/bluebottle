@@ -2,8 +2,6 @@
 
 from django.db import migrations
 
-from bluebottle.time_based.models import PeriodActivity
-
 
 def migrate_deadline_wallposts(apps, schema_editor):
     ContentType = apps.get_model("contenttypes", "ContentType")
@@ -38,6 +36,9 @@ class Migration(migrations.Migration):
     dependencies = [
         ("wallposts", "0023_auto_20221213_1132"),
         ("time_based", "0099_auto_20240304_1341"),
+    ]
+    run_before = [
+        ("time_based", "0140_registereddateactivity_and_more"),
     ]
 
     operations = [

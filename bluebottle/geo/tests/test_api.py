@@ -10,14 +10,15 @@ from rest_framework import status
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
-from bluebottle.geo.tests.test_admin import mapbox_response
+from bluebottle.geo.tests.mapbox_fixtures import MAPBOX_V6_ADDRESS_FEATURE as mapbox_response
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import (
     CountryFactory, GeolocationFactory, LocationFactory, PlaceFactory
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory, DateActivitySlotFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DeadlineActivityFactory, DateActivitySlotFactory
 
 
 class GeoTestCase(BluebottleTestCase):
@@ -62,7 +63,7 @@ class CountryListTestCase(GeoTestCase):
 
         countries = response.data
         self.assertTrue('Abchazië' in [c['name'] for c in countries])
-        self.assertTrue('Zwitserland' in [c['name'] for c in countries])
+        self.assertTrue('Zuid-Soedan' in [c['name'] for c in countries])
 
 
 class UsedCountryListTestCase(GeoTestCase):
@@ -72,20 +73,25 @@ class UsedCountryListTestCase(GeoTestCase):
     Endpoint: /api/geo/used_countries
     """
 
+    def create_geolocation(self, **kwargs):
+        geolocation = GeolocationFactory.build(**kwargs)
+        geolocation.save(skip_mapbox_sync=True)
+        return geolocation
+
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
 
         belgium = Country.objects.get(alpha2_code="BE")
-        location_be = GeolocationFactory.create(country=belgium)
+        location_be = self.create_geolocation(country=belgium)
 
         bulgaria = Country.objects.get(alpha2_code="BG")
-        location_bg = GeolocationFactory.create(country=bulgaria)
+        location_bg = self.create_geolocation(country=bulgaria)
 
         germany = Country.objects.get(alpha2_code="DE")
-        location_de = GeolocationFactory.create(country=germany)
+        location_de = self.create_geolocation(country=germany)
 
         turkey = Country.objects.get(alpha2_code="TR")
-        location_tr = GeolocationFactory.create(country=turkey)
+        location_tr = self.create_geolocation(country=turkey)
 
         initiative = InitiativeFactory.create(
             status='approved',
@@ -99,7 +105,8 @@ class UsedCountryListTestCase(GeoTestCase):
         )
         DateActivitySlotFactory.create(
             activity=activity,
-            location=location_be
+            location=location_be,
+            status='open',
         )
 
         activity = DateActivityFactory.create(
@@ -109,12 +116,14 @@ class UsedCountryListTestCase(GeoTestCase):
         )
         DateActivitySlotFactory.create(
             activity=activity,
-            location=location_bg
+            location=location_bg,
+            status='full',
         )
 
-        PeriodActivityFactory.create(
+        DeadlineActivityFactory.create(
             status='draft',
-            location=location_de
+            location=location_de,
+            initiative=initiative,
         )
 
         activity = DateActivityFactory.create(
@@ -140,7 +149,7 @@ class UsedCountryListTestCase(GeoTestCase):
         self.assertEqual(len(countries), 3)
 
     def test_api_used_country_list_endpoint_with_offices(self):
-        ireland = Country.objects.get(translations__name="Ireland")
+        ireland = Country.objects.filter(translations__name="Ireland").first()
         office = LocationFactory.create(country=ireland)
         InitiativeFactory.create(location=office, status='approved', place=None)
         response = self.client.get(reverse('country-list'), {'filter[used]': True, '_': now()})
@@ -172,7 +181,6 @@ class LocationListTestCase(GeoTestCase):
     def test_api_location_detail_endpoint(self):
         location = self.locations[0]
         response = self.client.get(reverse('office-detail', args=(location.id, )))
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(data['attributes']['name'], self.locations[0].name)
@@ -180,14 +188,21 @@ class LocationListTestCase(GeoTestCase):
 
         static_map_url = data['attributes']['static-map-url']
         self.assertTrue(
-            static_map_url.startswith('https://maps.googleapis.com/maps/api/staticmap?')
+            static_map_url.startswith(
+                'https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/'
+            )
         )
-        self.assertTrue(
-            'signature=' in static_map_url
-        )
-        self.assertTrue(
-            'center=10' in static_map_url
-        )
+        self.assertIn('access_token=', static_map_url)
+        self.assertIn(',10/422x422', static_map_url)
+
+    def test_api_location_closed_platform(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.closed = True
+        member_settings.save()
+
+        location = self.locations[0]
+        response = self.client.get(reverse('office-detail', args=(location.id, )))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class GeolocationCreateTestCase(GeoTestCase):
@@ -198,15 +213,15 @@ class GeolocationCreateTestCase(GeoTestCase):
 
     def setUp(self):
         super(GeoTestCase, self).setUp()
-        self.country = CountryFactory.create()
+        self.country = Country.objects.first()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
     @mock.patch(
-        'bluebottle.geo.models.Geolocation.reverse_geocode',
-        return_value=mapbox_response
+        'bluebottle.geo.mapbox.lookup_by_mapbox_id',
+        return_value={'features': [mapbox_response]}
     )
-    def test_api_geolocation_create(self, mock_reverse_geocode):
+    def test_api_geolocation_create(self, mock_lookup):
         """
         Ensure post request returns 201.
         """
@@ -214,6 +229,7 @@ class GeolocationCreateTestCase(GeoTestCase):
             "data": {
                 "type": "geolocations",
                 "attributes": {
+                    "mapbox-id": mapbox_response['properties']['mapbox_id'],
                     "position": {"latitude": 43.0579025, "longitude": 23.6851594},
                 },
                 "relationships": {
@@ -233,14 +249,61 @@ class GeolocationCreateTestCase(GeoTestCase):
 
         static_map_url = response.data['static_map_url']
         self.assertTrue(
-            static_map_url.startswith('https://maps.googleapis.com/maps/api/staticmap?')
+            static_map_url.startswith(
+                'https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/'
+            )
         )
-        self.assertTrue(
-            'signature=' in static_map_url
+        self.assertIn('access_token=', static_map_url)
+        position = response.data['position']
+        self.assertIn(
+            '{longitude},{latitude},10/422x422'.format(**position),
+            static_map_url,
         )
-        self.assertTrue(
-            'center={latitude},{longitude}'.format(**response.data['position']) in static_map_url
-        )
+
+    @mock.patch(
+        'bluebottle.geo.mapbox.lookup_by_mapbox_id',
+        return_value={'features': [mapbox_response]}
+    )
+    def test_api_geolocation_create_reuses_existing_mapbox_id(self, mock_lookup):
+        mapbox_id = mapbox_response['properties']['mapbox_id']
+        existing = GeolocationFactory.create(mapbox_id=mapbox_id)
+        existing.save(skip_mapbox_sync=True)
+
+        data = {
+            "data": {
+                "type": "geolocations",
+                "attributes": {
+                    "mapbox-id": mapbox_id,
+                    "position": {"latitude": 43.0579025, "longitude": 23.6851594},
+                },
+                "relationships": {
+                    "country": {
+                        "data": {
+                            "type": "countries",
+                            "id": self.country.id
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(reverse('geolocation-list'), json.dumps(data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(int(response.data['id']), existing.id)
+
+
+class OfficeListTestCase(GeoTestCase):
+    def setUp(self):
+        super(OfficeListTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.office = LocationFactory.create(name='Amsterdam Office')
+
+    def test_office_list_returns_offices(self):
+        response = self.client.get(reverse('office-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        ids = [item['id'] for item in data]
+        self.assertIn(str(self.office.pk), ids)
 
 
 class JSONAPICountryListTestCase(APITestCase):
@@ -249,7 +312,10 @@ class JSONAPICountryListTestCase(APITestCase):
         super().setUp()
 
         self.serializer = InitiativeCountrySerializer
-        CountryFactory.create_batch(20)
+        codes = [
+            'NL', 'BG', 'DE', 'BE', 'NO', 'SE', 'SF', 'DK', 'FR', 'CH', 'PT', 'ES'
+        ]
+        self.countries = [CountryFactory.create(alpha2_code=code) for code in codes]
 
         self.url = reverse('new-country-list')
 
@@ -257,7 +323,11 @@ class JSONAPICountryListTestCase(APITestCase):
         self.perform_get()
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertSize(20)
+        data = self.response.json()['data']
+        self.assertGreaterEqual(len(data), 10, 'response should include at least our 12 countries')
+        returned_ids = {item['id'] for item in data}
+        for country in self.countries:
+            self.assertIn(str(country.pk), returned_ids, f'created country {country.pk} should be in response')
 
 
 class PlaceDetailTestCase(APITestCase):
@@ -281,9 +351,9 @@ class PlaceDetailTestCase(APITestCase):
     def test_get_anonymous(self):
         self.perform_get()
         # Share places
-        self.assertStatus(status.HTTP_200_OK)
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())
         # Share places
-        self.assertStatus(status.HTTP_200_OK)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)

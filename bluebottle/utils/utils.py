@@ -1,4 +1,3 @@
-
 from future import standard_library
 
 standard_library.install_aliases()
@@ -14,7 +13,8 @@ from importlib import import_module
 
 import html2text
 
-import bleach
+from html_sanitizer import Sanitizer
+
 import pygeoip
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
@@ -27,21 +27,34 @@ from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients import properties
 
-
 to_text = html2text.HTML2Text()
 to_text.ignore_tables = True
 to_text.ignore_images = True
 to_text.body_width = 0
 to_text.ignore_emphasis = True
 
-
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
-        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u']
-ATTRIBUTES = {'a': ['target', 'href'], 'img': ['src', 'alt', 'width', 'height', 'align']}
+        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img']
+ATTRIBUTES = {
+    'a': ['target', 'href', 'rel'],
+    'img': ['src', 'alt', 'width', 'height', 'align'],
+    'li': ['data-list', 'class']
+}
+EMPTY = ['hr', 'a', 'br', 'img']
+
+sanitizer = Sanitizer({
+    'tags': TAGS,
+    'attributes': ATTRIBUTES,
+    'empty': EMPTY,
+    'element_preprocessors': [],
+    'keep_typographic_whitespace': True
+})
 
 
 def clean_html(content):
-    return bleach.clean(content, tags=TAGS, attributes=ATTRIBUTES)
+    if not content:
+        return ''
+    return sanitizer.sanitize(content)
 
 
 def get_languages():
@@ -56,7 +69,7 @@ def get_client_ip(request=None):
         request = ThreadLocal.get_current_request()
 
     try:
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.headers.get('x-forwarded-for')
     except AttributeError:
         x_forwarded_for = None
 
@@ -140,6 +153,11 @@ def get_current_host(include_scheme=True):
         return host
 
 
+def get_tenant_name():
+    tenant = connection.tenant
+    return tenant.name or '[site name]'
+
+
 def get_current_language():
     """
     Get the current language from request
@@ -149,6 +167,46 @@ def get_current_language():
         return request.LANGUAGE_CODE
     else:
         return properties.LANGUAGE_CODE
+
+
+def get_api_language():
+    """
+    Get the current language from request
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
+        return get_language_from_request(request)
+    else:
+        return properties.LANGUAGE_CODE
+
+
+def get_request():
+    """
+    Get the current request
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
+        return request
+
+
+def is_back_office_request():
+    """
+    Is this a back-office request?
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
+        return request.resolver_match and request.resolver_match.app_name == 'admin'
+    return False
+
+
+def is_api_request():
+    """
+    Is this an API request?
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
+        return '/api/' in request.path
+    return False
 
 
 class InvalidIpError(Exception):
@@ -247,7 +305,7 @@ def reverse_signed(name, args):
 
 
 def get_language_from_request(request):
-    return request.META.get('HTTP_X_APPLICATION_LANGUAGE', None)
+    return request.headers.get('x-application-language', None)
 
 
 def _json_object_hook(d):

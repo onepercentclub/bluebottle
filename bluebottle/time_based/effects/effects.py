@@ -3,9 +3,10 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from django.db.models import F
 from django.template.loader import render_to_string
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.follow.models import unfollow
 from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import (
@@ -25,9 +26,8 @@ class CreateSlotTimeContributionEffect(Effect):
         if slot.start and slot.duration:
             end = slot.start + slot.duration
             contribution = TimeContribution(
-                contributor=self.instance.participant,
+                contributor=self.instance,
                 contribution_type=ContributionTypeChoices.date,
-                slot_participant=self.instance,
                 value=slot.duration,
                 start=slot.start,
                 end=end
@@ -118,9 +118,15 @@ class CreateOverallTimeContributionEffect(Effect):
         activity = self.instance.activity
         tz = get_current_timezone()
         if activity.start and activity.start > date.today():
-            contribution_date = tz.localize(datetime.combine(activity.start, datetime.min.replace(hour=12).time()))
+            contribution_date = make_aware(
+                datetime.combine(activity.start, datetime.min.replace(hour=12).time()),
+                tz
+            )
         elif activity.deadline and activity.deadline < date.today():
-            contribution_date = tz.localize(datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()))
+            contribution_date = make_aware(
+                datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()),
+                tz
+            )
         else:
             contribution_date = now()
 
@@ -165,12 +171,18 @@ class RescheduleOverallPeriodActivityDurationsEffect(Effect):
             tz = get_current_timezone()
 
             if self.instance.start:
-                start = tz.localize(datetime.combine(self.instance.start, datetime.min.time()))
+                start = make_aware(
+                    datetime.combine(self.instance.start, datetime.min.time()),
+                    tz
+                )
             else:
                 start = F('start')
 
             if self.instance.deadline:
-                end = tz.localize(datetime.combine(self.instance.deadline, datetime.min.time()))
+                end = make_aware(
+                    datetime.combine(self.instance.deadline, datetime.min.time()),
+                    tz
+                )
             else:
                 end = None
 
@@ -301,15 +313,18 @@ class CreateFirstSlotEffect(Effect):
 
     template = 'admin/time_based/periodic/create_first_slot.html'
 
+    @property
     def is_valid(self):
         return self.instance.slots.count() == 0
 
     def post_save(self):
+        if self.instance.slots.count():
+            return
         tz = get_current_timezone()
-        start = tz.localize(
-            datetime.combine(self.instance.start, datetime.min.time())
+        start = make_aware(
+            datetime.combine(self.instance.start, datetime.min.time()),
+            tz
         ) if self.instance.start else now()
-
         PeriodicSlot.objects.create(
             activity=self.instance,
             start=start,
@@ -332,6 +347,12 @@ class CreateNextSlotEffect(Effect):
             )
 
             slot.states.start(save=True)
+
+    @property
+    def is_valid(self):
+        settings = SitePlatformSettings.load()
+
+        return not settings.terminated
 
 
 class CreatePeriodicParticipantsEffect(Effect):
@@ -386,20 +407,17 @@ class CheckPreparationTimeContributionEffect(Effect):
     template = 'admin/check_preparation_time_contribution.html'
 
     def post_save(self, **kwargs):
-        participant = self.instance.participant
-        participant.refresh_from_db()
-        has_registrations = participant.slot_participants.filter(
-            status__in=['registered']
-        ).exists()
-        prep_time = participant.contributions.filter(
+        prep_time = self.instance.contributions.filter(
             timecontribution__contribution_type=ContributionTypeChoices.preparation
         ).first()
         if prep_time:
-            if not has_registrations and prep_time.status in ['succeeded', 'new']:
+            if (
+                prep_time.contributor.status not in ('accepted', 'succeeded') and
+                prep_time.status in ['succeeded', 'new']
+            ):
                 prep_time.states.fail(save=True)
             elif (
-                participant.status in ['new', 'accepted', 'succeeded'] and
-                has_registrations and
+                prep_time.contributor.status in ['new', 'accepted', 'succeeded'] and
                 prep_time.status == 'failed'
             ):
                 prep_time.states.succeed(save=True)
@@ -443,7 +461,7 @@ class SlotParticipantUnFollowActivityEffect(Effect):
     @property
     def is_valid(self):
         return (
-            self.instance.participant.slot_participants.filter(
+            self.instance.registration.participants.filter(
                 status__in=("registered", "succeeded")
             ).count()
             == 1

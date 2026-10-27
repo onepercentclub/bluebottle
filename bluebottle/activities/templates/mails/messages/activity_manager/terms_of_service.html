@@ -1,0 +1,14 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+<p>
+    <p>
+        {% blocktrans context 'platform-email' %}
+            Thanks for creating a {{ activity_type }} for "{{title}}". Here are the Terms of Service.
+        {% endblocktrans %}
+    </p>
+    <div class="info-box">
+        {{ terms_of_service }}
+    </div>
+{% endblock message %}

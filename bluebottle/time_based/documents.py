@@ -1,9 +1,13 @@
-from datetime import datetime
-
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
+from bluebottle.activities.documents import (
+    ActivityDocument,
+    activity,
+    geofeatures_for_geolocation,
+    get_translated_country_list,
+    locality_from_geolocation,
+)
 from bluebottle.time_based.models import (
     DateActivity,
     DeadlineActivity,
@@ -14,17 +18,23 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     DateParticipant,
     DateActivitySlot,
+    RegisteredDateActivity,
+    RegisteredDateParticipant
 )
+from bluebottle.utils.documents import TextField
 
 SCORE_MAP = {
     'open': 1,
     'running': 0.7,
     'full': 0.6,
+    'registration_closed': 0.6,
     'succeeded': 0.5,
 }
 
+INDEXABLE_SLOT_STATUSES = ('open', 'full', 'registration_closed', 'finished')
 
-class TimeBasedActivityDocument:
+
+class TimeBasedActivityDocument(ActivityDocument):
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
@@ -34,9 +44,63 @@ def deduplicate(items):
     return [dict(s) for s in set(frozenset(d.items()) for d in items)]
 
 
+def unique_slot_geolocations(slots):
+    seen = {}
+    for slot in slots:
+        if getattr(slot, 'is_online', False) or not slot.location_id:
+            continue
+        if slot.location_id not in seen:
+            seen[slot.location_id] = slot.location
+    return list(seen.values())
+
+
+def deduplicate_locations(locations):
+    seen = {}
+    for location in locations:
+        location_id = location.get('id')
+        if location_id is not None:
+            key = ('id', location_id)
+        else:
+            key = (
+                'address',
+                location.get('name'),
+                location.get('locality'),
+                location.get('country_code'),
+                location.get('type'),
+            )
+        if key not in seen:
+            seen[key] = location
+    return list(seen.values())
+
+
+def deduplicate_positions(positions):
+    seen = {}
+    for position in positions:
+        key = (position.get('lat'), position.get('lon'))
+        if key not in seen:
+            seen[key] = position
+    return list(seen.values())
+
+
+def slot_location_entry(geolocation, location_hint=None):
+    primary = geolocation.geofeature
+    country = geolocation.country
+    return {
+        'id': geolocation.id,
+        'name': primary.place_name if primary else geolocation.formatted_address,
+        'formatted_address': primary.place_name if primary else geolocation.formatted_address,
+        'location_hint': location_hint,
+        'locality': locality_from_geolocation(geolocation),
+        'country_code': country.alpha2_code if country else None,
+        'country': country.name if country else None,
+        'type': 'location',
+        'geofeatures': geofeatures_for_geolocation(geolocation),
+    }
+
+
 @registry.register_document
 @activity.document
-class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+class DateActivityDocument(TimeBasedActivityDocument):
     contribution_duration = fields.NestedField(properties={
         'value': fields.FloatField()
     })
@@ -44,15 +108,29 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'status': fields.KeywordField(),
-        'title': fields.TextField(),
+        'title': TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
-        'locality': fields.KeywordField(attr='location.locality'),
-        'formatted_address': fields.KeywordField(attr='location.formatted_address'),
+        'location_hint': fields.KeywordField(),
+        'locality': fields.KeywordField(),
+        'formatted_address': fields.KeywordField(),
         'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
         'country': fields.KeywordField(attr='location.country.name'),
         'is_online': fields.BooleanField(),
+        'location_id': fields.LongField(),
     })
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.prefetch_related(
+            'slots',
+            'slots__location',
+            'slots__location__country',
+            'slots__location__geofeature',
+            'slots__location__geofeatures',
+            'slots__location__geofeatures__translations',
+        )
+        return queryset
 
     def get_instances_from_related(self, related_instance):
         result = super().get_instances_from_related(related_instance)
@@ -69,33 +147,56 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         related_models = ActivityDocument.Django.related_models + (DateParticipant, DateActivitySlot)
         model = DateActivity
 
-    def get_queryset(self):
-        return super().get_queryset().prefetch_related(
-            'slots'
-        )
-
     def prepare_location(self, instance):
         locations = super(DateActivityDocument, self).prepare_location(instance)
-        locations += [
-            {
-                'name': slot.location.formatted_address,
-                'locality': slot.location.locality,
-                'country_code': slot.location.country.alpha2_code,
-                'country': slot.location.country.name
-            }
-            for slot in instance.slots.all()
-            if not slot.is_online and slot.location
-        ]
-        return locations
+        for geolocation in unique_slot_geolocations(instance.slots.all()):
+            locations.append(slot_location_entry(geolocation))
+        return deduplicate_locations(locations)
+
+    def prepare_geofeature(self, instance):
+        # Geofeatures live on unique location entries (see prepare_location /
+        # slot_location_entry). Duplicating them on every slot and again at the
+        # top level blows past index.mapping.nested_objects.limit.
+        return []
+
+    def prepare_slots(self, instance):
+        slots = []
+        for slot in instance.active_slots.all():
+            location = slot.location
+            if not location:
+                continue
+
+            country = location.country
+            slots.append({
+                'id': str(slot.pk),
+                'status': slot.status,
+                'title': slot.title,
+                'start': slot.start,
+                'end': slot.end,
+                'location_hint': slot.location_hint,
+                'locality': locality_from_geolocation(location),
+                'formatted_address': (
+                    location.geofeature.place_name
+                    if location.geofeature else location.formatted_address
+                ),
+                'country': country.name if country else None,
+                'country_code': country.alpha2_code if country else None,
+                'is_online': slot.is_online,
+                'location_id': location.id,
+            })
+        return slots
 
     def prepare_start(self, instance):
-        return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finished', )]
+        return [
+            slot.start for slot in instance.slots.all()
+            if slot.status in INDEXABLE_SLOT_STATUSES
+        ]
 
     def prepare_end(self, instance):
         return [
             slot.start + slot.duration
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
+            if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_dates(self, instance):
@@ -106,14 +207,14 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
                 'status': slot.status
             }
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
+            if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_duration(self, instance):
         return [
             {'gte': slot.start, 'lte': slot.end}
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished')
+            if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_contribution_duration(self, instance):
@@ -124,28 +225,29 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
                 'value': slot.duration.seconds / (60 * 60) + slot.duration.days * 24
             }
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished')
+            if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
-        for slot in instance.slots.all():
-            if not slot.is_online and slot.location and slot.location.country:
-                countries += get_translated_list(slot.location.country)
+        for geolocation in unique_slot_geolocations(instance.slots.all()):
+            if geolocation.country:
+                countries += get_translated_country_list(geolocation.country)
         return deduplicate(countries)
 
     def prepare_position(self, instance):
-        return [
-            {'lat': slot.location.position.y, 'lon': slot.location.position.x}
-            for slot in instance.slots.all()
-            if not slot.is_online and slot.location and slot.location.position
+        positions = [
+            {'lat': geolocation.position.y, 'lon': geolocation.position.x}
+            for geolocation in unique_slot_geolocations(instance.slots.all())
+            if geolocation.position
         ]
+        return deduplicate_positions(positions)
 
     def prepare_is_online(self, instance):
         return any(slot.is_online for slot in instance.slots.all())
 
 
-class RegistrationActivityDocument(ActivityDocument):
+class RegistrationActivityDocument(TimeBasedActivityDocument):
 
     contribution_duration = fields.NestedField(properties={
         'period': fields.KeywordField(),
@@ -162,6 +264,7 @@ class RegistrationActivityDocument(ActivityDocument):
             return DeadlineActivity.objects.filter(contributors=related_instance)
 
     def prepare_contribution_duration(self, instance):
+
         if instance.duration:
             return [{
                 'period': 0,
@@ -173,6 +276,13 @@ class RegistrationActivityDocument(ActivityDocument):
             'value': 0,
             'period': 0,
         }]
+
+    def prepare_country(self, instance):
+        countries = super().prepare_country(instance)
+        if instance.location and instance.location.country:
+            countries += get_translated_country_list(instance.location.country)
+
+        return deduplicate(countries)
 
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:
@@ -187,8 +297,8 @@ class RegistrationActivityDocument(ActivityDocument):
 
     def prepare_dates(self, instance):
         return [{
-            'start': instance.start or datetime.min,
-            'end': instance.deadline or datetime.max,
+            'start': instance.start,
+            'end': instance.deadline
         }]
 
     def prepare_duration(self, instance):
@@ -199,7 +309,7 @@ class RegistrationActivityDocument(ActivityDocument):
 
 @registry.register_document
 @activity.doc_type
-class DeadlineActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+class DeadlineActivityDocument(RegistrationActivityDocument):
     participant_class = DeadlineParticipant
 
     def prepare_contribution_duration(self, instance):
@@ -212,14 +322,13 @@ class DeadlineActivityDocument(TimeBasedActivityDocument, RegistrationActivityDo
             ]
 
     class Django:
-
         related_models = ActivityDocument.Django.related_models + (DeadlineParticipant,)
         model = DeadlineActivity
 
 
 @registry.register_document
 @activity.doc_type
-class PeriodicActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+class PeriodicActivityDocument(RegistrationActivityDocument):
     participant_class = PeriodicParticipant
 
     def prepare_contribution_duration(self, instance):
@@ -239,8 +348,15 @@ class PeriodicActivityDocument(TimeBasedActivityDocument, RegistrationActivityDo
 
 @registry.register_document
 @activity.doc_type
-class ScheduleActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+class ScheduleActivityDocument(RegistrationActivityDocument):
     participant_class = ScheduleParticipant
+
+    def prepare_country(self, instance):
+        countries = super().prepare_country(instance)
+        if instance.location and instance.location.country:
+            countries += get_translated_country_list(instance.location.country)
+
+        return deduplicate(countries)
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
@@ -255,3 +371,40 @@ class ScheduleActivityDocument(TimeBasedActivityDocument, RegistrationActivityDo
 
         related_models = ActivityDocument.Django.related_models + (ScheduleParticipant,)
         model = ScheduleActivity
+
+
+@registry.register_document
+@activity.doc_type
+class RegisteredActivityDocument(RegistrationActivityDocument):
+    participant_class = RegisteredDateParticipant
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    'period': 'once',
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+                }
+            ]
+
+    class Django:
+        related_models = ActivityDocument.Django.related_models + (RegisteredDateParticipant,)
+        model = RegisteredDateActivity
+
+    def prepare_position(self, instance):
+        return []
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.start]
+
+    def prepare_dates(self, instance):
+        return [{
+            'start': instance.start,
+            'end': instance.start
+        }]
+
+    def prepare_duration(self, instance):
+        return {"gte": instance.start, "lte": instance.start}

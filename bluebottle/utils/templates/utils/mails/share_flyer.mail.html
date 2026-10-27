@@ -5,8 +5,8 @@
     <table class="twelve columns">
         <tr>
             <td>
-                {% trans "Hi" context 'email' %} {{ share_name }},<br><br>
-                {{ sender_name }} {% trans " wants to share the following initiative with you:" context 'email' %}<br><br>
+                {% trans "Hi" context 'platform-email' %} {{ share_name }},<br><br>
+                {{ sender_name }} {% trans " wants to share the following initiative with you:" context 'platform-email' %}<br><br>
                 <hr>
                 <br>
             </td>
@@ -41,7 +41,7 @@
     <table class="twelve columns">
         <tr>
             <td class="wrapper last">
-                <b style="font-weight: bold">{{ sender_name }} {% trans "says:" context 'email' %}</b><br>
+                <b style="font-weight: bold">{{ sender_name }} {% trans "says:" context 'platform-email' %}</b><br>
                 {{ share_motivation }}
             </td>
         </tr>
@@ -50,5 +50,5 @@
 
 {% block action %}
     <a href="mailto:{{ sender_email }}"
-       class="action-email">{% trans "Reply" context 'email' %}</a>
+       class="action-email">{% trans "Reply" context 'platform-email' %}</a>
 {% endblock %}

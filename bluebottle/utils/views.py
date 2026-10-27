@@ -1,35 +1,40 @@
+import json
 import mimetypes
 import os
 import re
 from io import BytesIO
 from operator import attrgetter
 
-import icalendar
+from django.db.models.manager import Manager
 import magic
 import xlsxwriter
+
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
+from django.contrib.admin.options import get_content_type_for_model
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
 from django.db.models import Case, When, IntegerField
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 from django.utils import translation
 from django.utils.functional import cached_property
 from django.views.generic import TemplateView
-from django.views.generic.base import View
 from django.views.generic.detail import DetailView
+from django.views import View
 from elasticsearch_dsl.utils import AttrList
 from rest_framework import generics
-from rest_framework import views, response
+from rest_framework.exceptions import APIException
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from taggit.models import Tag
 
+from bluebottle.activities.ical import ActivityIcal
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
 from bluebottle.utils.admin import prep_field
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
 from .serializers import LanguageSerializer
@@ -38,29 +43,12 @@ from .utils import get_current_language
 mime = magic.Magic(mime=True)
 
 
-class TagList(views.APIView):
-    """ All tags in use on this system """
-
-    def get(self, request, format=None):
-        data = [tag.name for tag in Tag.objects.all()[:20]]
-        return response.Response(data)
-
-
 class LanguageList(generics.ListAPIView):
     serializer_class = LanguageSerializer
     queryset = Language.objects.all()
 
     def get_queryset(self):
         return Language.objects.order_by('language_name').all()
-
-
-class TagSearch(views.APIView):
-    """ Search tags in use on this system """
-
-    def get(self, request, format=None, search=''):
-        data = [tag.name for tag in
-                Tag.objects.filter(name__startswith=search).all()[:20]]
-        return response.Response(data)
 
 
 class ModelTranslationViewMixin():
@@ -138,16 +126,71 @@ class RelatedPermissionMixin():
                     )
 
 
-class ListCreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.ListCreateAPIView):
+class LogUpdateMixin:
+    def get_changed_fields(self, serializer):
+        changed_fields = []
+
+        for key, value in serializer.validated_data.items():
+            if hasattr(serializer.instance, key):
+                current_value = getattr(serializer.instance, key)
+                if key in serializer.fields and isinstance(serializer.fields[key], RichTextField):
+                    current_value = json.dumps({'html': current_value.html, 'delta': ''})
+
+                if isinstance(current_value, Manager):
+                    current_value = list(current_value.all())
+
+                if current_value != value:
+                    changed_fields.append(key)
+
+        return changed_fields
+
+    def perform_create(self, serializer, **kwargs):
+        super().perform_create(serializer, **kwargs)
+        if self.request.user.is_authenticated:
+            LogEntry.objects.log_action(
+                self.request.user.pk,
+                get_content_type_for_model(serializer.Meta.model).pk,
+                serializer.instance.pk,
+                str(serializer.instance),
+                ADDITION,
+                json.dumps(
+                    [{'added': {}}]
+                )
+
+            )
+
+    def perform_update(self, serializer):
+        changed_fields = self.get_changed_fields(serializer)
+        if self.request.user.is_authenticated:
+            LogEntry.objects.log_action(
+                self.request.user.pk,
+                get_content_type_for_model(serializer.Meta.model).pk,
+                serializer.instance.pk,
+                str(serializer.instance),
+                CHANGE,
+                json.dumps(
+                    [{'changed': {'fields': changed_fields}}]
+                )
+            )
+
+        super().perform_update(serializer)
+
+
+class ListCreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, LogUpdateMixin, generics.ListCreateAPIView):
     permission_classes = (ResourcePermission,)
 
-    def perform_create(self, serializer):
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
+    def perform_create(self, serializer, **kwargs):
+        if hasattr(serializer.Meta, 'model'):
+            data = dict(
+                (key, value) for key, value in serializer.validated_data.items()
+                if getattr(serializer.Meta.model, key, None)
+            )
+            self.check_object_permissions(
+                self.request,
+                serializer.Meta.model(**data)
+            )
 
-        serializer.save()
+        super().perform_create(serializer)
 
 
 class CreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.CreateAPIView):
@@ -155,21 +198,26 @@ class CreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.Creat
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):
+            data = dict(
+                (key, value) for key, value in serializer.validated_data.items()
+                if getattr(serializer.Meta.model, key, None)
+            )
             self.check_object_permissions(
                 self.request,
-                serializer.Meta.model(**serializer.validated_data)
+                serializer.Meta.model(**data)
             )
-        serializer.save()
+
+        super().perform_create(serializer)
 
 
 class RetrieveUpdateAPIView(
-    RelatedPermissionMixin, ViewPermissionsMixin, generics.RetrieveUpdateAPIView
+    RelatedPermissionMixin, ViewPermissionsMixin, LogUpdateMixin, generics.RetrieveUpdateAPIView
 ):
     base_permission_classes = (ResourcePermission,)
 
 
 class RetrieveUpdateDestroyAPIView(
-    RelatedPermissionMixin, ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView
+    RelatedPermissionMixin, ViewPermissionsMixin, LogUpdateMixin, generics.RetrieveUpdateDestroyAPIView
 ):
     base_permission_classes = (ResourcePermission,)
 
@@ -208,10 +256,28 @@ class PrivateFileView(DetailView):
             field.name
         )
         try:
-            response['Content-Type'] = mime.from_file(field.path)
+            content_type = mime.from_file(field.path)
         except IOError:
-            pass
+            content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
+        from django.conf import settings
+
+        if settings.DEBUG:
+            # Direct file serving in debug mode
+            try:
+                with field.open('rb') as f:
+                    file_content = f.read()
+            except IOError:
+                raise Http404("File not found")
+
+            response = HttpResponse(file_content, content_type=content_type)
+        else:
+            # Use X-Accel-Redirect in production
+            response = HttpResponse()
+            response['X-Accel-Redirect'] = field.url
+            response['Content-Type'] = content_type
+
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
 
@@ -236,7 +302,9 @@ class TranslatedApiViewMixin(object):
         qs = super(TranslatedApiViewMixin, self).get_queryset().active_translations(
             get_current_language()
         ).distinct('id').order_by('id')
-        qs = qs.order_by(*qs.model._meta.ordering)
+        ordering = qs.model._meta.ordering
+        if ordering:
+            qs = qs.order_by(*ordering)
         return qs
 
 
@@ -302,10 +370,23 @@ class ESPaginator(Paginator):
         bottom = (number - 1) * self.per_page
         top = bottom + self.per_page
 
-        self.result = self.object_list[1][bottom:top].execute()
+        try:
+            self.result = self.object_list[1][bottom:top].execute()
+        except Exception as e:
+            # When index mappings drift (e.g. segments should be nested but isn't),
+            # ES raises a 400 RequestError which would otherwise bubble up as 500.
+            # Provide a clear hint to rebuild indices.
+            msg = str(e)
+            if 'nested object under path [segments] is not of nested type' in msg:
+                raise APIException(
+                    'Search index mapping is out of date (segments is not nested). '
+                    'Rebuild the Elasticsearch indices for this tenant.'
+                )
+            raise
 
         page = self._get_page(self.result, number, self)
-        page.facets = self.result.facets
+        # Some ES queries don't include aggregations/facets (e.g. plain sorted lists).
+        page.facets = getattr(self.result, 'facets', {})
 
         return page
 
@@ -330,7 +411,15 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
         result = super().get_paginated_response(data)
 
         facets = {}
-        for filter, facet in self.page.facets.to_dict().items():
+        page_facets = getattr(self.page, 'facets', {})
+        if hasattr(page_facets, 'to_dict'):
+            raw_facets = page_facets.to_dict()
+        elif isinstance(page_facets, dict):
+            raw_facets = page_facets
+        else:
+            raw_facets = {}
+
+        for filter, facet in raw_facets.items():
             facets[filter] = []
 
             for key, count, active in facet:
@@ -372,33 +461,11 @@ class NoPagination(PageNumberPagination):
 class IcalView(PrivateFileView):
     max_age = 30 * 60  # half an hour
 
-    @property
-    def details(self):
-        return self.get_object().description
-
     def get(self, *args, **kwargs):
         instance = self.get_object()
-        calendar = icalendar.Calendar()
+        activity_ical = ActivityIcal(instance)
 
-        event = icalendar.Event()
-        event.add('summary', instance.title)
-        event.add('description', self.details)
-        event.add('uid', instance.uid)
-        event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start)
-        event.add('dtend', instance.end)
-        event['uid'] = instance.uid
-
-        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
-        organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
-
-        event['organizer'] = organizer
-        if hasattr(instance, 'location') and instance.location:
-            event['location'] = icalendar.vText(instance.location.formatted_address)
-
-        calendar.add_component(event)
-
-        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
+        response = HttpResponse(activity_ical.to_file(), content_type='text/calendar')
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
         )
@@ -425,7 +492,7 @@ class ExportView(PrivateFileView):
         raise NotImplementedError()
 
     def write_data(self, workbook):
-        title = re.sub("[\[\]\\:*?/]", '', str(self.get_object())[:30])
+        title = re.sub(r"[\[\]\\:*?/]", '', str(self.get_object())[:30])
         worksheet = workbook.add_worksheet(title)
         worksheet.set_column(0, 10, 30)
         worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])
@@ -448,3 +515,8 @@ class ExportView(PrivateFileView):
         response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
         return response
+
+
+class NoopView(View):
+    def dispatch(self, *args, **kwargs):
+        return HttpResponseNotAllowed([])

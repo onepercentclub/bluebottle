@@ -1,52 +1,78 @@
-from django.conf.urls import url
+from django.urls import path
+from django.urls import re_path
 
 from bluebottle.time_based.views import (
     PeriodicTransitionList,
     PeriodicActivityListView, PeriodicActivityDetailView,
     PeriodicRelatedRegistrationList, PeriodicRegistrationList, PeriodicRegistrationTransitionList,
     PeriodicRegistrationDetail,
-    PeriodicRegistrationDocumentDetail, PeriodicParticipantTransitionList, PeriodicParticipantExportView,
-    PeriodicRelatedParticipantList, PeriodicParticipantDetail
+    PeriodicParticipantTransitionList, PeriodicParticipantExportView,
+    PeriodicRelatedParticipantList, PeriodicParticipantDetail,
+    PeriodicRelatedInterestList,
 )
 
 urlpatterns = [
-    url(r'^$',
+    path(
+        '',
         PeriodicActivityListView.as_view(),
-        name='periodic-list'),
-    url(r'^/(?P<pk>\d+)$',
+        name='periodic-list'
+    ),
+    path(
+        '/<int:pk>',
         PeriodicActivityDetailView.as_view(),
-        name='periodic-detail'),
-    url(r'^/transitions$',
+        name='periodic-detail'
+    ),
+    path(
+        '/transitions',
         PeriodicTransitionList.as_view(),
-        name='periodic-transition-list'),
+        name='periodic-transition-list'
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/registrations/$',
+    path(
+        '/<int:activity_id>/registrations/',
         PeriodicRelatedRegistrationList.as_view(),
-        name='related-periodic-registrations'),
-    url(r'^/registrations/$',
+        name='related-periodic-registrations'
+    ),
+    path(
+        '/registrations/',
         PeriodicRegistrationList.as_view(),
-        name='periodic-registration-list'),
-    url(r'^/registrations/transitions$',
+        name='periodic-registration-list'
+    ),
+    path(
+        '/registrations/transitions',
         PeriodicRegistrationTransitionList.as_view(),
-        name='periodic-registration-transitions'),
-    url(r'^/registrations/(?P<pk>\d+)$',
+        name='periodic-registration-transitions'
+    ),
+    path(
+        '/registrations/<int:pk>',
         PeriodicRegistrationDetail.as_view(),
-        name='periodic-registration-detail'),
-    url(r'^/registrations/(?P<pk>\d+)/document$',
-        PeriodicRegistrationDocumentDetail.as_view(),
-        name='periodic-registration-document'),
+        name='periodic-registration-detail'
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/participants$',
+    path(
+        '/<int:activity_id>/participants',
         PeriodicRelatedParticipantList.as_view(),
-        name='periodic-participants'),
-    url(r'^/participants/transitions$',
+        name='periodic-participants'
+    ),
+    path(
+        '/<int:activity_id>/interests',
+        PeriodicRelatedInterestList.as_view(),
+        name='periodic-interests'
+    ),
+    path(
+        '/participants/transitions',
         PeriodicParticipantTransitionList.as_view(),
-        name='periodic-participant-transitions'),
-    url(r'^/participants/(?P<pk>\d+)$',
+        name='periodic-participant-transitions'
+    ),
+    path(
+        '/participants/<int:pk>',
         PeriodicParticipantDetail.as_view(),
-        name='periodic-participant-detail'),
+        name='periodic-participant-detail'
+    ),
 
-    url(r'^/export/(?P<pk>[\d]+)$',
+    re_path(
+        r'^/export/(?P<pk>[\d]+)$',
         PeriodicParticipantExportView.as_view(),
-        name='periodic-participant-export'),
+        name='periodic-participant-export'
+    ),
 ]

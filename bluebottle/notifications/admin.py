@@ -1,32 +1,37 @@
 from builtins import object
+
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
-from django.contrib.contenttypes.admin import GenericTabularInline
-from django.forms import Textarea, TextInput
-from django.template.loader import render_to_string
+from django.contrib.contenttypes.admin import GenericStackedInline
 from django.db import router, transaction
+from django.forms import TextInput
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm, TranslatedField
 
 from bluebottle.notifications.models import Message, NotificationPlatformSettings, MessageTemplate
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
+from bluebottle.utils.utils import to_text
 
 
-class MessageAdminInline(GenericTabularInline):
+class MessageAdminInline(GenericStackedInline):
     model = Message
 
-    readonly_fields = ['sent', 'subject', 'recipient']
+    readonly_fields = ['sent', 'subject', 'recipient', 'message']
     fields = readonly_fields
+
+    def message(self, obj):
+        return to_text.handle(obj.custom_message)
 
     def has_add_permission(self, request, obj=None):
         return False
 
     extra = 0
+    ordering = ('-sent',)
 
     can_delete = False
 
@@ -55,7 +60,8 @@ class NotificationAdminMixin(object):
 
         if request.method == 'POST':
             form = ModelForm(request.POST, request.FILES, instance=obj)
-            new = self.save_form(request, form, change=True)
+            if form.is_valid():
+                new = self.save_form(request, form, change=True)
         old = self.get_object(request, object_id)
 
         confirm = request.POST.get('confirm', False)
@@ -105,15 +111,10 @@ class MessageTemplateAdminCreateForm(forms.ModelForm):
 
 class MessageTemplateAdminForm(TranslatableModelForm):
     subject = TranslatedField(widget=TextInput(attrs={'size': 60}))
-    body_html = TranslatedField(
-        form_class=forms.CharField,
-        widget=SummernoteWidget(attrs={'height': 300, 'width': 650})
-    )
-    body_txt = TranslatedField(widget=Textarea(attrs={'rows': 12, 'cols': 80}))
 
     class Meta(object):
         model = MessageTemplate
-        fields = ['message', 'subject', 'body_html', 'body_txt']
+        fields = ['message', 'subject', 'insert_method', 'body_html']
 
 
 @admin.register(MessageTemplate)
@@ -146,7 +147,9 @@ class MessageTemplateAdmin(TranslatableAdmin):
                 ('{site}', _('URL of the platform')),
                 ('{site_name}', _('Name of the platform')),
                 ('{first_name}', _('First name of the recipient')),
-                ('{contact_email}', _('Contact email of platform'))
+                ('{contact_email}', _('Contact email of platform')),
+                ('{partner_organization}', _('Partner organisation')),
+                ('{title}', _('Activity title')),
             ]
         }
         html = mark_safe(render_to_string("admin/notifications/placeholders.html", data))

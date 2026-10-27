@@ -1,22 +1,34 @@
-
-from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
-    ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
+from bluebottle.activities.messages.activity_manager import (
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivitySucceededNotification, ActivityRestoredNotification,
+    ActivityExpiredNotification
+)
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import NotificationTestCase
+from django.template import defaultfilters
+from datetime import date, timedelta
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, ParticipantFinishedNotification,
     ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
-    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
+    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
     SlotCancelledNotification, ParticipantAddedNotification,
     ParticipantSlotParticipantRegisteredNotification,
-    ManagerSlotParticipantRegisteredNotification, ParticipantCreatedNotification
+    ManagerSlotParticipantRegisteredNotification,
+    ManagerSlotParticipantWithdrewNotification,
+    SpotOpenedNotification,
+    InterestRegisteredNotification,
 )
-from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
-    ManagerRegistrationCreatedReviewNotification
+from bluebottle.time_based.messages.activity_manager import PastActivityRegisteredNotification
+from bluebottle.time_based.messages.participants import RegisteredActivityParticipantAddedNotification
+from bluebottle.time_based.messages.registrations import ManagerRegistrationCreatedNotification, \
+    ManagerRegistrationCreatedReviewNotification, DateUserJoinedNotification
+from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateParticipantFactory,
-    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory,
-    SlotParticipantFactory, DeadlineActivityFactory, DeadlineRegistrationFactory
+    DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory,
+    DeadlineActivityFactory, DeadlineRegistrationFactory, DateRegistrationFactory, RegisteredDateActivityFactory,
+    RegisteredDateParticipantFactory, InterestFactory
 )
 
 
@@ -57,9 +69,15 @@ class DateActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('The registration deadline for your activity "Save the world!" has expired')
         self.assertBodyContains(
-            'Unfortunately, nobody applied to your activity '
-            '"Save the world!" before the deadline to apply. '
-            'That’s why we have cancelled your activity.')
+            'Unfortunately, no one signed up for your activity '
+            '"Save the world!" before the deadline passed. '
+            'That’s why we have cancelled the activity.')
+        self.assertBodyContains(
+            'No worries, you can always reopen the activity by extending the deadline '
+            'or start a new activity and try again.')
+        self.assertBodyContains(
+            'Do you need tips to make your activity stand out? '
+            'Get in touch with the platform manager by replying to this email.')
         self.assertActionLink(self.obj.get_absolute_url())
 
     def test_activity_succeeded_notification(self):
@@ -86,18 +104,25 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
             owner=self.owner,
             slots=[]
         )
+        self.registration = DateRegistrationFactory.create(
+            answer='Par-bleu yellow'
+        )
         self.slots = DateActivitySlotFactory.create_batch(
             3,
             activity=self.activity
         )
         self.obj = DateParticipantFactory.create(
             activity=self.activity,
-            user=self.supporter
+            registration=self.registration,
+            user=self.supporter,
+            slot=self.slots[0]
         )
 
     def test_participant_registered_notification(self):
-        self.obj = SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
         )
         self.message_class = ParticipantSlotParticipantRegisteredNotification
         self.create()
@@ -107,14 +132,58 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionLink(self.obj.slot.get_absolute_url())
         self.assertActionTitle('View activity')
 
+    def test_participant_registered_with_hour_registration(self):
+        settings = InitiativePlatformSettings.load()
+        settings.hour_registration = 'per_activity'
+        settings.save()
+        self.activity.hour_registration_data = 'https://example.com'
+        self.activity.save()
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
+        )
+        self.message_class = ParticipantSlotParticipantRegisteredNotification
+        self.create()
+        self.assertBodyContains('Make sure to register your hours')
+
+    def test_participant_registered_with_review_link(self):
+        self.activity.review_link = 'https://example.com'
+        self.activity.save()
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
+        )
+        self.obj = participant.registration
+        self.message_class = DateUserJoinedNotification
+        self.create()
+        self.assertBodyContains('https://example.com')
+        self.assertBodyContains('Revisit the external link')
+
+    def test_slot_participant_withdrew_notification(self):
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
+        )
+        self.message_class = ManagerSlotParticipantWithdrewNotification
+        self.create()
+        self.assertRecipients([self.owner])
+        self.assertSubject('A participant has withdrawn from a time slot for your activity "Save the world!"')
+        self.assertBodyContains(f'{self.supporter.full_name} has withdrawn from a time slot for your activity')
+        self.assertActionLink(self.obj.slot.get_absolute_url())
+        self.assertActionTitle('View this activity')
+
     def test_participant_registered_manager(self):
         self.activity.review_title = 'What is your favorite color?'
         self.activity.save()
-        self.obj.motivation = 'Par-bleu yellow'
-        self.obj.save()
-        self.obj = SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter,
         )
+        self.obj.registration = self.registration
         self.message_class = ManagerSlotParticipantRegisteredNotification
         self.create()
         self.assertRecipients([self.activity.owner])
@@ -126,14 +195,19 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
     def test_new_participant_notification(self):
         self.activity.review_title = 'What is your favorite color?'
         self.activity.save()
-        self.obj.motivation = 'Par-bleu yellow'
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
+        )
+        self.obj.registration = self.registration
         self.message_class = NewParticipantNotification
         self.create()
-        self.assertRecipients([self.owner])
+        self.assertRecipients([self.activity.owner])
         self.assertSubject('A new participant has joined your activity "Save the world!" 🎉')
         self.assertBodyContains('Frans Beckenbauer has joined your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
         self.assertBodyContains('What is your favorite color?')
         self.assertBodyContains('Par-bleu yellow')
 
@@ -143,7 +217,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.supporter])
         self.assertSubject('You have been removed as participant for the activity "Save the world!"')
         self.assertBodyContains('You have been removed as participant for the activity "Save the world!"')
-        self.assertActionLink('https://testserver/initiatives/activities/list')
+        self.assertActionLink('http://test.localhost:3000/initiatives/activities/list')
         self.assertActionTitle('View all activities')
 
     def test_participant_finished_notification(self):
@@ -160,9 +234,9 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.owner])
         self.assertSubject('A participant has withdrawn from your activity "Save the world!"')
-        self.assertBodyContains('Frans Beckenbauer has withdrawn from you activity "Save the world!"')
+        self.assertBodyContains('Frans Beckenbauer has withdrawn from your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_participant_added_owner_notification(self):
         self.message_class = ManagerParticipantAddedOwnerNotification
@@ -171,14 +245,10 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A participant has been added to your activity "Save the world!" 🎉')
         self.assertBodyContains('Frans Beckenbauer has been added to your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_participant_added_notification(self):
         self.message_class = ParticipantAddedNotification
-        self.obj = DateParticipantFactory.create(
-            activity=self.activity,
-            user=self.supporter,
-        )
         self.create()
         self.assertRecipients([self.supporter])
         self.assertSubject('You have been added to the activity "Save the world!" 🎉')
@@ -192,11 +262,13 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A participant has been removed from your activity "Save the world!"')
         self.assertBodyContains('Frans Beckenbauer has been removed from your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_participant_joined_notification(self):
-        SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
         )
 
         self.message_class = ParticipantJoinedNotification
@@ -208,57 +280,6 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains(
             'Go to the activity page to see the times in your own timezone and add them to your calendar.'
         )
-
-
-class PeriodParticipantNotificationTestCase(NotificationTestCase):
-
-    def setUp(self):
-        self.supporter = BlueBottleUserFactory.create(
-            first_name='Frans',
-            last_name='Beckenbauer'
-        )
-        self.owner = BlueBottleUserFactory.create()
-        self.activity = PeriodActivityFactory.create(
-            title="Save the world!",
-            owner=self.owner,
-            duration='1:30:00',
-            duration_period='overall',
-            review=False
-        )
-        self.obj = PeriodParticipantFactory.create(
-            activity=self.activity,
-            user=self.supporter
-        )
-
-    def test_participant_joined_notification(self):
-        self.message_class = ParticipantJoinedNotification
-        self.create()
-        self.assertRecipients([self.supporter])
-        self.assertSubject('You have joined the activity "Save the world!"')
-        self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('View activity')
-        self.assertBodyNotContains(
-            'Go to the activity page to see the times in your own timezone and add them to your calendar.'
-        )
-
-    def test_new_participant_notification(self):
-        self.message_class = ParticipantAppliedNotification
-        self.create()
-        self.assertRecipients([self.supporter])
-        self.assertSubject('You have applied to the activity "Save the world!"')
-        self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('View activity')
-
-    def test_someone_applied_to_manager(self):
-        self.activity.review_title = 'What is your favorite color?'
-        self.obj.motivation = 'Vermilion'
-        self.message_class = ParticipantCreatedNotification
-        self.create()
-        self.assertRecipients([self.activity.owner])
-        self.assertSubject('You have a new participant for your activity "Save the world!" 🎉')
-        self.assertBodyContains('Review the application and decide if this person is the right fit.')
-        self.assertBodyContains('What is your favorite color?')
-        self.assertBodyContains('Vermilion')
 
 
 class DateSlotNotificationTestCase(NotificationTestCase):
@@ -277,23 +298,13 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_slot_cancelled_with_participant(self):
-        participant = DateParticipantFactory.create(activity=self.activity, status='accepted')
-        SlotParticipantFactory.create(
-            status='registered', slot=self.obj, participant=participant
-        )
-        SlotParticipantFactory.create(
-            status='rejected',
+        participant = DateParticipantFactory.create(
+            status='accepted',
             slot=self.obj,
-            participant=DateParticipantFactory.create(activity=self.activity, status='accepted')
-        )
-
-        SlotParticipantFactory.create(
-            status='registered',
-            slot=self.obj,
-            participant=DateParticipantFactory.create(activity=self.activity, status='rejected')
+            activity=self.activity
         )
 
         self.message_class = SlotCancelledNotification
@@ -301,7 +312,7 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner, participant.user])
         self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
 
 class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
@@ -328,7 +339,7 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject('You have a new participant for your activity "Save the world!" 🎉')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_manager_registration_created_review(self):
         self.activity.review = True
@@ -338,4 +349,312 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject('You have a new application for your activity "Save the world!" 🎉')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
+
+
+class RegisteredDateActivityNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.owner = BlueBottleUserFactory.create(
+            first_name='Frans',
+            last_name='Beckenbauer'
+        )
+
+        self.reviewer = BlueBottleUserFactory.create(
+            first_name='Oliver',
+            last_name='Kahn',
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+        self.obj = RegisteredDateActivityFactory.create(
+            title="Save the world!",
+            owner=self.owner
+        )
+
+    def test_activity_registered_reviewer(self):
+        self.message_class = ActivityRegisteredReviewerNotification
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new activity has been registered on Test')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View this activity')
+
+    def test_activity_registered(self):
+        self.message_class = PastActivityRegisteredNotification
+        self.create()
+        self.assertRecipients([self.owner])
+        self.assertSubject('Your activity on Test has been registered!')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+
+class RegisteredDateParticipantNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.supporter = BlueBottleUserFactory.create(
+            first_name='Frans',
+            last_name='Beckenbauer'
+        )
+
+        self.activity = RegisteredDateActivityFactory.create(
+            title="Save the world!",
+        )
+
+        self.obj = RegisteredDateParticipantFactory.create(
+            activity=self.activity,
+            user=self.supporter
+        )
+
+    def test_participant_added(self):
+        self.message_class = RegisteredActivityParticipantAddedNotification
+        self.create()
+        self.assertRecipients([self.obj.user])
+        self.assertSubject('You have been added to the activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+
+class SpotOpenedNotificationTestCase(NotificationTestCase):
+
+    def test_deadline_activity(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        other = BlueBottleUserFactory.create(first_name='Grace')
+        self.obj = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            is_online=True,
+            location=None,
+        )
+        InterestFactory.create(activity=self.obj, user=interested)
+        InterestFactory.create(activity=self.obj, user=other)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested, other])
+        self.assertSubject('A spot has opened up for an activity on Test.')
+        self.assertBodyContains('Good news, a spot has opened up for the activity:')
+        self.assertBodyContains('Save the world!')
+        self.assertBodyContains('first-come, first-served')
+        self.assertBodyContains(
+            'Changed your mind? You can withdraw your interest at any time on the activity page.'
+        )
+        self.assertActionLink(self.obj.get_absolute_url() + '?spotOpened=true')
+        self.assertActionTitle('View activity')
+
+    def test_date_slot(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+        )
+        self.obj = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+            is_online=True,
+            location=None,
+        )
+        InterestFactory.create(activity=activity, slot=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested])
+        self.assertSubject('A spot has opened up for an activity on Test.')
+        self.assertBodyContains('Save the world!')
+        self.assertBodyContains(self.obj.title)
+        self.assertActionLink(self.obj.get_absolute_url() + '&spotOpened=true')
+        self.assertActionTitle('View activity')
+
+    def test_date_slot_only_notifies_interested_users_for_that_slot(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        other = BlueBottleUserFactory.create(first_name='Grace')
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+        )
+        self.obj = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        other_slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        InterestFactory.create(activity=activity, slot=self.obj, user=interested)
+        InterestFactory.create(activity=activity, slot=other_slot, user=other)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested])
+
+    def test_date_slot_does_not_leak_online_meeting_url(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        slot_location = GeolocationFactory.create()
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+        )
+        self.obj = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+            is_online=True,
+            location=slot_location,
+            online_meeting_url='https://example.com/secret-meeting',
+        )
+        InterestFactory.create(activity=activity, slot=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested])
+        context = self.message.get_context(interested)
+        self.assertEqual(len(context['slots']), 1)
+        self.assertFalse(context['slots'][0].get('online_meeting_url'))
+        self.assertNotIn('online_meeting_url', context)
+        self.assertBodyNotContains('https://example.com/secret-meeting')
+        self.assertBodyNotContains(slot_location.formatted_address)
+
+    def test_deadline_activity_includes_location(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        location = GeolocationFactory.create()
+        start = date.today() + timedelta(days=7)
+        deadline = date.today() + timedelta(days=14)
+        self.obj = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            is_online=False,
+            location=location,
+            start=start,
+            deadline=deadline,
+            registration_deadline=None,
+        )
+        InterestFactory.create(activity=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested])
+        self.assertBodyContains(location.formatted_address)
+        self.assertBodyNotContains(defaultfilters.date(start))
+        self.assertBodyNotContains(defaultfilters.date(deadline))
+
+    def test_deadline_activity_with_review(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        self.obj = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            review=True,
+        )
+        InterestFactory.create(activity=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertBodyContains(
+            "Head to the activity page to apply. You'll need to wait to be approved before you can participate."
+        )
+        self.assertBodyNotContains('first-come, first-served')
+
+    def test_date_slot_with_review(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+            review=True,
+        )
+        self.obj = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        InterestFactory.create(activity=activity, slot=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertBodyContains(
+            "Head to the activity page to apply. You'll need to wait to be approved before you can participate."
+        )
+        self.assertBodyNotContains('first-come, first-served')
+
+    def test_no_recipients_without_interest(self):
+        self.obj = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            registration_deadline=None,
+        )
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([])
+
+
+class InterestRegisteredNotificationTestCase(NotificationTestCase):
+
+    def test_deadline_activity(self):
+        user = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+        )
+        self.obj = InterestFactory.create(activity=activity, user=user)
+
+        self.message_class = InterestRegisteredNotification
+        self.create()
+        self.assertRecipients([user])
+        self.assertSubject("You'll be notified if a spot opens up for Save the world!")
+        self.assertBodyContains("You've asked to be notified if a spot opens up for:")
+        self.assertBodyContains('Save the world!')
+        self.assertBodyContains('first-come, first-served')
+        self.assertBodyContains(
+            'Changed your mind? You can withdraw your interest at any time on the activity page.'
+        )
+        self.assertActionLink(activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_date_slot(self):
+        user = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        self.obj = InterestFactory.create(activity=activity, slot=slot, user=user)
+
+        self.message_class = InterestRegisteredNotification
+        self.create()
+        self.assertRecipients([user])
+        self.assertSubject("You'll be notified if a spot opens up for Save the world!")
+        self.assertBodyContains("You've asked to be notified if a spot opens up for:")
+        self.assertBodyContains('Save the world!')
+        self.assertBodyContains('first-come, first-served')
+        self.assertBodyContains(
+            'Changed your mind? You can withdraw your interest at any time on the activity page.'
+        )
+        self.assertActionLink(activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_deadline_activity_with_review(self):
+        user = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            review=True,
+        )
+        self.obj = InterestFactory.create(activity=activity, user=user)
+
+        self.message_class = InterestRegisteredNotification
+        self.create()
+        self.assertBodyContains(
+            "You'll need to apply and wait to be approved before you can participate."
+        )
+        self.assertBodyNotContains('first-come, first-served')

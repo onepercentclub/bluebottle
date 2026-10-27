@@ -1,4 +1,5 @@
 import re
+
 from django.db.models import Min
 from django.utils.translation import gettext_lazy as _
 
@@ -53,17 +54,22 @@ class PeriodActivityStartDeadlineValidator(Validator):
         return (
             not self.instance.deadline or
             not self.instance.start or
-            self.instance.deadline > self.instance.start
+            self.instance.deadline >= self.instance.start
         )
 
 
 class CompletedSlotsValidator(Validator):
     field = 'slots'
     code = 'slots'
-    message = _('All time slots should have all required fields filled out.')
+    message = _('At least one time slot should have all required fields filled out.')
 
     def is_valid(self):
-        return len([slot for slot in self.instance.slots.all() if not slot.is_complete]) == 0
+        if self.instance.pk:
+            slots = self.instance.slots.all()
+            if slots.exists():
+                return slots[0].is_complete
+            return not self.instance.pk or len([slot for slot in self.instance.slots.all() if slot.is_complete]) > 0
+        return False
 
 
 class HasSlotValidator(Validator):
@@ -72,4 +78,4 @@ class HasSlotValidator(Validator):
     message = _('Should have at least one time slot.')
 
     def is_valid(self):
-        return self.instance.slots.count() > 0
+        return not self.instance.pk or self.instance.slots.count() > 0

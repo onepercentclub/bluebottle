@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import path
 
 from bluebottle.time_based.views import (
     TeamTransitionList,
@@ -12,28 +12,28 @@ from bluebottle.time_based.views import (
 )
 
 urlpatterns = [
-    url(r"^$", TeamList.as_view(), name="team-list"),
+    path("", TeamList.as_view(), name="team-list"),
 
-    url(r"^/(?P<pk>\d+)$", TeamDetail.as_view(), name="team-detail"),
-    url(r"^/transitions$", TeamTransitionList.as_view(), name="team-transition-list"),
-    url(
-        r"^/(?P<team_id>\d+)/members$",
+    path("/<int:pk>", TeamDetail.as_view(), name="team-detail"),
+    path("/transitions", TeamTransitionList.as_view(), name="team-transition-list"),
+    path(
+        "/<int:team_id>/members",
         RelatedTeamMembers.as_view(),
         name="related-team-members",
     ),
-    url(
-        r"^/(?P<pk>\d+)/export$",
+    path(
+        "/<int:pk>/export",
         TeamMemberExportView.as_view(),
         name="team-members-export",
     ),
-    url(
-        r"^/activity/(?P<activity_id>\d+)/$",
+    path(
+        "/activity/<int:activity_id>/",
         RelatedTeamList.as_view(),
         name="related-teams",
     ),
 
-    url(r"^/team-members$", TeamMemberList.as_view(), name="team-member-list"),
-    url(r"^/team-members/(?P<pk>\d+)$", TeamMemberDetail.as_view(), name="team-member-detail"),
-    url(r"^/team-members/transitions$", TeamMemberTransitionList.as_view(), name="team-member-transition-list"),
+    path("/team-members", TeamMemberList.as_view(), name="team-member-list"),
+    path("/team-members/<int:pk>", TeamMemberDetail.as_view(), name="team-member-detail"),
+    path("/team-members/transitions", TeamMemberTransitionList.as_view(), name="team-member-transition-list"),
 
 ]

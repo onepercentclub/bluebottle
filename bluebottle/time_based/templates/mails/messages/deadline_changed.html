@@ -2,10 +2,15 @@
 {% load i18n %}
 {% load local_time %}
 
-{% block message %}{% blocktrans context 'email' %}
+{% block message %}{% blocktrans context 'platform-email' %}
 <p>The date of the activity "{{ title }}" has changed.</p>
 
 <p>The activity starts {{start}} and {{end}}.</p>
 
-<p>If you are unable to participate, please withdraw via the activity page so that others can take your place.</p>
 {% endblocktrans %}{% endblock %}
+
+
+{% block end_message %}
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
+{% endblock %}
+

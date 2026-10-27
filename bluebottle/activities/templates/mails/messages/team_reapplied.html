@@ -1,8 +1,0 @@
-{% extends "mails/messages/activity_base.html" %}
-{% load i18n %}
-
-{% block message%}
-    <p>
-        {% blocktrans context 'email' %}You’re added to team ‘{{team_name}}’ for the activity ‘{{title}}’.{% endblocktrans %}
-    </p>
-{% endblock %}

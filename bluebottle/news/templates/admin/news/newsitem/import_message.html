@@ -1,0 +1,21 @@
+{% load i18n %}
+
+{% if result.imported > 0 or result.updated > 0 %}
+    {% if result.imported > 0 %}
+        {% blocktrans count count=result.imported %}
+            1 news item was imported
+        {% plural %}
+            {{ count }} news items were imported
+        {% endblocktrans %}{% if result.updated > 0 %}. {% endif %}
+    {% endif %}
+    {% if result.updated > 0 %}
+        {% blocktrans count count=result.updated %}
+            1 news item was updated
+        {% plural %}
+            {{ count }} news items were updated
+        {% endblocktrans %}.
+    {% endif %}
+{% else %}
+    {% trans "No news items were imported or updated." %}
+{% endif %}
+

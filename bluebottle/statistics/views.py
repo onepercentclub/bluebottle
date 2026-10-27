@@ -1,4 +1,6 @@
-from bluebottle.statistics.models import BaseStatistic, DatabaseStatistic
+from rest_framework.permissions import IsAuthenticated
+
+from bluebottle.statistics.models import BaseStatistic, DatabaseStatistic, ImpactStatistic
 from bluebottle.statistics.renderers import StatisticsRenderer
 from bluebottle.statistics.serializers import StatisticSerializer, OldStatisticSerializer, UserStatisticSerializer
 from bluebottle.utils.permissions import TenantConditionalOpenClose
@@ -18,12 +20,21 @@ class StatisticList(JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose, ]
     queryset = BaseStatistic.objects.filter(active=True)
 
+    def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        filter = self.request.GET.get('filter[type]')
+
+        if filter and filter != 'all':
+            queryset = queryset.instance_of(DatabaseStatistic, ImpactStatistic)
+
+        return queryset
+
     renderer_classes = (StatisticsRenderer, )
 
 
 class UserStatisticList(JsonApiViewMixin, ListAPIView):
     serializer_class = UserStatisticSerializer
-    permission_classes = [TenantConditionalOpenClose, ]
+    permission_classes = [TenantConditionalOpenClose, IsAuthenticated]
     renderer_classes = (StatisticsRenderer, )
 
     def get_queryset(self, *args, **kwargs):

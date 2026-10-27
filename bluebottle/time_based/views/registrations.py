@@ -7,7 +7,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
     ScheduleRegistration,
-    TeamScheduleRegistration,
+    TeamScheduleRegistration, DateRegistration, Registration,
 )
 from bluebottle.time_based.serializers import (
     DeadlineRegistrationSerializer,
@@ -17,10 +17,11 @@ from bluebottle.time_based.serializers import (
     ScheduleRegistrationSerializer,
     ScheduleRegistrationTransitionSerializer,
     TeamScheduleRegistrationSerializer,
-    TeamScheduleRegistrationTransitionSerializer
+    TeamScheduleRegistrationTransitionSerializer, DateRegistrationSerializer, DateRegistrationTransitionSerializer,
+    RegistrationDocumentSerializer
 )
 from bluebottle.time_based.views.mixins import (
-    AnonimizeMembersMixin, FilterRelatedUserMixin,
+    AnonymizeMembersMixin, FilterRelatedUserMixin,
     RequiredQuestionsMixin
 )
 from bluebottle.transitions.views import TransitionList
@@ -40,6 +41,13 @@ class RegistrationList(JsonApiViewMixin, RequiredQuestionsMixin, CreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, IsAuthenticated),
     )
+
+
+class DateRegistrationList(RegistrationList):
+    queryset = DateRegistration.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = DateRegistrationSerializer
 
 
 class DeadlineRegistrationList(RegistrationList):
@@ -71,13 +79,13 @@ class PeriodicRegistrationList(RegistrationList):
 
 
 class RelatedRegistrationListView(
-    RelatedContributorListView, ListAPIView, AnonimizeMembersMixin, FilterRelatedUserMixin
+    RelatedContributorListView, ListAPIView, AnonymizeMembersMixin, FilterRelatedUserMixin
 ):
     @property
     def owners(self):
         if 'activity_id' in self.kwargs:
             activity = Activity.objects.get(pk=self.kwargs['activity_id'])
-            return [activity.owner] + list(activity.initiative.activity_managers.all())
+            return list(activity.owners)
 
     search_fields = ['user__first_name', 'user__last_name']
     filter_backends = [filters.SearchFilter]
@@ -97,9 +105,21 @@ class RelatedRegistrationListView(
             else:
                 queryset = queryset.none()
 
+        status_filter = self.request.query_params.get("filter[status]")
+        if status_filter:
+            statuses = status_filter.split(",")
+            queryset = queryset.filter(status__in=statuses)
+
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
         )
+
+
+class DateRelatedRegistrationList(RelatedRegistrationListView):
+    queryset = DateRegistration.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = DateRegistrationSerializer
 
 
 class DeadlineRelatedRegistrationList(RelatedRegistrationListView):
@@ -139,6 +159,11 @@ class RegistrationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     )
 
 
+class DateRegistrationDetail(RegistrationDetail):
+    queryset = DateRegistration.objects.all()
+    serializer_class = DateRegistrationSerializer
+
+
 class DeadlineRegistrationDetail(RegistrationDetail):
     queryset = DeadlineRegistration.objects.all()
     serializer_class = DeadlineRegistrationSerializer
@@ -160,6 +185,11 @@ class TeamScheduleRegistrationDetail(RegistrationDetail):
 class PeriodicRegistrationDetail(RegistrationDetail):
     queryset = PeriodicRegistration.objects.all()
     serializer_class = PeriodicRegistrationSerializer
+
+
+class DateRegistrationTransitionList(TransitionList):
+    serializer_class = DateRegistrationTransitionSerializer
+    queryset = DateRegistration.objects.all()
 
 
 class DeadlineRegistrationTransitionList(TransitionList):
@@ -186,19 +216,5 @@ class RegistrationDocumentDetail(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
     relation = 'document'
     field = 'file'
-
-
-class DeadlineRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = DeadlineRegistration.objects
-
-
-class ScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = ScheduleRegistration.objects
-
-
-class TeamScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = TeamScheduleRegistration.objects
-
-
-class PeriodicRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = PeriodicRegistration.objects
+    queryset = Registration.objects
+    serializer_class = RegistrationDocumentSerializer

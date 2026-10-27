@@ -9,6 +9,8 @@ from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 
+from django_quill.fields import QuillField
+
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import get_class
 
@@ -20,7 +22,7 @@ class Message(models.Model):
     template = models.CharField(max_length=100)
     subject = models.CharField(max_length=200)
     body_html = models.TextField(blank=True, null=True)
-    body_txt = models.TextField(blank=True, null=True)
+    insert_method = models.CharField(max_length=10, default='append')
     custom_message = models.TextField(blank=True, null=True)
     bcc = ArrayField(
         models.CharField(max_length=200, null=True),
@@ -54,20 +56,19 @@ class NotificationPlatformSettings(BasePlatformSettings):
         ('facebookAtWork', _('Facebook at Work')),
         ('linkedin', _('LinkedIn')),
         ('whatsapp', _('Whatsapp')),
-        ('yammer', _('Yammer')),
         ('teams', _('Teams')),
         ('email', _('Email')),
+        ('qrcode', _('QR code')),
     )
 
     share_options = MultiSelectField(
         max_length=100, choices=SHARE_OPTIONS, blank=True
     )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
-    default_yammer_group_id = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta(object):
-        verbose_name_plural = _('notification settings')
-        verbose_name = _('notification settings')
+        verbose_name_plural = _('Sharing settings')
+        verbose_name = _('Sharing settings')
 
 
 class NotificationModelMixin(object):
@@ -84,15 +85,29 @@ class NotificationModelMixin(object):
 class MessageTemplate(TranslatableModel):
 
     MESSAGES = (
-        ('bluebottle.members.messages.AccountActivationMessage', _('Member activated')),
+        (
+            'bluebottle.members.messages.AccountActivationMessage',
+            _('Member activated')
+        ),
     )
 
     message = models.CharField(
-        _('Message'), choices=MESSAGES,
+        _('Mail'), choices=MESSAGES,
         unique=True, max_length=500)
+
+    INSERT_METHODS = (
+        ('replace', _('Replace the entire message')),
+        ('append', _('Append this to the original message')),
+    )
+
+    insert_method = models.CharField(
+        _('Insert method'),
+        max_length=20,
+        choices=INSERT_METHODS,
+        default='append'
+    )
 
     translations = TranslatedFields(
         subject=models.CharField(_('Subject'), max_length=200),
-        body_html=models.TextField(_('Body (html)'), blank=True),
-        body_txt=models.TextField(_('Body (text)'), blank=True)
+        body_html=QuillField(_('Message'), blank=True),
     )

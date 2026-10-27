@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+    {% blocktrans with manager=obj.activity.owner.full_name context 'platform-email' %}
       <p>You have restarted your contribution to "{{ title }}".</p>
       <p>Good to have you on board again! You are expected to contribute approximately <b>{{ duration }} hours every {{ period }}</b>.</p>
     {% endblocktrans %}

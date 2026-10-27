@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block message %}
 <p>
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 The activity will take place tomorrow!
 {% endblocktrans %}
 
@@ -10,16 +10,14 @@ The activity will take place tomorrow!
 </p>
 
 <p>
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 Read the latest updates on the activity page.
 {% endblocktrans %}
 </p>
-<p>
-<i>
-{% blocktrans context 'email' %}
-If you are unable to participate, please withdraw via the activity page so that others can take your place.
-{% endblocktrans %}
-</i>
-</p>
 
+{% endblock %}
+
+
+{% block end_message %}
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
 {% endblock %}

@@ -1,21 +1,20 @@
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.forms import ActivityCancelledForm
 from bluebottle.activities.states import (
     ActivityStateMachine, ContributionStateMachine,
 )
 from bluebottle.fsm.state import (
-    register, State, Transition, EmptyState, ModelStateMachine
+    register, State, Transition
 )
 from bluebottle.time_based.models import (
     DateActivity,
     TimeContribution,
-    SlotParticipant,
     DeadlineActivity,
     PeriodicActivity,
-    PeriodActivity,
     ScheduleActivity,
+    RegisteredDateActivity,
 )
-from bluebottle.time_based.states.slots import DateActivitySlotStateMachine
 
 
 class TimeBasedStateMachine(ActivityStateMachine):
@@ -23,6 +22,12 @@ class TimeBasedStateMachine(ActivityStateMachine):
         _('Full'),
         'full',
         _('The number of people needed is reached and people can no longer register.')
+    )
+
+    registration_closed = State(
+        _('Registration closed'),
+        'registration_closed',
+        _('The registration deadline has passed and people can no longer register.')
     )
 
     lock = Transition(
@@ -47,16 +52,34 @@ class TimeBasedStateMachine(ActivityStateMachine):
         )
     )
 
+    close_registration = Transition(
+        [
+            ActivityStateMachine.open,
+            full,
+        ],
+        registration_closed,
+        name=_("Close registration"),
+        description=_(
+            "People can no longer join the event. "
+            "Triggered when the registration deadline has passed."
+        ),
+        automatic=True,
+        hide_from_admin=True,
+    )
+
     reopen = Transition(
         [
             full,
+            registration_closed,
             ActivityStateMachine.succeeded,
-            ActivityStateMachine.expired
+            ActivityStateMachine.expired,
+            ActivityStateMachine.cancelled
         ],
         ActivityStateMachine.open,
         name=_("Reopen"),
         passed_label=_('reopened'),
         automatic=True,
+        hide_from_admin=True,
         description=_(
             "The number of participants has fallen below the required number or new slots have been added. "
             "People can sign up again for the task."
@@ -64,7 +87,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     reopen_manually = Transition(
-        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        [ActivityStateMachine.expired, ],
         ActivityStateMachine.draft,
         name=_("Reopen"),
         passed_label=_('reopened'),
@@ -81,6 +104,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             ActivityStateMachine.open,
             ActivityStateMachine.expired,
             full,
+            registration_closed,
         ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
@@ -93,9 +117,13 @@ class TimeBasedStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted,
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
             full,
+            registration_closed,
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),
@@ -108,6 +136,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             'The activity will not be executed. Any contributions will be cancelled too.'
         ),
         passed_label=_('cancelled'),
+        form=ActivityCancelledForm,
         automatic=False,
         permission=ActivityStateMachine.is_owner,
     )
@@ -117,7 +146,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
             ActivityStateMachine.open,
             ActivityStateMachine.submitted,
             ActivityStateMachine.succeeded,
-            full
+            full,
+            registration_closed,
         ],
         ActivityStateMachine.expired,
         name=_('Expire'),
@@ -125,41 +155,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
             "The activity will be cancelled because no one has signed up for the registration deadline."
         ),
         automatic=True,
-    )
-
-    submit = None
-
-    publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_("Publish"),
-        passed_label=_("published"),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
-    auto_publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_('Automatically publish activity when initiative is approved'),
-        automatic=True,
-        name=_('Auto-publish'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-        ],
     )
 
 
@@ -176,21 +171,17 @@ class DateStateMachine(TimeBasedStateMachine):
         )
     )
 
-    submit = None
-
-
-@register(PeriodActivity)
-class PeriodActivityStateMachine(TimeBasedStateMachine):
-    # Keep this while we still have PeriodActivity, so we don't break things
-    pass
-
 
 class RegistrationActivityStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
         return len(self.instance.active_participants) > 0
 
     succeed_manually = Transition(
-        [ActivityStateMachine.open, TimeBasedStateMachine.full],
+        [
+            ActivityStateMachine.open,
+            TimeBasedStateMachine.full,
+            TimeBasedStateMachine.registration_closed,
+        ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=False,
@@ -212,42 +203,6 @@ class RegistrationActivityStateMachine(TimeBasedStateMachine):
         ),
     )
 
-    submit = None
-
-    publish = Transition(
-        [
-            ActivityStateMachine.submitted,
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_('Publish'),
-        passed_label=_('published'),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
-    auto_publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_('Automatically publish activity when initiative is approved'),
-        automatic=True,
-        name=_('Auto-publish'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-        ],
-    )
-
 
 @register(DeadlineActivity)
 class DeadlineActivityStateMachine(RegistrationActivityStateMachine):
@@ -264,130 +219,65 @@ class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
     pass
 
 
-@register(SlotParticipant)
-class SlotParticipantStateMachine(ModelStateMachine):
-    registered = State(
-        _('registered'),
-        'registered',
-        _("This person registered.")
-    )
-    succeeded = State(
-        _('succeeded'),
-        'succeeded',
-        _("The contribution was successful.")
-    )
-    removed = State(
-        _('removed'),
-        'removed',
-        _('This person no longer takes part.')
-    )
-    withdrawn = State(
-        _('withdrawn'),
-        'withdrawn',
-        _('This person has withdrawn. Spent hours are retained.')
-    )
-    cancelled = State(
-        _('cancelled'),
-        'cancelled',
-        _("The contribution was cancelled. This person's contribution "
-          "is removed and the spent hours are reset to zero.")
+@register(RegisteredDateActivity)
+class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
+
+    def has_participants(self):
+        return self.instance.participants.count() > 0
+
+    planned = State(
+        _('Planned'),
+        'planned',
+        _('The activity is planned. The activity manager will register participants.')
     )
 
-    def is_user(self, user):
-        """is participant"""
-        return self.instance.user == user
-
-    def can_accept_participant(self, user):
-        """can accept participant"""
-        return (
-            user in [
-                self.instance.activity.owner,
-                self.instance.activity.initiative.owner
-            ] or
-            user.is_staff or
-            user in self.instance.activity.initiative.activity_managers.all()
-        )
-
-    def slot_is_open(self):
-        """task is open"""
-        return self.instance.slot_id and self.instance.slot.status in (
-            DateActivitySlotStateMachine.open.value,
-            DateActivitySlotStateMachine.running.value,
-        )
-
-    initiate = Transition(
-        EmptyState(),
-        registered,
-        name=_('Initiate'),
-        description=_("User registered to join the slot."),
+    succeed = ActivityStateMachine.succeed.extend(
+        sources=[
+            TimeBasedStateMachine.submitted,
+            TimeBasedStateMachine.draft,
+            TimeBasedStateMachine.needs_work,
+            TimeBasedStateMachine.expired,
+            TimeBasedStateMachine.open,
+            planned,
+        ],
     )
 
-    accept = Transition(
-        [removed, withdrawn, cancelled],
-        registered,
-        name=_('Accept'),
-        passed_label=_('accepted'),
-        description=_("Accept the previously rejected person as a participant."),
-        description_front_end=_("Do you want to accept this person as a participant?"),
+    register = Transition(
+        [
+            TimeBasedStateMachine.submitted,
+            TimeBasedStateMachine.draft,
+            TimeBasedStateMachine.needs_work,
+        ],
+        planned,
+        name=_("Register"),
+        description=_('Once the activity is registered, the participants contributions will be recorded.'),
         automatic=False,
-        permission=can_accept_participant,
+        passed_label=_("registered"),
+        permission=TimeBasedStateMachine.is_owner,
+        conditions=[
+            TimeBasedStateMachine.is_complete,
+            TimeBasedStateMachine.is_valid,
+            TimeBasedStateMachine.can_publish,
+            has_participants
+        ],
+    )
+    submit = ActivityStateMachine.submit.extend(
+        conditions=ActivityStateMachine.submit.conditions + [has_participants],
     )
 
-    remove = Transition(
-        registered,
-        removed,
-        name=_('Remove'),
-        passed_label=_('removed'),
-        description=_("Remove this person as a participant."),
-        automatic=False,
-        permission=can_accept_participant,
+    publish = None
+
+    approve = ActivityStateMachine.approve.extend(
+        description=_('Approve activity, so it will be registered on the platform.'),
+        target=planned,
     )
 
-    withdraw = Transition(
-        registered,
-        withdrawn,
-        name=_('Withdraw'),
-        passed_label=_('withdrawn'),
-        description=_("Cancel the participation."),
-        description_front_end=_(
-            "You will no longer participate in this time slot. "
-            "You can rejoin as long as the activity is open."
-        ),
-        automatic=False,
-        permission=is_user,
-        hide_from_admin=True,
-    )
-
-    reapply = Transition(
-        withdrawn,
-        registered,
-        name=_('Reapply'),
-        passed_label=_('reapplied'),
-        description=_("User re-applies after previously withdrawing."),
-        description_front_end=_(
-            "Do you want to join this time slot again?"
-        ),
-        automatic=False,
-        conditions=[slot_is_open],
-        permission=is_user,
-    )
-
-    reset = Transition(
-        [succeeded, cancelled],
-        registered,
-        name=_('Reset'),
-        passed_label=_('reset'),
-        description=_("User is reset to registered."),
-        automatic=True,
-    )
-
-    succeed = Transition(
-        [removed, withdrawn, cancelled, registered],
-        succeeded,
-        name=_('Succeed'),
-        passed_label=_('succeeded'),
-        description=_("Succeed the participant, because the slot has finished."),
-        automatic=True,
+    cancel = ActivityStateMachine.cancel.extend(
+        sources=[
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded,
+            planned,
+        ],
     )
 
 

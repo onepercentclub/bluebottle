@@ -1,0 +1,52 @@
+{% load i18n %}
+
+{% if code %}
+
+<div class="related-widget-wrapper">
+    <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+        <a href="{{ signup_url }}" target="_blank" style="color: #417690;">
+            {{ signup_url }}
+        </a>
+        <button type="button" class="button" onclick="copyToClipboard('{{ signup_url }}', this)" >
+            {% trans "Copy" %}
+        </button>
+    </div>
+
+    <div>
+        <a class="button" href="{{ renew_url }}" onclick="return confirm('{% trans "Are you sure you want to generate a new access code? The old code will no longer work." %}');">
+            {% trans "Re-new link" %}
+        </a>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text, button) {
+    navigator.clipboard.writeText(text).then(function() {
+        var originalText = button.textContent;
+        button.textContent = '{% trans "Copied!" %}';
+        button.style.backgroundColor = '#5b80b2';
+        button.style.color = 'white';
+        setTimeout(function() {
+            button.textContent = originalText;
+            button.style.backgroundColor = '';
+            button.style.color = '';
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+        alert('{% trans "Failed to copy to clipboard" %}');
+    });
+}
+</script>
+<p class="help">
+    {% trans "Share this link with people who are allowed to get access." %}
+</p>
+{% else %}
+
+<div>
+    <a class="button" href="{{ renew_url }}">
+        {% trans "Generate link" %}
+    </a>
+</div>
+
+{% endif %}
+

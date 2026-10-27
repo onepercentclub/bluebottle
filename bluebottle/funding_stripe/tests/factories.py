@@ -67,11 +67,12 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
+
         stripe = get_stripe()
-        account_id = 'acct_1234567890'
-        account = stripe.Account(
-            id=account_id,
-        )
+        stripe_account_id = kwargs.get('account_id') or 'acct_1234567890'
+        account = stripe.Account(id=stripe_account_id)
         account.business_type = "individual"
         account.individual = munch.munchify({
             "email": "test@example.com",
@@ -86,7 +87,27 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
         })
         account.charges_enabled = True
         account.payouts_enabled = True
-        with mock.patch('stripe.Account.create', return_value=account):
+        account.business_profile = munch.munchify({
+            "mcc": "8398",
+            "product_description": "Not applicable - test factory account.",
+            "url": "https://goodup.com",
+        })
+        account.email = "factory-stripe-account@example.com"
+        account.company = None
+
+        country_code = kwargs.get('country', 'NL')
+        country_spec = stripe.CountrySpec(country_code)
+        country_spec.update({
+            "supported_bank_account_currencies": ['EUR'],
+        })
+
+        with mock.patch('stripe.Account.create', return_value=account), mock.patch(
+            'stripe.Account.retrieve', return_value=account
+        ), mock.patch(
+            'stripe.Account.modify', return_value=account
+        ), mock.patch(
+            'stripe.CountrySpec.retrieve', return_value=country_spec
+        ):
             return super(StripePayoutAccountFactory, cls)._create(model_class, *args, **kwargs)
 
 

@@ -3,7 +3,13 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution
+from bluebottle.funding.forms import (
+    FundingNeedsWorkForm, FundingRejectedForm, FundingAcceptedForm, RefundCampaignForm,
+    CancelCampaignForm
+)
+from bluebottle.funding.models import (
+    Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution,
+)
 
 
 @register(Funding)
@@ -55,20 +61,18 @@ class FundingStateMachine(ActivityStateMachine):
 
     def without_approved_payouts(self):
         """hasn't got approved payouts"""
-        return not self.instance.payouts.exclude(status__in=['new', 'failed']).count()
-
-    def can_approve(self, user):
-        """user has the permission to approve (staff member)"""
-        return user.is_staff
+        return self.instance.pk and not self.instance.payouts.exclude(status__in=['new', 'failed']).count()
 
     def psp_allows_refunding(self):
         """PSP allows refunding through their API"""
-        return self.instance.bank_account and \
+        return self.instance.pk and \
+            self.instance.bank_account and \
             self.instance.bank_account.provider_class and \
             self.instance.bank_account.provider_class.refund_enabled
 
     def kyc_is_valid(self):
         return (
+            self.instance.bank_account is not None and
             self.instance.payout_account
             and self.instance.payout_account.status == "verified"
         )
@@ -100,8 +104,9 @@ class FundingStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         name=_('Approve'),
         description=_('The campaign will be visible in the frontend and people can donate.'),
+        form=FundingAcceptedForm,
         automatic=False,
-        permission=can_approve,
+        permission=ActivityStateMachine.can_approve,
         conditions=[
             ActivityStateMachine.initiative_is_approved,
             ActivityStateMachine.is_valid,
@@ -121,6 +126,7 @@ class FundingStateMachine(ActivityStateMachine):
             'search page in the front end. The campaign will still be available '
             'in the back office and appear in your reporting.'
         ),
+        form=CancelCampaignForm,
         automatic=False,
         permission=ActivityStateMachine.is_owner,
         conditions=[no_donations],
@@ -137,8 +143,9 @@ class FundingStateMachine(ActivityStateMachine):
             "can edit and resubmit the campaign. Don't forget to inform the activity "
             "manager of the necessary adjustments."
         ),
+        form=FundingNeedsWorkForm,
         automatic=False,
-        permission=can_approve
+        permission=ActivityStateMachine.can_approve
     )
 
     put_on_hold = Transition(
@@ -150,7 +157,7 @@ class FundingStateMachine(ActivityStateMachine):
         description=_(
             'The campaign will not be able to receive donations'),
         automatic=True,
-        permission=can_approve,
+        permission=ActivityStateMachine.can_approve,
     )
 
     reject = Transition(
@@ -167,6 +174,7 @@ class FundingStateMachine(ActivityStateMachine):
             "on the search page in the front end. The campaign will still be available in the "
             "back office and appear in your reporting."
         ),
+        form=FundingRejectedForm,
         automatic=False,
         conditions=[
             no_donations
@@ -255,6 +263,7 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Refund'),
         description=_(
             "The campaign will be refunded and all donations will be returned to the donors."),
+        form=RefundCampaignForm,
         automatic=False,
         permission=ActivityStateMachine.is_staff,
         conditions=[
@@ -506,7 +515,7 @@ class PayoutStateMachine(ModelStateMachine):
     )
 
     approve = Transition(
-        [new, approved],
+        [new],
         approved,
         name=_('Approve'),
         description=_(
@@ -683,7 +692,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     set_incomplete = Transition(
-        [pending, verified],
+        [pending, verified, new],
         incomplete,
         name=_('Set incomplete'),
         description=_(

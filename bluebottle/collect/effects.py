@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta
 
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import now, get_current_timezone, make_aware
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.collect.models import CollectContribution
@@ -16,16 +16,18 @@ class CreateCollectContribution(Effect):
         contribution_date = now()
         tz = get_current_timezone()
         if self.instance.activity.start and self.instance.activity.start > contribution_date.date():
-            contribution_date = tz.localize(
+            contribution_date = make_aware(
                 datetime.combine(
                     self.instance.activity.start, datetime.min.replace(hour=12).time()
-                )
+                ),
+                tz
             )
         elif self.instance.activity.end and self.instance.activity.end < contribution_date.date():
-            contribution_date = tz.localize(
+            contribution_date = make_aware(
                 datetime.combine(
                     self.instance.activity.end, datetime.min.replace(hour=12).time()
-                )
+                ),
+                tz
             )
         self.contribution = CollectContribution(
             contributor=self.instance,

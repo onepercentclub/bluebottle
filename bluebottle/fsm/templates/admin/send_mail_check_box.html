@@ -1,0 +1,21 @@
+{% load i18n %}
+
+{% if has_notifications %}
+
+<fieldset class="module aligned">
+    <div class="form-row{% if field.errors %} errors{% endif %}">
+        <div {% if field.is_checkbox %} class="checkbox-row" {% endif %}>
+            <div class="field-box">
+                <span class="checkbox">
+                    <label for="id_send_messages">
+                        Send email notifications
+                    </label>
+                    <input type="checkbox" name="send_messages" id="id_send_messages" checked="">
+                    <label for="id_send_messages" class="checkbox-label"></label>
+                </span>
+            </div>
+
+        </div>
+    </div>
+</fieldset>
+{% endif %}

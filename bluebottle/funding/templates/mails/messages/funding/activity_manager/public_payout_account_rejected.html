@@ -1,0 +1,23 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+<p class="donation-intro">
+    {% blocktrans context 'platform-email' %}
+        We recently tried to verify your organisation, but we didn't succeed. This can happen for a few reasons.
+        <br/>
+        <br/>
+        Please use the link below to review and update your information. If you still run into issues, you can contact
+        the platform manager at %(contact_email)s.
+        <br/>
+        <br/>
+        Please do this as soon as possible.
+    {% endblocktrans %}
+</p>
+{% endblock message %}
+
+{% block action %}
+<a href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}">
+    {% trans 'Check details' context 'platform-email' %}
+</a>
+{% endblock %}`

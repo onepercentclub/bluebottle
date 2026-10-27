@@ -1,14 +1,13 @@
 import logging
+import uuid
 
+from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from django.views.generic import View
 from django_tools.middlewares.ThreadLocal import get_current_user
-from moneyed import Money
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -21,8 +20,8 @@ from bluebottle.funding.authentication import (
     DonorAuthentication,
     ClientSecretAuthentication,
 )
-from bluebottle.funding.permissions import PaymentPermission, IntentPermission
 from bluebottle.funding.models import Donor, FundingPlatformSettings
+from bluebottle.funding.permissions import PaymentPermission, IntentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
@@ -36,10 +35,14 @@ from bluebottle.funding_stripe.serializers import (
     StripePaymentSerializer,
     ConnectAccountSessionSerializer,
     CountrySpecSerializer,
-    ExternalAccountSerializer, BankTransferSerializer
+    ExternalAccountSerializer,
+    BankTransferSerializer,
+    ConnectVerificationLinkSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.grant_management.models import GrantPayment
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.views import (
     ListAPIView,
     RetrieveUpdateAPIView,
@@ -63,7 +66,7 @@ class StripeSourcePaymentList(PaymentList):
     permission_classes = (PaymentPermission,)
 
 
-def get_init_args(donation,):
+def get_init_args(donation, ):
     statement_descriptor = connection.tenant.name[:22]
 
     intent_args = dict(
@@ -107,22 +110,31 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
         }
         init_args['automatic_payment_methods'] = {"enabled": True}
 
-        platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
+        payment_provider = StripePaymentProvider.objects.first()
 
-        if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-            init_args['on_behalf_of'] = connect_account.account_id
+        platform_currency = payment_provider.currency.lower()
 
-        if platform_currency == 'usd' and connect_account.country != 'US':
-            init_args['on_behalf_of'] = connect_account.account_id
+        if 'card_payments' in connect_account.account.capabilities:
+            # Only do  on_behalf_of when card_payments are enabled
+            if payment_provider.country != connect_account.country:
+                if payment_provider.country in STRIPE_EUROPEAN_COUNTRY_CODES:
+                    if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                        # European stripe account and connect account not in Europe
+                        init_args['on_behalf_of'] = connect_account.account_id
+                else:
+                    # Non european stripe account and countries differ
+                    init_args['on_behalf_of'] = connect_account.account_id
+
+            if platform_currency == 'usd' and connect_account.country != 'US':
+                init_args['on_behalf_of'] = connect_account.account_id
 
         stripe = get_stripe()
         intent = stripe.PaymentIntent.create(
             **init_args
         )
-        serializer.save(
-            intent_id=intent.id,
-            client_secret=intent.client_secret,
-        )
+        serializer.validated_data['intent_id'] = intent.id
+        serializer.validated_data['client_secret'] = intent.client_secret
+        super().perform_create(serializer)
 
 
 class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
@@ -169,11 +181,11 @@ class StripeBankTransferList(PaymentList):
         # Get data from serializer without saving
         payment_intent_data = serializer.validated_data
         donation = payment_intent_data['donation']
-        account_currency = str(donation.activity.target.currency)
+        account_currency = str(donation.activity.bank_account.currency or 'EUR').upper()
         currency = str(donation.amount.currency)
         # Validate the currency compatibility
         if currency != account_currency:
-            raise ValidationError(f'Bank transfer not supported for currency {currency}')
+            raise ValidationError(f'Bank transfer not supported for currency {currency} only {account_currency}')
 
         stripe = get_stripe()
         init_args = get_init_args(donation)
@@ -232,10 +244,18 @@ class StripeBankTransferList(PaymentList):
             **init_args
         )
 
-        serializer.save(
-            intent_id=intent.id,
-            client_secret=intent.client_secret,
-            instructions=intent.next_action
+        serializer.validated_data['intent_id'] = intent.id
+        serializer.validated_data['client_secret'] = intent.client_secret
+        serializer.validated_data['instructions'] = intent.next_action
+
+        super().perform_create(serializer)
+
+        donation.payment_intent = serializer.instance
+        donation.save()
+
+        StripePayment.objects.create(
+            payment_intent=serializer.instance,
+            donation=donation,
         )
 
 
@@ -254,7 +274,8 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -290,6 +311,8 @@ class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
         account = get_object_or_404(
             StripePayoutAccount.objects.all(), pk=request.data.get("account_id")
         )
+        if account.owner != request.user:
+            raise PermissionDenied()
 
         # TODO check permissions on account
         account_session = stripe.AccountSession.create(
@@ -316,6 +339,40 @@ class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
     serializer_class = ConnectAccountSessionSerializer
 
 
+class ConnectVerificationLink(JsonApiViewMixin, CreateAPIView):
+
+    def create(self, request):
+        stripe = get_stripe()
+        account = get_object_or_404(
+            StripePayoutAccount.objects.all(), pk=request.data.get("account_id")
+        )
+        if account.owner != request.user:
+            raise PermissionDenied()
+
+        # TODO check permissions on account
+
+        verification_link = stripe.AccountLink.create(
+            account=account.account_id,
+            refresh_url=f'{get_current_host()}/activities/stripe/expired',
+            return_url=f'{get_current_host()}/activities/stripe/complete',
+            type="account_onboarding",
+            collection_options={
+                "fields": "eventually_due",
+                "future_requirements": "include",
+            }
+        )
+
+        verification_link.pk = str(uuid.uuid4())
+        serializer = self.get_serializer(instance=verification_link)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    serializer_class = ConnectVerificationLinkSerializer
+
+
 class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -329,7 +386,7 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
     related_permission_classes = {"connect_account": [IsOwner]}
 
     def get_queryset(self):
-        settings = FundingPlatformSettings.objects.get()
+        settings = FundingPlatformSettings.load()
         if settings.public_accounts:
             return self.queryset.order_by("-created").filter(
                 connect_account__public=True,
@@ -350,7 +407,8 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
             self.check_object_permissions(
                 self.request, serializer.Meta.model(**validated_data)
             )
-        serializer.save()
+
+        super().perform_create(serializer)
 
 
 class ExternalAccountDetails(
@@ -370,13 +428,13 @@ class ExternalAccountDetails(
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
         serializer.instance.update(token)
-        serializer.save()
+        super().perform_update(serializer)
 
 
 class IntentWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
 
         try:
@@ -390,22 +448,16 @@ class IntentWebHookView(View):
         try:
             if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != payment.states.succeeded.value:
-                    payment.states.succeed()
-                    try:
-                        # Check if it's an old webhook call or a new one
-                        transfer = stripe.Transfer.retrieve(event.data.object.charges.data[0].transfer)
-                        # Fix this if we're going to support currencies that don't have smaller units, like yen.
-                        payment.donation.payout_amount = Money(
-                            transfer.amount / 100.0, transfer.currency
-                        )
-                    except AttributeError:
-                        # Fix this if we're going to support currencies that don't have smaller units, like yen.
-                        payment.donation.payout_amount = Money(
-                            event.data.object.amount / 100.0, event.data.object.currency
-                        )
-                    payment.donation.save()
-                    payment.save()
+                if payment:
+                    if payment.status != payment.states.succeeded.value:
+                        payment.states.succeed()
+                        payment.update()
+                        payment.donation.save()
+                        payment.save()
+                else:
+                    grant_payment = self.get_grant_payment(event.data.object.id)
+                    if grant_payment:
+                        grant_payment.check_status()
 
                 return HttpResponse('Updated payment to succeeded')
 
@@ -441,115 +493,49 @@ class IntentWebHookView(View):
             return HttpResponse('Payment not found', status=400)
 
     def get_payment(self, payment_id):
-        intent = PaymentIntent.objects.get(intent_id=payment_id)
-        try:
-            return intent.payment
-        except StripePayment.DoesNotExist:
+        if PaymentIntent.objects.filter(intent_id=payment_id).exists():
+            intent = PaymentIntent.objects.get(intent_id=payment_id)
             try:
-                intent.donation.payment.payment_intent = intent
-                intent.donation.payment.save()
                 return intent.payment
-            except Donor.payment.RelatedObjectDoesNotExist:
-                payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
-                return payment
+            except StripePayment.DoesNotExist:
+                try:
+                    intent.donation.payment.payment_intent = intent
+                    intent.donation.payment.save()
+                    return intent.payment
+                except Donor.payment.RelatedObjectDoesNotExist:
+                    payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
+                    return payment
+
+    def get_grant_payment(self, payment_id):
+        return GrantPayment.objects.filter(intent_id=payment_id).first()
 
 
-class SourceWebHookView(View):
+class SessionWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret_sources
+                payload, signature_header, stripe.webhook_secret_checkout
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature
             return HttpResponse('Signature failed to verify', status=400)
 
-        try:
-            if event.type == 'source.canceled':
-                payment = self.get_payment_from_source(event.data.object.id)
-                payment.states.cancel(save=True)
-                return HttpResponse('Updated payment')
-
-            if event.type == 'source.failed':
-                payment = self.get_payment_from_source(event.data.object.id)
-                if payment.status != payment.states.failed.value:
-                    payment.states.fail(save=True)
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'source.chargeable':
-                payment = self.get_payment_from_source(event.data.object.id)
-                payment.do_charge()
-                payment.save()
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.failed':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.id)
-                if payment.status != payment.states.failed.value:
-                    payment.states.fail(save=True)
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.succeeded':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.id)
-                if payment.status != payment.states.succeeded.value:
-                    transfer = stripe.Transfer.retrieve(event.data.object.transfer)
-                    payment.donation.payout_amount = Money(
-                        transfer.amount / 100.0, transfer.currency
-                    )
-                    payment.donation.save()
-                    payment.states.succeed(save=True)
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.pending':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.id)
-                payment.states.authorize(save=True)
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.refunded':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.id)
-                payment.states.refund(save=True)
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.dispute.closed' and event.data.object.status == 'lost':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.charge)
-                payment.states.dispute(save=True)
-                return HttpResponse('Updated payment')
-
-        except StripePayment.DoesNotExist:
-            return HttpResponse('Payment not found', status=400)
-
-        return HttpResponse('Skipped')
-
-    def get_payment_from_source(self, source_token):
-        return StripeSourcePayment.objects.get(source_token=source_token)
-
-    def get_payment_from_charge(self, charge_token):
-        return StripeSourcePayment.objects.get(charge_token=charge_token)
+        if event.type.startswith('checkout.session'):
+            session_id = event.data.object.id
+            payment = GrantPayment.objects.filter(checkout_id=session_id).first()
+            if payment:
+                payment.check_status()
 
 
 class ConnectWebHookView(View):
     def post(self, request, **kwargs):
 
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
         try:
             event = stripe.Webhook.construct_event(
@@ -574,10 +560,21 @@ class ConnectWebHookView(View):
                         bank_account.delete()
 
                 for external_account in event.data.object.external_accounts.data:
+                    status = 'new'
+                    if (
+                        account.status == 'verified' and
+                        external_account.requirements.currently_due == [] and
+                        external_account.requirements.past_due == [] and
+                        external_account.requirements.pending_verification == [] and
+                        external_account.future_requirements.currently_due == [] and
+                        external_account.future_requirements.past_due == [] and
+                        external_account.future_requirements.pending_verification == []
+                    ):
+                        status = 'verified'
                     ExternalAccount.objects.get_or_create(
                         connect_account=account,
                         account_id=external_account.id,
-                        defaults={'status': "new"}
+                        defaults={'status': status}
                     )
 
                 account.update(event.data.object)
@@ -588,10 +585,10 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            __import__('ipdb').set_trace()
-            error = "Payout not found"
+            tenant = connection.tenant
+            error = f"Payout account not found {event.data.object.id} on {tenant.name}"
             logger.error(error)
-            return HttpResponse(error, status=400)
+            return HttpResponse("Skipped event {}, account not found".format(event.type))
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)
@@ -600,7 +597,6 @@ class ConnectWebHookView(View):
 class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     serializer_class = CountrySpecSerializer
 
-    @method_decorator(cache_page(60 * 60 * 24))
     def list(self, request, *args, **kwargs):
         stripe = get_stripe()
         specs = stripe.CountrySpec.list(limit=100)
@@ -609,7 +605,7 @@ class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
         data.extend(specs2.data)
         serializer = self.get_serializer(data, many=True)
 
-        for spec in specs.data:
+        for spec in data:
             spec.pk = spec.id
 
         return Response(serializer.data)

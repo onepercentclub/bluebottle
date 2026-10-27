@@ -113,9 +113,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), db_index=True, max_length=254, unique=True)
     username = models.CharField(_('username'), max_length=254, unique=True)
 
-    is_staff = models.BooleanField(_('staff status'),
+    is_staff = models.BooleanField(_('Back office access'),
                                    default=False,
-                                   help_text=_('Designates whether the user can log into this admin site.'))
+                                   help_text=_('Allow this user to access the back office.'))
     is_active = models.BooleanField(_('active'),
                                     default=False,
                                     help_text=_('Designates whether this user should be treated as active. Unselect '
@@ -136,12 +136,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_('last name'), blank=True, max_length=100)
     location = models.ForeignKey(
         'geo.Location', blank=True,
-        verbose_name=_('Office'),
+        verbose_name=_('Work location'),
         null=True, on_delete=models.SET_NULL)
 
     location_verified = models.BooleanField(
         default=False,
-        help_text=_('Office location is verified by the user')
+        help_text=_('Work location is verified by the user')
     )
 
     favourite_themes = models.ManyToManyField(Theme, blank=True)
@@ -183,11 +183,18 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     # Use lazy for the choices and default, so that tenant properties
     # will be correctly loaded
-    primary_language = models.CharField(_('primary language'),
-                                        choices=lazy(get_language_choices, tuple)(),
-                                        default=lazy(get_default_language, str)(),
-                                        help_text=_('Language used for website and emails.'),
-                                        max_length=7)
+    primary_language = models.CharField(
+        _('primary language'),
+        choices=lazy(get_language_choices, tuple)(),
+        default=lazy(get_default_language, str)(),
+        help_text=_('Language used for website and emails.'),
+        max_length=7
+    )
+    translate_user_content = models.BooleanField(
+        _('Translate user content'),
+        default=True,
+    )
+
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
     newsletter = models.BooleanField(_('newsletter'), default=True, help_text=_('Subscribe to newsletter.'))
@@ -197,8 +204,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         default=True
     )
     submitted_initiative_notifications = models.BooleanField(
-        _('Submitted initiatives'),
-        help_text=_('Staff member receives a notification when an initiative is submitted an ready to be reviewed.'),
+        _('New activities/initiatives notification'),
+        help_text=_(
+            'Receive a notification via email when new activities and initiatives get submitted '
+            'or published. This depends on the review setting of the platform.'
+        ),
         default=False
     )
 
@@ -282,7 +292,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """
         Returns the first_name plus the last_name, with a space in between.
         """
+        from ..members.models import MemberPlatformSettings
+        member_settings = MemberPlatformSettings.load()
         full_name = u'{0} {1}'.format(self.first_name, self.last_name)
+        if member_settings.display_member_names == 'first_name_strict':
+            full_name = self.first_name
         return full_name.strip()
 
     def anonymize(self):
@@ -350,7 +364,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_initiator(self):
-        return self.own_initiatives.exists() or self.activity_managers_initiatives.exists()
+        return self.own_initiatives.exists() or self.activity_managers_initiatives.exists() or self.activities.exists()
 
     @cached_property
     def is_supporter(self):
@@ -395,7 +409,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         from bluebottle.time_based.models import TimeContribution, TimeContributionStateMachine
         total = TimeContribution.objects.filter(
             contributor__user=self,
-            status=TimeContributionStateMachine.succeeded
+            status=TimeContributionStateMachine.succeeded.value
         ).aggregate(
             time_spent=models.Sum('value')
         )['time_spent'] or datetime.timedelta()

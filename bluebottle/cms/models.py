@@ -3,18 +3,21 @@ from adminsortable.models import SortableMixin
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions import PluginImageField
 from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
-from future.utils import python_2_unicode_compatible
+from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
+from bluebottle.activity_pub.models import Following
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
+from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileExtensionValidator, FileMimetypeValidator, validate_file_infection
@@ -37,6 +40,7 @@ class ResultPage(TranslatableModel):
     content = PlaceholderField('content', plugins=[
         'ProjectMapBlockPlugin',
         'QuotesBlockPlugin',
+        'PeopleBlockPlugin',
         'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',
         'StatsBlockPlugin',
@@ -71,8 +75,12 @@ class HomePage(SingletonModel, TranslatableModel):
         'ActivitiesBlockPlugin',
         'ProjectMapBlockPlugin',
         'HomepageStatisticsBlockPlugin',
+        'NewsBlockPlugin',
         'QuotesBlockPlugin',
-        'DonateButtonBlockPlugin'
+        'PeopleBlockPlugin',
+        'DonateButtonBlockPlugin',
+        'PollBlockPlugin',
+
     ])
     translations = TranslatedFields()
 
@@ -84,8 +92,10 @@ class HomePage(SingletonModel, TranslatableModel):
             ('api_delete_homepage', 'Can delete homepages through the API'),
         )
 
+    def __str__(self):
+        return str(_('Homepage'))
 
-@python_2_unicode_compatible
+
 class LinkPermission(models.Model):
     permission = models.CharField(max_length=255, null=False,
                                   help_text=_('A dot separated app name and permission codename.'))
@@ -96,7 +106,6 @@ class LinkPermission(models.Model):
         return u"{0} - {1}".format(self.permission, self.present)
 
 
-@python_2_unicode_compatible
 class SiteLinks(models.Model):
     language = models.OneToOneField('utils.Language', null=False, on_delete=models.CASCADE)
     has_copyright = models.BooleanField(null=False, default=True)
@@ -214,6 +223,29 @@ class Quote(models.Model):
         resource_name = 'pages/blocks/quotes/quotes'
 
 
+class Person(models.Model):
+    block = models.ForeignKey('cms.PeopleContent', related_name='persons', on_delete=models.CASCADE)
+    name = models.CharField(_('Name'), max_length=60)
+    role = models.CharField(_('Role'), max_length=60, null=True, blank=True)
+    email = models.CharField(_('Email'), max_length=60, null=True, blank=True)
+    phone_number = models.CharField(_('Phone number'), max_length=60, null=True, blank=True)
+
+    avatar = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='people_images/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people/persons'
+
+
 class TitledContent(ContentItem):
     title = models.CharField(max_length=50, blank=True, null=True)
     sub_title = models.CharField(max_length=400, blank=True, null=True)
@@ -224,7 +256,6 @@ class TitledContent(ContentItem):
         abstract = True
 
 
-@python_2_unicode_compatible
 class QuotesContent(TitledContent):
     type = 'quotes'
     preview_template = 'admin/cms/preview/quotes.html'
@@ -243,7 +274,35 @@ class QuotesContent(TitledContent):
         return self.quotes
 
 
-@python_2_unicode_compatible
+class PeopleContent(TitledContent):
+    type = 'people'
+    preview_template = 'admin/cms/preview/people.html'
+
+    class Meta:
+        verbose_name = _('Persons')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people'
+
+    def __str__(self):
+        return str(self.persons)
+
+    @property
+    def items(self):
+        return self.persons
+
+
+class NewsContent(TitledContent):
+    type = 'news'
+    preview_template = 'admin/cms/preview/news.html'
+
+    class Meta:
+        verbose_name = _('News items')
+
+    def __str__(self):
+        return str(_("News items"))
+
+
 class StatsContent(TitledContent):
     type = 'statistics'
     preview_template = 'admin/cms/preview/stats.html'
@@ -260,22 +319,24 @@ class StatsContent(TitledContent):
         return str(self.stats)
 
 
-@python_2_unicode_compatible
 class HomepageStatisticsContent(TitledContent):
     type = 'homepage-statistics'
     preview_template = 'admin/cms/preview/homepage-statistics.html'
     year = models.IntegerField(blank=True, null=True)
 
     class StatTypeChoices(DjangoChoices):
-        all = ChoiceItem('all', label=_("Global"))
-        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+        all = ChoiceItem('all', label=_("All"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Group"))
+        office_region = ChoiceItem('office_region', label=_("Region"))
 
     stat_type = models.CharField(
-        _("Stat type"),
+        _("Statistics view"),
         max_length=100,
         choices=StatTypeChoices.choices,
         default=StatTypeChoices.all,
-        help_text=_('Stats will show all data or only activities from the user\'s office group')
+        help_text=_(
+            'Set the default statistics view. Users will see this first but can switch views anytime.'
+        )
     )
 
     class Meta:
@@ -288,7 +349,6 @@ class HomepageStatisticsContent(TitledContent):
         return str(self.title)
 
 
-@python_2_unicode_compatible
 class ActivitiesContent(TitledContent):
     type = 'activities'
 
@@ -326,7 +386,6 @@ class ActivitiesContent(TitledContent):
         return str(self.title)
 
 
-@python_2_unicode_compatible
 class DonateButtonContent(TitledContent):
     type = 'donate'
 
@@ -348,7 +407,27 @@ class DonateButtonContent(TitledContent):
         return str(self.funding.title)
 
 
-@python_2_unicode_compatible
+class PollContent(ContentItem):
+    type = 'poll'
+    preview_template = 'admin/cms/preview/default.html'
+
+    poll = models.ForeignKey(
+        'voting.Poll',
+        verbose_name=_('Poll'),
+        on_delete=models.CASCADE,
+        limit_choices_to={'status__in': ['open', 'closed']}
+    )
+
+    class Meta:
+        verbose_name = _('Poll')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/poll'
+
+    def __str__(self):
+        return str(self.poll)
+
+
 class ProjectsContent(TitledContent):
     type = 'projects'
     action_text = models.CharField(max_length=80,
@@ -368,7 +447,6 @@ class ProjectsContent(TitledContent):
         return str(self.title)
 
 
-@python_2_unicode_compatible
 class ShareResultsContent(TitledContent):
     type = 'share-results'
     preview_template = 'admin/cms/preview/share_results.html'
@@ -387,21 +465,24 @@ class ShareResultsContent(TitledContent):
         return 'Share results block'
 
 
-@python_2_unicode_compatible
 class ProjectsMapContent(TitledContent):
-
     type = 'projects-map'
 
     class MapTypeChoices(DjangoChoices):
+
         all = ChoiceItem('all', label=_("Global"))
-        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Group"))
+        office_region = ChoiceItem('office_region', label=_("Region"))
 
     map_type = models.CharField(
-        _("Map type"),
+        _("Map view"),
         max_length=100,
         choices=MapTypeChoices.choices,
         default=MapTypeChoices.all,
-        help_text=_('The map will show all activities or only from the user\'s office group')
+        help_text=_(
+            'Set the default map view that shows where all activities are taking place. '
+            'Users will see this first but can switch views anytime.'
+        )
     )
 
     class Meta:
@@ -414,7 +495,6 @@ class ProjectsMapContent(TitledContent):
         return 'Projects Map'
 
 
-@python_2_unicode_compatible
 class SupporterTotalContent(TitledContent):
     type = 'supporter_total'
     preview_template = 'admin/cms/preview/supporter_total.html'
@@ -428,7 +508,6 @@ class SupporterTotalContent(TitledContent):
         return 'Supporter total'
 
 
-@python_2_unicode_compatible
 class SlidesContent(TitledContent):
     type = 'slides'
 
@@ -475,7 +554,6 @@ class Step(SortableMixin, models.Model):
         resource_name = 'pages/blocks/steps/steps'
 
 
-@python_2_unicode_compatible
 class StepsContent(TitledContent):
     action_text = models.CharField(max_length=40,
                                    default=_('Start your own project'),
@@ -499,7 +577,6 @@ class StepsContent(TitledContent):
         return self.steps
 
 
-@python_2_unicode_compatible
 class LocationsContent(TitledContent):
     type = 'locations'
     locations = models.ManyToManyField(Location, db_table='cms_locationscontent_locations')
@@ -511,7 +588,6 @@ class LocationsContent(TitledContent):
         return str(_('Locations'))
 
 
-@python_2_unicode_compatible
 class CategoriesContent(TitledContent):
     type = 'categories'
     categories = models.ManyToManyField(Category, db_table='cms_categoriescontent_categories')
@@ -551,7 +627,6 @@ class Logo(SortableMixin, models.Model):
         resource_name = 'pages/blocks/logos/logos'
 
 
-@python_2_unicode_compatible
 class LogosContent(TitledContent):
     type = 'logos'
 
@@ -592,7 +667,6 @@ class ContentLink(SortableMixin, models.Model):
         resource_name = 'pages/blocks/links/links'
 
 
-@python_2_unicode_compatible
 class LinksContent(TitledContent):
     type = 'links'
 
@@ -611,7 +685,6 @@ class Greeting(models.Model):
     text = models.TextField()
 
 
-@python_2_unicode_compatible
 class WelcomeContent(ContentItem):
     type = 'welcome'
     preview_template = 'admin/cms/preview/default.html'
@@ -634,24 +707,96 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         if ext not in valid_extensions:
             raise ValidationError(u'File not supported!')
 
+    SHARE_ACTIVITIES_CHOICES = (
+        ('supplier', _('Supplier')),
+        ('consumer', _('Consumer')),
+    )
+
+    share_activities = MultiSelectField(
+        _('Enable GoodUp Connect'),
+        choices=SHARE_ACTIVITIES_CHOICES,
+        help_text=_('Allow sharing and/or receiving activities with other connected partners.'),
+        default=[],
+        max_length=100,
+        blank=True
+    )
+
+    @property
+    def is_sharing_activities(self):
+        return self.is_publishing_activities or self.is_receiving_activities
+
+    @property
+    def is_publishing_activities(self):
+        return 'supplier' in (self.share_activities or [])
+
+    @property
+    def is_receiving_activities(self):
+        return 'consumer' in (self.share_activities or [])
+
+    @property
+    def is_linking_activities(self):
+        return Following.objects.filter(adoption_type='link').exists()
+
+    platform_name = models.CharField(
+        _('Platform name'),
+        max_length=255,
+        default='New platform'
+    )
+
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        verbose_name=_('GoodUp Connect name'),
+        null=True, blank=True, on_delete=models.SET_NULL,
+        help_text=_(
+            "This is the name other partners will see when you send connection "
+            "requests or share activities. Use your organisation's official name "
+            "to ensure partners recognise you."
+        )
+    )
+
+    accessible_colours = models.BooleanField(
+        _('Accessible colours'),
+        help_text=_('Make sure the colours are WCAG compliant. You should save settings for this to take effect.'),
+        default=False,
+    )
+
     action_color = ColorField(
         _('Action colour'), null=True, blank=True,
         help_text=_(
             'Colour for action buttons and links'
         )
     )
+    action_color_adjusted = ColorField(
+        _('Adjusted action colour'), null=True, blank=True,
+        help_text=_(
+            'Darkened when white or dark text would not be readable on the action colour'
+        )
+    )
     action_text_color = ColorField(
         _('Action text colour'), null=True, blank=True,
         help_text=_(
-            'If the action colour is quite light, you could set this to a darker colour for better contrast'
+            'Automatically set to white or dark grey so text stays readable on the action colour'
         )
     )
     alternative_link_color = ColorField(
-        _('Alternative link colour'), null=True, blank=True,
+        _('Action text on white'), null=True, blank=True,
         default=None,
         help_text=_(
-            'If the action colour is quite light, you can set this colour to use for text links'
+            'Automatically darkened so the action colour stays readable as text on white or grey'
         )
+    )
+    action_on_tint_color = ColorField(
+        _('Action text on tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a light tint of the action colour'
+        )
+    )
+
+    terminated = models.BooleanField(
+        _("Terminated"),
+        default=False,
+        help_text=_('Is the platform terminated?')
     )
 
     @property
@@ -664,10 +809,30 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'Colour for descriptive and secondary buttons'
         )
     )
+    description_color_adjusted = ColorField(
+        _('Adjusted description colour'), null=True, blank=True,
+        help_text=_(
+            'Darkened when white or dark text would not be readable on the description colour'
+        )
+    )
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
         help_text=_(
-            'If the description colour is quite light, you could set this to a darker colour for better contrast'
+            'Automatically set to white or dark grey so text stays readable on the description colour'
+        )
+    )
+    description_on_background_color = ColorField(
+        _('Description text on white'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so the description colour stays readable as text on white or grey'
+        )
+    )
+    description_on_tint_color = ColorField(
+        _('Description text on tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a light tint of the description colour'
         )
     )
     footer_color = ColorField(
@@ -761,6 +926,33 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         ),
     )
 
+    def save(self, *args, **kwargs):
+        from bluebottle.cms.utils.color_contrast import apply_on_colors
+
+        if self.accessible_colours:
+            apply_on_colors(self)
+        else:
+            self.action_color_adjusted = None
+            self.action_on_tint_text_color = self.action_color
+            self.action_on_tint_color = self.action_color
+
+            self.description_color_adjusted = None
+            self.description_on_background_color = self.description_color
+            self.description_on_tint_color = self.description_color
+
+        if self.share_activities and not self.organization_id:
+            tenant = connection.tenant
+            self.organization = Organization.objects.create(
+                name=tenant.name,
+                logo=self.logo,
+            )
+
+        if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):
+            from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+            ActivityPubOrganization.objects.from_model(self.organization)
+
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name_plural = _('site platform settings')
         verbose_name = _('site platform settings')
@@ -789,7 +981,7 @@ class ImagePlainTextItem(TitledContent):
     """
     A snippet of HTML text to display on a page.
     """
-    text = models.TextField()
+    text = QuillField()
     image = PluginImageField(
         _("Image"),
         upload_to='pages',
@@ -836,8 +1028,8 @@ class ImagePlainTextItem(TitledContent):
     objects = ContentItemManager()
 
     class Meta(object):
-        verbose_name = _('Plain Text + Media')
-        verbose_name_plural = _('Plain Text + Media')
+        verbose_name = _('Text + Media')
+        verbose_name_plural = _('Text + Media')
 
     def __str__(self):
         return Truncator(self.text).words(20)

@@ -11,11 +11,11 @@ MODULES_TO_PATCH = [admin_utils, admin_helpers, admin_list]
 original_display_for_field = admin_utils.display_for_field
 
 
-def display_for_field(value, field, empty):
+def display_for_field(value, field, *args, **kwargs):
     if isinstance(field, MoneyField):
         return str(value)
 
-    return original_display_for_field(value, field, empty)
+    return original_display_for_field(value, field, *args, **kwargs)
 
 
 # FIXME: Do not monkeypatch this when django-money is fixed

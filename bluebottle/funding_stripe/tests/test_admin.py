@@ -7,14 +7,19 @@ from rest_framework import status
 from bluebottle.funding.tests.factories import (
     DonorFactory, FundingFactory
 )
-from bluebottle.funding_stripe.tests.factories import StripeSourcePaymentFactory, ExternalAccountFactory
+from bluebottle.funding_stripe.models import StripePaymentProvider
+from bluebottle.funding_stripe.tests.factories import StripeSourcePaymentFactory, ExternalAccountFactory, \
+    StripePaymentProviderFactory
 from bluebottle.funding_stripe.tests.utils import generate_stripe_payout_account
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.test.utils import BluebottleAdminTestCase
 
 
-class StripeSourcePaymentAdminTestCase(BluebottleAdminTestCase):
+class StripeSourcePaymentAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
     def setUp(self):
         super(StripeSourcePaymentAdminTestCase, self).setUp()
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         account = generate_stripe_payout_account()
         bank_account = ExternalAccountFactory.create(connect_account=account)
         funding = FundingFactory.create(bank_account=bank_account)

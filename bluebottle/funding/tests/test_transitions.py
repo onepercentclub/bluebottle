@@ -5,7 +5,7 @@ import mock
 from django.core import mail
 from django.db import connection
 from django.utils import timezone
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import now, get_current_timezone, make_aware
 from moneyed import Money
 
 from bluebottle.activities.models import Organizer
@@ -89,7 +89,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         deadline = now() + timedelta(days=30)
         self.assertAlmostEqual(
             funding.deadline,
-            get_current_timezone().localize(
+            make_aware(
                 datetime(
                     deadline.year,
                     deadline.month,
@@ -97,7 +97,8 @@ class FundingTestCase(BluebottleAdminTestCase):
                     hour=23,
                     minute=59,
                     second=59
-                )
+                ),
+                get_current_timezone()
             ),
             delta=timedelta(seconds=1)
         )
@@ -116,7 +117,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(self.funding.status, 'cancelled')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign has expired')
+        self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign on Test has expired')
         self.assertTrue(self.funding.title in mail.outbox[0].body)
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
 
@@ -136,8 +137,8 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertTrue('Hi Bill,' in mail.outbox[1].body)
 
         # Donor amount should appear in both emails
-        self.assertTrue(u'50.00 €' in mail.outbox[0].body)
-        self.assertTrue(u'50.00 €' in mail.outbox[1].body)
+        self.assertTrue(u'€50.00' in mail.outbox[0].body)
+        self.assertTrue(u'€50.00' in mail.outbox[1].body)
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
@@ -150,10 +151,10 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(self.funding.status, 'partially_funded')
         self.assertEqual(len(mail.outbox), 3)
-        self.assertEqual(mail.outbox[2].subject, 'Your crowdfunding campaign deadline passed')
+        self.assertEqual(mail.outbox[2].subject, 'The deadline of your crowdfunding campaign on Test has passed')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
         self.assertTrue(self.funding.title in mail.outbox[0].body)
-        url = 'http://testserver/en/activities/details/funding/{}/{}'.format(
+        url = 'http://test.localhost/en/activities/details/funding/{}/{}'.format(
             self.funding.id, self.funding.slug
         )
         self.assertTrue(url in mail.outbox[0].body)
@@ -177,13 +178,13 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(
             mail.outbox[4].subject,
-            u'Your campaign "{}" has been successfully completed! \U0001f389'.format(
+            u'Your crowdfunding campaign "{}" has been successfully completed! \U0001f389'.format(
                 self.funding.title
             )
         )
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
         self.assertTrue(self.funding.title in mail.outbox[4].body)
-        url = 'http://testserver/en/activities/details/funding/{}/{}'.format(
+        url = 'http://test.localhost/en/activities/details/funding/{}/{}'.format(
             self.funding.id, self.funding.slug
         )
         self.assertTrue(url in mail.outbox[4].body)

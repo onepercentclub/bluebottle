@@ -3,7 +3,7 @@ from builtins import object
 from django.db.models import Q
 from django.urls import reverse
 from django_tools.middlewares.ThreadLocal import get_current_user
-from fluent_contents.models import ContentItem
+from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
@@ -13,23 +13,38 @@ from rest_framework_json_api.relations import ResourceRelatedField, SerializerMe
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import (
-    ImageSerializer, SorlImageField, CustomHyperlinkRelatedSerializer
+    ImageSerializer, SorlImageField
 )
 from bluebottle.cms.models import (
-    HomePage, QuotesContent, Quote,
+    HomePage, QuotesContent, Quote, PeopleContent, Person,
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, NewsContent,
+    PollContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
-from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem
+from bluebottle.news.models import NewsItem
+from bluebottle.pages.models import (
+    Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem,
+    ScaledImageTextItem
+)
 from bluebottle.slides.models import Slide
-from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, SafeField
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, RichTextField, SafeField
+from bluebottle.utils.models import get_default_language
 
 
-class QuoteSerializer(serializers.ModelSerializer):
+def get_staff_admin_url(obj):
+    user = get_current_user()
+    if user and user.is_authenticated and (user.is_staff or user.is_superuser):
+        return reverse(
+            'admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name),
+            args=[obj.pk]
+        )
+
+
+class QuoteSerializer(ModelSerializer):
     image = SorlImageField('100x100', crop='center')
 
     class Meta(object):
@@ -40,7 +55,18 @@ class QuoteSerializer(serializers.ModelSerializer):
         resource_name = 'pages/blocks/quotes/quotes'
 
 
-class SlideSerializer(serializers.ModelSerializer):
+class PersonSerializer(ModelSerializer):
+    avatar = SorlImageField('100x100', crop='center')
+
+    class Meta(object):
+        model = Person
+        fields = ('id', 'name', 'role', 'email', 'phone_number', 'avatar')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people/persons'
+
+
+class SlideSerializer(ModelSerializer):
     background_image = SorlImageField('1600x674', crop='center')
     small_background_image = SorlImageField('200x84', crop='center', source='background_image')
 
@@ -60,7 +86,7 @@ class SlideSerializer(serializers.ModelSerializer):
         )
 
 
-class StepSerializer(serializers.ModelSerializer):
+class StepSerializer(ModelSerializer):
     image = SorlImageField("500x500", upscale=False)
 
     text = SafeField(required=False, allow_blank=True)
@@ -73,7 +99,7 @@ class StepSerializer(serializers.ModelSerializer):
         resource_name = 'pages/blocks/steps/steps'
 
 
-class LogoSerializer(serializers.ModelSerializer):
+class LogoSerializer(ModelSerializer):
     image = SorlImageField('x150', crop='center')
 
     class Meta(object):
@@ -84,7 +110,7 @@ class LogoSerializer(serializers.ModelSerializer):
         resource_name = 'pages/blocks/logos/logos'
 
 
-class LinkSerializer(serializers.ModelSerializer):
+class LinkSerializer(ModelSerializer):
     image = SorlImageField('800x600', crop='center')
 
     class Meta(object):
@@ -96,13 +122,13 @@ class LinkSerializer(serializers.ModelSerializer):
 
 
 class BaseBlockSerializer(ModelSerializer):
-    type = serializers.SerializerMethodField(read_only=True)
+    block_type = serializers.SerializerMethodField(read_only=True)
 
     class Meta(object):
         model = ContentItem
-        fields = ('id', 'type', 'language_code', 'title', 'sub_title',)
+        fields = ('id', 'block_type', 'language_code', 'title', 'sub_title',)
 
-    def get_type(self, obj):
+    def get_block_type(self, obj):
         return self.JSONAPIMeta.resource_name
 
     class JSONAPIMeta:
@@ -129,34 +155,22 @@ class LinksBlockSerializer(BaseBlockSerializer):
 
 
 class ProjectsMapBlockSerializer(BaseBlockSerializer):
+    links = serializers.SerializerMethodField()
 
-    subregion = serializers.SerializerMethodField()
+    def get_links(self, obj):
+        links = {}
+        base_url = reverse('activity-location-list')
+        for type, _ in ProjectsMapContent.MapTypeChoices.choices:
+            links[type] = f'{base_url}?filter[type]={type}'
 
-    def get_subregion(self, obj):
-        if obj.map_type == 'office_subregion':
-            user = get_current_user()
-            if user and not user.is_anonymous and user.location and user.location.subregion:
-                return user.location.subregion.name
-
-    activities = CustomHyperlinkRelatedSerializer(
-        link="/api/activities/locations"
-    )
-
-    activities_url = serializers.SerializerMethodField()
-
-    def get_activities_url(self, obj):
-        url = reverse('activity-location-list')
-        if obj.map_type == 'office_subregion':
-            user = get_current_user()
-            if user and user.location and user.location.subregion:
-                url += f'?office_location__subregion={user.location.subregion.pk}'
-        return url
+        return links
 
     class Meta(object):
         model = ProjectsMapContent
         fields = BaseBlockSerializer.Meta.fields + (
-            'activities', 'activities_url', 'map_type', 'activities_url', 'subregion'
+            'map_type', 'links'
         )
+        meta_fields = ['links']
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/map'
@@ -214,7 +228,7 @@ class DonateButtonBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = DonateButtonContent
-        fields = ('id', 'type', 'title', 'sub_title', 'button_text', 'funding')
+        fields = ('id', 'block_type', 'title', 'sub_title', 'button_text', 'funding')
         included_resources = ['funding']
 
     class JSONAPIMeta:
@@ -222,6 +236,27 @@ class DonateButtonBlockSerializer(BaseBlockSerializer):
 
     included_serializers = {
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
+    }
+
+
+class PollBlockSerializer(BaseBlockSerializer):
+
+    poll = ResourceRelatedField(
+        read_only=True
+    )
+
+    class Meta(object):
+        model = PollContent
+        fields = ('id', 'block_type', 'poll')
+        included_resources = ['poll', 'poll.options', 'poll.my_vote']
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/poll'
+
+    included_serializers = {
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'poll.options': 'bluebottle.voting.serializers.PollOptionSerializer',
+        'poll.my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
     }
 
 
@@ -237,11 +272,11 @@ class SlidesBlockSerializer(BaseBlockSerializer):
         if user and isinstance(user, Member) and user.location and user.location.subregion:
             return Slide.objects.published().filter(
                 language=obj.language_code
-            ).filter(Q(sub_region__isnull=True) | Q(sub_region=user.location.subregion))
+            ).filter(Q(sub_regions__isnull=True) | Q(sub_regions=user.location.subregion))
         else:
             return Slide.objects.published().filter(
                 language=obj.language_code
-            ).filter(Q(sub_region__isnull=True))
+            ).filter(Q(sub_regions__isnull=True))
 
     class Meta(object):
         model = SlidesContent
@@ -264,7 +299,7 @@ class StepsBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = StepsContent
-        fields = ('id', 'type', 'title', 'sub_title',
+        fields = ('id', 'block_type', 'title', 'sub_title',
                   'steps', 'action_text', 'action_link')
         included_resources = ['steps']
 
@@ -276,42 +311,26 @@ class StepsBlockSerializer(BaseBlockSerializer):
     }
 
 
-class StatsLinkSerializer(CustomHyperlinkRelatedSerializer):
-
-    def get_links(self, *args, **kwargs):
-        url = reverse('statistics')
-        obj = args[0]
-
-        url = url + '?'
-
-        if obj.stat_type == 'office_subregion':
-            user = get_current_user()
-            if user and user.location and user.location.subregion:
-                url += f'office_location__subregion={user.location.subregion.pk}'
-
-        if obj.year:
-            url += f'&year={obj.year}'
-        return {
-            'related': url
-        }
-
-
 class StatsBlockSerializer(BaseBlockSerializer):
     title = serializers.CharField()
     sub_title = serializers.CharField()
     year = serializers.IntegerField()
-    stats = StatsLinkSerializer()
-    subregion = serializers.SerializerMethodField()
+    links = serializers.SerializerMethodField()
 
-    def get_subregion(self, obj):
-        if obj.stat_type == 'office_subregion':
-            user = get_current_user()
-            if user and not user.is_anonymous and user.location and user.location.subregion:
-                return user.location.subregion.name
+    def get_links(self, obj):
+        links = {}
+        base_url = reverse('statistics')
+        for type, _ in HomepageStatisticsContent.StatTypeChoices.choices:
+            if obj.year:
+                links[type] = f'{base_url}?filter[type]={type}&filter[year]={obj.year}'
+            else:
+                links[type] = f'{base_url}?filter[type]={type}'
+
+        return links
 
     class Meta(object):
         model = HomepageStatisticsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'year', 'stats', 'stat_type', 'subregion')
+        fields = ('id', 'block_type', 'title', 'sub_title', 'year', 'stat_type', 'links')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/stats'
@@ -325,12 +344,39 @@ class QuotesBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = QuotesContent
-        fields = ('id', 'quotes', 'type', 'title', 'sub_title', 'quotes')
+        fields = ('id', 'quotes', 'block_type', 'title', 'sub_title', 'quotes')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/quotes'
         included_resources = [
             'quotes'
+        ]
+
+
+class NewsBlockSerializer(BaseBlockSerializer):
+
+    class Meta(object):
+        model = NewsContent
+        fields = ('id', 'block_type', 'title', 'sub_title')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/news'
+
+
+class PeopleBlockSerializer(BaseBlockSerializer):
+    persons = ResourceRelatedField(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta(object):
+        model = PeopleContent
+        fields = ('id', 'block_type', 'title', 'sub_title', 'persons')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people'
+        included_resources = [
+            'persons'
         ]
 
 
@@ -342,7 +388,7 @@ class CategoriesBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = CategoriesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'categories')
+        fields = ('id', 'block_type', 'title', 'sub_title', 'categories')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/categories'
@@ -363,7 +409,7 @@ class LogosBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = LogosContent
-        fields = ('id', 'logos', 'type', 'title', 'sub_title')
+        fields = ('id', 'logos', 'block_type', 'title', 'sub_title')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/logos'
@@ -377,7 +423,7 @@ class PlainTextBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = PlainTextItem
-        fields = ('id', 'text', 'type', 'title', 'sub_title',)
+        fields = ('id', 'text', 'block_type', 'title', 'sub_title',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text'
@@ -385,12 +431,12 @@ class PlainTextBlockSerializer(BaseBlockSerializer):
 
 class ImagePlainTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
-    text = SafeField()
+    text = RichTextField()
 
     class Meta(object):
         model = ImagePlainTextItem
         fields = (
-            'id', 'text', 'image', 'video_url', 'ratio', 'align', 'type', 'title', 'sub_title',
+            'id', 'text', 'image', 'video_url', 'ratio', 'align', 'block_type', 'title', 'sub_title',
             'action_text', 'action_link'
         )
 
@@ -403,7 +449,7 @@ class ImageBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ImageItem
-        fields = ('id', 'type', 'video_url', 'image', 'title', 'sub_title')
+        fields = ('id', 'block_type', 'video_url', 'image', 'title', 'sub_title')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image'
@@ -414,7 +460,7 @@ class PictureBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = PictureItem
-        fields = ('id', 'align', 'image', 'type',)
+        fields = ('id', 'align', 'image', 'block_type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/picture'
@@ -423,12 +469,12 @@ class PictureBlockSerializer(BaseBlockSerializer):
 class TextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = TextItem
-        fields = ('id', 'text', 'type', )
+        fields = ('id', 'text', 'block_type', )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/text'
 
-        fields = ('id', 'align', 'image', 'type',)
+        fields = ('id', 'align', 'image', 'block_type',)
 
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
@@ -437,7 +483,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ImageTextItem
 
-        fields = ('id', 'text', 'image', 'ratio', 'align', 'type',)
+        fields = ('id', 'text', 'image', 'ratio', 'align', 'block_type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image-text'
@@ -449,17 +495,29 @@ class ImageRoundTextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ImageTextRoundItem
 
-        fields = ('id', 'text', 'image', 'type',)
+        fields = ('id', 'text', 'image', 'block_type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image-rounded-text'
+
+
+class ScaledImageTextBlockSerializer(BaseBlockSerializer):
+    image = ImageSerializer()
+
+    class Meta(object):
+        model = ScaledImageTextItem
+
+        fields = ('id', 'text', 'image', 'align', 'block_type',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/scaled-image-text'
 
 
 class DocumentBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = DocumentItem
 
-        fields = ('id', 'type', 'text', 'document',)
+        fields = ('id', 'block_type', 'text', 'document',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/document'
@@ -469,7 +527,7 @@ class ActionBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ActionItem
 
-        fields = ('id', 'type', 'link', 'title',)
+        fields = ('id', 'block_type', 'link', 'title',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/action'
@@ -479,7 +537,7 @@ class RawHHTMLBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = RawHtmlItem
 
-        fields = ('id', 'type', 'html',)
+        fields = ('id', 'block_type', 'html',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/raw-html'
@@ -490,7 +548,7 @@ class ColumnBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ColumnsItem
 
-        fields = ('id', 'text1', 'text2', 'type',)
+        fields = ('id', 'text1', 'text2', 'block_type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/columns'
@@ -498,12 +556,11 @@ class ColumnBlockSerializer(BaseBlockSerializer):
 
 class FallbackBlockSerializer(serializers.Serializer):
     def to_representation(self, instance):
-        print(instance.__class__)
-        return {'id': instance.pk, 'type': self.JSONAPIMeta.resource_name}
+        return {'id': instance.pk, 'block_type': self.JSONAPIMeta.resource_name}
 
     class Meta(object):
         model = None
-        fields = ('id', 'type',)
+        fields = ('id', 'block_type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/unknown'
@@ -514,7 +571,7 @@ class OEmbedBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = OEmbedItem
-        fields = ('id', 'title', 'width', 'height', 'html', 'type',)
+        fields = ('id', 'title', 'width', 'height', 'html', 'block_type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/oembed'
@@ -531,15 +588,19 @@ class BlockSerializer(PolymorphicModelSerializer):
         StepsBlockSerializer,
         ActivitiesBlockSerializer,
         DonateButtonBlockSerializer,
+        PollBlockSerializer,
         ProjectsMapBlockSerializer,
         LinksBlockSerializer,
         StatsBlockSerializer,
         QuotesBlockSerializer,
+        PeopleBlockSerializer,
+        NewsBlockSerializer,
         LogosBlockSerializer,
         CategoriesBlockSerializer,
         TextBlockSerializer,
         ImageTextBlockSerializer,
         ImageRoundTextBlockSerializer,
+        ScaledImageTextBlockSerializer,
         ImageBlockSerializer,
         PictureBlockSerializer,
         ImagePlainTextBlockSerializer,
@@ -571,7 +632,7 @@ class BlockSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding',
-            'full_page'
+            'poll', 'poll.options', 'full_page', 'persons'
 
         ]
 
@@ -580,11 +641,25 @@ class BlockSerializer(PolymorphicModelSerializer):
         'links': 'bluebottle.cms.serializers.LinkSerializer',
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'persons': 'bluebottle.cms.serializers.PersonSerializer',
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
-
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'poll.options': 'bluebottle.voting.serializers.PollOptionSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
+
+
+def get_content_items(obj, attribute):
+    """
+    Return the content items of a placeholder field, tolerating a missing placeholder.
+    """
+    try:
+        placeholder = getattr(obj, attribute)
+    except Placeholder.DoesNotExist:
+        return ContentItem.objects.none()
+
+    return placeholder.contentitems.all()
 
 
 class BaseCMSSerializer(ModelSerializer):
@@ -598,7 +673,14 @@ class BaseCMSSerializer(ModelSerializer):
     content_attribute = 'content'
 
     def get_blocks(self, obj):
-        return obj.content.contentitems.all().translated()
+        items = get_content_items(obj, self.content_attribute)
+
+        blocks = items.translated()
+        if blocks.exists():
+            return blocks
+
+        default_language = get_default_language()
+        return items.translated(default_language)
 
     class Meta(object):
         fields = ('id', 'blocks')
@@ -610,8 +692,12 @@ class BaseCMSSerializer(ModelSerializer):
             'blocks.links',
             'blocks.slides',
             'blocks.quotes',
+            'blocks.persons',
             'blocks.funding',
             'blocks.funding.image',
+            'blocks.poll',
+            'blocks.poll.options',
+            'blocks.poll.my_vote',
             'blocks.logos',
             'blocks.categories',
         ]
@@ -622,8 +708,12 @@ class BaseCMSSerializer(ModelSerializer):
         'links': 'bluebottle.cms.serializers.LinkSerializer',
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'persons': 'bluebottle.cms.serializers.PersonSerializer',
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'options': 'bluebottle.voting.serializers.PollOptionSerializer',
+        'my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
@@ -639,13 +729,40 @@ class HomeSerializer(BaseCMSSerializer):
 
 class PageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    admin_url = serializers.SerializerMethodField()
 
     def get_blocks(self, obj):
-        return obj.content.contentitems.all()
+        return get_content_items(obj, self.content_attribute)
+
+    def get_admin_url(self, obj):
+        return get_staff_admin_url(obj)
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'show_title', 'full_page', 'slug', 'admin_url'
+        )
+        meta_fields = ('admin_url',)
+
+    class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
+        resource_name = 'pages'
+
+
+class PlatformPageSerializer(BaseCMSSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
+    admin_url = serializers.SerializerMethodField()
+
+    content_attribute = 'body'
+
+    def get_admin_url(self, obj):
+        return get_staff_admin_url(obj)
+
+    class Meta(BaseCMSSerializer.Meta):
+        model = Page
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'show_title', 'full_page', 'slug', 'admin_url'
+        )
+        meta_fields = ('admin_url',)
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'pages'
@@ -654,16 +771,17 @@ class PageSerializer(BaseCMSSerializer):
 class NewsItemSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     main_image = SorlImageField('1920')
+    summary = serializers.CharField()
 
     content_attribute = 'contents'
 
     def get_blocks(self, obj):
-        return obj.contents.contentitems.all()
+        return get_content_items(obj, self.content_attribute)
 
     class Meta(BaseCMSSerializer.Meta):
-        model = Page
+        model = NewsItem
         fields = BaseCMSSerializer.Meta.fields + (
-            'title', 'author', 'publication_date', 'slug', 'main_image'
+            'title', 'author', 'publication_date', 'slug', 'main_image', 'summary'
         )
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
@@ -687,6 +805,14 @@ class NewsItemPreviewSerializer(ModelSerializer):
         resource_name = 'news-item-preview'
 
 
+def _published_brand_color(obj, original_attr, adjusted_attr):
+    if getattr(obj, 'accessible_colours', False):
+        adjusted = getattr(obj, adjusted_attr, None)
+        if adjusted:
+            return adjusted
+    return getattr(obj, original_attr, None)
+
+
 class FaviconsSerializer(serializers.Serializer):
     large = SorlImageField('194x194', source='*')
     small = SorlImageField('32x32', source='*')
@@ -694,10 +820,19 @@ class FaviconsSerializer(serializers.Serializer):
 
 class SitePlatformSettingsSerializer(serializers.ModelSerializer):
     favicons = FaviconsSerializer(source='favicon')
+    action_color = serializers.SerializerMethodField()
+    description_color = serializers.SerializerMethodField()
+
+    def get_action_color(self, obj):
+        return _published_brand_color(obj, 'action_color', 'action_color_adjusted')
+
+    def get_description_color(self, obj):
+        return _published_brand_color(obj, 'description_color', 'description_color_adjusted')
 
     class Meta(object):
         model = SitePlatformSettings
         fields = (
+            'platform_name',
             'contact_email',
             'contact_phone',
             'copyright',
@@ -714,8 +849,11 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'action_color',
             'action_text_color',
             'alternative_link_color',
+            'action_on_tint_color',
             'description_color',
             'description_text_color',
+            'description_on_background_color',
+            'description_on_tint_color',
             'footer_color',
             'footer_text_color',
             'title_font',

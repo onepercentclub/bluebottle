@@ -5,7 +5,7 @@ from bluebottle.utils.permissions import IsOwner
 
 class DonorOwnerOrSucceededPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         if (not settings.closed or request.user.is_authenticated) \
                 and obj.status == 'succeeded' and request.method == 'GET':
             return True
@@ -42,9 +42,12 @@ class IntentPermission(IsOwner):
 
 class CanExportSupportersPermission(IsOwner):
     """ Allows access only to obj owner. """
+
     def has_object_action_permission(self, action, user, obj):
-        return (obj.owner == user or user in obj.initiative.activity_managers.all()) \
+        return (
+            (user in obj.owners or user.is_staff or user.is_superuser)
             and InitiativePlatformSettings.load().enable_participant_exports
+        )
 
     def has_action_permission(self, action, user, model_cls):
         return True

@@ -3,11 +3,13 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.core import mail
 from django.test import TestCase, RequestFactory
 from future import standard_library
-from mock import patch
+from mock import patch, MagicMock
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
+from bluebottle.clients import properties
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -16,10 +18,11 @@ from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.models import SAMLLog
 from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS, TOKEN_AUTH_SETTINGS
-
-from bluebottle.clients import properties
+from bluebottle.utils import translation
 
 standard_library.install_aliases()
+
+response_mock = MagicMock()
 
 
 class TestSAMLTokenAuthentication(TestCase):
@@ -28,12 +31,12 @@ class TestSAMLTokenAuthentication(TestCase):
     """
 
     def setUp(self):
-        self.session_middleware = SessionMiddleware()
+        self.session_middleware = SessionMiddleware(response_mock)
 
     def _request(self, method, target, session=None, *args, **kwargs):
         request = getattr(RequestFactory(), method)(target, *args, **kwargs)
 
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(response_mock)
         middleware.process_request(request)
         if session:
             request.session.update(session)
@@ -134,6 +137,58 @@ class TestSAMLTokenAuthentication(TestCase):
             error.assert_called()
             self.assertTrue(len(SAMLLog.objects.all()), 1)
 
+    def _assert_rejected(self, response):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+            self.assertRaises(TokenAuthenticationError, auth_backend.authenticate)
+
+    def test_auth_bad_base64_padding(self):
+        self._assert_rejected('PHNhbWxwOlJlc3BvbnNlPg')
+
+    def test_auth_base64_length_one_mod_four(self):
+        self._assert_rejected('YWJjZGU')
+
+    def test_auth_non_base64_characters(self):
+        self._assert_rejected("' OR 1=1--")
+
+    def test_auth_non_ascii_body(self):
+        self._assert_rejected('\u00e9\u00e8\u00ea')
+
+    def test_auth_empty_response(self):
+        self._assert_rejected('')
+
+    def test_auth_not_xml(self):
+        self._assert_rejected(
+            OneLogin_Saml2_Utils.b64encode('this is not xml at all')
+        )
+
+    def test_auth_dtd_entity(self):
+        self._assert_rejected(
+            OneLogin_Saml2_Utils.b64encode(
+                '<?xml version="1.0"?>'
+                '<!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://evil.example.com/x">]>'
+                '<samlp:Response>&xxe;</samlp:Response>'
+            )
+        )
+
+    def test_auth_xml_but_not_a_saml_response(self):
+        self._assert_rejected(
+            OneLogin_Saml2_Utils.b64encode('<hello>world</hello>')
+        )
+
+    def test_auth_malformed_responses_do_not_mail_admins(self):
+        for response in ('PHNhbWxwOlJlc3BvbnNlPg', "' OR 1=1--", ''):
+            self._assert_rejected(response)
+
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_auth_success_missing_field(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)
         settings['assertion_mapping']['is_staff'] = 'test'
@@ -190,6 +245,37 @@ class TestSAMLTokenAuthentication(TestCase):
             user, created = auth_backend.authenticate()
 
             self.assertTrue(created)
+
+            self.assertEqual(user.username, 'smartin')
+            self.assertEqual(user.email, 'smartin@yaco.es')
+            self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
+
+    def test_existing_different_remote_id(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            user = BlueBottleUserFactory.create(
+                remote_id='1234',
+                email='smartin@yaco.es',
+                username='blah'
+            )
+
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            user, created = auth_backend.authenticate()
+
+            self.assertFalse(created)
 
             self.assertEqual(user.username, 'smartin')
             self.assertEqual(user.email, 'smartin@yaco.es')
@@ -285,6 +371,40 @@ class TestSAMLTokenAuthentication(TestCase):
             user, created = auth_backend.authenticate()
             self.assertFalse(created)
             self.assertEqual(user.username, 'smartin')
+            self.assertEqual(user.email, 'smartin@yaco.es')
+            self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
+
+    def test_auth_existing_inactive_success(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            # Create user with remote_id with caps
+            BlueBottleUserFactory.create(
+                remote_id='492882615ACF31C8096B627245D76AE53036C090',
+                email='smartin@yaco.es',
+                username='smartin',
+                is_active=False
+            )
+
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            # Login should stil work.
+            user, created = auth_backend.authenticate()
+            self.assertFalse(created)
+            self.assertEqual(user.username, 'smartin')
+            self.assertTrue(user.is_active, 'smartin')
+
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
 
@@ -525,6 +645,44 @@ class TestSAMLTokenAuthentication(TestCase):
 
             self.assertEqual(auth_backend.target_url, '/test')
 
+    def test_auth_absolute_custom_target(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response, 'RelayState': 'https://example.com/test'}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            self.assertEqual(auth_backend.target_url, '/test')
+
+    def test_auth_admin_target(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response, 'RelayState': '/en/admin'}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            self.assertEqual(auth_backend.target_url, '/en/admin')
+
     def test_auth_custom_target_non_http(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             filename = os.path.join(
@@ -705,26 +863,27 @@ class TestSAMLTokenAuthentication(TestCase):
             }
         )
 
+        language = properties.LANGUAGE_CODE
         with self.settings(TOKEN_AUTH=settings):
+            with translation.override(language):
+                request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+                auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
-            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
-
-            result = auth_backend.parse_user({
-                'team': ['Marketing'],
-                'team_name': ['Online Marketing'],
-                'mail': ['test@example.com'],
-                'nameId': ['1234325']
-            })
-            self.assertEqual(
-                result['remote_id'], '1234325'
-            )
-            self.assertEqual(
-                result['email'], 'test@example.com'
-            )
-            self.assertEqual(
-                result['segment.team'], ['Marketing', 'Online Marketing']
-            )
+                result = auth_backend.parse_user({
+                    'team': ['Marketing'],
+                    'team_name': ['Online Marketing'],
+                    'mail': ['test@example.com'],
+                    'nameId': ['1234325']
+                })
+                self.assertEqual(
+                    result['remote_id'], '1234325'
+                )
+                self.assertEqual(
+                    result['email'], 'test@example.com'
+                )
+                self.assertEqual(
+                    result['segment.team'], ['Marketing', 'Online Marketing']
+                )
 
     def test_parse_segments(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)
@@ -747,6 +906,8 @@ class TestSAMLTokenAuthentication(TestCase):
             name='Sales'
         )
 
+        language = properties.LANGUAGE_CODE
+
         with self.settings(TOKEN_AUTH=settings):
             user = BlueBottleUserFactory.create()
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
@@ -756,23 +917,163 @@ class TestSAMLTokenAuthentication(TestCase):
                 'segment.segment': ['Online Marketing', 'Marketing']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing']
             )
             auth_backend.set_segments(user, {
                 'segment.segment': ['Sales', 'Marketing']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing', 'Sales']
             )
             auth_backend.set_segments(user, {
                 'segment.segment': ['markeTING']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing']
             )
+
+    def test_parse_segments_translated_names(self):
+        """Test that segment matching works with translated segment names."""
+        from bluebottle.utils.models import Language
+
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'segment.segment': ['segment', 'section'],
+            }
+        )
+
+        en_lang, _ = Language.objects.get_or_create(code='en', defaults={'default': True})
+        nl_lang, _ = Language.objects.get_or_create(code='nl', defaults={'default': False})
+
+        segment_type = SegmentTypeFactory.create(slug='segment')
+
+        marketing_segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Marketing',
+            alternate_names=['MarkCom', 'Propaganda', 'Online Marketing']
+        )
+        marketing_segment.set_current_language('nl')
+        marketing_segment.name = 'Prodaganda'
+        marketing_segment.save()
+
+        sales_segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Sales',
+            alternate_names=['Sales Team']
+        )
+        sales_segment.set_current_language('nl')
+        sales_segment.name = 'Verkoop'
+        sales_segment.save()
+        sales_segment.alternate_names.append('Verkoop')
+        sales_segment.save()
+
+        language = properties.LANGUAGE_CODE
+
+        with self.settings(TOKEN_AUTH=settings):
+            user = BlueBottleUserFactory.create()
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            # Test matching with Dutch translated name in alternate_names
+            auth_backend.set_segments(user, {
+                'segment.segment': ['Verkoop']
+            })
+            self.assertEqual(
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
+                ['Sales']
+            )
+            # Verify it matches the correct segment by checking Dutch translation
+            with translation.override('nl'):
+                self.assertEqual(
+                    list(user.segments.translated('nl').values_list('translations__name', flat=True)),
+                    ['Verkoop']
+                )
+
+            # Test case-insensitive matching with translated name
+            auth_backend.set_segments(user, {
+                'segment.segment': ['VERKOOP']
+            })
+            self.assertEqual(
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
+                ['Sales']
+            )
+
+            # Test matching with English name still works
+            auth_backend.set_segments(user, {
+                'segment.segment': ['Sales', 'Marketing']
+            })
+            self.assertEqual(
+                sorted(list(user.segments.translated(language).values_list('translations__name', flat=True))),
+                ['Marketing', 'Sales']
+            )
+
+            # Test matching with both English and Dutch names
+            auth_backend.set_segments(user, {
+                'segment.segment': ['Verkoop', 'Marketing']
+            })
+            self.assertEqual(
+                sorted(list(user.segments.translated(language).values_list('translations__name', flat=True))),
+                ['Marketing', 'Sales']
+            )
+
+    def test_parse_segments_translated_names_slug_match(self):
+        """Test that segment matching works with translated names via slug matching."""
+        from bluebottle.utils.models import Language
+
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'segment.segment': ['segment', 'section'],
+            }
+        )
+
+        # Ensure we have at least English and Dutch languages
+        en_lang, _ = Language.objects.get_or_create(code='en', defaults={'default': True})
+        nl_lang, _ = Language.objects.get_or_create(code='nl', defaults={'default': False})
+
+        segment_type = SegmentTypeFactory.create(slug='segment')
+
+        # Create a segment with English name "Support" and Dutch name "Ondersteuning"
+        # The slug will be based on the English name
+        support_segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Support',
+            alternate_names=[]  # No alternate names, so it will match via slug
+        )
+        # Set Dutch translation
+        support_segment.set_current_language('nl')
+        support_segment.name = 'Ondersteuning'
+        support_segment.save()
+
+        language = properties.LANGUAGE_CODE
+
+        with self.settings(TOKEN_AUTH=settings):
+            user = BlueBottleUserFactory.create()
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            # Test matching via slug (the slug is based on English name "support")
+            auth_backend.set_segments(user, {
+                'segment.segment': ['support']  # This will match via slug
+            })
+            self.assertEqual(
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
+                ['Support']
+            )
+            # Verify Dutch translation is correct
+            with translation.override('nl'):
+                self.assertEqual(
+                    list(user.segments.translated('nl').values_list('translations__name', flat=True)),
+                    ['Ondersteuning']
+                )
 
     def test_parse_user_missing(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)

@@ -1,18 +1,16 @@
 from builtins import object
+
 from django.contrib.auth.models import Group
 from django.urls import reverse
-
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-
 from rest_framework import serializers, validators
 
-from bluebottle.segments.models import Segment
+from bluebottle.geo.models import Location
+from bluebottle.members.models import Member
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.scim.utils import SCIMPath
-
-from bluebottle.members.models import Member
-from bluebottle.geo.models import Location
+from bluebottle.segments.models import Segment
 
 
 class NonNestedSerializer(serializers.Serializer):
@@ -83,11 +81,15 @@ class AddressesField(serializers.RelatedField):
             queryset = self.get_queryset()
             location_name = value[0]['locality']
             try:
-                return queryset.get(slug=slugify(location_name))
-            except Location.DoesNotExist:
-                return queryset.create(name=location_name)
+                slug = slugify(location_name)
             except (TypeError, ValueError):
                 self.fail('invalid')
+
+            # slug is not unique, so pick the oldest match rather than assuming one.
+            return (
+                queryset.filter(slug=slug).order_by('pk').first()
+                or queryset.create(name=location_name)
+            )
 
 
 class SchemaSerializer(NonNestedSerializer):
@@ -188,7 +190,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     def save(self, *args, **kwargs):
         result = super().save(*args, **kwargs)
 
-        segment_settings = SCIMPlatformSettings.objects.get().segments
+        segment_settings = SCIMPlatformSettings.load().segments
 
         for path, segment_type in segment_settings:
             segment_name = path.get(self.initial_data)
@@ -209,7 +211,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     def to_representation(self, obj):
         data = super().to_representation(obj)
 
-        segment_settings = SCIMPlatformSettings.objects.get().segments
+        segment_settings = SCIMPlatformSettings.load().segments
 
         for path, segment_type in segment_settings:
             try:

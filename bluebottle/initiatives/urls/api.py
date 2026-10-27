@@ -1,4 +1,5 @@
-from django.conf.urls import url
+from django.urls import path
+from django.urls import re_path
 
 from bluebottle.initiatives.views import (
     InitiativeList, InitiativeDetail, InitiativeImage,
@@ -11,62 +12,62 @@ from bluebottle.initiatives.views import (
 
 urlpatterns = [
 
-    url(
-        r'^$',
+    path(
+        '',
         InitiativeList.as_view(),
         name='initiative-list'
     ),
-    url(
-        r'^/(?P<pk>\d+)$',
+    path(
+        '/<int:pk>',
         InitiativeDetail.as_view(),
         name='initiative-detail'
     ),
-    url(
-        r'^/transitions$',
+    path(
+        '/transitions',
         InitiativeReviewTransitionList.as_view(),
         name='initiative-review-transition-list'
     ),
-    url(
+    re_path(
         r'^/(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
         InitiativeImage.as_view(),
         name='initiative-image'
     ),
 
-    url(
-        r'^/redirects$',
+    path(
+        '/redirects',
         InitiativeRedirectList.as_view(),
         name='initiative-redirect-list'
     ),
 
-    url(
-        r'^/related-images$',
+    path(
+        '/related-images',
         RelatedInitiativeImageList.as_view(),
         name='related-initiative-image-list'
     ),
-    url(
-        r'^/themes$',
+    path(
+        '/themes',
         ThemeList.as_view(),
         name='initiative-theme-list'
     ),
-    url(
-        r'^/themes/(?P<pk>\d+)$',
+    path(
+        '/themes/<int:pk>',
         ThemeDetail.as_view(),
         name='initiative-theme'
     ),
 
-    url(
+    re_path(
         r'^/(?P<pk>\d+)/related-image/(?P<size>\d+(x\d+)?)$',
         RelatedInitiativeImageContent.as_view(),
         name='related-initiative-image-content'
     ),
 
-    url(
-        r'^/map/$',
+    path(
+        '/map/',
         InitiativeMapList.as_view(),
         name='initiative-map-list'
     ),
-    url(
-        r'^/preview/$',
+    path(
+        '/preview/',
         InitiativePreviewList.as_view(),
         name='initiative-preview-list'
     ),

@@ -2,11 +2,24 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
-        <p>Good news, you have been accepted for the activity "{{ title }}"!</p>
-        <p>If you are unable to participate, please withdraw via the activity page so that others can take your place.</p>
-    {% endblocktrans %}
-  {% if period %}
-    {% include 'mails/messages/partial/periodic.html' %}
-  {% endif %}
+    <p>
+        {% blocktrans with manager=obj.activity.owner.full_name context 'platform-email' %}
+            <p>Good news, you have been accepted for the activity "{{ title }}"!</p>
+        {% endblocktrans %}
+    </p>
+    {% if period %}
+        {% include 'mails/messages/partial/periodic.html' %}
+    {% endif %}
+    {% if hour_registration %}
+        <p>
+            {% blocktrans context 'platform-email' %}
+                Make sure to register your hours using the code or URL found on the activity detail page.
+            {% endblocktrans %}
+        </p>
+    {% endif %}
+{% endblock %}
+
+
+{% block end_message %}
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
 {% endblock %}

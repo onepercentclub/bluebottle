@@ -1,13 +1,10 @@
-from builtins import object
-from builtins import str
+from builtins import object, str
 from collections import defaultdict
 
-from django.conf.urls import url
 from django.contrib import admin, messages
-from django.contrib.admin.models import CHANGE, LogEntry
-from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.urls import path
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -16,17 +13,6 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
-
-
-def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
-    LogEntry.objects.log_action(
-        user_id=user.id,
-        content_type_id=ContentType.objects.get_for_model(obj).pk,
-        object_id=obj.pk,
-        object_repr=str(obj),
-        action_flag=action_flag,
-        change_message=change_message
-    )
 
 
 def get_effects(effects):
@@ -154,10 +140,15 @@ class StateMachineAdminMixin(object):
             return HttpResponseRedirect(link)
 
         instance = self.model.objects.get(pk=pk)
-        form = TransitionConfirmationForm(request.POST)
 
         state_machine = getattr(instance, field_name)
         transition = state_machine.transitions[transition_name]
+
+        form = (
+            transition.form(request.POST or None, instance=instance, transition=transition)
+            if transition.form
+            else TransitionConfirmationForm(request.POST or None)
+        )
 
         if transition not in state_machine.possible_transitions():
             messages.error(request, 'Transition not possible: {}'.format(transition.name))
@@ -169,20 +160,18 @@ class StateMachineAdminMixin(object):
                 getattr(state_machine, transition_name)(
                     user=request.user
                 )
+                if transition.form:
+                    form.save()
+                custom_message = getattr(transition, 'custom_message', None)
                 try:
-                    instance.execute_triggers(user=request.user, send_messages=send_messages)
+                    instance.execute_triggers(user=request.user, send_messages=send_messages, message=custom_message)
                     instance.save()
                 except TransitionNotPossible as e:
                     messages.warning(request, 'Effect failed: {}'.format(e))
 
-                log_action(
-                    instance,
-                    request.user,
-                    'Changed status to {}'.format(transition.target.value)
-                )
-
                 return HttpResponseRedirect(link)
 
+        # Execute the transition
         getattr(state_machine, transition_name)()
         effects = instance.execute_triggers(user=request.user)
         rendered_effects = get_effects(effects)
@@ -205,9 +194,9 @@ class StateMachineAdminMixin(object):
             transition=transition,
             action_text=action_text,
             form=form,
+            media=self.media + form.media,
             has_notifications=any(
-                isinstance(effect, BaseNotificationEffect)
-                for effect in effects
+                isinstance(effect, BaseNotificationEffect) for effect in effects
             ),
             source=instance.status,
             effects=rendered_effects,
@@ -221,8 +210,8 @@ class StateMachineAdminMixin(object):
     def get_urls(self):
         urls = super(StateMachineAdminMixin, self).get_urls()
         custom_urls = [
-            url(
-                r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
+            path(
+                '<path:pk>/transition/<path:field_name>/<path:transition_name>',
                 self.admin_site.admin_view(self.transition),
                 name='{}_{}_state_transition'.format(
                     self.model._meta.app_label, self.model._meta.model_name

@@ -1,0 +1,250 @@
+# -*- coding: utf-8 -*-
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext_lazy as pgettext
+
+from bluebottle.activities.messages.base import BaseParticipantNotification
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.time_based.messages import get_slot_info
+from bluebottle.time_based.models import PeriodicActivity, DeadlineActivity
+from bluebottle.time_based.utils import duration_to_hours
+
+
+class ManagerRegistrationNotification(TransitionMessage):
+    context = {
+        'title': 'activity.title',
+        'applicant_name': 'user.full_name',
+        'team_name': 'team.name',
+        'captain_email': 'team.user.email',
+        'question': 'activity.review_title',
+        'answer': 'answer',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('platform-email', 'View this activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.activity.owner]
+
+    class Meta:
+        abstract = True
+
+
+class ManagerRegistrationCreatedReviewNotification(ManagerRegistrationNotification):
+    subject = pgettext('platform-email', 'You have a new application for your activity "{title}" 🎉')
+    template = 'messages/registrations/manager_registration_created_review'
+
+
+class ManagerRegistrationCreatedNotification(ManagerRegistrationNotification):
+    subject = pgettext('platform-email', 'You have a new participant for your activity "{title}" 🎉')
+    template = 'messages/registrations/manager_registration_created'
+
+
+class ManagerRegistrationStoppedNotification(ManagerRegistrationNotification):
+    subject = pgettext("platform-email", 'A participant for your activity "{title}" has stopped')
+    template = "messages/registrations/manager_registration_stopped"
+
+
+class ManagerRegistrationRestartedNotification(ManagerRegistrationNotification):
+    subject = pgettext(
+        "platform-email", 'A participant for your activity "{title}" has restarted'
+    )
+    template = "messages/registrations/manager_registration_restarted"
+
+
+class ManagerReminderNotification(ManagerRegistrationNotification):
+    subject = pgettext(
+        "email", '⏰ Reminder: Keep your participant list up-to-date!'
+    )
+    template = "messages/registrations/manager_reminder"
+
+
+class UserRegistrationNotification(BaseParticipantNotification):
+    context = {
+        'title': 'activity.title',
+        'applicant_name': 'user.full_name',
+        'review_link': 'activity.review_link',
+    }
+
+    def get_context(self, recipient):
+        context = super(UserRegistrationNotification, self).get_context(recipient)
+        if isinstance(self.obj.activity, PeriodicActivity):
+            context['start'] = self.obj.activity.start
+            context['end'] = self.obj.activity.deadline
+            context['duration'] = duration_to_hours(self.obj.activity.duration)
+            if self.obj.activity.period == 'days':
+                context['period'] = _('day')
+            if self.obj.activity.period == 'weeks':
+                context['period'] = _('week')
+            if self.obj.activity.period == 'months':
+                context['period'] = _('month')
+        if isinstance(self.obj.activity, DeadlineActivity):
+            context['start'] = self.obj.activity.start
+            context['end'] = self.obj.activity.deadline
+            context['duration'] = duration_to_hours(self.obj.activity.duration)
+
+        settings = InitiativePlatformSettings.load()
+        context['hour_registration'] = (
+            settings.hour_registration != 'disabled'
+            and self.obj.activity.hour_registration_data
+        )
+
+        return context
+
+    class Meta:
+        abstract = True
+
+
+class UserRegistrationAcceptedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have been selected for the activity "{title}"')
+    template = 'messages/registrations/user_accepted'
+
+
+class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
+    subject = pgettext(
+        "platform-email", 'Your team has been selected for the activity "{title}"'
+    )
+    template = "messages/registrations/team_accepted"
+
+
+class UserRegistrationRejectedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have not been selected for the activity "{title}"')
+    template = 'messages/registrations/user_rejected'
+    link_to_overview = True
+
+
+class UserRegistrationRemovedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have been removed from the activity "{title}"')
+    template = 'messages/registrations/user_removed'
+    link_to_overview = True
+
+
+class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
+    subject = pgettext(
+        "platform-email", 'Your team has not been selected for the activity "{title}"'
+    )
+    template = "messages/registrations/team_rejected"
+    link_to_overview = True
+
+
+class UserRegistrationStoppedNotification(UserRegistrationNotification):
+    subject = pgettext(
+        "platform-email", 'Your contribution to the activity "{title}" has been stopped'
+    )
+    template = "messages/registrations/user_stopped"
+
+
+class UserRegistrationRestartedNotification(UserRegistrationNotification):
+    subject = pgettext(
+        "platform-email", 'Your contribution to the activity "{title}" has been restarted'
+    )
+    template = "messages/registrations/user_restarted"
+
+    def get_context(self, recipient):
+        context = super(UserRegistrationNotification, self).get_context(recipient)
+        context['duration'] = duration_to_hours(self.obj.activity.duration)
+        if self.obj.activity.period == 'days':
+            context['period'] = pgettext('platform-email', 'day')
+        if self.obj.activity.period == 'weeks':
+            context['period'] = pgettext('platform-email', 'week')
+        if self.obj.activity.period == 'months':
+            context['period'] = pgettext('platform-email', 'months')
+        return context
+
+
+class UserReminderNotification(UserRegistrationNotification):
+    subject = pgettext(
+        "email", '⏰ Reminder: Update your participation!'
+    )
+    template = "messages/registrations/user_reminder"
+
+
+class DeadlineUserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/deadline/user_applied'
+
+
+class DeadlineUserJoinedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/deadline/user_joined'
+
+
+class ScheduleUserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/schedule/user_applied'
+
+
+class ScheduleUserJoinedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/schedule/user_joined'
+
+
+class TeamScheduleUserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/schedule/team_applied'
+
+
+class TeamScheduleUserJoinedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/schedule/team_joined'
+
+
+class PeriodicUserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/periodic/user_applied'
+
+
+class DateUserBaseNotification(UserRegistrationNotification):
+    def get_context(self, recipient):
+        context = super(DateUserBaseNotification, self).get_context(recipient)
+        context['slots'] = [
+            get_slot_info(p.slot) for p in self.obj.participants.filter(
+                status__in=['new', 'accepted', 'succeeded'],
+                slot__start__gte=now(),
+            ).all()
+        ]
+        return context
+    delay = 60
+
+    class Meta:
+        abstract = True
+
+
+class DateUserJoinedNotification(DateUserBaseNotification):
+    subject = pgettext('platform-email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/date/user_joined'
+
+
+class DateUserAppliedNotification(DateUserBaseNotification):
+    subject = pgettext('platform-email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/date/user_applied'
+
+
+class PeriodicUserJoinedNotification(UserRegistrationNotification):
+    subject = pgettext('platform-email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/periodic/user_joined'
+
+
+class ManagerTeamRegistrationCreatedReviewNotification(ManagerRegistrationNotification):
+    subject = pgettext("platform-email", 'A new team has applied to your activity "{title}" 🎉')
+    template = "messages/registrations/manager_team_registration_created_review"
+
+
+class ManagerTeamRegistrationCreatedNotification(ManagerRegistrationNotification):
+    subject = pgettext("platform-email", 'You have a new team for your activity "{title}" 🎉')
+    template = "messages/registrations/manager_team_registration_created"
+
+
+class TeamAppliedNotification(UserRegistrationNotification):
+    subject = pgettext("platform-email", 'You have registered your team on "{site_name}"')
+    template = "messages/registrations/schedule/team_applied"
+
+
+class TeamJoinedNotification(UserRegistrationNotification):
+    subject = pgettext("platform-email", 'You have registered your team on "{site_name}"')
+    template = "messages/registrations/schedule/team_joined"

@@ -5,11 +5,13 @@ from django.test.client import RequestFactory
 from django.urls import reverse
 from fluent_contents.models import Placeholder
 
+from bluebottle.cms.models import ImagePlainTextItem, PeopleContent, PollContent
 from bluebottle.pages.admin import PageAdmin
 from bluebottle.pages.models import Page, DocumentItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.voting.models import Poll
 
 
 class TestPageAdmin(BluebottleAdminTestCase):
@@ -44,6 +46,29 @@ class TestPageAdmin(BluebottleAdminTestCase):
         page.refresh_from_db()
         self.assertEqual(page.author, user)
 
+    def test_change_page_with_cms_blocks(self):
+        page = PageFactory.create()
+        placeholder = Placeholder.objects.create_for_object(page, 'blog_contents')
+        placeholder.save()
+
+        poll = Poll()
+        poll.set_current_language('en')
+        poll.title = 'Favourite colour'
+        poll.status = 'open'
+        poll.save()
+        PollContent.objects.create_for_placeholder(placeholder, poll=poll)
+        ImagePlainTextItem.objects.create_for_placeholder(placeholder, title='Intro')
+        people = PeopleContent.objects.create_for_placeholder(placeholder)
+        people.persons.create(name='Ada', email='ada@example.com', role='Lead')
+
+        page_admin_url = reverse('admin:pages_page_change', args=(page.id,))
+        response = self.client.get(page_admin_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Favourite colour')
+        self.assertContains(response, 'Intro')
+        self.assertContains(response, 'Ada')
+
     def test_upload_link_to_png(self):
         page = PageFactory.create()
         placeholder = Placeholder.objects.create_for_object(page, 'blog_contents')
@@ -57,7 +82,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "slug": page.slug,
                 "title": page.title,
                 "language": 'en',
-                "auhtor": page.author.id,
+                "author": page.author.id,
                 "status": "published",
                 "publication_date_0": "2013-07-05",
                 "publication_date_1": "14:13:53",
@@ -96,6 +121,8 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "pictureitem-INITIAL_FORMS": "0",
                 "imagetextitem-TOTAL_FORMS": "0",
                 "imagetextitem-INITIAL_FORMS": "0",
+                "scaledimagetextitem-TOTAL_FORMS": "0",
+                "scaledimagetextitem-INITIAL_FORMS": "0",
                 "imageplaintextitem-TOTAL_FORMS": "0",
                 "imageplaintextitem-INITIAL_FORMS": "0",
                 "textitem-TOTAL_FORMS": "0",
@@ -104,11 +131,15 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "imagetextrounditem-INITIAL_FORMS": "0",
                 "columnsitem-TOTAL_FORMS": "0",
                 "columnsitem-INITIAL_FORMS": "0",
+                "peoplecontent-TOTAL_FORMS": "0",
+                "peoplecontent-INITIAL_FORMS": "0",
+                "pollcontent-TOTAL_FORMS": "0",
+                "pollcontent-INITIAL_FORMS": "0",
 
                 '_continue': 'Save and continue editing',
             }
 
-            response = self.client.post(page_admin_url, data)
+            response = self.client.post(page_admin_url, data, format='multipart')
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(page.content.contentitems.count(), 1)
@@ -128,7 +159,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "slug": page.slug,
                 "title": page.title,
                 "language": 'en',
-                "auhtor": page.author.id,
+                "author": page.author.id,
                 "status": "published",
                 "publication_date_0": "2013-07-05",
                 "publication_date_1": "14:13:53",
@@ -167,6 +198,8 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "pictureitem-INITIAL_FORMS": "0",
                 "imagetextitem-TOTAL_FORMS": "0",
                 "imagetextitem-INITIAL_FORMS": "0",
+                "scaledimagetextitem-TOTAL_FORMS": "0",
+                "scaledimagetextitem-INITIAL_FORMS": "0",
                 "imageplaintextitem-TOTAL_FORMS": "0",
                 "imageplaintextitem-INITIAL_FORMS": "0",
                 "textitem-TOTAL_FORMS": "0",
@@ -175,11 +208,15 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "imagetextrounditem-INITIAL_FORMS": "0",
                 "columnsitem-TOTAL_FORMS": "0",
                 "columnsitem-INITIAL_FORMS": "0",
+                "peoplecontent-TOTAL_FORMS": "0",
+                "peoplecontent-INITIAL_FORMS": "0",
+                "pollcontent-TOTAL_FORMS": "0",
+                "pollcontent-INITIAL_FORMS": "0",
 
                 '_continue': 'Save and continue editing',
             }
 
-            response = self.client.post(page_admin_url, data)
+            response = self.client.post(page_admin_url, data, format='multipart')
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(page.content.contentitems.count(), 1)
@@ -198,7 +235,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "slug": page.slug,
                 "title": page.title,
                 "language": 'en',
-                "auhtor": page.author.id,
+                "author": page.author.id,
                 "status": "published",
                 "publication_date_0": "2013-07-05",
                 "publication_date_1": "14:13:53",
@@ -237,6 +274,8 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "pictureitem-INITIAL_FORMS": "0",
                 "imagetextitem-TOTAL_FORMS": "0",
                 "imagetextitem-INITIAL_FORMS": "0",
+                "scaledimagetextitem-TOTAL_FORMS": "0",
+                "scaledimagetextitem-INITIAL_FORMS": "0",
                 "imageplaintextitem-TOTAL_FORMS": "0",
                 "imageplaintextitem-INITIAL_FORMS": "0",
                 "textitem-TOTAL_FORMS": "0",
@@ -245,11 +284,15 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "imagetextrounditem-INITIAL_FORMS": "0",
                 "columnsitem-TOTAL_FORMS": "0",
                 "columnsitem-INITIAL_FORMS": "0",
+                "peoplecontent-TOTAL_FORMS": "0",
+                "peoplecontent-INITIAL_FORMS": "0",
+                "pollcontent-TOTAL_FORMS": "0",
+                "pollcontent-INITIAL_FORMS": "0",
 
                 '_continue': 'Save and continue editing',
             }
 
-            response = self.client.post(page_admin_url, data)
+            response = self.client.post(page_admin_url, data, format='multipart')
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(page.content.contentitems.count(), 1)
@@ -268,7 +311,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "slug": page.slug,
                 "title": page.title,
                 "language": 'en',
-                "auhtor": page.author.id,
+                "author": page.author.id,
                 "status": "published",
                 "publication_date_0": "2013-07-05",
                 "publication_date_1": "14:13:53",
@@ -314,11 +357,15 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "imagetextrounditem-INITIAL_FORMS": "0",
                 "columnsitem-TOTAL_FORMS": "0",
                 "columnsitem-INITIAL_FORMS": "0",
+                "peoplecontent-TOTAL_FORMS": "0",
+                "peoplecontent-INITIAL_FORMS": "0",
+                "pollcontent-TOTAL_FORMS": "0",
+                "pollcontent-INITIAL_FORMS": "0",
 
                 '_continue': 'Save and continue editing',
             }
 
-            response = self.client.post(page_admin_url, data)
+            response = self.client.post(page_admin_url, data, format='multipart')
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(

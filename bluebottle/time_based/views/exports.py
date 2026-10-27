@@ -1,19 +1,91 @@
 import re
 
+from django.db.models import Case, Value, When
+from django.utils.timezone import now
+
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     PeriodicActivity,
     ScheduleActivity,
+    DateActivity,
     ScheduleParticipant,
     PeriodicRegistration,
+    DateParticipant, RegisteredDateActivity, RegisteredDateParticipant
 )
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
 
 
-class TimebasedExportView(ExportView):
+def format_slot_worksheet_title(slot, prefix=''):
+    title = f"{prefix}{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
+    return re.sub(r"[\[\]\\:*?/]", "", str(title).strip())[:31]
+
+
+def get_export_slots(activity):
+    if activity.status == 'succeeded':
+        return activity.slots.order_by('start')
+    return activity.active_slots.filter(start__gt=now()).order_by('start')
+
+
+def add_unique_worksheet(workbook, title):
+    base_title = re.sub(r"[\[\]\\:*?/]", "", str(title)[:31])
+    worksheet_title = base_title or "Sheet"
+    counter = 2
+
+    while True:
+        try:
+            return workbook.add_worksheet(worksheet_title)
+        except Exception:
+            suffix = f" {counter}"
+            worksheet_title = f"{base_title[:31 - len(suffix)]}{suffix}"
+            counter += 1
+
+
+class InterestExportMixin:
+    interest_sheet_title = 'Interested'
+
+    interest_export_fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+    )
+
+    def get_interest_queryset(self):
+        return (
+            self.get_object()
+            .interests.filter(slot__isnull=True)
+            .select_related('user')
+            .order_by('created', 'pk')
+        )
+
+    def get_interest_row(self, interest):
+        row = []
+        for field, _name in self.interest_export_fields:
+            row.append(prep_field(self.request, interest, field))
+        return row
+
+    def write_interest_sheet(self, workbook):
+        interests = list(self.get_interest_queryset())
+        self.write_interest_worksheet(workbook, self.interest_sheet_title, interests)
+
+    def write_interest_worksheet(self, workbook, title, interests):
+        if not interests:
+            return
+
+        bold = workbook.add_format({'bold': True})
+        worksheet = add_unique_worksheet(workbook, title)
+        worksheet.set_column(0, len(self.interest_export_fields) - 1, 30)
+
+        for column, (_field, name) in enumerate(self.interest_export_fields):
+            worksheet.write(0, column, name, bold)
+
+        for index, interest in enumerate(interests):
+            worksheet.write_row(index + 1, 0, self.get_interest_row(interest))
+
+
+class TimeBasedExportView(InterestExportMixin, ExportView):
     filename = "participants"
     fields = (
         ('user__email', 'Email'),
@@ -31,9 +103,10 @@ class TimebasedExportView(ExportView):
                 if instance.user:
                     row.append(
                         ", ".join(
-                            instance.user.segments.filter(
-                                segment_type_id=field.split('.')[-1]
-                            ).values_list('name', flat=True)
+                            [
+                                s.name for s in
+                                instance.user.segments.filter(segment_type_id=field.split('.')[-1])
+                            ]
                         )
                     )
                 else:
@@ -56,38 +129,66 @@ class TimebasedExportView(ExportView):
             self.participant_model
         ).prefetch_related('user__segments').select_related('user')
 
+    def write_data(self, workbook):
+        super().write_data(workbook)
+        self.write_interest_sheet(workbook)
 
-class DeadlineParticipantExportView(TimebasedExportView):
+
+class DeadlineParticipantExportView(TimeBasedExportView):
     model = DeadlineActivity
     participant_model = DeadlineParticipant
 
 
-class ScheduleParticipantExportView(TimebasedExportView):
+class RegisteredDateParticipantExportView(TimeBasedExportView):
+    model = RegisteredDateActivity
+    participant_model = RegisteredDateParticipant
+
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+        ('activity__start', 'Contribution Date')
+    )
+
+
+class ScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity
     participant_model = ScheduleParticipant
 
+    fields = (
+        ("user__email", "Email"),
+        ("user__full_name", "Name"),
+        ("created", "Registration Date"),
+        ("slot__start", "Start"),
+        ("status", "Status"),
+        ("registration__answer", "Registration answer"),
+    )
 
-class TeamScheduleParticipantExportView(TimebasedExportView):
+
+class TeamScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity
     fields = (
         ("user__email", "Captain email"),
         ("user__full_name", "Captain name"),
         ("created", "Registration Date"),
-        ("team__status", "Status"),
-        ("answer", "Registration answer"),
+        ("slots__first__start", "Start"),
+        ("status", "Status"),
+        ("registration__answer", "Registration answer"),
     )
     team_fields = (
         ("user__email", "Email"),
         ("user__full_name", "Name"),
         ("created", "Registration Date"),
+        ("slot__start", "Start"),
         ("status", "Status"),
-        ("is_captain", "Is captain"),
+        ("team_member__is_captain", "Is captain"),
     )
 
     def get_instances(self):
         return (
             self.get_object()
-            .registrations.prefetch_related("user__segments")
+            .teams.prefetch_related("user__segments")
             .select_related("user")
         )
 
@@ -95,23 +196,26 @@ class TeamScheduleParticipantExportView(TimebasedExportView):
         return [prep_field(self.request, team, field[0]) for field in self.team_fields]
 
     def get_team_data(self, team):
-        return [self.get_team_row(instance) for instance in team.team_members.all()]
+        return [
+            self.get_team_row(instance.participants.first()) for instance in team.team_members.all()
+        ]
 
     def write_data(self, workbook):
         super().write_data(workbook)
 
         for team in self.get_object().teams.all():
-            title = re.sub("[\[\]\\:*?/]", "", str(team)[:30])
+            worksheet = add_unique_worksheet(workbook, team)
 
-            worksheet = workbook.add_worksheet(title)
             worksheet.set_column(0, 10, 30)
             worksheet.write_row(0, 0, [field[1] for field in self.team_fields])
 
             for index, row in enumerate(self.get_team_data(team)):
                 worksheet.write_row(index + 1, 0, row)
 
+        self.write_interest_sheet(workbook)
 
-class PeriodicParticipantExportView(TimebasedExportView):
+
+class PeriodicParticipantExportView(TimeBasedExportView):
     model = PeriodicActivity
     participant_model = PeriodicRegistration
 
@@ -133,3 +237,54 @@ class PeriodicParticipantExportView(TimebasedExportView):
             .prefetch_related("user__segments")
             .select_related("user")
         )
+
+
+class DateParticipantExportView(TimeBasedExportView):
+    model = DateActivity
+    participant_model = DateParticipant
+
+    fields = (
+        ("user__email", "Email"),
+        ("user__full_name", "Name"),
+        ("created", "Registration Date"),
+        ("slot__title", "Slot id"),
+        ("slot__start", "Slot start"),
+        ("slot__duration", "Slot duration"),
+        ("slot__status", "Slot status"),
+        ("status", "Participant status"),
+        ("answer", "Registration answer"),
+    )
+
+    interest_export_fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ("slot__title", "Slot id"),
+        ("slot__start", "Slot start"),
+        ("slot__duration", "Slot duration"),
+        ("slot__status", "Slot status"),
+    )
+
+    slot_status_order = Case(
+        When(slot__status='open', then=Value(1)),
+        When(slot__status='finished', then=Value(2)),
+        default=3
+    )
+
+    def get_instances(self):
+        return self.participant_model.objects.alias(
+            status_order=self.slot_status_order
+        ).filter(
+            activity=self.get_object()
+        ).prefetch_related(
+            "user__segments"
+        ).select_related(
+            "user", "slot"
+        ).order_by('status_order', 'slot__start', 'created')
+
+    def get_interest_queryset(self):
+        return self.get_object().interests.alias(
+            status_order=self.slot_status_order
+        ).select_related(
+            'user', 'slot'
+        ).order_by('status_order', 'created', 'pk')

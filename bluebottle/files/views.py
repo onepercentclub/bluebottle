@@ -1,4 +1,5 @@
 import mimetypes
+import os
 from random import randrange
 
 import magic
@@ -6,6 +7,7 @@ from django.conf import settings
 from django.http import (
     HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 )
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.parsers import FileUploadParser
@@ -44,6 +46,7 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
 
     authentication_classes = (
         JSONWebTokenAuthentication,
+        SessionAuthentication
     )
 
     prefetch_for_includes = {
@@ -73,7 +76,8 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
                 ]
             )
 
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
 class PrivateFileList(FileList):
@@ -84,10 +88,16 @@ class PrivateFileList(FileList):
 class FileContentView(RetrieveAPIView):
     permission_classes = []
 
+    def get_download_filename(self, file_record):
+        name = file_record.name or file_record.file.name
+        return os.path.basename(name)
+
     def retrieve(self, *args, **kwargs):
         instance = self.get_object()
-        file = getattr(instance, self.field).file
-        content_type = mimetypes.guess_type(file.name)[0]
+        file_record = getattr(instance, self.field)
+        file = file_record.file
+        content_type = mimetypes.guess_type(file.name)[0] or 'application/octet-stream'
+        filename = self.get_download_filename(file_record)
 
         if settings.DEBUG:
             response = HttpResponse(content=file.read())
@@ -96,12 +106,12 @@ class FileContentView(RetrieveAPIView):
             response['X-Accel-Redirect'] = file.url
 
         response['Content-Type'] = content_type
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
         return response
 
 
 class ImageContentView(FileContentView):
-    cropbox = True
 
     def get_random_image_url(self):
         if 'x' in self.kwargs['size']:
@@ -131,11 +141,24 @@ class ImageContentView(FileContentView):
             return HttpResponseNotFound()
 
         size = self.kwargs['size']
+        cropbox = None
 
-        cropbox = image.cropbox if self.kwargs['size'] != ORIGINAL_SIZE else None
+        if self.kwargs['size'] != ORIGINAL_SIZE and image.cropbox:
+            try:
+                left, upper, right, lower = map(int, image.cropbox.split(','))
+                if right <= left:
+                    left, right = min(left, right), max(left, right)
+                if lower <= upper:
+                    upper, lower = min(upper, lower), max(upper, lower)
+                cropbox = (left, upper, right, lower)
+            except ValueError:
+                cropbox = None
 
         try:
-            width, height = size.split('x')
+            if 'x' in size:
+                width, height = size.split('x')
+            else:
+                width = height = size
             if width == height and int(width) < 300:
                 thumbnail = get_thumbnail(file, size, crop='center', cropbox=cropbox)
             else:
@@ -173,6 +196,12 @@ class ImageList(FileList):
     serializer_class = ImageSerializer
 
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
+
+
+class FileDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsOwner,)
+    queryset = Document.objects.all()
+    serializer_class = FileSerializer
 
 
 class ImageDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

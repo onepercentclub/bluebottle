@@ -1,8 +1,10 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 
+from bluebottle.activities.models import Activity
+from bluebottle.time_based.models import DateActivitySlot
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import Team
-from bluebottle.activities.models import Activity
 from bluebottle.utils.permissions import (
     IsOwner,
     BasePermission,
@@ -13,35 +15,32 @@ from bluebottle.utils.permissions import (
 class TeamMemberPermission(ResourceOwnerPermission):
     def has_object_action_permission(self, action, user, obj):
         try:
-            owner = obj.team.owner
+            captain = obj.team.owner
         except Team.owner.RelatedObjectDoesNotExist:
-            owner = None
+            captain = None
 
         try:
-            activity_owner = obj.team.activity.owner
+            activity_owners = obj.team.activity.owners
         except Activity.owner.RelatedObjectDoesNotExist:
-            activity_owner = None
+            activity_owners = []
 
         return (
-            user
-            in [
-                owner,
-                activity_owner,
-                obj.team.activity.initiative.owner,
-            ]
-            or user in obj.team.activity.initiative.activity_managers.all()
+            user == captain or
+            user in activity_owners or
+            user.is_staff or
+            user.is_superuser
         )
 
 
-class SlotParticipantPermission(IsOwner):
+class DateParticipantPermission(IsOwner):
     def has_object_action_permission(self, action, user, obj):
-        return not obj.participant or user == obj.participant.user
+        return user == obj.user
 
     def has_action_permission(self, action, user, model_cls):
         return True
 
     def has_object_permission(self, request, view, obj):
-        return not obj.participant or request.user == obj.participant.user
+        return request.user == obj.user
 
 
 class CreateByEmailPermission(IsOwner):
@@ -55,9 +54,14 @@ class CreateByEmailPermission(IsOwner):
 
 
 class InviteCodePermission(BasePermission):
-
     def has_object_permission(self, request, view, obj):
-        return str(obj.invite_code) == str(obj.team.invite_code)
+        return (
+            str(obj.invite_code) == str(obj.team.invite_code) or
+            request.user.is_staff or
+            request.user.is_superuser or
+            request.user == obj.team.owner or
+            request.user in obj.team.activity.owners
+        )
 
     def has_action_permission(self, action, user, model_cls):
         return True
@@ -67,9 +71,7 @@ class DateSlotActivityStatusPermission(BasePermission):
     def has_object_action_permission(self, action, user, obj):
         return (
             action not in ('POST', 'DELETE', 'PATCH', 'PUT') or
-            obj.activity.owner == user or
-            user in obj.activity.initiative.activity_managers.all() or
-            obj.activity.initiative.owner == user or
+            user in obj.activity.owners or
             user.is_staff or
             user.is_superuser
         )
@@ -81,9 +83,7 @@ class DateSlotActivityStatusPermission(BasePermission):
         user = request.user
         return (
             request.method not in ('POST', 'DELETE', 'PATCH', 'PUT') or
-            obj.activity.owner == user or
-            user in obj.activity.initiative.activity_managers.all() or
-            obj.activity.initiative.owner == user or
+            user in obj.activity.owners or
             user.is_staff or
             user.is_superuser
         )
@@ -92,17 +92,34 @@ class DateSlotActivityStatusPermission(BasePermission):
 class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
 
     def has_object_permission(self, request, view, obj):
+        user = request.user
         if not obj:
             return True
         if obj and (
-            request.user in [
-                obj.user,
-                obj.activity.owner,
-            ] or
-            request.user in obj.activity.initiative.activity_managers.all()
+            user == obj.user or
+            user in obj.activity.owners or
+            user.is_staff or
+            user.is_superuser
+
         ):
             return True
         return False
+
+
+class RelatedActivityInterestListPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_staff or user.is_superuser:
+            return True
+
+        if 'slot_id' in view.kwargs:
+            slot = get_object_or_404(DateActivitySlot, pk=view.kwargs['slot_id'])
+            return user in slot.activity.owners
+
+        activity = get_object_or_404(Activity, pk=view.kwargs['activity_id'])
+        return user in activity.owners
 
 
 class CanExportParticipantsPermission(IsOwner):
@@ -110,9 +127,7 @@ class CanExportParticipantsPermission(IsOwner):
 
     def has_object_action_permission(self, action, user, obj):
         return (
-            obj.owner == user or
-            user in obj.initiative.activity_managers.all() or
-            obj.initiative.owner == user or
+            user in obj.owners or
             user.is_staff or
             user.is_superuser
         ) and InitiativePlatformSettings.load().enable_participant_exports

@@ -1,5 +1,14 @@
 {% load i18n %}
 <table>
+
+    {% if enable_iban_check %}
+        {% if bank_account.iban_verified %}
+            <th>{% trans 'IBAN verified' %}</th><td>{% trans 'Name matches account number' %}</td>
+        {% else %}
+            <th>{% trans 'IBAN NOT verified' %}</th><td>{% trans 'This account was not verified.' %}</td>
+        {% endif %}
+    {% endif %}
+
     <tr>
         <th>{% trans 'Account holder name' %}</th><td>{{info.account_holder_name}}</td>
     </tr>

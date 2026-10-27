@@ -3,6 +3,7 @@ from django.contrib.gis.geos import Point
 from django.core import mail
 from django.test import tag
 from django.test.utils import override_settings
+from django.utils.translation import activate
 from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 
@@ -10,8 +11,9 @@ from bluebottle.activities.models import Contributor, Contribution
 from bluebottle.activities.tasks import (
     recommend, get_matching_activities, data_retention_contribution_task
 )
+from bluebottle.notifications.models import Message
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
@@ -28,7 +30,7 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory, ScheduleParticipantFactory,
+    ScheduleParticipantFactory,
 )
 
 
@@ -40,6 +42,7 @@ from bluebottle.time_based.tests.factories import (
 class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super().setUp()
+        activate('en')
         self.settings = InitiativePlatformSettingsFactory.create(enable_matching_emails=True)
 
         self.amsterdam = Point(x=4.8981734, y=52.3790565)
@@ -85,9 +88,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 status="open",
                 location=None,
                 is_online=True,
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching place, theme and no skill
@@ -96,9 +97,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 expertise=None,
                 is_online=False,
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching theme, skill, online
@@ -107,9 +106,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 expertise=self.user.skills.first(),
                 location=None,
                 is_online=True,
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching place, theme and skill
@@ -118,9 +115,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 is_online=False,
                 expertise=self.user.skills.first(),
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
         ]
@@ -128,6 +123,36 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def test_recommend(self):
         recommend()
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_recommend_does_not_resend_same_month(self):
+        recommend()
+        self.assertEqual(len(mail.outbox), 1)
+
+        recommend()
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_recommend_does_not_resend_unsent_row(self):
+        recommend()
+        self.assertEqual(len(mail.outbox), 1)
+        Message.objects.filter(
+            template='messages/matching/matching_activities',
+            recipient=self.user,
+        ).update(sent=None)
+        mail.outbox = []
+
+        recommend()
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_recommend_sends_again_next_month(self):
+        recommend()
+        self.assertEqual(len(mail.outbox), 1)
+        Message.objects.filter(
+            template='messages/matching/matching_activities',
+            recipient=self.user,
+        ).update(sent=now() - relativedelta(months=1))
+
+        recommend()
+        self.assertEqual(len(mail.outbox), 2)
 
     def test_recommend_no_matching(self):
         for activity in self.matching:
@@ -355,24 +380,27 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         for date in dates:
             contributor = factory.create(activity=activity)
             contributor.created = date
-            contributor.save()
             if isinstance(contributor, DateParticipant):
-                SlotParticipantFactory.create(
-                    slot=activity.slots.get(), participant=contributor
+                contributor.slot = DateActivitySlotFactory.create(
+                    activity=activity,
+                    start=date
                 )
+            contributor.save()
             if isinstance(contributor, ScheduleParticipant):
                 contributor.slot.start = date
                 contributor.slot.save()
+
             contributor.contributions.update(status='succeeded')
 
             registration = getattr(contributor, 'registration', None)
             if registration:
+                registration.user = contributor.user
                 registration.created = date
                 registration.save()
 
     def setUp(self):
         super(ContributorDataRetentionTest, self).setUp()
-        months_ago_12 = now() - relativedelta(months=12)
+        months_ago_12 = now() - relativedelta(months=14)
         months_ago_8 = now() - relativedelta(months=8)
         months_ago_2 = now() - relativedelta(months=2)
 
@@ -398,29 +426,29 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         self.task = data_retention_contribution_task
 
     def test_data_retention_dont_delete_without_settings(self):
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
         self.task()
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
 
     def test_data_retention_clean_up(self):
         member_settings = MemberPlatformSettings.load()
         member_settings.retention_delete = 10
         member_settings.retention_anonymize = 6
         member_settings.save()
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
         self.task()
-        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 6)
-        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 3)
+        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 8)
+        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 2)
         self.activity1.refresh_from_db()
-        self.assertEqual(self.activity1.deleted_successful_contributors, 1)
+        self.assertEqual(self.activity1.deleted_successful_contributors, 0)
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Contributor.objects.count(), 9)
-        self.assertEqual(Registration.objects.count(), 1)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Contributor.objects.count(), 10)
+        self.assertEqual(Registration.objects.count(), 3)

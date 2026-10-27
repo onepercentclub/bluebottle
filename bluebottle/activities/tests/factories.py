@@ -1,13 +1,14 @@
-import factory.fuzzy
+import factory
 
-from bluebottle.time_based.tests.factories import PeriodActivityFactory
-from bluebottle.activities.models import Team
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.activities.models import TextQuestion, TextAnswer
 
 
-class TeamFactory(factory.DjangoModelFactory):
+class TextQuestionFactory(factory.DjangoModelFactory):
+
     class Meta:
-        model = Team
+        model = TextQuestion
 
-    owner = factory.SubFactory(BlueBottleUserFactory)
-    activity = factory.SubFactory(PeriodActivityFactory)
+
+class TextAnswerFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = TextAnswer

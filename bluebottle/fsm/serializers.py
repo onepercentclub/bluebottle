@@ -5,6 +5,7 @@ from builtins import str
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import ReadOnlyField
+from rest_framework_json_api.serializers import Serializer
 
 from bluebottle.fsm.state import TransitionNotPossible
 
@@ -22,7 +23,7 @@ class AvailableTransitionsField(ReadOnlyField):
         user = self.context['request'].user
         states = getattr(value, self.source)
 
-        transtisions = (
+        transitions = (
             {
                 "name": transition.field,
                 "target": transition.target.value,
@@ -45,7 +46,7 @@ class AvailableTransitionsField(ReadOnlyField):
         ]
 
         sorted_transitions = sorted(
-            transtisions,
+            transitions,
             key=lambda x: preferred_order.index(x["name"]) if x["name"] in preferred_order else len(preferred_order))
         return sorted_transitions
 
@@ -62,7 +63,7 @@ class CurrentStatusField(ReadOnlyField):
         }
 
 
-class TransitionSerializer(serializers.Serializer):
+class TransitionSerializer(Serializer):
     transition = serializers.CharField()
     message = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     send_email = serializers.BooleanField(default=True, allow_null=True)

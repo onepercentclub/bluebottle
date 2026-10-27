@@ -1,44 +1,53 @@
-import time
 from datetime import date, datetime, timedelta
-
-import mock
 from dateutil.relativedelta import relativedelta
+from unittest.mock import Mock
 from django.core import mail
 from django.template import defaultfilters
-from django.utils.timezone import get_current_timezone, now
-from tenant_extras.utils import TenantLanguage
+from django.utils.timezone import get_current_timezone, now, make_aware
 
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
     InitiativePlatformSettingsFactory,
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase, TriggerTestCase
+from bluebottle.test.utils import BluebottleTestCase, TriggerTestCase
 from bluebottle.time_based.effects.effects import (
     CreateNextSlotEffect,
     CreatePeriodicParticipantsEffect,
 )
 from bluebottle.time_based.messages import (
-    ParticipantAppliedNotification,
-    ParticipantChangedNotification,
-    ParticipantJoinedNotification, ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification, )
-from bluebottle.time_based.notifications.participants import UserScheduledNotification
-from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
+    ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification,
+)
+from bluebottle.time_based.messages.participants import UserScheduledNotification
+from bluebottle.time_based.messages.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification, \
     UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification, UserRegistrationStoppedNotification, \
     UserRegistrationRestartedNotification, PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, \
     ScheduleUserJoinedNotification
+from bluebottle.time_based.models import DateRegistration, Interest
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
+    DateRegistrationFactory,
     DateActivitySlotFactory,
     DateParticipantFactory,
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
     PeriodicSlotFactory,
-    SlotParticipantFactory, ScheduleRegistrationFactory,
-    ScheduleActivityFactory, ScheduleSlotFactory, )
+    ScheduleRegistrationFactory,
+    ScheduleActivityFactory,
+    ScheduleSlotFactory, RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
+    InterestFactory,
+)
+from bluebottle.time_based.triggers.triggers import (
+    activity_will_not_be_full,
+    spots_taken_after_release,
+)
+from tenant_extras.utils import TenantLanguage
 
 
 class TimeBasedActivityTriggerTestCase():
@@ -64,15 +73,13 @@ class TimeBasedActivityTriggerTestCase():
 
     def test_reject(self):
         self.initiative.states.submit(save=True)
-        if self.activity.states.submit:
-            self.activity.states.publish()
+        mail.outbox = []
 
         self.activity.states.reject(save=True)
         organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
-
         self.assertEqual(
-            mail.outbox[-1].subject,
+            mail.outbox[0].subject,
             'Your activity "{}" has been rejected'.format(self.activity.title)
         )
 
@@ -82,15 +89,12 @@ class TimeBasedActivityTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'submitted')
 
-    def test_submit_initiative_already_approved(self):
+    def test_publish_initiative_already_approved(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 
         activity = self.factory.create(initiative=self.initiative)
-        if activity.states.submit:
-            activity.states.publish(save=True)
-        else:
-            activity.states.publish(save=True)
+        activity.states.publish(save=True)
 
         self.assertEqual(activity.status, 'open')
 
@@ -99,26 +103,11 @@ class TimeBasedActivityTriggerTestCase():
 
         activity = self.factory.create(initiative=self.initiative)
         if self.activity.states.submit:
-            activity.states.publish(save=True)
-
+            activity.states.submit(save=True)
             self.assertEqual(activity.status, 'submitted')
 
-    def test_approve_initiative(self):
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, 'open')
-
-        organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, 'succeeded')
-
     def test_cancel(self):
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.refresh_from_db()
         self.activity.states.cancel(save=True)
-
         self.assertEqual(self.activity.status, 'cancelled')
 
         organizer = self.activity.contributors.instance_of(Organizer).get()
@@ -129,32 +118,7 @@ class TimeBasedActivityTriggerTestCase():
             'Your activity "{}" has been cancelled'.format(self.activity.title)
         )
 
-    def test_change_capacity(self):
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-
-        self.activity.refresh_from_db()
-
-        self.participant_factory.create_batch(
-            self.activity.capacity - 1,
-            activity=self.activity,
-            status='accepted'
-        )
-
-        self.activity.capacity = self.activity.capacity - 1
-        self.activity.save()
-        self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, 'full')
-
-        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
-
-        self.activity.capacity = self.activity.capacity + 1
-        self.activity.save()
-
-        self.assertEqual(self.activity.status, "open")
-
-    def change_registration_deadline(self):
+    def test_change_registration_deadline(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 
@@ -163,7 +127,7 @@ class TimeBasedActivityTriggerTestCase():
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, "registration_closed")
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.registration_deadline = date.today() + timedelta(days=1)
@@ -216,7 +180,7 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, "registration_closed")
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.refresh_from_db()
@@ -224,6 +188,183 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.activity.save()
 
         self.assertEqual(self.activity.status, "open")
+
+    def test_registration_deadline_closes_slots(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        self.assertEqual(slot.status, "open")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(slot.status, "open")
+
+    def test_registration_deadline_reopen_notifies_interested(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=slot,
+            user=interested,
+        )
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        mail.outbox = []
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(slot.status, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_registration_closed_reopens_to_full_when_slot_at_capacity(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        slot.capacity = 1
+        slot.save()
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=slot)
+
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(slot.status, "full")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(slot.status, "full")
+
+    def test_withdraw_while_registration_closed_does_not_reopen(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=slot
+        )
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        participant.states.withdraw(save=True)
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+    def test_remove_while_registration_closed_does_not_reopen(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=slot
+        )
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        participant.states.remove(save=True)
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+    def test_add_to_expired_activity(self):
+        self.initiative.states.submit(save=True)
+        activity = self.factory.create(
+            initiative=self.initiative,
+            status='expired',
+            slots=[]
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() - timedelta(days=1),
+            duration=timedelta(hours=1),
+            is_online=True,
+            status='finished'
+        )
+        participant = self.participant_factory.create(
+            slot=slot,
+            activity=activity,
+        )
+        self.assertStatus(participant, 'succeeded')
+        self.assertStatus(slot, 'finished')
+        self.assertStatus(activity, 'succeeded')
 
 
 class DateActivitySlotTriggerTestCase(BluebottleTestCase):
@@ -240,7 +381,6 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
-
         self.activity.refresh_from_db()
 
     def assertStatus(self, obj, status):
@@ -257,13 +397,13 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.start = now() + timedelta(days=2)
         self.slot.save()
 
-        self.assertEqual(self.slot.status, 'open')
+        self.assertStatus(self.slot, 'open')
 
     def test_start(self):
+        self.assertStatus(self.slot, "open")
         self.slot.start = now() - timedelta(hours=1)
         self.slot.save()
-
-        self.assertEqual(self.slot.status, "running")
+        self.assertStatus(self.slot, "running")
 
     def test_finish_one_slot_no_participants(self):
         self.slot.start = now() - timedelta(days=1)
@@ -278,26 +418,429 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot, "open")
         self.assertStatus(self.activity, "open")
 
+    def test_fill_slot(self):
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+
+        self.participant = DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+
+        self.assertStatus(self.slot, "full")
+
+    def test_fill_slot_review(self):
+        self.activity.review = True
+        self.activity.save()
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateRegistrationFactory.create(activity=self.activity)
+        second = DateRegistrationFactory.create(activity=self.activity)
+
+        self.participant = DateParticipantFactory.create(registration=first, slot=self.slot)
+
+        self.assertStatus(self.slot, "open")
+
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+        first.states.accept(save=True)
+        second.states.accept(save=True)
+
+        self.assertStatus(self.slot, "full")
+
+    def test_reopen_slot_review(self):
+        self.test_fill_slot_review()
+
+        self.participant.registration.states.reject(save=True)
+        self.assertStatus(self.slot, "open")
+
+    def test_fill_slot_reaccept(self):
+        self.test_reopen_slot_review()
+
+        self.participant.registration.states.accept(save=True)
+        self.assertStatus(self.slot, "full")
+
+    def test_reopen_slot(self):
+        self.test_fill_slot()
+        self.participant.states.withdraw(save=True)
+
+        self.assertStatus(self.slot, "open")
+
+    def test_fill_reapply(self):
+        self.test_reopen_slot()
+        self.participant.states.reapply(save=True)
+
+        self.assertStatus(self.slot, "full")
+
+    def test_fill_slot_change_capacity(self):
+
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+
+        DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        self.assertStatus(self.slot, "full")
+
     def test_fill_free(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
 
         self.slot.capacity = 2
         self.slot.save()
 
-        first = DateParticipantFactory.create(activity=self.activity)
-        second = DateParticipantFactory.create(activity=self.activity)
-        third = DateParticipantFactory.create(activity=self.activity)
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        third = DateRegistrationFactory.create(activity=self.activity, status='accepted')
 
-        SlotParticipantFactory.create(participant=first, slot=self.slot)
-        SlotParticipantFactory.create(participant=second, slot=self.slot)
+        DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
 
-        SlotParticipantFactory.create(participant=first, slot=self.slot2)
-        SlotParticipantFactory.create(participant=second, slot=self.slot2)
-        SlotParticipantFactory.create(participant=third, slot=self.slot2)
+        DateParticipantFactory.create(registration=first, slot=self.slot2)
+        DateParticipantFactory.create(registration=second, slot=self.slot2)
+        DateParticipantFactory.create(registration=third, slot=self.slot2)
 
         self.assertStatus(self.slot, "full")
         self.assertStatus(self.slot2, "full")
         self.assertStatus(self.activity, "full")
+
+    def test_registration_closed_reopens_to_full_when_all_slots_full(self):
+        self.test_fill_free()
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.assertStatus(self.activity, "registration_closed")
+        self.assertStatus(self.slot, "registration_closed")
+        self.assertStatus(self.slot2, "registration_closed")
+
+        self.activity = self.activity.__class__.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+
+        self.assertStatus(self.activity, "full")
+        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.slot2, "full")
+
+    def test_registration_closed_reopens_partially_full_slots(self):
+        self.slot.capacity = 1
+        self.slot.save()
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=2)
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+
+        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.slot2, "open")
+        self.assertStatus(self.activity, "open")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.assertStatus(self.activity, "registration_closed")
+        self.assertStatus(self.slot, "registration_closed")
+        self.assertStatus(self.slot2, "registration_closed")
+
+        self.activity = self.activity.__class__.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+
+        self.assertStatus(self.activity, "open")
+        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.slot2, "open")
+
+    def test_unlock_on_delete(self):
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+        participant2 = DateParticipantFactory.create(registration=first, slot=self.slot2)
+        participant = DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+        participant.delete()
+        self.assertStatus(self.slot, "open")
+        self.assertTrue(DateRegistration.objects.filter(pk=first.pk).exists())
+        participant2.delete()
+        self.assertFalse(DateRegistration.objects.filter(pk=first.pk).exists())
+
+    def test_unlock_notifies_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+
+        mail.outbox = []
+        participant.states.withdraw(save=True)
+        self.slot.refresh_from_db()
+        self.assertStatus(self.slot, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_increase_capacity_notifies_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+
+        mail.outbox = []
+        self.slot.capacity = 2
+        self.slot.save()
+        self.assertStatus(self.slot, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
+    def test_increase_capacity_while_open_does_not_notify(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+
+        self.slot.capacity = 2
+        self.slot.save()
+        self.assertStatus(self.slot, "open")
+
+        mail.outbox = []
+        self.slot.capacity = 3
+        self.slot.save()
+        self.assertStatus(self.slot, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
+    def test_unlock_after_deadline_does_not_notify(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.assertStatus(self.activity, "registration_closed")
+        self.assertStatus(self.slot, "registration_closed")
+
+        mail.outbox = []
+        participant.states.withdraw(save=True)
+        self.assertStatus(self.slot, "registration_closed")
+        self.assertStatus(self.activity, "registration_closed")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
+    def test_remove_notifies_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+
+        mail.outbox = []
+        participant.states.remove(save=True)
+        self.slot.refresh_from_db()
+        self.assertStatus(self.slot, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_reject_pending_participant_does_not_notify_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+
+        self.activity.review = True
+        self.activity.save()
+
+        pending_registration = DateRegistrationFactory.create(activity=self.activity)
+        pending = DateParticipantFactory.create(
+            registration=pending_registration, slot=self.slot
+        )
+        self.assertStatus(pending, "new")
+
+        mail.outbox = []
+        pending.states.reject(save=True)
+
+        self.assertStatus(self.slot, "full")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
+    def test_other_slot_interest_not_notified(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        other_slot = DateActivitySlotFactory.create(
+            activity=self.activity, capacity=1
+        )
+        other_interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=other_slot,
+            user=other_interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+
+        mail.outbox = []
+        participant.states.withdraw(save=True)
+        self.slot.refresh_from_db()
+        self.assertStatus(self.slot, "open")
+
+        self.assertFalse(
+            any(other_interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_unlock_notifies_interested_with_multiple_slots(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.activity, "open")
+
+        mail.outbox = []
+        participant.states.withdraw(save=True)
+        self.slot.refresh_from_db()
+        self.assertStatus(self.slot, "open")
+
+        spot_messages = [
+            message for message in mail.outbox
+            if 'A spot has opened up for an activity on Test.' in message.subject
+            and interested.email in message.to
+        ]
+        self.assertEqual(len(spot_messages), 1)
+        html = ''
+        if spot_messages[0].alternatives:
+            html = spot_messages[0].alternatives[0][0]
+        self.assertIn(
+            'slotId={}'.format(self.slot.pk),
+            spot_messages[0].body + html,
+        )
 
     def test_fill_cancel_slot(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
@@ -305,11 +848,11 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.capacity = 2
         self.slot.save()
 
-        first = DateParticipantFactory.create(activity=self.activity)
-        second = DateParticipantFactory.create(activity=self.activity)
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
 
-        SlotParticipantFactory.create(participant=first, slot=self.slot)
-        SlotParticipantFactory.create(participant=second, slot=self.slot)
+        DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
 
         self.slot2.states.cancel(save=True)
 
@@ -323,7 +866,10 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.activity, "open")
 
     def test_finish_one_slot_with_participants(self):
-        DateParticipantFactory.create(activity=self.activity)
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        DateParticipantFactory.create(
+            registration=registration, activity=self.activity, slot=self.slot
+        )
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
         self.assertStatus(self.slot, "finished")
@@ -338,7 +884,11 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
     def test_finish_multiple_slots(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
-        DateParticipantFactory.create(activity=self.activity)
+
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        DateParticipantFactory.create(
+            registration=registration, activity=self.activity, slot=self.slot2
+        )
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
         self.assertStatus(self.slot, "finished")
@@ -362,9 +912,9 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
     def test_changed_single_date(self):
         eng = BlueBottleUserFactory.create(primary_language="en")
-        participant = DateParticipantFactory.create(activity=self.activity, user=eng)
-        SlotParticipantFactory.create(
-            participant=participant, slot=self.activity.slots.get()
+        registration = DateRegistrationFactory.create(activity=self.activity, user=eng, status='accepted')
+        DateParticipantFactory.create(
+            registration=registration, slot=self.activity.slots.get()
         )
 
         mail.outbox = []
@@ -388,12 +938,15 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
     def test_changed_multiple_dates(self):
         eng = BlueBottleUserFactory.create(primary_language="en")
-        participant = DateParticipantFactory.create(activity=self.activity, user=eng)
-        SlotParticipantFactory.create(participant=participant, slot=self.slot)
+        registration = DateRegistrationFactory.create(activity=self.activity, user=eng, status='accepted')
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
 
         slot2 = DateActivitySlotFactory.create(activity=self.activity)
-        other_participant = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=slot2, participant=other_participant)
+
+        registration2 = DateRegistrationFactory.create(
+            activity=self.activity, user=eng, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration2, slot=slot2)
 
         mail.outbox = []
         self.slot.start = now() + timedelta(days=10)
@@ -408,7 +961,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             'The details of activity "{}" have changed'.format(self.activity.title),
         )
 
-        self.assertEqual(mail.outbox[0].to[0], participant.user.email)
+        self.assertEqual(mail.outbox[0].to[0], registration.user.email)
 
         with TenantLanguage("en"):
             expected_date = defaultfilters.date(self.slot.start)
@@ -446,15 +999,14 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             self.assertEqual(duration.value, self.slot.duration)
 
     def test_cancel(self):
-        participant = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(
-            participant=participant, slot=self.activity.slots.get()
-        )
-
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        participant = DateParticipantFactory.create(registration=registration, slot=self.slot)
         mail.outbox = []
         self.slot.title = "Session 1"
         self.slot.states.cancel(save=True)
-        self.assertEqual(self.slot.status, "cancelled")
+        self.assertStatus(self.slot, "cancelled")
+        self.assertStatus(participant, "cancelled")
+        self.assertStatus(participant.contributions.first(), "failed")
         self.assertEqual(len(mail.outbox), 3)
 
         self.assertEqual(
@@ -476,31 +1028,41 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot2, "cancelled")
         self.assertStatus(self.activity, "cancelled")
 
+    def test_cancel_last_slot(self):
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        self.slot2.states.cancel(save=True)
+        self.assertStatus(self.slot2, "cancelled")
+        self.assertStatus(self.activity, "open")
+
     def test_cancel_multiple_slots_succeed(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
-
-        DateParticipantFactory.create(activity=self.activity)
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        DateParticipantFactory.create(
+            registration=registration,
+            activity=self.activity,
+            slot=self.slot
+        )
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
+
         self.assertStatus(self.slot, "finished")
         self.assertStatus(self.activity, "open")
 
         self.slot2.states.cancel(save=True)
         self.assertStatus(self.slot2, "cancelled")
+        self.assertStatus(self.slot, "finished")
         self.assertStatus(self.activity, "succeeded")
 
     def test_cancel_with_cancelled_activity(self):
-        participant = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(
-            participant=participant, slot=self.activity.slots.get()
-        )
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        DateParticipantFactory.create(registration=registration, slot=self.activity.slots.get())
 
         self.activity.states.cancel(save=True)
         mail.outbox = []
         self.slot.title = "Session 3"
         self.slot.states.cancel(save=True)
         self.assertEqual(self.slot.status, "cancelled")
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
 
         self.assertEqual(
             mail.outbox[0].subject,
@@ -517,15 +1079,15 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.capacity = 2
         self.slot.save()
 
-        first = DateParticipantFactory.create(activity=self.activity)
-        second = DateParticipantFactory.create(activity=self.activity)
-        third = DateParticipantFactory.create(activity=self.activity)
+        first = DateRegistrationFactory.create(activity=self.activity, status="accepted")
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        third = DateRegistrationFactory.create(activity=self.activity, status='accepted')
 
-        SlotParticipantFactory.create(participant=first, slot=self.slot)
+        DateParticipantFactory.create(registration=first, slot=self.slot)
 
-        SlotParticipantFactory.create(participant=first, slot=self.slot2)
-        SlotParticipantFactory.create(participant=second, slot=self.slot2)
-        SlotParticipantFactory.create(participant=third, slot=self.slot2)
+        DateParticipantFactory.create(registration=first, slot=self.slot2)
+        DateParticipantFactory.create(registration=second, slot=self.slot2)
+        DateParticipantFactory.create(registration=third, slot=self.slot2)
 
         self.slot.states.start(save=True)
         self.assertStatus(self.slot, "running")
@@ -541,8 +1103,8 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.capacity = 2
         self.slot.save()
 
-        first = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(participant=first, slot=self.slot)
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
 
         self.slot.states.start(save=True)
         self.assertStatus(self.slot, "running")
@@ -558,15 +1120,15 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.capacity = 2
         self.slot.save()
 
-        first = DateParticipantFactory.create(activity=self.activity)
-        second = DateParticipantFactory.create(activity=self.activity)
-        third = DateParticipantFactory.create(activity=self.activity)
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        third = DateRegistrationFactory.create(activity=self.activity, status='accepted')
 
-        SlotParticipantFactory.create(participant=first, slot=self.slot)
+        DateParticipantFactory.create(registration=first, slot=self.slot)
 
-        SlotParticipantFactory.create(participant=first, slot=self.slot2)
-        SlotParticipantFactory.create(participant=second, slot=self.slot2)
-        SlotParticipantFactory.create(participant=third, slot=self.slot2)
+        DateParticipantFactory.create(registration=first, slot=self.slot2)
+        DateParticipantFactory.create(registration=second, slot=self.slot2)
+        DateParticipantFactory.create(registration=third, slot=self.slot2)
 
         self.assertStatus(self.slot2, "full")
         self.assertStatus(self.slot, "open")
@@ -577,7 +1139,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot, "cancelled")
         self.assertStatus(self.activity, "full")
 
-        self.slot.states.reopen(save=True)
+        self.slot.states.restore(save=True)
         self.assertStatus(self.slot2, "full")
         self.assertStatus(self.slot, "open")
         self.assertStatus(self.activity, "open")
@@ -610,14 +1172,14 @@ class ParticipantTriggerTestCase(object):
 
     def test_initial_added_through_admin(self):
         mail.outbox = []
-        participant = self.participant_factory.create(
-            activity=self.review_activity,
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity,
             user=BlueBottleUserFactory.create(),
             as_user=self.admin_user,
+            status='accepted'
         )
-        SlotParticipantFactory.create(
-            slot=self.activity.slots.get(), participant=participant
-        )
+        participant = DateParticipantFactory.create(registration=registration, slot=self.activity.slots.get())
         self.assertEqual(participant.status, "accepted")
 
         self.assertEqual(len(mail.outbox), 1)
@@ -638,13 +1200,14 @@ class ParticipantTriggerTestCase(object):
     def test_initial_removed_through_admin(self):
         mail.outbox = []
 
-        participant = self.participant_factory.create(
+        registration = DateRegistrationFactory.create(
             activity=self.review_activity,
             user=BlueBottleUserFactory.create(),
             as_user=self.admin_user,
+            status='accepted'
         )
-        SlotParticipantFactory.create(
-            slot=self.activity.slots.get(), participant=participant
+        participant = DateParticipantFactory.create(
+            slot=self.activity.slots.get(), registration=registration
         )
         mail.outbox = []
         participant.states.remove()
@@ -670,17 +1233,17 @@ class ParticipantTriggerTestCase(object):
 
     def test_accept(self):
         user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
+        registration = self.participant_factory.create(
             activity=self.review_activity, user=user, as_user=user
         )
-        SlotParticipantFactory.create(
-            slot=self.activity.slots.get(), participant=participant
+        participant = DateParticipantFactory.create(
+            slot=self.activity.slots.get(), registration=registration
         )
 
         mail.outbox = []
-        participant.states.accept(save=True)
+        registration.states.accept(save=True)
 
-        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(registration.status, "accepted")
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
@@ -693,24 +1256,24 @@ class ParticipantTriggerTestCase(object):
         self.assertEqual(prep.status, "succeeded")
 
     def test_no_review_fill(self):
-        participants = self.participant_factory.create_batch(
+        registrations = DateRegistrationFactory.create_batch(
             self.activity.capacity, activity=self.activity
         )
-        for participant in participants:
-            SlotParticipantFactory.create(
-                slot=self.activity.slots.get(), participant=participant
+        for registration in registrations:
+            DateParticipantFactory.create(
+                slot=self.activity.slots.get(), registration=registration
             )
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, "full")
 
     def test_no_review_fill_cancel(self):
-        participants = self.participant_factory.create_batch(
+        registrations = DateRegistrationFactory.create_batch(
             self.activity.capacity, activity=self.activity
         )
-        for participant in participants:
-            SlotParticipantFactory.create(
-                slot=self.activity.slots.get(), participant=participant
+        for registration in registrations:
+            DateParticipantFactory.create(
+                slot=self.activity.slots.get(), registration=registration
             )
 
         self.activity.refresh_from_db()
@@ -721,42 +1284,42 @@ class ParticipantTriggerTestCase(object):
         self.assertEqual(self.activity.status, "cancelled")
 
     def test_review_fill(self):
-        participants = self.participant_factory.create_batch(
+        registrations = DateRegistrationFactory.create_batch(
             self.review_activity.capacity,
             activity=self.review_activity,
             user=BlueBottleUserFactory.create(),
             as_relation="user",
         )
-        for participant in participants:
-            SlotParticipantFactory.create(
-                slot=self.review_activity.slots.get(), participant=participant
+        for registration in registrations:
+            DateParticipantFactory.create(
+                slot=self.review_activity.slots.get(), registration=registration
             )
 
         self.review_activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, "open")
 
-        for participant in participants:
-            participant.states.accept(save=True)
+        for registration in registrations:
+            registration.states.accept(save=True)
 
         self.review_activity.refresh_from_db()
 
         self.assertEqual(self.review_activity.status, "full")
 
     def test_remove(self):
-        self.participants = self.participant_factory.create_batch(
+        self.registrations = DateRegistrationFactory.create_batch(
             self.activity.capacity, activity=self.activity
         )
-        for participant in self.participants:
-            SlotParticipantFactory.create(
-                slot=self.activity.slots.get(), participant=participant
+        for registration in self.registrations:
+            DateParticipantFactory.create(
+                slot=self.activity.slots.get(), registration=registration
             )
 
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, "full")
         mail.outbox = []
-        participant = self.participants[0]
+        participant = self.registrations[0].participants.first()
         participant.states.remove(save=True)
 
         self.assertEqual(
@@ -793,23 +1356,27 @@ class ParticipantTriggerTestCase(object):
 
     def test_reject(self):
         users = BlueBottleUserFactory.create_batch(self.activity.capacity)
-        self.participants = []
+        self.registrations = []
+
         for user in users:
-            participant = self.participant_factory.build(
+            registration = DateRegistrationFactory.build(
                 user=user,
                 activity=self.review_activity,
             )
-            participant.execute_triggers(user=user)
-            participant.save()
+            registration.execute_triggers(user=user)
+            registration.save()
 
-            SlotParticipantFactory.create(
-                slot=self.activity.slots.get(), participant=participant
+            DateParticipantFactory.create(
+                slot=self.activity.slots.get(), registration=registration
             )
-            self.participants.append(participant)
+
+            self.registrations.append(registration)
 
         mail.outbox = []
-        participant = self.participants[0]
-        participant.states.reject(save=True)
+        registration = self.registrations[0]
+        registration.states.reject(save=True)
+
+        participant = registration.participants.first()
 
         self.assertEqual(
             participant.contributions.exclude(
@@ -832,508 +1399,6 @@ class ParticipantTriggerTestCase(object):
         )
 
 
-class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-    def test_type(self):
-        participant = self.participant_factory.create(activity=self.review_activity)
-        SlotParticipantFactory.create(
-            participant=participant, slot=self.review_activity.slots.get()
-        )
-        self.assertEqual(
-            participant.contributions.exclude(
-                timecontribution__contribution_type="preparation"
-            )
-            .get()
-            .contribution_type,
-            "date",
-        )
-
-    def test_reaccept(self):
-        self.test_remove()
-
-        self.participants[0].states.accept(save=True)
-
-        self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
-
-        self.assertEqual(self.participants[0].contributions.first().status, "new")
-
-        self.assertEqual(self.participants[0].contributions.last().status, "succeeded")
-        self.assertTrue(
-            self.activity.followers.filter(user=self.participants[0].user).exists()
-        )
-
-    def test_initial_no_review(self):
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.activity, user=user, as_user=user
-        )
-        SlotParticipantFactory(
-            slot=self.activity.slots.get(), participant=participant, as_user=user
-        )
-
-        self.assertEqual(participant.status, "accepted")
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'A participant has registered for a time slot for your activity "{}"'.format(
-                self.activity.title
-            ),
-        )
-        self.assertTrue(self.activity.followers.filter(user=participant.user).exists())
-        self.assertEqual(
-            self.activity.accepted_participants.get()
-            .contributions.exclude(timecontribution__contribution_type="preparation")
-            .get()
-            .status,
-            "new",
-        )
-        prep = participant.preparation_contributions.first()
-        self.assertEqual(prep.value, self.activity.preparation)
-        self.assertEqual(prep.status, "succeeded")
-
-    def test_initial_review(self):
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.review_activity, user=user, as_user=user
-        )
-        SlotParticipantFactory(
-            slot=self.review_activity.slots.get(), participant=participant
-        )
-
-        self.assertEqual(participant.status, "new")
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[1].subject,
-            'You have a new participant for your activity "{}" 🎉'.format(
-                self.review_activity.title
-            ),
-        )
-        self.assertTrue(
-            self.review_activity.followers.filter(user=participant.user).exists()
-        )
-        self.assertEqual(
-            participant.contributions.exclude(
-                timecontribution__contribution_type="preparation"
-            )
-            .get()
-            .status,
-            "new",
-        )
-        prep = participant.preparation_contributions.first()
-        self.assertEqual(prep.value, self.review_activity.preparation)
-        self.assertEqual(prep.status, "new")
-
-
-@mock.patch.object(ParticipantJoinedNotification, "delay", 2)
-@mock.patch.object(ParticipantAppliedNotification, "delay", 1)
-@mock.patch.object(ParticipantChangedNotification, "delay", 2)
-class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-    factories = CeleryTestCase.factories + [
-        DateParticipantFactory,
-        DateActivityFactory,
-        InitiativeFactory,
-    ]
-
-    def setUp(self):
-        super().setUp()
-        self.settings = InitiativePlatformSettingsFactory.create(
-            activity_types=[self.factory._meta.model.__name__.lower()]
-        )
-
-        self.user = BlueBottleUserFactory()
-        self.admin_user = BlueBottleUserFactory(is_staff=True)
-        self.initiative = InitiativeFactory(owner=self.user, status="approved")
-
-        self.activity = self.factory.create(
-            preparation=timedelta(hours=1), initiative=self.initiative, review=False
-        )
-        self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
-
-        self.activity.refresh_from_db()
-        self.participant = None
-
-    def test_join_free(self):
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.activity, user=user, as_user=user
-        )
-
-        slot = self.slots[0]
-        self.slot_participant = SlotParticipantFactory.create(
-            slot=slot, participant=participant, as_user=user
-        )
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'A participant has registered for a time slot for your activity "{self.activity.title}"'
-        )
-        self.assertTrue(slot.title in mail.outbox[0].body)
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You\'ve registered for a time slot for the activity "{self.activity.title}"'
-        )
-
-    def test_join_free_review(self):
-        self.activity.review = True
-        self.activity.save()
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.activity,
-            user=user,
-            as_user=user
-        )
-
-        self.slot_participants = [
-            SlotParticipantFactory.create(slot=slot, participant=participant)
-            for slot in self.slots
-        ]
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'You have a new participant for your activity "{self.activity.title}" 🎉'
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have applied to the activity "{self.activity.title}"'
-        )
-
-    def test_change_free(self):
-        self.test_join_free()
-
-        time.sleep(3)
-        mail.outbox = []
-
-        self.slot_participant.states.withdraw(save=True)
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'A participant has withdrawn from a time slot for your activity "{self.activity.title}"'
-        )
-
-    def test_withdraw_free(self):
-        self.test_join_free()
-        time.sleep(3)
-        mail.outbox = []
-
-        self.slot_participant.states.withdraw(save=True)
-
-        time.sleep(3)
-        self.assertEqual(len(mail.outbox), 1)
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f"A participant has withdrawn from a time slot for "
-            f'your activity "{self.activity.title}"',
-        )
-        mail.outbox = []
-
-        self.slot_participant.states.reapply(save=True)
-
-        time.sleep(3)
-        self.assertEqual(len(mail.outbox), 2)
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f"A participant has registered for a time slot for "
-            f'your activity "{self.activity.title}"',
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have changed your application on the activity "{self.activity.title}"',
-        )
-
-
-class SlotParticipantTriggerTestCase(BluebottleTestCase):
-    def setUp(self):
-        self.user = BlueBottleUserFactory.create()
-        self.initiative = InitiativeFactory.create()
-        self.activity = DateActivityFactory.create(
-            slots=[], capacity=None, initiative=self.initiative
-        )
-        self.slot1 = DateActivitySlotFactory.create(activity=self.activity, capacity=2)
-        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=1)
-
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.refresh_from_db()
-        self.participant = DateParticipantFactory.create(activity=self.activity)
-
-    def assertStatus(self, obj, status):
-        obj.refresh_from_db()
-        self.assertEqual(obj.status, status)
-
-    def test_apply(self):
-        self.assertEqual(self.participant.slot_participants.count(), 0)
-        slot_participant = SlotParticipantFactory.create(
-            slot=self.slot1, participant=self.participant
-        )
-        self.assertEqual(self.participant.slot_participants.count(), 1)
-        self.assertStatus(slot_participant, "registered")
-
-    def test_withdraw_from_slot(self):
-        slot_participant = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        slot_participant.states.withdraw(save=True)
-
-        self.assertStatus(slot_participant, "withdrawn")
-        self.assertStatus(slot_participant.contributions.first(), "failed")
-
-    def test_withdraw_from_slot_finish(self):
-        slot_participant = SlotParticipantFactory.create(
-            slot=self.slot1, participant=self.participant
-        )
-        slot_participant.states.withdraw(save=True)
-
-        self.slot1.start = now() - timedelta(days=2)
-        self.slot1.save()
-
-        slot_participant.refresh_from_db()
-
-        self.assertStatus(slot_participant, "withdrawn")
-        self.assertStatus(slot_participant.contributions.first(), "failed")
-
-    def test_withdraw_from_all_slots(self):
-        slot_participant1 = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        slot_participant2 = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
-
-        slot_participant1.states.withdraw(save=True)
-        self.assertStatus(self.participant, 'accepted')
-        self.assertStatus(slot_participant1, 'withdrawn')
-
-        slot_participant2.states.withdraw(save=True)
-        self.assertStatus(slot_participant2, 'withdrawn')
-
-        self.assertFalse(
-            self.participant.activity.followers.filter(
-                user=self.participant.user
-            ).exists()
-        )
-
-        slot_participant1.states.reapply(save=True)
-
-        self.assertStatus(self.participant, 'accepted')
-        self.assertStatus(slot_participant1, 'registered')
-
-        self.assertTrue(
-            self.participant.activity.followers.filter(
-                user=self.participant.user
-            ).exists()
-        )
-
-        slot_participant2.states.reapply(save=True)
-        self.assertStatus(self.participant, "accepted")
-        self.assertStatus(slot_participant2, "registered")
-
-    def test_remove_from_all_slots(self):
-        slot_participant1 = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        slot_participant2 = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
-
-        slot_participant1.states.remove(save=True)
-        self.assertStatus(self.participant, 'accepted')
-        self.assertStatus(slot_participant1, 'removed')
-
-        slot_participant2.states.remove(save=True)
-        self.assertStatus(self.participant, 'accepted')
-        self.assertStatus(slot_participant2, 'removed')
-
-        self.assertFalse(
-            self.participant.activity.followers.filter(
-                user=self.participant.user
-            ).exists()
-        )
-
-        slot_participant1.states.accept(save=True)
-
-        self.assertStatus(self.participant, 'accepted')
-        self.assertStatus(slot_participant1, 'registered')
-
-        self.assertTrue(
-            self.participant.activity.followers.filter(
-                user=self.participant.user
-            ).exists()
-        )
-
-        slot_participant2.states.accept(save=True)
-        self.assertStatus(self.participant, "accepted")
-        self.assertStatus(slot_participant2, "registered")
-
-    def test_fill_slot(self):
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        self.assertStatus(self.slot1, "open")
-        participant2 = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
-        self.assertStatus(self.slot1, 'full')
-        self.assertStatus(self.activity, 'open')
-        SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
-        self.assertStatus(self.slot2, 'full')
-        self.assertStatus(self.activity, 'full')
-
-    def test_do_not_fill_withdrawn(self):
-        withdrawn = SlotParticipantFactory.create(
-            slot=self.slot1, participant=self.participant
-        )
-        withdrawn.states.withdraw(save=True)
-        self.assertStatus(self.slot1, "open")
-        participant2 = DateParticipantFactory.create(activity=self.activity)
-
-        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
-        self.assertStatus(self.slot1, "open")
-        self.assertStatus(self.activity, "open")
-
-    def test_fill_slot_ignores_activity_capacity(self):
-        self.activity.capacity = 1
-        self.activity.save()
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        self.assertStatus(self.slot1, 'open')
-        self.assertStatus(self.activity, 'open')
-
-    def test_unfill_slot(self):
-        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
-        self.assertStatus(self.slot2, 'full')
-        self.assertStatus(self.activity, 'open')
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        participant2 = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
-        self.assertStatus(self.slot1, 'full')
-        self.assertStatus(self.activity, 'full')
-        self.slot_part.states.withdraw(save=True)
-        self.assertStatus(self.slot2, 'open')
-        self.assertStatus(self.activity, 'open')
-
-    def test_extend_slot_unfills(self):
-        self.assertStatus(self.activity, 'open')
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        participant2 = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
-        participant2 = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot2, participant=participant2)
-        self.assertStatus(self.slot1, 'full')
-        self.assertStatus(self.slot2, 'full')
-        self.assertStatus(self.activity, 'full')
-
-        self.slot1.capacity = 10
-        self.slot1.save()
-        self.assertStatus(self.slot1, 'open')
-        self.assertStatus(self.activity, 'open')
-
-    def test_cancel_open_slot_fills(self):
-        self.assertStatus(self.activity, 'open')
-        self.assertStatus(self.slot1, 'open')
-        SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
-        self.assertStatus(self.slot1, 'open')
-        self.assertStatus(self.slot2, 'full')
-        self.assertStatus(self.activity, 'open')
-        self.slot1.states.cancel(save=True)
-        self.assertStatus(self.activity, 'full')
-        self.slot3 = DateActivitySlotFactory.create(activity=self.activity)
-        self.assertStatus(self.activity, 'open')
-        self.slot3.delete()
-        self.assertStatus(self.activity, 'full')
-
-    def test_fill_new_slot(self):
-        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
-        self.assertStatus(self.slot2, 'full')
-        self.assertStatus(self.activity, 'open')
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        participant2 = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
-        self.assertStatus(self.slot1, 'full')
-        self.assertStatus(self.activity, 'full')
-
-        new_slot = DateActivitySlotFactory.create(
-            activity=self.activity,
-            capacity=1
-        )
-
-        self.assertStatus(self.activity, 'open')
-
-        new_slot.delete()
-
-        self.assertStatus(self.activity, 'full')
-
-    def test_expire_new_slot(self):
-        self.participant.delete()
-
-        self.slot1.start = now() - timedelta(days=1)
-        self.slot1.save()
-        self.assertStatus(self.slot1, 'finished')
-        self.assertStatus(self.activity, 'open')
-
-        self.slot2.start = now() - timedelta(days=1)
-        self.slot2.save()
-        self.assertStatus(self.slot2, 'finished')
-        self.assertStatus(self.activity, 'expired')
-
-        new_slot = DateActivitySlotFactory.create(
-            activity=self.activity,
-            capacity=1
-        )
-
-        self.assertStatus(self.activity, 'open')
-
-        new_slot.delete()
-
-        self.assertStatus(self.activity, 'expired')
-
-    def test_succeed_new_slot(self):
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        self.slot1.start = now() - timedelta(days=1)
-        self.slot1.save()
-        self.assertStatus(self.slot1, 'finished')
-        self.assertStatus(self.activity, 'open')
-
-        SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
-        self.slot2.start = now() - timedelta(days=1)
-        self.slot2.save()
-        self.assertStatus(self.slot2, 'finished')
-        self.assertStatus(self.activity, 'succeeded')
-
-        new_slot = DateActivitySlotFactory.create(
-            activity=self.activity,
-            capacity=1
-        )
-
-        self.assertStatus(self.activity, 'open')
-
-        new_slot.delete()
-
-        self.assertStatus(self.activity, 'succeeded')
-
-    def test_refill_slot(self):
-        self.test_unfill_slot()
-        self.slot_part.states.reapply(save=True)
-        self.assertStatus(self.slot2, 'full')
-
-    def test_unfill_slot_remove(self):
-        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
-        self.assertStatus(self.slot2, 'full')
-        self.slot_part.states.remove(save=True)
-        self.assertStatus(self.slot2, 'open')
-
-    def test_refill_slot_remove(self):
-        self.test_unfill_slot_remove()
-        self.slot_part.states.accept(save=True)
-        self.assertStatus(self.slot2, 'full')
-
-
 class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
     factory = PeriodicSlotFactory
 
@@ -1353,8 +1418,9 @@ class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
             status="open",
             review=False
         )
-        start = get_current_timezone().localize(
-            datetime.combine(self.activity.start, datetime.min.time())
+        start = make_aware(
+            datetime.combine(self.activity.start, datetime.min.time()),
+            get_current_timezone()
         )
 
         self.defaults = {
@@ -1464,6 +1530,25 @@ class RegistrationTriggerTestBase:
                 ManagerParticipantAddedOwnerNotification
             )
 
+    def test_added_by_staff_is_active(self):
+        self.user.is_active = False
+        self.user.save()
+
+        self.model = PeriodicRegistrationFactory.build(
+            activity=self.activity,
+            user=self.user,
+        )
+        with self.execute(user=self.staff):
+            self.assertNoNotificationEffect(
+                ParticipantAddedNotification
+            )
+            self.assertNotificationEffect(
+                InactiveParticipantAddedNotification
+            )
+            self.assertNotificationEffect(
+                ManagerParticipantAddedOwnerNotification
+            )
+
     def test_accept(self):
         self.test_apply()
         self.model.states.accept()
@@ -1526,6 +1611,11 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
     activity_factory = ScheduleActivityFactory
     user_joined_notification = ScheduleUserJoinedNotification
 
+    def setUp(self):
+        super().setUp()
+        self.activity.capacity = 4
+        self.activity.save()
+
     def test_manager_schedules_slot(self):
         self.test_join()
         slot = ScheduleSlotFactory.create(
@@ -1539,3 +1629,300 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
             self.assertNotificationEffect(
                 UserScheduledNotification
             )
+
+    def test_fill_join(self):
+        ScheduleRegistrationFactory.create_batch(
+            self.activity.capacity - 1,
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+    def test_fill_accept(self):
+        self.activity.review = True
+        self.activity.save()
+
+        for registration in ScheduleRegistrationFactory.create_batch(
+            self.activity.capacity - 1,
+            activity=self.activity,
+        ):
+            registration.states.accept(save=True)
+
+        registration = ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+        )
+        registration.states.accept(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+    def test_remove_unfill(self):
+        ScheduleRegistrationFactory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+        registration = self.activity.registrations.first()
+        registration.participants.first().states.remove(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_added_by_staff_at_capacity(self):
+        ScheduleRegistrationFactory.create_batch(
+            self.activity.capacity - 1,
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        user = BlueBottleUserFactory.create()
+        registration = ScheduleRegistrationFactory.build(
+            activity=self.activity,
+            user=user,
+        )
+        registration.execute_triggers(user=self.staff)
+        registration.save()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+
+class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
+    factory = RegisteredDateActivityFactory
+    participant_factory = RegisteredDateParticipantFactory
+
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=[self.factory._meta.model.__name__.lower()]
+        )
+        self.manager = BlueBottleUserFactory.create()
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+        self.settings.enable_reviewing = True
+        self.settings.save()
+        self.model = self.factory.create(initiative=None, owner=self.manager)
+        self.participant = self.participant_factory.create(activity=self.model)
+
+    def test_initial(self):
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'new')
+
+    def test_delete(self):
+        self.model.states.delete(save=True)
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'failed')
+
+    def test_reject(self):
+        self.model.states.submit(save=True)
+        self.model.states.reject(save=True)
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'failed')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'Your activity "{}" has been rejected'.format(self.model.title)
+        )
+
+    def test_approve(self):
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.assertStatus(self.participant, 'succeeded')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'succeeded')
+        self.assertStatus(self.model, 'succeeded')
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'Your activity on Test has been approved!'
+        )
+        self.assertEqual(
+            mail.outbox[3].subject,
+            'You have been added to the activity "{}"'.format(self.model.title)
+        )
+
+    def test_remove_participant(self):
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.model, 'succeeded')
+        self.participant.states.remove(save=True)
+        self.assertStatus(self.participant, 'removed')
+        self.assertStatus(self.model, 'expired')
+        self.participant.states.readd(save=True)
+        self.assertStatus(self.model, 'succeeded')
+        self.assertStatus(self.participant, 'succeeded')
+
+    def test_needs_work(self):
+        self.model.states.submit(save=True)
+        self.model.states.request_changes(save=True)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'The activity you submitted on Test needs work'
+        )
+
+    def test_register(self):
+        self.settings.enable_reviewing = False
+        self.settings.save()
+        activity = self.factory.create(
+            initiative=None,
+            start=now() - timedelta(days=10)
+        )
+        self.participant_factory.create(activity=activity)
+        activity.states.register(save=True)
+        self.assertEqual(activity.status, 'succeeded')
+        organizer = activity.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'succeeded')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'A new activity has been registered on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'Your activity on Test has been registered!'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'You have been added to the activity "{}"'.format(activity.title)
+        )
+
+    def test_submit(self):
+        self.model.states.submit(save=True)
+        self.assertStatus(self.model, 'submitted')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+
+    def test_cancel(self):
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.model.states.cancel(save=True)
+        self.assertStatus(self.model, 'cancelled')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'failed')
+
+
+class SpotsTakenAfterReleaseTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='full',
+            capacity=1,
+            review=True,
+        )
+        self.accepted = DeadlineParticipantFactory.create(
+            activity=self.activity,
+            status='accepted',
+        )
+        self.pending = DeadlineParticipantFactory.create(
+            activity=self.activity,
+            status='new',
+        )
+
+    def test_pending_participant_does_not_release_spot(self):
+        taken = self.activity.accepted_participants
+        self.assertEqual(
+            spots_taken_after_release(taken, self.pending),
+            1,
+        )
+
+    def test_accepted_participant_releases_spot(self):
+        taken = self.activity.accepted_participants
+        self.assertEqual(
+            spots_taken_after_release(taken, self.accepted),
+            0,
+        )
+
+    def test_activity_will_not_be_full_pending_reject(self):
+        effect = Mock(instance=self.pending)
+        self.assertFalse(activity_will_not_be_full(effect))
+
+    def test_activity_will_not_be_full_accepted_withdraw(self):
+        effect = Mock(instance=self.accepted)
+        self.assertTrue(activity_will_not_be_full(effect))
+
+
+class InterestTriggerTestCase(BluebottleTestCase):
+
+    def test_create_sends_confirmation_email(self):
+        mail.outbox = []
+        user = BlueBottleUserFactory.create()
+        activity = DeadlineActivityFactory.create(
+            title='Save the world!',
+            status='full',
+            capacity=1,
+        )
+
+        Interest.objects.create(user=user, activity=activity)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [user.email])
+        self.assertEqual(
+            mail.outbox[0].subject,
+            "You'll be notified if a spot opens up for Save the world!",
+        )
+
+    def test_create_slot_interest_sends_confirmation_email(self):
+        mail.outbox = []
+        user = BlueBottleUserFactory.create()
+        activity = DateActivityFactory.create(
+            title='Save the world!',
+            slots=[],
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+
+        Interest.objects.create(user=user, activity=activity, slot=slot)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [user.email])
+        self.assertEqual(
+            mail.outbox[0].subject,
+            "You'll be notified if a spot opens up for Save the world!",
+        )

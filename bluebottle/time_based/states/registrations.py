@@ -5,7 +5,7 @@ from bluebottle.fsm.state import (
 )
 from bluebottle.time_based.models import (
     DeadlineRegistration,
-    PeriodicRegistration, ScheduleRegistration, TeamScheduleRegistration, )
+    PeriodicRegistration, ScheduleRegistration, TeamScheduleRegistration, DateRegistration, )
 
 
 class RegistrationStateMachine(ModelStateMachine):
@@ -25,17 +25,23 @@ class RegistrationStateMachine(ModelStateMachine):
         _("This person is not selected for the activity.")
     )
 
+    withdrawn = State(
+        _('Withdrawn'),
+        'withdrawn',
+        _("This person did not participate.")
+    )
+
     def can_accept_registration(self, user):
         """can accept participant"""
         return (
-            user in [
-                self.instance.activity.owner,
-                self.instance.activity.initiative.owner
-            ] or
+            user in self.instance.activity.owners or
             user.is_superuser or
-            user.is_staff or
-            user in self.instance.activity.initiative.activity_managers.all()
+            user.is_staff
         )
+
+    def is_user(self, user):
+        """is participant"""
+        return self.instance.user == user
 
     initiate = Transition(
         EmptyState(),
@@ -75,13 +81,46 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        [new],
+        new,
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_registration,
     )
+
+    withdraw = Transition(
+        [
+            new,
+            accepted,
+        ],
+        withdrawn,
+        name=_("Withdraw"),
+        passed_label=_("withdrawn"),
+        description=_(
+            "Cancel your participation in the activity. Participation hours will not be counted."
+        ),
+        automatic=True,
+        permission=is_user,
+        hide_from_admin=True,
+    )
+
+    restore = Transition(
+        withdrawn,
+        new,
+        name=_("Restore"),
+        passed_label=_("restored"),
+        description=_(
+            "Restore after being withdrawn."
+        ),
+        automatic=True,
+        hide_from_admin=True,
+    )
+
+
+@register(DateRegistration)
+class DateRegistrationStateMachine(RegistrationStateMachine):
+    pass
 
 
 @register(DeadlineRegistration)

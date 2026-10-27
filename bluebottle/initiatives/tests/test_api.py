@@ -14,9 +14,9 @@ from rest_framework import status
 
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.impact.models import ImpactType
-from bluebottle.impact.tests.factories import ImpactGoalFactory
+from bluebottle.impact.tests.factories import ImpactGoalFactory, ImpactTypeFactory
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, InitiativeSearchFilter, \
     ActivitySearchFilter
 from bluebottle.initiatives.models import Theme
@@ -34,8 +34,7 @@ from bluebottle.time_based.tests.factories import (
     DeadlineParticipantFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory,
-)
+    DateRegistrationFactory, )
 
 
 def get_include(response, name):
@@ -59,14 +58,15 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
     def setUp(self):
         super(InitiativeListAPITestCase, self).setUp()
         self.theme = ThemeFactory.create()
+        self.image = ImageFactory.create()
         self.url = reverse('initiative-list')
-
-    def test_create(self):
-        data = {
+        self.data = {
             'data': {
                 'type': 'initiatives',
                 'attributes': {
-                    'title': 'Some title'
+                    'title': 'Some title',
+                    'story': "About that initiative",
+                    'pitch': "A pitch",
                 },
                 'relationships': {
                     'theme': {
@@ -74,13 +74,21 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
                             'type': 'themes',
                             'id': self.theme.pk
                         },
+                    },
+                    'image': {
+                        'data': {
+                            'type': 'images',
+                            'id': str(self.image.id)
+                        }
                     }
                 }
             }
         }
+
+    def test_create(self):
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -99,28 +107,29 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             response_data['data']['relationships']['theme']['data']['id'],
             str(initiative.theme.pk)
         )
-        self.assertEqual(len(response_data['included']), 2)
+        self.assertEqual(len(response_data['included']), 3)
+        transitions = [t['name'] for t in response_data['data']['meta']['transitions']]
+        self.assertTrue('submit' in transitions)
 
-    def test_create_special_chars(self):
-        data = {
-            'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': ':)'
-                },
-                'relationships': {
-                    'theme': {
-                        'data': {
-                            'type': 'themes',
-                            'id': self.theme.pk
-                        },
-                    }
-                }
-            }
-        }
+    def test_create_no_review(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_reviewing = False
+        initiative_settings.save()
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response_data = json.loads(response.content)
+        transitions = [t['name'] for t in response_data['data']['meta']['transitions']]
+        self.assertTrue('publish' in transitions)
+
+    def test_create_special_chars(self):
+        self.data['data']['attributes']['title'] = ':)'
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -128,7 +137,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response_data['data']['attributes']['title'], ':)')
         self.assertNotEqual(response_data['data']['attributes']['slug'], '')
 
-    def test_create_missing_iamge(self):
+    def test_create_missing_image(self):
         data = {
             'data': {
                 'type': 'initiatives',
@@ -159,25 +168,9 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
 
     def test_create_duplicate_title(self):
         InitiativeFactory.create(title='Some title', status='approved')
-        data = {
-            'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                },
-                'relationships': {
-                    'theme': {
-                        'data': {
-                            'type': 'themes',
-                            'id': self.theme.pk
-                        },
-                    }
-                }
-            }
-        }
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -189,25 +182,16 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
 
     def test_create_with_location(self):
         geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
-        data = {
+        self.data['data']['relationships']['place'] = {
             'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                },
-                'relationships': {
-                    'place': {
-                        'data': {
-                            'type': 'geolocations',
-                            'id': geolocation.id
-                        },
-                    }
-                }
-            }
+                'type': 'geolocations',
+                'id': geolocation.id
+            },
         }
+
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -436,14 +420,15 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             activity=date_activity,
             start=now() - datetime.timedelta(weeks=1),
         )
-        for participant in DateParticipantFactory.create_batch(
+        for registration in DateRegistrationFactory.create_batch(
             3, activity=date_activity
         ):
-            SlotParticipantFactory.create(participant=participant, slot=slot)
-        for participant in DateParticipantFactory.create_batch(
+            DateParticipantFactory.create(registration=registration, slot=slot)
+
+        for registration in DateRegistrationFactory.create_batch(
             3, activity=date_activity, status="rejected"
         ):
-            SlotParticipantFactory.create(participant=participant, slot=slot)
+            DateParticipantFactory.create(registration=registration, slot=slot, status='rejected')
 
         funding = FundingFactory.create(
             initiative=self.initiative,
@@ -474,7 +459,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=datetime.date.today() - datetime.timedelta(weeks=2),
         )
         collect_activity.realized = 100
-        collect_activity.states.submit(save=True)
+        collect_activity.states.publish(save=True)
 
         CollectContributorFactory.create_batch(3, activity=collect_activity)
         CollectContributorFactory.create_batch(3, activity=collect_activity, status='withdrawn')
@@ -484,7 +469,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=datetime.date.today() - datetime.timedelta(weeks=2),
         )
         other_collect_activity.realized = 200
-        other_collect_activity.states.submit(save=True)
+        other_collect_activity.states.publish(save=True)
 
         CollectContributorFactory.create_batch(3, activity=other_collect_activity)
 
@@ -532,8 +517,16 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
-        co2 = ImpactType.objects.get(slug='co2')
-        water = ImpactType.objects.get(slug='water')
+        co2 = ImpactTypeFactory.create(
+            slug='co2',
+            name='reduce CO₂ emissions by {} kg',
+            text_passed='kg CO₂ saved'
+        )
+        water = ImpactTypeFactory.create(
+            slug='water',
+            name='water saved',
+            text_passed='liter water saved'
+        )
 
         first = DeedFactory.create(
             initiative=self.initiative, target=5, enable_impact=True
@@ -563,11 +556,20 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
 
-        self.assertEqual(stats['impact'][0]['name'], 'reduce CO₂ emissions by {} kg')
+        self.assertEqual(stats['impact'][0]['name'], 'kg CO₂ saved')
         self.assertEqual(stats['impact'][0]['value'], 600.0)
 
-        self.assertEqual(stats['impact'][1]['name'], 'water saved')
+        self.assertEqual(stats['impact'][1]['name'], 'liter water saved')
         self.assertEqual(stats['impact'][1]['value'], 1250.0)
+
+    def test_get_staff(self):
+        response = self.client.get(
+            self.url,
+            user=BlueBottleUserFactory.create(is_staff=True)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.initiative.title)
+        self.assertTrue(response.json()['data']['meta']['permissions']['PUT'])
 
     def test_get_other(self):
         response = self.client.get(
@@ -583,6 +585,55 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
+
+    def _admin_url(self, user=None):
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response.json()['data']['meta'].get('admin-url')
+
+    def test_admin_url_anonymous(self):
+        self.assertIsNone(self._admin_url())
+
+    def test_admin_url_owner(self):
+        self.assertIsNone(self._admin_url(self.owner))
+
+    def test_admin_url_staff(self):
+        expected = reverse(
+            'admin:initiatives_initiative_change', args=(self.initiative.pk,)
+        )
+        self.assertEqual(
+            self._admin_url(BlueBottleUserFactory.create(is_staff=True)),
+            expected
+        )
+
+    def test_admin_url_superuser(self):
+        expected = reverse(
+            'admin:initiatives_initiative_change', args=(self.initiative.pk,)
+        )
+        self.assertEqual(
+            self._admin_url(BlueBottleUserFactory.create(is_superuser=True)),
+            expected
+        )
+
+    def test_get_story_safe(self):
+        self.initiative.story = json.dumps({
+            'html': (
+                '<p>Test</p><img src="/media/test.jpg">'
+                '<ul><li class="bla">List</li></ul>'
+                '<script type="javascript">alert("bla")</script>'
+            ),
+            'delta': ''
+        })
+        self.initiative.save()
+
+        response = self.client.get(
+            self.url
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['story'],
+            '<p>Test</p><img src="/media/test.jpg"><ul><li class="bla">List</li></ul>'
+        )
 
 
 @override_settings(
@@ -751,9 +802,11 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_country(self):
-        matching_country, other_country = CountryFactory.create_batch(2)
-
-        matching = InitiativeFactory.create_batch(2, status='approved')
+        matching_country = CountryFactory.create(alpha2_code='NL')
+        other_country = CountryFactory.create(alpha2_code='DE')
+        matching_location = GeolocationFactory.create(country=matching_country)
+        other_location = GeolocationFactory.create(country=other_country)
+        matching = InitiativeFactory.create_batch(2, status='approved', place=matching_location)
         for initiative in matching:
             DeadlineActivityFactory.create(
                 status='open',
@@ -761,7 +814,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 office_location=LocationFactory.create(country=matching_country)
             )
 
-        other = InitiativeFactory.create_batch(3, status='approved')
+        other = InitiativeFactory.create_batch(3, status='approved', place=other_location)
         for initiative in other:
             DeadlineActivityFactory.create(
                 status='open',
@@ -779,8 +832,18 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_unknown_filters_are_ignored(self):
+        matching = InitiativeFactory.create_batch(2, status='approved')
+
+        self.search({
+            'distance': '20km',
+            'activity-type': 'grantapplication',
+            'is_online': '1',
+        })
+        self.assertFound(matching)
+
     def test_filter_office(self):
-        settings, _ = InitiativePlatformSettings.objects.get_or_create()
+        settings = InitiativePlatformSettings.load()
         settings.search_filters_initiatives.add(
             InitiativeSearchFilter.objects.create(
                 settings=settings,
@@ -861,6 +924,18 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         text = 'lorem ipsum'
         matching = [
             InitiativeFactory.create(title='Lorem ipsum dolor sit amet', status='approved'),
+            InitiativeFactory.create(title='Other title', pitch="Lorem ipsum", status='approved')
+        ]
+        InitiativeFactory.create(title='consectetur adipiscing elit', status='approved')
+        InitiativeFactory.create(title='Nam eu turpis erat', status='approved')
+
+        self.search({'search': text})
+        self.assertFound(matching)
+
+    def test_search_diacritics(self):
+        text = 'lorem ipsum'
+        matching = [
+            InitiativeFactory.create(title='LÔrem Ïpsum dolor sit amet', status='approved'),
             InitiativeFactory.create(title='Other title', pitch="Lorem ipsum", status='approved')
         ]
         InitiativeFactory.create(title='consectetur adipiscing elit', status='approved')
@@ -1223,6 +1298,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         self.assertEqual(result['attributes']['name'], 'World domination')
 
     def test_detail_translation_missing(self):
+        """When requested language (nl) has no translation, response falls back to another language (en)."""
         theme = Theme.objects.create(slug='world')
         theme.set_current_language('en')
         theme.name = 'World domination'
@@ -1263,12 +1339,12 @@ class ThemeApiTestCase(BluebottleTestCase):
         self.url = reverse('initiative-theme-list')
         self.client = JSONAPITestClient()
 
-    def test_get_skills_authenticated(self):
+    def test_get_themes_authenticated(self):
         user = BlueBottleUserFactory.create()
-        response = self.client.get(self.url, user=user)
+        response = self.client.get(self.url, user=user, HTTP_X_APPLICATION_LANGUAGE='en')
         self.assertEqual(response.status_code, 200)
 
-    def test_get_skills_unauthenticated(self):
+    def test_get_themes_unauthenticated(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 401)
 
@@ -1365,7 +1441,7 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
             data['platform']['initiatives']['search_filters_activities'],
             [
                 {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select a date'},
-                {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select a distance'},
+                {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select distance'},
                 {'type': 'is_online', 'name': 'Online / In-person', 'highlight': False, 'placeholder': 'Make a choice'}
             ]
 
@@ -1374,7 +1450,7 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
             data['platform']['initiatives']['search_filters_initiatives'],
             [
                 {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
-                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select a country'}
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'}
             ]
 
         )
@@ -1393,7 +1469,7 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
             data['platform']['initiatives']['search_filters_initiatives'],
             [
                 {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
-                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select a country'},
-                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select a --------'}
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'},
+                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select --------'}
             ]
         )

@@ -3,22 +3,29 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ActivitySegmentPermission
 )
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
-from bluebottle.time_based.models import DateActivity, DeadlineActivity, PeriodicActivity, ScheduleActivity
+from bluebottle.activities.views import ActivityDetailView
+from bluebottle.time_based.models import (
+    DateActivity,
+    DeadlineActivity,
+    PeriodicActivity,
+    ScheduleActivity,
+    RegisteredDateActivity,
+    TimeBasedActivity,
+)
 from bluebottle.time_based.serializers import (
     DateActivitySerializer, DeadlineActivitySerializer,
     DateTransitionSerializer, DeadlineTransitionSerializer,
     PeriodicActivitySerializer, PeriodicTransitionSerializer, PeriodActivitySerializer, ScheduleActivitySerializer,
-    ScheduleTransitionSerializer
+    ScheduleTransitionSerializer, RegisteredDateActivitySerializer, RegisteredDateTransitionSerializer
 )
-from bluebottle.time_based.views.mixins import CreatePermissionMixin
+from bluebottle.time_based.views.mixins import CreatePermissionMixin, prefetch_my_interests
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateDestroyAPIView, ListCreateAPIView, JsonApiViewMixin,
+    ListCreateAPIView, JsonApiViewMixin,
 )
 
 
@@ -28,24 +35,24 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView, CreatePermi
         OneOf(ResourcePermission, ActivityOwnerPermission, IsStaffMember),
     )
 
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request, serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request, serializer.Meta.model(**serializer.validated_data)
-        )
-        serializer.save(owner=self.request.user)
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        return prefetch_my_interests(qs, self.request.user, activity_level=True)
 
 
-class TimeBasedActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
+class TimeBasedActivityDetailView(ActivityDetailView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
         DeleteActivityPermission,
         ActivitySegmentPermission,
     )
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        if issubclass(qs.model, TimeBasedActivity):
+            qs = qs.select_related('expertise')
+        return prefetch_my_interests(qs, self.request.user, activity_level=True)
 
 
 class DateActivityListView(TimeBasedActivityListView):
@@ -56,6 +63,11 @@ class DateActivityListView(TimeBasedActivityListView):
 class DeadlineActivityListView(TimeBasedActivityListView):
     queryset = DeadlineActivity.objects.all()
     serializer_class = DeadlineActivitySerializer
+
+
+class RegisteredDateActivityListView(TimeBasedActivityListView):
+    queryset = RegisteredDateActivity.objects.all()
+    serializer_class = RegisteredDateActivitySerializer
 
 
 class ScheduleActivityListView(TimeBasedActivityListView):
@@ -83,6 +95,11 @@ class DeadlineActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = DeadlineActivitySerializer
 
 
+class RegisteredDateActivityDetailView(TimeBasedActivityDetailView):
+    queryset = RegisteredDateActivity.objects.all()
+    serializer_class = RegisteredDateActivitySerializer
+
+
 class ScheduleActivityDetailView(TimeBasedActivityDetailView):
     queryset = ScheduleActivity.objects.all()
     serializer_class = ScheduleActivitySerializer
@@ -101,6 +118,11 @@ class DateTransitionList(TransitionList):
 class DeadlineTransitionList(TransitionList):
     serializer_class = DeadlineTransitionSerializer
     queryset = DeadlineActivity.objects.all()
+
+
+class RegisteredDateTransitionList(TransitionList):
+    serializer_class = RegisteredDateTransitionSerializer
+    queryset = RegisteredDateActivity.objects.all()
 
 
 class ScheduleTransitionList(TransitionList):

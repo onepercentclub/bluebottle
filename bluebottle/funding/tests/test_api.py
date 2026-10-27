@@ -6,6 +6,7 @@ import mock
 import munch
 import stripe
 from django.contrib.auth.models import Group
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
@@ -13,39 +14,58 @@ from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding
+from bluebottle.funding.models import (
+    Donor,
+    Funding,
+    FundingPlatformSettings,
+    PaymentCurrency,
+)
+from bluebottle.funding.serializers import IbanCheckSerializer
 from bluebottle.funding.tests.factories import (
+    BudgetLineFactory,
+    DonorFactory,
     FundingFactory,
     PlainPayoutAccountFactory,
     RewardFactory,
-    DonorFactory,
-    BudgetLineFactory,
 )
 from bluebottle.funding.tests.test_admin import generate_mock_bank_account
 from bluebottle.funding_flutterwave.tests.factories import (
-    FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
+    FlutterwaveBankAccountFactory,
+    FlutterwavePaymentFactory,
+    FlutterwavePaymentProviderFactory,
 )
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import (
-    LipishaBankAccountFactory, LipishaPaymentFactory, LipishaPaymentProviderFactory
+    LipishaBankAccountFactory,
+    LipishaPaymentFactory,
+    LipishaPaymentProviderFactory,
 )
 from bluebottle.funding_pledge.tests.factories import (
-    PledgeBankAccountFactory, PledgePaymentProviderFactory
+    PledgeBankAccountFactory,
+    PledgePaymentFactory,
+    PledgePaymentProviderFactory,
 )
-from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
-from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, \
-    StripeSourcePaymentFactory, ExternalAccountFactory, StripePayoutAccountFactory
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
+from bluebottle.funding_stripe.tests.factories import (
+    ExternalAccountFactory,
+    StripePaymentProviderFactory,
+    StripePayoutAccountFactory,
+    StripeSourcePaymentFactory,
+)
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
-    VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory
+    VitepayBankAccountFactory,
+    VitepayPaymentFactory,
+    VitepayPaymentProviderFactory,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.segments.tests.factories import SegmentTypeFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -443,7 +463,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['data']['attributes']['description'],
-            self.funding.description
+            self.funding.description.html
         )
         self.assertEqual(
             data['data']['attributes']['title'],
@@ -471,7 +491,7 @@ class FundingDetailTestCase(BluebottleTestCase):
             5
         )
 
-        co_financers = response.json()['data']['relationships']['co-financers']
+        co_financers = response.json()['data']['relationships']['co-financers']['data']
         self.assertEqual(len(co_financers), 1)
 
         # Test that geolocation is included too
@@ -500,6 +520,40 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertIsNone(export_url)
 
     def test_get_owner_export_enabled(self):
+        segment_type = SegmentTypeFactory.create()
+        segment = SegmentFactory.create(segment_type=segment_type)
+        initiative_settings = InitiativePlatformSettings.load()
+        user = BlueBottleUserFactory.create()
+        user.segments.add(segment)
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+        DonorFactory.create(
+            user=user, activity=self.funding,
+            amount=Money(20, 'EUR'), status='new'
+        )
+        DonorFactory.create(
+            user=user, activity=self.funding,
+            amount=Money(35, 'EUR'), status='succeeded'
+        )
+        response = self.client.get(self.funding_url, user=self.funding.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['supporters-export-url']['url']
+        export_response = self.client.get(export_url)
+        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        self.assertEqual(sheet['A1'].value, 'Email')
+        self.assertEqual(sheet['B1'].value, 'Name')
+        self.assertEqual(sheet['C1'].value, 'Date')
+        self.assertEqual(sheet['D1'].value, 'Amount')
+        self.assertEqual(sheet['D2'].value, '€35.00')
+        self.assertEqual(sheet['D3'].value, None)
+
+        wrong_signature_response = self.client.get(export_url + '111')
+        self.assertEqual(
+            wrong_signature_response.status_code, 404
+        )
+
+    def test_get_export_with_segments(self):
         SegmentTypeFactory.create()
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
@@ -516,7 +570,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(sheet['B1'].value, 'Name')
         self.assertEqual(sheet['C1'].value, 'Date')
         self.assertEqual(sheet['D1'].value, 'Amount')
-        self.assertEqual(sheet['D2'].value, '35.00 €')
+        self.assertEqual(sheet['D2'].value, '€35.00')
         self.assertEqual(sheet['D3'].value, None)
 
         wrong_signature_response = self.client.get(export_url + '111')
@@ -528,7 +582,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
-        self.funding.title = 'This \ is å süper / weird ++ TITŁE $%$%'
+        self.funding.title = r'This \ is å süper / weird ++ TITŁE $%$%'
         self.funding.save()
         DonorFactory.create(activity=self.funding, amount=Money(20, 'EUR'), status='new')
         DonorFactory.create(activity=self.funding, user=None, amount=Money(35, 'EUR'), status='succeeded')
@@ -540,7 +594,6 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(export_response.status_code, 200)
 
     def test_get_bank_account(self):
-
         self.funding.bank_account = generate_mock_bank_account()
 
         self.funding.save()
@@ -636,6 +689,33 @@ class FundingDetailTestCase(BluebottleTestCase):
             'New title'
         )
 
+    def test_update_target(self):
+        self.data['data']['attributes']['target'] = {
+            'amount': 2500,
+            'currency': 'EUR'
+        }
+
+        response = self.client.patch(
+            self.funding_url,
+            data=json.dumps(self.data),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, 400)
+        self.funding.refresh_from_db()
+        self.funding.target = Money(5000, 'EUR')
+
+        self.funding.status = 'needs_work'
+        self.funding.save()
+
+        response = self.client.patch(
+            self.funding_url,
+            data=json.dumps(self.data),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, 200)
+        self.funding.refresh_from_db()
+        self.funding.target = Money(2500, 'EUR')
+
     def test_recalculate_refund(self):
         self.funding.status = 'succeeded'
         self.funding.save()
@@ -650,6 +730,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(len(response.json()["data"]["meta"]["transitions"]), 0)
 
     def test_update_bank_account(self):
+        self.funding.status = 'needs_work'
+        self.funding.save()
         external_account = generate_mock_bank_account()
         connect_account = stripe.Account("some-connect-id")
         connect_account.update(
@@ -671,6 +753,9 @@ class FundingDetailTestCase(BluebottleTestCase):
                         'data': {
                             'id': self.funding.pk,
                             'type': 'activities/fundings',
+                            'attributes': {
+                                'deadline': None,
+                            },
                             'relationships': {
                                 'bank_account': {
                                     'data': {
@@ -727,9 +812,11 @@ class FundingTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create(owner=self.user)
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('funding')
         settings.save()
+
+        self.theme = ThemeFactory.create()
 
         self.bank_account = PledgeBankAccountFactory.create(
             status="verified",
@@ -752,6 +839,13 @@ class FundingTestCase(BluebottleTestCase):
                         'data': {
                             'type': 'initiatives',
                             'id': self.initiative.pk,
+                        },
+                    },
+
+                    'theme': {
+                        'data': {
+                            'type': 'themes',
+                            'id': self.theme.pk,
                         },
                     },
                 }
@@ -827,22 +921,26 @@ class FundingTestCase(BluebottleTestCase):
             len(data['data']['meta']['required']),
             0
         )
+
         funding.states.submit(save=True)
         funding.states.approve(save=True)
         data['data']['attributes'] = {
             'deadline': now() + timedelta(days=80),
         }
-        response = self.client.put(update_url, data, user=self.user)
+        response = self.client.patch(update_url, data, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         data = response.json()
         self.assertEqual(
-            data['data']['meta']['errors'][0]['title'],
-            'The deadline should not be more then 60 days in the future'
+            data['errors'][0]['source']['pointer'],
+            '/data/attributes/deadline'
         )
 
 
-class DonationTestCase(BluebottleTestCase):
+class DonationTestCase(FundingStripeMixin, BluebottleTestCase):
     def setUp(self):
         super(DonationTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -884,19 +982,77 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertIsNone(data['data']['attributes']['client-secret'])
 
-    def test_donate(self):
+    def test_create_twice(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        donation = Donor.objects.get(pk=data['data']['id'])
-        donation.states.succeed()
-        donation.save()
 
-        response = self.client.get(self.funding_url, user=self.user)
+        self.assertEqual(data['data']['attributes']['status'], 'new')
+        self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
+        self.assertIsNone(data['data']['attributes']['client-secret'])
 
-        self.assertTrue(response.json()['data']['attributes']['is-follower'])
-        self.assertEqual(response.json()['data']['meta']['contributor-count'], 1)
+    def test_donate_limits(self):
+        provider = StripePaymentProvider.objects.first()
+        PaymentCurrency.objects.create(
+            provider=provider,
+            code='EUR',
+            min_amount=10,
+            max_amount=1000,
+            default1=25,
+            default2=50,
+            default3=100,
+            default4=200,
+        )
+
+        self.data['data']['attributes']['amount'] = {'amount': 1, 'currency': 'EUR'}
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertEqual(
+            data['errors'][0]['detail'],
+            "Amount must be at least 10.00 EUR"
+        )
+
+        self.data['data']['attributes']['amount'] = {'amount': 2000, 'currency': 'EUR'}
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertEqual(
+            data['errors'][0]['detail'],
+            "Amount cannot exceed 1000.00 EUR"
+        )
+
+    def test_donate_over_funded(self):
+        self.funding.target = Money(5, 'EUR')
+        self.funding.save()
+
+        FundingPlatformSettings.objects.update_or_create(
+            fixed_target=True
+        )
+
+        response = self.client.post(
+            self.create_url, data=json.dumps(self.data), user=self.user
+        )
+        self.data['data']['attributes']['amount']['value'] = 10
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_donate_over_funded_allowed(self):
+        self.funding.target = Money(5, 'EUR')
+        self.funding.save()
+        FundingPlatformSettings.objects.update_or_create(
+            fixed_target=False
+        )
+
+        response = self.client.post(
+            self.create_url, data=json.dumps(self.data), user=self.user
+        )
+        self.data['data']['attributes']['amount']['value'] = 10
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_donate_anonymous(self):
         self.data['data']['attributes']['anonymous'] = True
@@ -1301,8 +1457,6 @@ class CurrencySettingsTestCase(BluebottleTestCase):
     def test_currency_settings(self):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data['platform']['currencies'])
-
         self.assertTrue(
             {
                 'provider': 'stripe',
@@ -1349,8 +1503,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.save()
 
         with mock.patch(
-            "bluebottle.funding_stripe.models.ExternalAccount.verified",
-            new_callable=mock.PropertyMock,
+                "bluebottle.funding_stripe.models.ExternalAccount.verified",
+                new_callable=mock.PropertyMock,
         ) as verified:
             verified.return_value = True
             self.funding.states.submit()
@@ -1360,7 +1514,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
             donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
-                payment=PledgePaymentFactory.create()
             )
             PledgePaymentFactory.create(donation=donation)
 
@@ -1645,6 +1798,29 @@ class PayoutDetailTestCase(BluebottleTestCase):
         payout.refresh_from_db()
         self.assertEqual(payout.status, 'scheduled')
 
+    def test_put_twice(self):
+        self.test_put()
+        payout = self.funding.payouts.first()
+
+        response = self.client.put(
+            self.get_payout_url(payout),
+            data=json.dumps({
+                'data': {
+                    'id': payout.pk,
+                    'type': 'funding/payouts',
+                    'attributes': {
+                        'status': 'scheduled'
+                    }
+                }
+            }),
+            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payout.refresh_from_db()
+        self.assertEqual(payout.status, 'scheduled')
+
 
 class FundingAPIPermissionsTestCase(BluebottleTestCase):
 
@@ -1732,25 +1908,27 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
     def setUp(self):
         super(FundingPlatformSettingsAPITestCase, self).setUp()
         self.user = BlueBottleUserFactory.create()
+        StripePaymentProviderFactory.create()
 
     def test_anonymous_donations_setting(self):
         funding_settings = FundingPlatformSettings.load()
         funding_settings.anonymous_donations = True
-        funding_settings.allow_anonymous_rewards = True
         funding_settings.matching_name = "Dagobert Duck"
         funding_settings.save()
         response = self.client.get('/api/config', user=self.user)
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertEquals(
-            data['platform']['funding'],
+        self.assertEqual(
+            data["platform"]["funding"],
             {
-                "allow_anonymous_rewards": True,
                 "anonymous_donations": True,
+                "business_types": ["individual"],
+                "enable_iban_check": False,
                 "matching_name": "Dagobert Duck",
-                'public_accounts': False,
+                "public_accounts": False,
                 "stripe_publishable_key": "test-pub-key",
+                "fixed_target": False,
             },
         )
 
@@ -1778,3 +1956,241 @@ class FundingAnonymousDonationsTestCase(APITestCase):
         funding_settings.save()
         self.perform_get()
         self.assertFalse('user' in self.response.json()['data']['relationships'])
+
+
+@override_settings(
+    RABOBANK={
+        'public_cert': '',
+        'private_key': '',
+        'client_id': '',
+        'client_secret': '',
+        'iban_check_url': '',
+    }
+)
+class IbanCheckTestCase(FundingStripeMixin, APITestCase):
+    url_name = 'funding-iban-check'
+    serializer = IbanCheckSerializer
+    fields = ['iban', 'name', 'matched']
+
+    def setUp(self):
+        super(IbanCheckTestCase, self).setUp()
+        self.url = reverse('funding-iban-check')
+        self.user = BlueBottleUserFactory.create()
+        self.stripe_token = stripe.Token("tok_test_token_id")
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
+
+        self.stripe_token.bank_account = stripe.BankAccount()
+        self.stripe_token.bank_account.update(munch.munchify({
+            'object': 'bank_account',
+            'account_holder_name': 'Nadine Bok',
+            'account_holder_type': 'individual',
+            'bank_name': 'STRIPE TEST BANK',
+            'country': 'NL',
+            'currency': 'eur',
+            'fingerprint': '1JWtPxqbdX5Gamtc',
+            'last4': '6789',
+            'metadata': {
+                'order_id': '6735'
+            },
+            'routing_number': '110000000',
+            'status': 'new',
+            'account': 'acct_1032D82eZvKYlo2C'
+        }))
+
+    def test_valid(self):
+        # Mock ABN Amro API response for valid match
+        abn_amro_response = {"nameMatchResult": "match", "nameSuggestion": "Nadine Bok"}
+
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL78RABO5394792070',
+                    'name': 'Nadine Bok'
+                }
+            }
+        }
+
+        with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.requests.post"
+        ) as mock_abn_amro:
+            mock_abn_amro.return_value.json.return_value = abn_amro_response
+            mock_abn_amro.return_value.raise_for_status.return_value = None
+            with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.AbnAmroAdapter._get_token",
+                return_value='some-token'
+            ):
+                with mock.patch("stripe.Token.create", return_value=self.stripe_token):
+                    self.perform_create(user=self.user, data=data)
+
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+        data = self.response.json()['data']
+        self.assertEqual(
+            data['attributes']['matched'],
+            'match'
+        )
+        self.assertIsNotNone(
+            data['attributes']['token'],
+        )
+
+    def test_invalid(self):
+        # Mock ABN Amro API response for no match
+        abn_amro_response = {"nameMatchResult": "no_match"}
+
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL78RABO5394792070',
+                    'name': 'Evil Scammer'
+                }
+            }
+        }
+
+        with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.requests.post"
+        ) as mock_abn_amro:
+            mock_abn_amro.return_value.json.return_value = abn_amro_response
+            mock_abn_amro.return_value.raise_for_status.return_value = None
+            with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.AbnAmroAdapter._get_token",
+                return_value='some-token'
+            ):
+                self.perform_create(user=self.user, data=data)
+
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+        data = self.response.json()['data']
+        self.assertEqual(
+            data['attributes']['matched'],
+            'no_match'
+        )
+
+    def test_close_match(self):
+        # Mock ABN Amro API response for close match
+        abn_amro_response = {
+            "nameMatchResult": "mistype",
+            "nameSuggestion": "Nadine Bok",
+        }
+
+        data = {
+            "data": {
+                "type": "funding/iban-check",
+                "attributes": {
+                    "iban": "NL78RABO5394792070",
+                    "name": "Nadine Bock",  # Slightly different name
+                },
+            }
+        }
+
+        with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.requests.post"
+        ) as mock_abn_amro:
+            mock_abn_amro.return_value.json.return_value = abn_amro_response
+            mock_abn_amro.return_value.raise_for_status.return_value = None
+            with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.AbnAmroAdapter._get_token",
+                return_value='some-token'
+            ):
+                with mock.patch("stripe.Token.create", return_value=self.stripe_token):
+                    self.perform_create(user=self.user, data=data)
+
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+        data = self.response.json()["data"]
+        self.assertEqual(
+            data["attributes"]["matched"],
+            "mistype",
+        )
+        self.assertIsNotNone(
+            data["attributes"]["token"],
+        )
+        # Check that the name was updated with the suggestion
+        self.assertEqual(data["attributes"]["name"], "Nadine Bok")
+
+
+class FundingDeadlineValidationTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(FundingDeadlineValidationTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create(owner=self.user)
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            owner=self.user,
+            target=Money(5000, 'EUR'),
+            deadline=now() + timedelta(days=15),
+        )
+        BudgetLineFactory.create(activity=self.funding)
+        self.funding.bank_account = generate_mock_bank_account()
+        self.funding.save()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
+
+        self.url = reverse('funding-detail', args=(self.funding.pk,))
+
+    def _patch(self, deadline):
+        return self.client.patch(
+            self.url,
+            json.dumps({
+                'data': {
+                    'type': 'activities/fundings',
+                    'id': str(self.funding.pk),
+                    'attributes': {'deadline': deadline},
+                }
+            }),
+            user=self.user,
+        )
+
+    def test_null_deadline_with_stored_deadline_is_rejected(self):
+        """Clearing a published deadline is a change: 400, not 500."""
+        response = self._patch(None)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/deadline',
+        )
+
+    def test_null_deadline_with_no_stored_deadline_is_unchanged(self):
+        """null -> null is not a change, so it must pass validation."""
+        self.funding.deadline = None
+        self.funding.save()
+
+        response = self._patch(None)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.funding.refresh_from_db()
+        self.assertIsNone(self.funding.deadline)
+
+    def test_deadline_set_with_no_stored_deadline_is_rejected(self):
+        """null -> date is a change. Previously crashed on the stored side."""
+        self.funding.deadline = None
+        self.funding.save()
+
+        response = self._patch(str(now() + timedelta(days=20)))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/deadline',
+        )
+
+    def test_unchanged_deadline_is_accepted(self):
+        """date -> same date is not a change."""
+        response = self._patch(str(self.funding.deadline))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_changed_deadline_is_still_rejected(self):
+        """date -> different date is still a change."""
+        response = self._patch(str(self.funding.deadline + timedelta(days=1)))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/deadline',
+        )

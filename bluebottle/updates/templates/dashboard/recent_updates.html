@@ -13,7 +13,7 @@
         <br>
         {{ update.activity.title|truncatechars:70 }}
         <br>
-        <i>{{ update.message|truncatewords:20 }}</i>
+        <i>{{ update.message.html|truncatewords:20 }}</i>
     </li>
     {% endfor %}
     {% endspaceless %}

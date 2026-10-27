@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.db import models
-from django.forms import Select
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -9,14 +8,7 @@ from .models import Slide
 from ..offices.models import OfficeSubRegion
 
 
-class SelectSubregion(Select):
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        context['widget']['optgroups'][0][1][0]['label'] = _('Global (all regions)')
-        return context
-
-
+@admin.register(Slide)
 class SlideAdmin(admin.ModelAdmin):
     list_display = ('title', 'sequence', 'status', 'modification_date', 'language')
     list_filter = ('status', 'language')
@@ -28,13 +20,12 @@ class SlideAdmin(admin.ModelAdmin):
 
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
-        models.ForeignKey: {'widget': SelectSubregion}
     }
 
     def get_fieldsets(self, request, obj=None):
         fields = super(SlideAdmin, self).get_fieldsets(request, obj)
-        if OfficeSubRegion.objects.count() > 0 and 'sub_region' not in fields[0][1]['fields']:
-            fields[0][1]['fields'] += ('sub_region',)
+        if OfficeSubRegion.objects.count() > 0 and 'sub_regions' not in fields[0][1]['fields']:
+            fields[0][1]['fields'] += ('sub_regions',)
         return fields
 
     fieldsets = (
@@ -119,6 +110,3 @@ class SlideAdmin(admin.ModelAdmin):
         self.message_user(request, message)
 
     make_published.short_description = _("Mark selected entries as published")
-
-
-admin.site.register(Slide, SlideAdmin)

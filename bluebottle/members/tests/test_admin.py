@@ -1,4 +1,5 @@
 # coding=utf-8
+import json
 import os
 from builtins import object
 from datetime import timedelta
@@ -27,7 +28,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DateParticipantFactory,
     DeadlineParticipantFactory,
-    ParticipationFactory,
+    TimeContributionFactory,
 )
 from bluebottle.utils.models import Language
 
@@ -95,7 +96,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'is_superuser': False,
             'csrfmiddlewaretoken': csrf
         }
-        response = self.client.post(self.add_member_url, data)
+        response = self.client.post(self.add_member_url, data, format='multipart')
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
@@ -117,7 +118,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
-        response = self.client.post(reset_url, {'confirm': True})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
@@ -127,7 +128,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         self.client.logout()
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
-        response = self.client.post(reset_url, {'confirm': True})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -144,12 +145,15 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
-        response = self.client.post(welcome_email_url, {'confirm': True})
+        response = self.client.post(welcome_email_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
-            'Welcome {}'.format(user.first_name) in welcome_email.body
+            'Hi {}'.format(user.first_name) in welcome_email.body
+        )
+        self.assertTrue(
+            "You’re now officially part of the Test" in welcome_email.body
         )
 
     def test_resend_welcome_anonymous(self):
@@ -157,7 +161,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.client.logout()
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
-        response = self.client.post(welcome_email_url, {'confirm': True})
+        response = self.client.post(welcome_email_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 403)
 
 
@@ -271,6 +275,9 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             "hours_spent",
             "all_contributions",
             "data_retention_info",
+            "grant_applications",
+            "registered_date_activities",
+            "office_manager_info"
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -300,6 +307,9 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             "hours_spent",
             "all_contributions",
             "data_retention_info",
+            "grant_applications",
+            "registered_date_activities",
+            "office_manager_info"
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -351,7 +361,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         LocationFactory.create_batch(3)
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['require_office'].checked = True
 
         form.submit()
@@ -361,7 +371,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
     def test_require_profile_fields(self):
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['require_address'].checked = True
         form['require_birthdate'].checked = True
         form['require_phone_number'].checked = True
@@ -376,7 +386,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         LocationFactory.create_batch(3)
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['create_initiatives'].checked = True
 
         form.submit()
@@ -386,7 +396,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
     def test_fiscal_year(self):
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['fiscal_month_offset'] = '4'
 
         form.submit()
@@ -396,13 +406,13 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
     def test_retention_settings(self):
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['retention_anonymize'] = '12'
         form['retention_delete'] = '24'
 
         page = form.submit()
         self.assertContains(page, 'You are about to anonymise/delete user data across the whole platform.')
-        form = page.forms[0]
+        form = page.forms[1]
         form.submit()
         settings_platform = MemberPlatformSettings.load()
         self.assertEqual(settings_platform.retention_anonymize, 12)
@@ -413,7 +423,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         self.staff_member.user_permissions.add(permission)
         self.app.set_user(self.staff_member)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         self.assertFalse('retention_anonymize' in form.fields)
         self.assertFalse('retention_delete' in form.fields)
 
@@ -428,24 +438,24 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.init_projects()
         self.request_factory = RequestFactory()
         self.request = self.request_factory.post('/')
-        self.request.user = MockUser()
+        self.request.user = BlueBottleUserFactory.create()
         self.member_admin = MemberAdmin(Member, AdminSite())
         self.export_action = self.member_admin.get_actions(self.request)['export_as_csv'][0]
 
     def test_member_export(self):
         member = BlueBottleUserFactory.create()
 
-        ParticipationFactory.create(
+        TimeContributionFactory.create(
             value=timedelta(hours=5),
             contributor=DateParticipantFactory(user=member, status='accepted'),
             status='succeeded'
         )
-        ParticipationFactory.create(
+        TimeContributionFactory.create(
             value=timedelta(hours=12),
             contributor=DeadlineParticipantFactory(user=member, status="accepted"),
             status="succeeded",
         )
-        ParticipationFactory.create_batch(
+        TimeContributionFactory.create_batch(
             3,
             value=timedelta(hours=10),
             contributor=DateParticipantFactory(user=member, status='accepted'),
@@ -471,7 +481,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
 
-        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[9], u'€35.00')
         self.assertEqual(user_data[10], '47.0')
 
     def test_member_unicode_export(self):
@@ -513,9 +523,9 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers, [
             'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
-            'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
-        self.assertEqual(user_data[12], 'Bier')
-        self.assertEqual(user_data[13], 'Bitterballen')
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Food', 'Drinks'])
+        self.assertEqual(user_data[12], 'Bitterballen')
+        self.assertEqual(user_data[13], 'Bier')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)
@@ -537,7 +547,9 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         )
         self.message.set_current_language('en')
         self.message.subject = 'You have been assimilated to {site_name}'
-        self.message.body_html = 'You are no longer {first_name}.<br/><h1>We are borg</h1>'
+        self.message.body_html = json.dumps(
+            {'html': 'You are no longer {first_name}.<br/><h1>We are borg</h1>', 'delta': ''}
+        )
         self.message.body_txt = 'You are no longer {first_name}.\nWe are borg'
         self.message.save()
 
@@ -578,11 +590,10 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         BlueBottleUserFactory.create(
             first_name='Bob',
             email='bob@bob.bg',
-            primary_language='bg'
+            primary_language='dk'
         )
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.bg'])
-        # NL translations not set so we should receive default translation
         self.assertEqual(welcome_email.subject, 'Welcome to Test!')
 
     def test_create_user_language_not_set(self):
@@ -602,7 +613,9 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         # Now set BG translations
         self.message.set_current_language('bg')
         self.message.subject = u'Асимилирани сте към {site_name}'
-        self.message.body_html = u'Ти вече не си {first_name}.<br/><h1>Ние сме Борг</h1>'
+        self.message.body_html = json.dumps(
+            {'html': u'Ти вече не си {first_name}.<br/><h1>Ние сме Борг</h1>', 'delta': ''}
+        )
         self.message.body_txt = u'Ти вече не си {first_name}.\nНие сме Борг'
         self.message.save()
         mail.outbox = []
@@ -676,33 +689,16 @@ class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
             args=(self.user.id,)
         )
 
-    def test_initiative_admin(self):
+    def test_set_reviewer_notifications(self):
         self.app.set_user(self.staff_member)
+        self.assertFalse(self.user.submitted_initiative_notifications)
 
-        # Normal user should not have submitted_initiative_notifications checkbox
-        page = self.app.get(self.member_admin_url)
-        self.assertFalse('id_submitted_initiative_notifications' in page.text)
-        form = page.forms[0]
-        form.set('is_staff', True)
-        form.submit()
-
-        # Made user into a staff member
-        # Should have submitted_initiative_notifications checkbox now
         page = self.app.get(self.member_admin_url)
         self.assertTrue('id_submitted_initiative_notifications' in page.text)
-        form = page.forms[0]
+
+        form = page.forms[1]
         form.set('submitted_initiative_notifications', True)
         form.submit()
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.submitted_initiative_notifications)
-
-        # Demote user into normal member
-        # Should unset submitted_initiative_notifications boolean
-        page = self.app.get(self.member_admin_url)
-        form = page.forms[0]
-        form.set('is_staff', False)
-        form.submit()
-
-        self.user.refresh_from_db()
-        self.assertFalse(self.user.submitted_initiative_notifications)

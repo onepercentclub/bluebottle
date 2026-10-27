@@ -1,7 +1,7 @@
 import re
 
-from django.utils.http import int_to_base36
 from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import int_to_base36
 
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url, tenant_name
@@ -11,7 +11,7 @@ from bluebottle.members.messages import AccountActivationMessage
 def send_welcome_mail(user=None):
 
     from bluebottle.members.models import MemberPlatformSettings
-    settings = MemberPlatformSettings.objects.get()
+    settings = MemberPlatformSettings.load()
 
     context = {
         'email': user.email,

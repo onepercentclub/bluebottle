@@ -9,7 +9,7 @@
 {% block extrahead %}
     <script type="text/javascript" src="{% static "/admin/js/dashboard.js" as url %}{{ url|jet_append_version }}"></script>
 
-  <script defer data-domain="all-platforms-admin" src="https://plausible.io/js/script.js"></script>
+  <script defer  data-api="https://plausible.io/api/event" data-domain="all-platforms-admin" src="{% static 'admin/js/plausible.js' %}"></script>
 {% endblock %}
 
 {% block welcome-msg %}
@@ -20,10 +20,19 @@
 {% block pretitle %}
     {% if user.is_authenticated %}
         <div class="site-title">
-            {{ tenant.name }}
-          {% if user.region_manager %}
-            - {{ user.region_manager.name }}
-          {%  endif %}
+            {% if user.segment_manager.count < 3 %}
+                {% for segment in user.segment_manager.all %}
+                    <span class="segment-label segment-label-{{ segment.slug }}">{{ segment.name }}</span> &middot;
+                {% endfor %}
+            {% endif %}
+            {% if user.subregion_manager.count < 3 %}
+                {% for subregion in user.subregion_manager.all %}
+                    <span class="segment-label segment-label-{{ segment.slug }}">{{ subregion.name }}</span> &middot;
+                {% endfor %}
+            {% endif %}
+            {% if platform_name %}
+                <span class="segment-label segment-label-{{ tenant.slug }}">{{platform_name}}</span>
+            {% endif %}
         </div>
     {% else %}
         <div class="site-title site-title-login">
@@ -44,7 +53,7 @@
 
 {% block userlinks %}
     {% if site_url %}
-        <a href="{{ site_url }}">{% trans 'View site' %}</a> 
+        <a href="{{ site_url }}">{% trans 'View site' %}</a>
     {% endif %}
     {% if user.has_usable_password %}
     <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /

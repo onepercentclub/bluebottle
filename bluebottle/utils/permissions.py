@@ -31,9 +31,7 @@ class IsActivityManager(permissions.BasePermission):
         Return `True` if user is owner of the object granted, `False` otherwise.
         """
         return (
-            obj.owner == request.user or
-            obj.initiative.owner == request.user or
-            request.user in obj.initiative.activity_managers.all() or
+            request.user in obj.owners or
             request.user.is_superuser or
             request.user.is_staff
         )
@@ -192,6 +190,7 @@ class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
         return True
 
     def has_action_permission(self, action, user, model_cls):
+
         if model_cls:
             perms = self.get_required_permissions(action, model_cls)
             return user.has_perms(perms)
@@ -215,7 +214,10 @@ class ResourceOwnerPermission(ResourcePermission):
     }
 
     def has_object_action_permission(self, action, user, obj):
-        return user == obj.owner
+        """
+        Let users create the object or let them interact with it if they own the object
+        """
+        return action == 'POST' or user == obj.owner
 
 
 class RelatedResourceOwnerPermission(ResourceOwnerPermission):
@@ -236,7 +238,7 @@ class TenantConditionalOpenClose(BasePermission):
 
     def has_object_action_permission(self, action, user, obj):
         try:
-            settings = MemberPlatformSettings.objects.get()
+            settings = MemberPlatformSettings.load()
             if settings.closed:
                 return user and user.is_authenticated
         except AttributeError:
@@ -245,7 +247,7 @@ class TenantConditionalOpenClose(BasePermission):
 
     def has_action_permission(self, action, user, model_cls):
         try:
-            settings = MemberPlatformSettings.objects.get()
+            settings = MemberPlatformSettings.load()
             if settings.closed:
                 return user and user.is_authenticated
         except AttributeError:

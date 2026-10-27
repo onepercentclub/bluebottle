@@ -1,26 +1,24 @@
-from django.conf.urls import url
 from django.contrib import admin, messages
-from django.http import HttpResponseRedirect
 from django.forms import ChoiceField
+from django.http import HttpResponseRedirect
 from django.template import loader
+from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext_lazy as _
 from stripe.error import StripeError
 
-from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.fsm.forms import StateMachineModelForm
-
-from bluebottle.geo.models import Country
-
 from bluebottle.clients import properties
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.admin import (
     PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin,
     BankAccountChildAdmin
 )
-from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
+from bluebottle.funding.models import BankAccount, Payment, PaymentProvider, FundingPlatformSettings
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, PaymentIntent
+from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.geo.models import Country
 
 
 @admin.register(StripePayment)
@@ -90,7 +88,6 @@ class StripePayoutAccountForm(StateMachineModelForm):
             (country.code, country.name) for country in countries
         ]
 
-        self.base_fields['business_type'].required = True
         super().__init__(*args, **kwargs)
 
 
@@ -106,30 +103,34 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         'requirements_list',
         'verification_link',
         'stripe_link',
-        'funding'
-
+        'grant_application',
     ]
 
     search_fields = ["account_id"]
     list_display = ["id", "account_id", "owner", "status"]
 
-    fields = PayoutAccountChildAdmin.fields + ['country', 'business_type', 'account_id']
+    fields = PayoutAccountChildAdmin.fields + [
+        'country', 'business_type', 'account_id'
+    ]
 
     def get_status_fields(self, request, obj):
         return super().get_status_fields(request, obj) + [
             'verified', 'payments_enabled', 'payouts_enabled',
-            'requirements_list', 'verification_link'
+            'requirements_list'
 
         ]
 
     def get_basic_fields(self, request, obj):
         fields = super().get_basic_fields(request, obj) + [
-            'business_type', 'country', 'funding'
+            'business_type', 'country', 'verification_link'
         ]
-        if request.user.is_superuser:
-            fields = fields + ['stripe_link', 'account_id']
-
         return fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            fieldsets[2][1]['fields'] += ['stripe_link', 'account_id']
+        return fieldsets
 
     def save_model(self, request, obj, form, change):
         if obj.account_id and 'ba_' in obj.account_id:
@@ -152,8 +153,8 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     def get_urls(self):
         urls = super(StripePayoutAccountAdmin, self).get_urls()
         custom_urls = [
-            url(
-                r'^(?P<account_id>.+)/check_status/$',
+            path(
+                '<path:account_id>/check_status/',
                 self.admin_site.admin_view(self.check_status),
                 name='funding-stripe-account-check',
             ),
@@ -207,10 +208,8 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         else:
             url = 'https://dashboard.stripe.com/test/connect/accounts/{}'.format(obj.account_id)
         return format_html(
-            '<a href="{}" target="_blank">{}</a><br/>'
-            '<small>{}</small>',
+            '<a href="{}" target="_blank">{}</a><br/>',
             url, obj.account_id,
-            _('This is only visible for superadmin accounts.')
         )
     stripe_link.short_description = _('Stripe link')
 
@@ -226,7 +225,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 class StripeBankAccountAdmin(BankAccountChildAdmin):
     base_model = BankAccount
     model = ExternalAccount
-    readonly_fields = ('status', 'account_details') + BankAccountChildAdmin.readonly_fields
+    readonly_fields = ('status', 'iban_verified', 'currency', 'account_details') + BankAccountChildAdmin.readonly_fields
     fields = ('connect_account', 'account_id') + readonly_fields
 
     list_filter = ['reviewed']
@@ -234,8 +233,12 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
     list_display = ['created', 'account_id', 'status']
 
     def get_fieldsets(self, request, obj=None):
+        fields = list(self.get_fields(request, obj))
+        settings = FundingPlatformSettings.load()
+        if not settings.enable_iban_check and 'iban_verified' in fields:
+            fields.remove('iban_verified')
         fieldsets = (
-            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+            (_('Basic'), {'fields': fields}),
         )
         if request.user.is_superuser:
             fieldsets += (

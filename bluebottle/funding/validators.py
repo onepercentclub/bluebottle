@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.models import Validator
 
 
@@ -18,6 +19,7 @@ class KYCReadyValidator(Validator):
 
     def is_valid(self):
         return (
+            self.instance.pk and
             self.instance.payout_account
             and self.instance.payout_account.status == "verified"
             and self.instance.bank_account
@@ -63,7 +65,7 @@ class BudgetLineValidator(Validator):
     field = 'budgetlines'
 
     def is_valid(self):
-        return len(self.instance.budget_lines.all()) > 0
+        return self.instance.pk and len(self.instance.budget_lines.all()) > 0
 
 
 class TargetValidator(Validator):
@@ -88,3 +90,15 @@ class BudgetValidator(Validator):
         if self.instance.target.amount != self.instance.total_budget.amount:
             return False
         return True
+
+
+class TosAcceptedValidator(Validator):
+    code = 'tos_accepted'
+    message = _('Please accepted the conditions')
+    field = 'tos_accepted'
+
+    def is_valid(self):
+        settings = InitiativePlatformSettings.load()
+        if not settings.terms_of_service:
+            return True
+        return self.instance.tos_accepted is True

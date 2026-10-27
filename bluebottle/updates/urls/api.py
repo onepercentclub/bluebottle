@@ -1,17 +1,28 @@
-from django.conf.urls import url
+from django.urls import path
+from django.urls import re_path
 
-from bluebottle.updates.views import UpdateList, UpdateDetail, ActivityUpdateList, UpdateImageContent, UpdateImageList
+from bluebottle.updates.views import (
+    UpdateList, UpdateDetail, ActivityUpdateList,
+    UpdateImageContent, UpdateImageList,
+    UpdateDocumentContent, UpdateDocumentList,
+)
 
 urlpatterns = [
-    url(r'^$', UpdateList.as_view(), name='update-list'),
-    url(r'^activity/(?P<activity_pk>\d+)$', ActivityUpdateList.as_view(), name='activity-update-list'),
-    url(r'^(?P<pk>\d+)$', UpdateDetail.as_view(), name='update-detail'),
-    url(r'^images/$', UpdateImageList.as_view(), name='update-image-list'),
+    path('', UpdateList.as_view(), name='update-list'),
+    path('activity/<int:activity_pk>', ActivityUpdateList.as_view(), name='activity-update-list'),
+    path('<int:pk>', UpdateDetail.as_view(), name='update-detail'),
+    path('images/', UpdateImageList.as_view(), name='update-image-list'),
+    path('documents/', UpdateDocumentList.as_view(), name='update-document-list'),
 
 
-    url(
-        r'^(?P<pk>\d+)/image/(?P<size>\d+x\d+)$',
+    re_path(
+        r'^(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
         UpdateImageContent.as_view(),
         name='update-image'
+    ),
+    re_path(
+        r'^(?P<pk>\d+)/document/$',
+        UpdateDocumentContent.as_view(),
+        name='update-document'
     ),
 ]

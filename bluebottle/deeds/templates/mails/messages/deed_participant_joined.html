@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block message %}
 <p>
-    {% blocktrans context 'email' %}You joined an activity on <b>{{ site_name }}</b>{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}You joined an activity on <b>{{ site_name }}</b>{% endblocktrans %}
 </p>
 
 <p>
@@ -11,20 +11,15 @@
 
 <p>
 {% if start %}
-    {% blocktrans context 'email' %}Starts on {{ start }}{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}Starts on {{ start }}{% endblocktrans %}
 {% endif %}
 {% if end %}
-    {% blocktrans context 'email' %}Ends on {{ end }}{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}Ends on {{ end }}{% endblocktrans %}
 {% endif %}
 </p>
 {% endblock %}
 
 {% block end_message %}
-    <p>
-        <i>
-            {% blocktrans context 'email' %}
-                If you are unable to participate, please withdraw via the activity page so that others can take your place.
-            {% endblocktrans %}
-        </i>
-    </p>
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
 {% endblock %}
+

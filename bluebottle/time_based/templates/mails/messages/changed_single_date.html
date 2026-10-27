@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block message %}
 <p>
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 The activity "{{ title }}" has changed:
 {% endblocktrans %}
 </p>
@@ -14,7 +14,7 @@ The activity "{{ title }}" has changed:
 {%  endif %}
 </p>
 <p>
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 Read the latest updates on the activity page.
 {% endblocktrans %}
 </p>
@@ -22,12 +22,5 @@ Read the latest updates on the activity page.
 {% endblock %}
 
 {% block end_message %}
-    <p>
-        <i>
-            {% blocktrans context 'email' %}
-                If you are unable to participate, please withdraw via the activity page so that others can take your place.
-            {% endblocktrans %}
-        </i>
-    </p>
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
 {% endblock %}
-

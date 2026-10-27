@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from builtins import object
 import importlib
 import itertools
 import logging
 import re
+from builtins import object
 from collections import namedtuple, defaultdict
 
 from babel.numbers import get_currency_symbol, get_currency_name
@@ -18,9 +18,6 @@ from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
 from bluebottle.utils.models import Language, get_current_language
-from bluebottle.funding.utils import get_currency_settings
-from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
-from bluebottle.funding_stripe.utils import get_stripe_settings
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +60,7 @@ def tenant_url(path=None):
         domain = 'example.com'
 
     if domain.endswith("localhost"):
-        url = "http://{0}:8000".format(domain)
+        url = "http://{0}:3000".format(domain)
     else:
         url = "https://{0}".format(domain)
 
@@ -102,13 +99,15 @@ def get_currencies():
     ]))
     min_amounts = get_min_amounts(properties.PAYMENT_METHODS)
 
-    currencies = list({
-        code: {
-            'code': code,
-            'name': get_currency_name(code),
-            'symbol': get_currency_symbol(code).replace('US$', '$').replace('NGN', '₦')
-        } for code in currencies
-    }.values())
+    currencies = list(
+        {
+            code: {
+                'code': code,
+                'name': get_currency_name(code),
+                'symbol': get_currency_symbol(code).replace('US$', '$').replace('NGN', '₦')
+            } for code in currencies
+        }.values()
+    )
 
     for currency in currencies:
         if currency['code'] in min_amounts:
@@ -215,6 +214,9 @@ def get_public_properties(request):
 
     # First load tenant settings that should always be exposed
     if connection.tenant:
+        from bluebottle.funding.utils import get_currency_settings
+        from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
+        from bluebottle.funding_stripe.utils import get_stripe_settings
 
         current_tenant = connection.tenant
         properties = get_tenant_properties()
@@ -241,11 +243,6 @@ def get_public_properties(request):
                 'initiatives': get_platform_settings('initiatives.InitiativePlatformSettings'),
                 'funding': get_platform_settings('funding.FundingPlatformSettings'),
                 'notifications': get_platform_settings('notifications.NotificationPlatformSettings'),
-                'translations': dict(
-                    (key, value) for key, value
-                    in get_platform_settings('utils.TranslationPlatformSettings').items()
-                    if value
-                ),
                 'currencies': get_currency_settings(),
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }

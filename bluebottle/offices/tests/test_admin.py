@@ -87,7 +87,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         )
 
     def test_activities_link_regions_enabled(self):
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         activities_link = self.region_admin.activities(self.europe)
@@ -115,7 +115,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
     def test_office_filters_regions_enabled(self):
         request = MockRequest()
         request.user = BlueBottleUserFactory.create()
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         filters = self.activity_admin.get_list_filter(request)
@@ -125,8 +125,9 @@ class OfficeAdminTest(BluebottleAdminTestCase):
 
     def test_office_filters_region_manager(self):
         request = MockRequest()
-        request.user = BlueBottleUserFactory.create(region_manager=self.subregions[0])
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        request.user = BlueBottleUserFactory.create()
+        request.user.subregion_manager.add(self.subregions[0])
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         filters = self.activity_admin.get_list_filter(request)
@@ -139,30 +140,30 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         url = reverse('admin:geo_location_changelist')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Office group')
-        self.assertContains(response, 'Office region')
+        self.assertContains(response, 'Work location group')
+        self.assertContains(response, 'Work location region')
 
     def test_office_admin_staff(self):
         self.client.force_login(self.staff_member)
         url = reverse('admin:geo_location_changelist')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Office group')
-        self.assertContains(response, 'Office region')
+        self.assertContains(response, 'Work location group')
+        self.assertContains(response, 'Work location region')
 
     def test_activity_admin_region_filters(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.activities_url)
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'By office group')
-        self.assertNotContains(response, 'by office region')
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        self.assertNotContains(response, 'Work location group')
+        self.assertNotContains(response, 'Work location region')
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         response = self.client.get(self.activities_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'By office group')
-        self.assertContains(response, 'By office region')
+        self.assertContains(response, 'Work location group')
+        self.assertContains(response, 'Work location region')
         response = self.client.get(self.activities_url, {
             'office_location__subregion__region__id__exact': self.location1.subregion.region.id,
             'office_location__subregion__id__exact': self.location1.subregion.id,
@@ -183,12 +184,12 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         url = reverse('admin:index')
         page = self.app.get(url)
         self.assertFalse('Office group' in page.text)
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         url = reverse('admin:index')
         page = self.app.get(url)
-        self.assertTrue('Office group' in page.text)
+        self.assertTrue('Work location group' in page.text)
 
 
 class RegionManagerAdminTest(BluebottleAdminTestCase):
@@ -205,8 +206,8 @@ class RegionManagerAdminTest(BluebottleAdminTestCase):
         self.office = LocationFactory.create(subregion=self.subregion)
         self.region_manager = BlueBottleUserFactory.create(
             is_staff=True,
-            region_manager=self.subregion
         )
+        self.region_manager.subregion_manager.add(self.subregion)
         region_manager_group = Group.objects.get(name='Region Manager')
         region_manager_group.user_set.add(self.region_manager)
         self.app.set_user(self.region_manager)
@@ -214,7 +215,7 @@ class RegionManagerAdminTest(BluebottleAdminTestCase):
     def test_menu(self):
         url = reverse('admin:index')
         page = self.app.get(url)
-        self.assertFalse('Offices' in page.text)
+        self.assertFalse('Work places' in page.text)
         self.assertFalse('Groups' in page.text)
         self.assertFalse('Settings' in page.text)
 

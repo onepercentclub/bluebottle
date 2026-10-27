@@ -1,9 +1,11 @@
-from django.conf.urls import url
+from django.urls import path
 
 from bluebottle.projects.views import ProjectImageCreate
 
 urlpatterns = [
-    url(r'^project-images/$',
+    path(
+        'project-images/',
         ProjectImageCreate.as_view(),
-        name='project-image-create'),
+        name='project-image-create'
+    ),
 ]

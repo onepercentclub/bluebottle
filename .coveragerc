@@ -1,0 +1,51 @@
+[run]
+parallel = True
+source = bluebottle
+omit =
+    */migrations/*
+    */tests/*
+    */static/*
+    */bluebottle_dashboard/static/*
+    bluebottle/payments/*
+    bluebottle/payments_*/*
+    bluebottle/orders/*
+    bluebottle/donations/*
+    bluebottle/fundraisers/*
+    bluebottle/bb_projects/*
+    bluebottle/bb_payouts/*
+    bluebottle/bb_metrics/*
+    bluebottle/assignments/*
+    bluebottle/events/*
+    bluebottle/tasks/*
+    bluebottle/votes/*
+    bluebottle/rewards/*
+    bluebottle/suggestions/*
+    bluebottle/surveys/*
+    bluebottle/contentplugins/*
+    bluebottle/wallposts/*
+    bluebottle/projects/*
+
+[report]
+omit =
+    */migrations/*
+    */tests/*
+    */static/*
+    */bluebottle_dashboard/static/*
+    bluebottle/payments/*
+    bluebottle/payments_*/*
+    bluebottle/orders/*
+    bluebottle/donations/*
+    bluebottle/fundraisers/*
+    bluebottle/bb_projects/*
+    bluebottle/bb_payouts/*
+    bluebottle/bb_metrics/*
+    bluebottle/assignments/*
+    bluebottle/events/*
+    bluebottle/tasks/*
+    bluebottle/votes/*
+    bluebottle/rewards/*
+    bluebottle/suggestions/*
+    bluebottle/surveys/*
+    bluebottle/contentplugins/*
+    bluebottle/wallposts/*
+    bluebottle/projects/*

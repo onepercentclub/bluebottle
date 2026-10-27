@@ -1,15 +1,23 @@
+import logging
 import re
 
-from bluebottle.clients import properties
-
+import django_otp
 from django.conf import settings
 from django.contrib.auth import login
-from django.http.response import HttpResponseRedirect, HttpResponse
+from django.http.response import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
 from django.template import loader
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
+from rest_framework.exceptions import PermissionDenied
 
-from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.clients import properties
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.token_auth.models import SAMLDevice
+from bluebottle.utils.utils import get_client_ip
+
+logger = logging.getLogger(__name__)
 
 
 def get_auth(request, settings, saml_request=None):
@@ -22,11 +30,38 @@ class TokenRedirectView(View):
     """
     permanent = False
     query_string = True
-    pattern_name = 'article-detail'
+
+    def target_url(self, request):
+        url = request.GET.get('url')
+        try:
+            allowed = url and url_has_allowed_host_and_scheme(
+                url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            )
+            if allowed:
+                return request.build_absolute_uri(url)
+        except ValueError:
+            allowed = False
+
+        if url:
+            logger.warning(
+                'Rejected off-site or malformed token redirect url %r on %s',
+                url,
+                request.get_host(),
+            )
+        return request.build_absolute_uri('/')
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
-        sso_url = auth.sso_url(target_url=request.GET.get('url'))
+        client_ip = get_client_ip(request)
+
+        if client_ip == settings.VPN_CLIENT_IP or client_ip == '127.0.0.1':
+            saml_settings = settings.SUPPORT_TOKEN_AUTH
+        else:
+            saml_settings = properties.TOKEN_AUTH
+
+        auth = get_auth(request, settings=saml_settings, **kwargs)
+        sso_url = auth.sso_url(target_url=self.target_url(request))
         return HttpResponseRedirect(sso_url)
 
 
@@ -34,7 +69,7 @@ class SAMLLoginView(View):
     def get_auth(self, request):
         return get_auth(request, self.settings)
 
-    def authenticated(self, user):
+    def authenticated(self, user, auth, created):
         pass
 
     def post(self, request):
@@ -47,14 +82,21 @@ class SAMLLoginView(View):
             url = '/token/error?message={0}'.format(e)
             return HttpResponseRedirect(url)
 
-        self.authenticated(user)
+        try:
+            self.authenticated(user, auth, created)
+        except PermissionDenied as e:
+            return HttpResponseForbidden(str(e))
 
         target_url = auth.target_url or "/"
 
-        if target_url and re.match('^\/\w\w\/admin', target_url):
+        if target_url and re.match(r'^/\w\w/admin', target_url):
             # Admin login:
             # Log user in using cookies and redirect directly
             login(request, user)
+
+            (device, _created) = SAMLDevice.objects.get_or_create(user=user)
+            django_otp.login(request, device)
+
             return HttpResponseRedirect(target_url)
 
         template = loader.get_template('utils/login_with.html')
@@ -71,12 +113,24 @@ class UserSAMLLoginView(SAMLLoginView):
 
 
 class SupportSAMLLoginView(SAMLLoginView):
-    def authenticated(self, user):
+    groups_uri = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups'
 
-        if not user.is_superuser or not user.is_staff:
-            user.is_staff = True
-            user.is_superuser = True
-            user.save()
+    def authenticated(self, user, auth, created):
+        allowed_groups = set(MemberPlatformSettings.load().support_groups)
+        actual_groups = set(auth.attributes[self.groups_uri])
+
+        allowed = len(allowed_groups.intersection(actual_groups)) > 0
+
+        if allowed:
+            if not user.is_superuser or not user.is_staff:
+                user.is_staff = True
+                user.is_superuser = True
+                user.save()
+        else:
+            if created:
+                user.delete()
+
+            raise PermissionDenied('Not allowed to login for support')
 
     def get_auth(self, request):
         saml_request = {

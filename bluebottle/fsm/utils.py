@@ -5,7 +5,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.utils.timezone import now
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.activities.models import Team
+from bluebottle.activities.models import Activity, Team
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.triggers import TransitionTrigger
@@ -27,8 +27,7 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     PeriodicActivity,
     PeriodicParticipant,
-    SlotParticipant,
-    TeamSlot,
+    DateRegistration,
     TimeContribution, ScheduleActivity, ScheduleParticipant, DeadlineRegistration, ScheduleRegistration,
     TeamScheduleRegistration, TeamScheduleParticipant, TeamMember, PeriodicRegistration,
 )
@@ -64,6 +63,9 @@ def setup_instance(model):
     instance = model(
         **model_args
     )
+
+    if isinstance(instance, Activity) and getattr(instance, 'title', None) is None:
+        instance.title = "[activity title]"
 
     if isinstance(instance, Initiative):
         instance.title = "[initiative title]"
@@ -156,44 +158,22 @@ def setup_instance(model):
         instance.title = "[activity title]"
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
-    if isinstance(instance, DateParticipant):
+    if isinstance(instance, DateRegistration):
         instance.activity = DateActivity(title="[activity title]")
         instance.activity.pre_save_polymorphic()
-        instance.team = Team()
-        instance.team.slot = TeamSlot()
-        instance.team.start = now() + timedelta(days=3)
-        instance.team.duration = timedelta(hours=2)
-        instance.team.owner = Member(first_name='[first name]', last_name='[last name]')
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivitySlot):
         instance.activity = DateActivity(title="[activity title]")
 
-    if isinstance(instance, SlotParticipant):
+    if isinstance(instance, DateParticipant):
         activity = DateActivity(title="[activity title]")
         instance.slot = DateActivitySlot(activity=activity)
-        instance.participant = DateParticipant(activity=activity)
-        instance.participant.user = Member(
+        instance.activity = activity
+        instance.registration = DateRegistration(activity=activity)
+        instance.registration.user = Member(
             first_name="[first name]", last_name="[last name]"
         )
-
-    if isinstance(instance, Team):
-        instance.activity = DateActivity(title="[activity title]")
-        instance.activity.pre_save_polymorphic()
-        instance.activity.owner = Member(first_name='[first name]', last_name='[last name]')
-        instance.slot = TeamSlot()
-        instance.start = now() + timedelta(days=3)
-        instance.duration = timedelta(hours=2)
-
-        instance.owner = Member(first_name='[first name]', last_name='[last name]')
-
-    if isinstance(instance, TeamSlot):
-        instance.team = Team()
-        instance.start = now() + timedelta(days=3)
-        instance.duration = timedelta(hours=2)
-        instance.team.activity = DateActivity(title="[activity title]")
-        instance.team.activity.pre_save_polymorphic()
-        instance.team.activity.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, TimeContribution):
         contributor = DeadlineParticipant()

@@ -9,6 +9,10 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 
+from bluebottle.utils.models import get_default_language
+from django.utils import translation
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,17 +56,17 @@ class BaseTokenAuthentication():
         name = data.get("location.name", data.get("location.slug", None))
 
         if name and not user.location_verified:
-            try:
-                location = Location.objects.extra(
-                    where=["%s ILIKE ANY (alternate_names)"],
-                    params=[
-                        name.lower(),
-                    ],
-                ).get()
+            location = Location.objects.extra(
+                where=["%s ILIKE ANY (alternate_names)"],
+                params=[
+                    name.lower(),
+                ],
+            ).first()
 
+            if location:
                 user.location = location
                 user.save()
-            except Location.DoesNotExist:
+            else:
                 if MemberPlatformSettings.load().create_locations:
                     location = Location.objects.create(name=name)
                     user.location = location
@@ -160,8 +164,9 @@ class BaseTokenAuthentication():
             user_model.objects.filter(pk=user.pk).update(**user_data)
             user.refresh_from_db()
 
-        self.set_location(user, data)
-        self.set_segments(user, data)
+        with translation.override(get_default_language()):
+            self.set_location(user, data)
+            self.set_segments(user, data)
 
         return user, created
 

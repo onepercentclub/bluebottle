@@ -7,12 +7,11 @@ JET_APP_INDEX_DASHBOARD = (
 
 JET_DEFAULT_THEME = "goodup"
 
-
 JET_SIDE_MENU_ITEMS = [
     {
-        "label": _("Initiatives"),
-        "app_label": "initiatives",
-        "permissions": ["initiatives.change_initiative"],
+        "label": _("Initiatives & Activities"),
+        "app_label": "activities",
+        "permissions": ["activities.change_activity"],
         "items": [
             {
                 "name": "initiatives.initiative",
@@ -31,6 +30,10 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["activities.change_contribution"],
             },
             {
+                "name": "activities.activityquestion",
+                "permissions": ["activities.change_activityquestion"],
+            },
+            {
                 "name": "impact.impacttype",
                 "permissions": ["impact.change_impacttype"],
                 "enabled": "initiatives.InitiativePlatformSettings.enable_impact",
@@ -44,7 +47,7 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "organizations.organization",
                 "permissions": ["organizations.change_organization"],
             },
-            {"name": "geo.location", "permissions": ["geo.location"]},
+            {"name": "geo.location", "permissions": ["geo.change_location"]},
         ],
     },
     {
@@ -55,6 +58,10 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "time_based.dateactivity",
                 "permissions": ["time_based.change_dateactivity"],
+            },
+            {
+                "name": "time_based.registereddateactivity",
+                "permissions": ["time_based.change_registereddateactivity"],
             },
             {
                 "name": "time_based.dateactivityslot",
@@ -73,6 +80,11 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["time_based.change_scheduleactivity"],
             },
             {"name": "time_based.skill", "permissions": ["time_based.change_skill"]},
+            {
+                "name": "time_based.interest",
+                "label": _("Waiting list"),
+                "permissions": ["time_based.change_interest"]
+            },
         ],
     },
     {
@@ -121,7 +133,80 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "funding.bankaccount",
                 "permissions": ["funding.change_bankaccount"],
             },
-            {"name": "funding.payout", "permissions": ["funding.change_payout"]},
+            {
+                "name": "funding.payout", "permissions": ["funding.change_payout"],
+            },
+        ],
+    },
+    {
+        "label": _("Grant management"),
+        "app_label": "grant_management",
+        "permissions": ["grant_management.change_grantapplication"],
+        "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+        "items": [
+            {
+                "name": "grant_management.grantprovider",
+                "permissions": ["grant_management.change_grantprovider"],
+            },
+            {
+                "name": "grant_management.grantfund",
+                "permissions": ["grant_management.change_grantfund"],
+            },
+            {
+                "name": "grant_management.grantapplication",
+                "permissions": ["grant_management.change_grantapplication"],
+            },
+            {
+                "name": "grant_management.grantpayout",
+                "permissions": ["grant_management.change_grantpayout"],
+            },
+            {
+                "name": "grant_management.grantpayment",
+                "permissions": ["grant_management.change_grantpayment"],
+            },
+        ],
+    },
+    {
+        "label": _("GoodUp Connect"),
+        "app_label": "activity_pub",
+        "permissions": ["activity_pub.change_event"],
+        "enabled": "cms.SitePlatformSettings.is_sharing_activities",
+        "items": [
+            {
+                "name": "activity_pub.publishedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
+                "url": "/en/admin/activity_pub/follower/",
+                "label": _("Connected consumers"),
+            },
+            {
+                "name": "activity_pub.receivedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
+                "url": "/en/admin/activity_pub/following/",
+                "label": _("Connected suppliers"),
+            },
+            {
+                "name": "activity_pub.publishedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
+                "url": "/en/admin/activity_pub/publishedactivity/",
+                "label": _("Shared activities"),
+            },
+            {
+                "name": "activity_pub.receivedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
+                "url": "/en/admin/activity_pub/receivedactivity/",
+                "label": _("Received activities"),
+            },
+            {
+                "name": "activity_links.linkedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_linking_activities",
+                # "url": "/en/admin/activity_pub/following/",
+                "label": _("Linked activities"),
+            },
         ],
     },
     {
@@ -146,7 +231,7 @@ JET_SIDE_MENU_ITEMS = [
         ],  # Segment type items are added programmatically in bluebottle_dashboard/utils.py
     },
     {
-        "label": _("Offices"),
+        "label": _("Work locations"),
         "permissions": ["offices.change_officeregion"],
         "enabled": "initiatives.InitiativePlatformSettings.enable_office_regions",
         "items": [
@@ -165,6 +250,7 @@ JET_SIDE_MENU_ITEMS = [
         "label": _("Content"),
         "permissions": ["pages.change_page"],
         "items": [
+            {"name": "pages.platformpage", "permissions": ["pages.change_platformpage"]},
             {"name": "pages.page", "permissions": ["pages.change_page"]},
             {
                 "name": "news.newsitem",
@@ -183,9 +269,8 @@ JET_SIDE_MENU_ITEMS = [
             },
             {"name": "slides.slide", "permissions": ["slides.change_slide"]},
             {
-                "name": "cms.resultpage",
-                "label": _("Result page"),
-                "permissions": ["cms.change_resultpage"],
+                "name": "voting.poll",
+                "permissions": ["voting.change_poll"],
             },
             {
                 "name": "cms.sitelinks",
@@ -215,9 +300,8 @@ JET_SIDE_MENU_ITEMS = [
     },
     {
         "label": _("Settings"),
-        "permissions": ["terms.change_terms"],
+        "permissions": ["cms.siteplatformsettings"],
         "items": [
-            {"name": "terms.terms", "permissions": ["terms.change_terms"]},
             {
                 "name": "cms.siteplatformsettings",
                 "permissions": ["cms.change_siteplatformsettings"],
@@ -255,10 +339,6 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "looker.lookerembed",
             },
             {
-                "name": "utils.translationplatformsettings",
-                "permissions": ["utils.change_translationplatformsettings"],
-            },
-            {
                 "name": "scim.scimplatformsettings",
                 "permissions": ["scim.change_scimplatformsettings"],
             },
@@ -268,6 +348,5 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
 ]
-
 
 JET_SIDE_MENU_COMPACT = False

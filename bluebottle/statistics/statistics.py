@@ -24,8 +24,9 @@ from bluebottle.utils.exchange_rates import convert
 
 
 class Statistics(object):
-    def __init__(self, start=None, end=None, subregion=None, user=None):
+    def __init__(self, start=None, end=None, subregion=None, region=None, user=None):
         self.subregion = subregion
+        self.region = region
         self.start = start
         self.end = end
         self.user = user
@@ -53,6 +54,11 @@ class Statistics(object):
             activities = activities.filter(
                 office_location__subregion=self.subregion
             )
+
+        if self.region:
+            activities = activities.filter(
+                office_location__subregion__region=self.region
+            )
         return activities
 
     @property
@@ -78,7 +84,10 @@ class Statistics(object):
 
         activity_owner_ids = Activity .objects.filter(
             self.date_filter('created'),
-            status__in=['open', 'full', 'running', 'succeeded', 'partially_funded']
+            status__in=[
+                'open', 'full', 'registration_closed', 'running',
+                'succeeded', 'partially_funded'
+            ]
         ).order_by(
             'owner__id'
         ).distinct('owner').values_list('owner_id', flat=True)
@@ -191,7 +200,11 @@ class Statistics(object):
         ]
 
         return sum(
-            len(self.filter_activities(model, date_field, ['open', 'full', 'running']))
+            len(
+                self.filter_activities(
+                    model, date_field, ['open', 'full', 'registration_closed', 'running']
+                )
+            )
             for model, date_field in activity_filters
         )
 
@@ -227,6 +240,11 @@ class Statistics(object):
                 contributor__user__location__subregion=self.subregion
             )
 
+        if self.region:
+            contributions = contributions.filter(
+                contributor__user__location__subregion__region=self.region
+            )
+
         contributions = contributions.aggregate(time_spent=Sum('value'))
         if contributions['time_spent']:
             return contributions['time_spent'].total_seconds() / 3600
@@ -246,6 +264,11 @@ class Statistics(object):
             efforts = efforts.filter(
                 contributor__user__location__subregion=self.subregion
             )
+
+        if self.region:
+            efforts = efforts.filter(
+                contributor__user__location__subregion__region=self.region
+            )
         return efforts.count()
 
     @property
@@ -261,6 +284,11 @@ class Statistics(object):
             efforts = efforts.filter(
                 contributor__user__location__subregion=self.subregion
             )
+
+        if self.region:
+            efforts = efforts.filter(
+                contributor__user__location__subregion__region=self.region
+            )
         return efforts.count()
 
     @property
@@ -274,6 +302,11 @@ class Statistics(object):
         if self.subregion:
             contributions = contributions.filter(
                 contributor__user__location__subregion=self.subregion
+            )
+
+        if self.region:
+            contributions = contributions.filter(
+                contributor__user__location__subregion__region=self.region
             )
 
         contributions = contributions.aggregate(count=Count('contributor__user', distinct=True))
@@ -318,6 +351,11 @@ class Statistics(object):
                 owner__location__subregion=self.subregion
             )
 
+        if self.region:
+            initiative_owners = initiative_owners.filter(
+                owner__location__subregion__region=self.region
+            )
+
         return initiative_owners.count() + self.activity_participants
 
     @property
@@ -348,6 +386,10 @@ class Statistics(object):
         )
         if self.subregion:
             members = members.filter(location__subregion=self.subregion)
+
+        if self.region:
+            members = members.filter(location__subregion__region=self.region)
+
         return len(members)
 
     def __repr__(self):

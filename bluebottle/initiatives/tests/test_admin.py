@@ -84,16 +84,19 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_review_initiative_send_mail(self):
-        self.client.force_login(self.superuser)
-        response = self.client.get(self.approve_url)
+        response = self.app.get(self.approve_url, user=self.superuser)
+        mail.outbox = []
 
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'You are about to')
-        self.assertContains(response, 'Send messages')
+        self.assertContains(response, 'Send email notifications')
 
         # Confirm should change status
-        response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': True})
+        response = self.app.post(self.approve_url, {
+            'confirm': "Yes, I'm sure",
+            'send_messages': 'on'
+        }, user=self.superuser)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
@@ -101,16 +104,18 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_review_initiative_send_no_mail(self):
-        self.client.force_login(self.superuser)
-        response = self.client.get(self.approve_url)
+        mail.outbox = []
+        response = self.app.get(self.approve_url, user=self.superuser)
 
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'You are about to')
-        self.assertContains(response, 'Send messages')
+        self.assertContains(response, 'Send email')
 
         # Confirm should change status
-        response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': False})
+        response = self.app.post(self.approve_url, {
+            'confirm': "Yes, I'm sure",
+        }, user=self.superuser)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
@@ -124,7 +129,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         )
 
         self.client.force_login(self.superuser)
-        response = self.client.get(request_changes_url)
+        response = self.app.get(request_changes_url, user=self.superuser)
 
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -132,7 +137,11 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertNotContains(response, 'Don\'t send any messages')
 
         # Confirm should change status
-        response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': True})
+        response = self.app.post(self.approve_url, {
+            'confirm': "Yes, I'm sure",
+            'send_messages': 'on',
+            'post': 'yes'
+        }, user=self.superuser)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
@@ -183,12 +192,13 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.app.set_user(self.staff_member)
         reviewer = BlueBottleUserFactory.create()
         admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        mail.outbox = []
         page = self.app.get(admin_url)
         form = page.forms['initiative_form']
         form.set('reviewer', reviewer.id)
         page = form.submit()
         self.assertTrue('<h3>Send email</h3>' in page.text)
-        form = page.forms[0]
+        form = page.forms[1]
         form.submit()
 
         # Should send out one mail that contains admin url and contact email
@@ -199,10 +209,23 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.refresh_from_db()
         self.assertEqual(self.initiative.reviewer, reviewer)
 
+    def test_invalid_form_shows_errors(self):
+        self.app.set_user(self.staff_member)
+        admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        page = self.app.get(admin_url)
+        form = page.forms['initiative_form']
+        form['owner'].force_value('999999')
+
+        page = form.submit()
+
+        self.assertEqual(page.status, '200 OK')
+        self.assertTrue('Select a valid choice' in page.text)
+
     def test_add_reviewer_cancel(self):
         self.app.set_user(self.staff_member)
         reviewer = BlueBottleUserFactory.create()
         admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        mail.outbox = []
         page = self.app.get(admin_url)
         form = page.forms['initiative_form']
         form.set('reviewer', reviewer.id)
@@ -214,11 +237,12 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.refresh_from_db()
         self.assertNotEqual(self.initiative.reviewer, reviewer)
 
-    def test_add_reviewer_without_titlte(self):
+    def test_add_reviewer_without_title(self):
         initiative = InitiativeFactory.create(title='')
         self.app.set_user(self.staff_member)
         reviewer = BlueBottleUserFactory.create()
         admin_url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
+        mail.outbox = []
         page = self.app.get(admin_url)
         form = page.forms['initiative_form']
         form.set('reviewer', reviewer.id)
@@ -235,7 +259,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
         self.app.set_user(self.staff_member)
         page = self.app.get(url)
-        self.assertFalse('is_open' in page.forms[0].fields)
+        self.assertFalse('is_open' in page.forms[1].fields)
 
     def test_admin_open_initiative_enabled(self):
         InitiativePlatformSettingsFactory.create(
@@ -245,7 +269,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
         self.app.set_user(self.staff_member)
         page = self.app.get(url)
-        self.assertTrue('is_open' in page.forms[0].fields)
+        self.assertTrue('is_open' in page.forms[1].fields)
 
     def test_paginated_activities(self):
         self.app.set_user(self.staff_member)
@@ -292,7 +316,7 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiativeplatformsettings_changelist')
         self.app.set_user(self.superuser)
         page = self.app.get(url)
-        form = page.forms[0]
+        form = page.forms[1]
         self.assertFalse(form['enable_open_initiatives'].checked)
         form['enable_open_initiatives'].checked = True
         page = form.submit().follow()
@@ -306,7 +330,7 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiativeplatformsettings_change')
         self.app.set_user(self.superuser)
         page = self.app.get(url)
-        form = page.forms[0]
+        form = page.forms[1]
         self.assertFalse(form['team_activities'].checked)
         form['team_activities'].checked = True
         page = form.submit().follow()
@@ -314,3 +338,72 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
         self.assertFalse('error' in page.text)
         self.initiative_settings.refresh_from_db()
         self.assertTrue(self.initiative_settings.team_activities)
+
+
+class TestInitiativeReviewerFilter(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super(TestInitiativeReviewerFilter, self).setUp()
+        self.client.force_login(self.superuser)
+        self.changelist_url = reverse('admin:initiatives_initiative_changelist')
+
+        self.reviewer = BlueBottleUserFactory.create(is_staff=True)
+        self.reviewed = InitiativeFactory.create(reviewer=self.reviewer)
+        self.unreviewed = InitiativeFactory.create(reviewer=None)
+
+    def test_invalid_reviewer_value_does_not_crash(self):
+        for value in ('True', 'not-a-number', '1.5'):
+            response = self.client.get(self.changelist_url, {'reviewer': value})
+
+            self.assertIn(
+                response.status_code,
+                (status.HTTP_200_OK, status.HTTP_302_FOUND),
+                'reviewer={} returned {}'.format(value, response.status_code),
+            )
+
+    def test_empty_reviewer_value_returns_changelist(self):
+        response = self.client.get(self.changelist_url, {'reviewer': ''})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unknown_reviewer_id_returns_empty_changelist(self):
+        response = self.client.get(self.changelist_url, {'reviewer': '999999'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.context['cl'].queryset.count(), 0)
+
+    def test_valid_reviewer_id_still_filters(self):
+        response = self.client.get(
+            self.changelist_url, {'reviewer': str(self.reviewer.pk)}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            list(response.context['cl'].queryset), [self.reviewed]
+        )
+
+    def test_me_still_filters_on_the_current_user(self):
+        self.reviewed.reviewer = self.superuser
+        self.reviewed.save()
+
+        response = self.client.get(self.changelist_url, {'reviewer': 'me'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            list(response.context['cl'].queryset), [self.reviewed]
+        )
+
+
+class TestMyReviewingInitiativesDashboard(BluebottleAdminTestCase):
+    """The dashboard module is what produced the bad ?reviewer=True URL."""
+
+    def test_title_url_uses_a_value_the_filter_accepts(self):
+        from bluebottle.initiatives.dashboard import MyReviewingInitiatives
+
+        module = MyReviewingInitiatives()
+        module.init_with_context(None)
+
+        self.assertTrue(module.title_url.endswith('?reviewer=me'))

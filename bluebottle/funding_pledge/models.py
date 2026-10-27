@@ -58,6 +58,10 @@ class PledgeBankAccount(BankAccount):
         on_delete=models.CASCADE
     )
 
+    @property
+    def currency(self):
+        return 'EUR'
+
     def save(self, *args, **kwargs):
         super(PledgeBankAccount, self).save(*args, **kwargs)
 

@@ -1,12 +1,15 @@
 from datetime import date, timedelta
 from builtins import object
 
+from bluebottle.test.factory_models import generate_rich_text
+
 import factory.fuzzy
 
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.activities.models import EffortContribution
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 
 
 class DeedFactory(factory.DjangoModelFactory):
@@ -15,7 +18,7 @@ class DeedFactory(factory.DjangoModelFactory):
 
     title = factory.Faker('sentence')
     slug = factory.Faker('slug')
-    description = factory.Faker('text')
+    description = factory.LazyFunction(generate_rich_text)
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
@@ -28,6 +31,8 @@ class DeedFactory(factory.DjangoModelFactory):
         date.today() + timedelta(days=3),
         date.today() + timedelta(days=20)
     )
+
+    theme = factory.SubFactory(ThemeFactory)
 
 
 class DeedParticipantFactory(factory.DjangoModelFactory):

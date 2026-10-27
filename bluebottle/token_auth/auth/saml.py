@@ -1,6 +1,11 @@
+import binascii
+
+from defusedxml import DTDForbidden
 from future import standard_library
+from lxml.etree import XMLSyntaxError
 
 from bluebottle.token_auth.models import SAMLLog
+
 standard_library.install_aliases()
 import logging
 import urllib.parse
@@ -11,16 +16,16 @@ from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
-
+from bluebottle.utils.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 
 
 def get_saml_request(request):
-    http_host = request.META.get('HTTP_HOST', None)
-    if 'HTTP_X_FORWARDED_FOR' in request.META:
+    http_host = request.headers.get('host', None)
+    if 'x-forwarded-for' in request.headers:
         server_port = None
-        https = request.META.get('HTTP_X_FORWARDED_PROTO') == 'https'
+        https = request.headers.get('x-forwarded-proto') == 'https'
     else:
         server_port = request.META.get('SERVER_PORT')
         https = request.is_secure()
@@ -62,9 +67,10 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
             if (
                 (parsed.scheme.startswith('http') and parsed.netloc == self.request.get_host()) or
-                (not parsed.scheme and not parsed.netloc and parsed.path.startswith('/'))
+                (((not parsed.scheme and not parsed.netloc) or parsed.scheme == 'https') and
+                 parsed.path.startswith('/'))
             ):
-                return relay_state
+                return parsed.path
 
     def get_metadata(self):
         base_path = self.settings.get('base_path', None)
@@ -105,26 +111,32 @@ class SAMLAuthentication(BaseTokenAuthentication):
         return data
 
     def authenticate_request(self):
-        saml_request_id = self.request.session.get('saml_request_id',
-                                                   self.auth.get_last_request_id())
-        # See BB-17150
-        # if 'saml_request_id' not in self.request.session:
-        #     error = 'SAML request id missing from session'
-        #     logger.error('Saml login error: {}'.format(error))
-        #     raise TokenAuthenticationError(error)
+        saml_request_id = self.request.session.get(
+            'saml_request_id',
+            self.auth.get_last_request_id()
+        )
         try:
             self.auth.process_response(saml_request_id)
             SAMLLog.log(body=self.auth.get_last_response_xml())
         except OneLogin_Saml2_Error as e:
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)
+        except (ValueError, binascii.Error, XMLSyntaxError, DTDForbidden) as e:
+            logger.warning(
+                'Rejected unreadable SAML response on %s from %s: %s: %s',
+                self.request.get_host(),
+                get_client_ip(self.request),
+                type(e).__name__,
+                e,
+            )
+            raise TokenAuthenticationError('Invalid SAML response')
 
         if self.auth.is_authenticated():
             # del self.request.session['saml_request_id']
-            user_data = self.auth.get_attributes()
-            user_data['nameId'] = [self.auth.get_nameid()]
+            self.attributes = self.auth.get_attributes()
+            self.attributes['nameId'] = [self.auth.get_nameid()]
 
-            return self.parse_user(user_data)
+            return self.parse_user(self.attributes)
         else:
             error = "Saml login error: {}, reason: {}, assertions: {}".format(
                 self.auth.get_errors(),

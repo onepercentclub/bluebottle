@@ -1,0 +1,362 @@
+name: Testing
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
+  LANG: en_GB.UTF-8
+  LC_ALL: en_GB.UTF-8
+  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+  PG_CLI_IMAGE: postgis/postgis:14-3.3
+  TEST_DB_NAME: test_bluebottle_test
+  TEST_DB_USER: testuser
+  TEST_DB_PASSWORD: password
+  POSTGRES_PASSWORD: postgres
+
+jobs:
+  test-without-elasticsearch:
+    name: Tests (without Elasticsearch)
+    runs-on: Bluebottle
+    permissions:
+      contents: read
+      pull-requests: write
+
+    services:
+      postgres:
+        image: postgis/postgis:14-3.3
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      BLUEBOTTLE_SKIP_ES_TEST_SETUP: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export service ports
+        run: |
+          echo "PGHOST=127.0.0.1" >> "$GITHUB_ENV"
+          echo "PGPORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
+
+      - name: Install system dependencies (host)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            locales \
+            libxmlsec1-dev \
+            libgdal-dev \
+            swig \
+            libjpeg-dev \
+            zlib1g-dev
+          sudo sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+          sudo locale-gen
+          sudo update-locale LANG=en_GB.UTF-8
+
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python
+
+      - name: Bootstrap database
+        run: |
+          set -e
+
+          pg_run() {
+            docker run --rm -i --network host \
+              -e "PGPASSWORD=${PGPASSWORD:-}" \
+              -v "$GITHUB_WORKSPACE:/workspace:ro" \
+              "$PG_CLI_IMAGE" \
+              "$@"
+          }
+
+          # Create user if it does not exist
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT FROM pg_catalog.pg_roles WHERE rolname = 'testuser'
+            ) THEN
+              CREATE ROLE testuser LOGIN PASSWORD 'password';
+            END IF;
+          END
+          $$;
+          ALTER ROLE testuser WITH SUPERUSER CREATEDB CREATEROLE;
+          SQL
+
+          # Drop test database if it exists
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          SELECT pg_terminate_backend(pid)
+          FROM pg_stat_activity
+          WHERE datname = 'test_bluebottle_test'
+            AND pid <> pg_backend_pid();
+          DROP DATABASE IF EXISTS test_bluebottle_test;
+          SQL
+
+          # Drop stale parallel clone DBs (test_bluebottle_test_1..N) so keepdb starts clean.
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          DO $$
+          DECLARE
+            db record;
+          BEGIN
+            FOR db IN
+              SELECT datname
+              FROM pg_database
+              WHERE datname LIKE 'test_bluebottle_test\_%' ESCAPE '\'
+            LOOP
+              EXECUTE format(
+                'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = %L AND pid <> pg_backend_pid()',
+                db.datname
+              );
+              EXECUTE format('DROP DATABASE IF EXISTS %I', db.datname);
+            END LOOP;
+          END
+          $$;
+          SQL
+
+          # Recreate database
+          PGPASSWORD=password pg_run createdb -h 127.0.0.1 -p "$PGPORT" -U testuser test_bluebottle_test
+
+          # Ensure extensions exist in template1 so new DBs inherit them
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d template1 <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS postgis;
+          CREATE EXTENSION IF NOT EXISTS postgis_topology;
+          CREATE EXTENSION IF NOT EXISTS unaccent;
+          SQL
+
+          # Load test data
+          PGPASSWORD=password pg_run psql -h 127.0.0.1 -p "$PGPORT" -U testuser -d test_bluebottle_test -f /workspace/testdata.sql
+
+          # Sync all serial/identity sequences with current max(id) values after loading fixtures.
+          PGPASSWORD=password pg_run psql -h 127.0.0.1 -p "$PGPORT" -U testuser -d test_bluebottle_test <<'SQL'
+          DO $$
+          DECLARE
+            r record;
+            max_id bigint;
+          BEGIN
+            FOR r IN
+              SELECT
+                n.nspname AS schema_name,
+                c.relname AS table_name,
+                a.attname AS column_name,
+                pg_get_serial_sequence(format('%I.%I', n.nspname, c.relname), a.attname) AS seq_name
+              FROM pg_class c
+              JOIN pg_namespace n ON n.oid = c.relnamespace
+              JOIN pg_attribute a ON a.attrelid = c.oid
+              WHERE c.relkind = 'r'
+                AND n.nspname = 'public'
+                AND a.attnum > 0
+                AND NOT a.attisdropped
+                AND a.attname = 'id'
+            LOOP
+              IF r.seq_name IS NOT NULL THEN
+                EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I', r.column_name, r.schema_name, r.table_name) INTO max_id;
+                EXECUTE format('SELECT setval(%L, %s, true)', r.seq_name, GREATEST(max_id, 1));
+              END IF;
+            END LOOP;
+          END
+          $$;
+          SQL
+
+      - name: Run tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          source "${VENV_DIR}/bin/activate"
+          python manage.py test \
+            --parallel 12 \
+            --keepdb \
+            --exclude-tag=elasticsearch \
+            --settings bluebottle.settings.runner \
+            -v3
+
+  test-elasticsearch:
+    name: Tests (Elasticsearch)
+    runs-on: Bluebottle
+    permissions:
+      contents: read
+      pull-requests: write
+
+    services:
+      postgres:
+        image: postgis/postgis:14-3.3
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.22
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+        ports:
+          - 9200/tcp
+        options: >-
+          --health-cmd="curl -fsS 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' | grep -q '\"timed_out\":false' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export service ports
+        run: |
+          echo "PGHOST=127.0.0.1" >> "$GITHUB_ENV"
+          echo "PGPORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
+          echo "ESHOST=127.0.0.1" >> "$GITHUB_ENV"
+          echo "ESPORT=${{ job.services.elasticsearch.ports[9200] }}" >> "$GITHUB_ENV"
+
+      - name: Install system dependencies (host)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            locales \
+            libxmlsec1-dev \
+            libgdal-dev \
+            swig \
+            libjpeg-dev \
+            zlib1g-dev
+          sudo sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+          sudo locale-gen
+          sudo update-locale LANG=en_GB.UTF-8
+
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python
+
+      - name: Bootstrap database
+        run: |
+          set -e
+
+          pg_run() {
+            docker run --rm -i --network host \
+              -e "PGPASSWORD=${PGPASSWORD:-}" \
+              -v "$GITHUB_WORKSPACE:/workspace:ro" \
+              "$PG_CLI_IMAGE" \
+              "$@"
+          }
+
+          # Create user if it does not exist
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT FROM pg_catalog.pg_roles WHERE rolname = 'testuser'
+            ) THEN
+              CREATE ROLE testuser LOGIN PASSWORD 'password';
+            END IF;
+          END
+          $$;
+          ALTER ROLE testuser WITH SUPERUSER CREATEDB CREATEROLE;
+          SQL
+
+          # Drop test database if it exists
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          SELECT pg_terminate_backend(pid)
+          FROM pg_stat_activity
+          WHERE datname = 'test_bluebottle_test'
+            AND pid <> pg_backend_pid();
+          DROP DATABASE IF EXISTS test_bluebottle_test;
+          SQL
+
+          # Drop stale parallel clone DBs (test_bluebottle_test_1..N) so keepdb starts clean.
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          DO $$
+          DECLARE
+            db record;
+          BEGIN
+            FOR db IN
+              SELECT datname
+              FROM pg_database
+              WHERE datname LIKE 'test_bluebottle_test\_%' ESCAPE '\'
+            LOOP
+              EXECUTE format(
+                'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = %L AND pid <> pg_backend_pid()',
+                db.datname
+              );
+              EXECUTE format('DROP DATABASE IF EXISTS %I', db.datname);
+            END LOOP;
+          END
+          $$;
+          SQL
+
+          # Recreate database
+          PGPASSWORD=password pg_run createdb -h 127.0.0.1 -p "$PGPORT" -U testuser test_bluebottle_test
+
+          # Ensure extensions exist in template1 so new DBs inherit them
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d template1 <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS postgis;
+          CREATE EXTENSION IF NOT EXISTS postgis_topology;
+          CREATE EXTENSION IF NOT EXISTS unaccent;
+          SQL
+
+          # Load test data
+          PGPASSWORD=password pg_run psql -h 127.0.0.1 -p "$PGPORT" -U testuser -d test_bluebottle_test -f /workspace/testdata.sql
+
+          # Sync all serial/identity sequences with current max(id) values after loading fixtures.
+          PGPASSWORD=password pg_run psql -h 127.0.0.1 -p "$PGPORT" -U testuser -d test_bluebottle_test <<'SQL'
+          DO $$
+          DECLARE
+            r record;
+            max_id bigint;
+          BEGIN
+            FOR r IN
+              SELECT
+                n.nspname AS schema_name,
+                c.relname AS table_name,
+                a.attname AS column_name,
+                pg_get_serial_sequence(format('%I.%I', n.nspname, c.relname), a.attname) AS seq_name
+              FROM pg_class c
+              JOIN pg_namespace n ON n.oid = c.relnamespace
+              JOIN pg_attribute a ON a.attrelid = c.oid
+              WHERE c.relkind = 'r'
+                AND n.nspname = 'public'
+                AND a.attnum > 0
+                AND NOT a.attisdropped
+                AND a.attname = 'id'
+            LOOP
+              IF r.seq_name IS NOT NULL THEN
+                EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I', r.column_name, r.schema_name, r.table_name) INTO max_id;
+                EXECUTE format('SELECT setval(%L, %s, true)', r.seq_name, GREATEST(max_id, 1));
+              END IF;
+            END LOOP;
+          END
+          $$;
+          SQL
+
+      - name: Run Elasticsearch tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          source "${VENV_DIR}/bin/activate"
+          python manage.py test \
+            --parallel 8 \
+            --keepdb \
+            --tag=elasticsearch \
+            --settings bluebottle.settings.runner \
+            -v3

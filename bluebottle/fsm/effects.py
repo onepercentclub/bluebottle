@@ -1,6 +1,6 @@
 from builtins import object
 from builtins import str
-from collections import Iterable
+from collections.abc import Iterable
 from functools import partial
 
 from django.template.loader import render_to_string
@@ -21,7 +21,7 @@ class Effect(object):
     def render(cls, effects):
         context = {
             'opts': effects[0].instance.__class__._meta,
-            'effects': effects
+            'effects': effects,
         }
         return render_to_string(cls.template, context)
 
@@ -37,7 +37,7 @@ class Effect(object):
         return (partial(Effect, self.instance, **self.options), ())
 
     def __eq__(self, other):
-        return self.instance == other.instance and type(self) == type(other)
+        return self.instance == other.instance and type(self) is type(other)
 
     def pre_save(self, **kwargs):
         pass
@@ -99,17 +99,24 @@ class BaseTransitionEffect(Effect):
             )
         return str(self.transition.target)
 
-    @ property
+    @property
     def help(self):
         return _('{}: {}').format(self.instance.__class__._meta.verbose_name, self.instance)
 
     def to_html(self):
         if self.conditions:
-            return _('{transition} {object} if {conditions}').format(
-                transition=self.transition.name,
-                object=str(self.instance),
-                conditions=" and ".join([c.__doc__ for c in self.conditions])
-            )
+            try:
+                return _('{transition} {object} if {conditions}').format(
+                    transition=self.transition.name,
+                    object=str(self.instance),
+                    conditions=" and ".join([c.__doc__ for c in self.conditions])
+                )
+            except TypeError:
+                return _('{transition} {object} if {conditions}').format(
+                    transition=self.transition.name,
+                    object=str(self.instance),
+                    conditions=" and ".join([str(c) for c in self.conditions])
+                )
         return _('{transition} {object}').format(
             transition=self.transition.name,
             object=str(self.instance)
@@ -134,7 +141,6 @@ def TransitionEffect(transition, field='states', conditions=None, post_save=Fals
 
 
 class BaseRelatedTransitionEffect(Effect):
-    post_save = True
     display = False
     description = None
     transition_effect_class = None
@@ -146,6 +152,8 @@ class BaseRelatedTransitionEffect(Effect):
 
         try:
             self.instances = list(relation.all())
+        except ValueError:
+            self.instances = []
         except AttributeError:
             if isinstance(relation, Iterable):
                 self.instances = relation
@@ -184,16 +192,25 @@ class BaseRelatedTransitionEffect(Effect):
 
     def to_html(self):
         if self.conditions:
+            conditions = []
+            for c in self.conditions:
+                try:
+                    conditions.append(c.__doc__ or str(c))
+                except TypeError:
+                    conditions.append(str(c))
             return _('{transition} related {object} if {conditions}').format(
                 transition=self.transition_effect_class.transition.name,
                 object=str(self.relation),
-                conditions=" and ".join([c.__doc__ for c in self.conditions])
+                conditions=" and ".join(conditions)
             )
-        return str(self)
+        return _('{transition} related {object}').format(
+            transition=self.transition_effect_class.transition.name,
+            object=str(self.relation),
+        )
 
 
 def RelatedTransitionEffect(
-    _relation, transition, field='states', conditions=None, description=None, display=True
+        _relation, transition, field='states', conditions=None, description=None, display=True
 ):
     _transition = transition
     _conditions = conditions or []

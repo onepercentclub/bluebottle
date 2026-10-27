@@ -1,0 +1,14 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p class="donation-intro">
+        {% blocktrans context 'platform-email' %}
+        Unfortunately, nobody donated to your campaign "{{title}}" before the deadline. That’s why we have cancelled your campaign.
+
+        Don’t worry, you can always create a new campaign and try again.
+
+        Need some tips to make your campaign stand out? Reach out to the platform manager at {{ contact_email }}.
+        {% endblocktrans %}
+    </p>
+{% endblock %}

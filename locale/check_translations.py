@@ -6,7 +6,7 @@ import argparse
 
 import polib
 
-display_missing = 3
+display_missing = 10
 
 parser = argparse.ArgumentParser(description='Check translation percentages')
 
@@ -31,6 +31,12 @@ parser.add_argument(
     type=str,
     default='nl',
     help='Locales to check'
+)
+
+parser.add_argument(
+    '--no-fail',
+    action='store_true',
+    help='Do not exit with code 1 when translations are missing (report only)'
 )
 
 
@@ -58,15 +64,15 @@ if __name__ == '__main__':
 
         if missing:
             failed = True
-            print(f'Missing translatoins for {locale}\n')
+            print(f'Missing translations for {locale}\n')
 
             for trans in missing[:display_missing]:
                 print(f'* {trans.strip()}\n')
 
-            if len(missing) > 3:
+            if len(missing) > display_missing:
                 print(f'and {len(missing) - display_missing} more\n')
         else:
             print(f'All strings for {locale} are translated\n')
 
-    if failed:
+    if failed and not args.no_fail:
         sys.exit(1)

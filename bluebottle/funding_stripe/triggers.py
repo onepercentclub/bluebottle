@@ -5,18 +5,19 @@ from bluebottle.fsm.triggers import (
     register,
     TriggerManager,
 )
-from bluebottle.funding.messages import (
-    PayoutAccountVerified,
-    PayoutAccountMarkedIncomplete,
+from bluebottle.funding.messages.funding.activity_manager import (
+    FundingPayoutAccountVerified,
+    FundingPayoutAccountMarkedIncomplete,
+    FundingPublicPayoutAccountMarkedIncomplete,
+)
+from bluebottle.funding.messages.funding.platform_manager import (
     LivePayoutAccountMarkedIncomplete,
-    PublicPayoutAccountMarkedIncomplete,
     LivePublicPayoutAccountMarkedIncomplete
 )
-from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
 from bluebottle.funding_stripe.effects import (
-    PutActivitiesOnHoldEffect, AcceptTosEffect, UpdateBusinessTypeEffect, OpenActivitiesOnHoldEffect
+    PutActivitiesOnHoldEffect, AcceptTosEffect, UpdateBusinessTypeEffect, OpenActivitiesOnHoldEffect,
 )
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
@@ -27,6 +28,11 @@ from bluebottle.funding_stripe.states import (
     StripePayoutAccountStateMachine,
     StripeSourcePaymentStateMachine,
     StripeBankAccountStateMachine, StripePaymentStateMachine,
+)
+from bluebottle.grant_management.effects import PrepareGrantApplicationPayoutsEffect
+from bluebottle.grant_management.messages.activity_manager import (
+    GrantApplicationPayoutAccountVerified,
+    GrantApplicationPayoutAccountMarkedIncomplete
 )
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -98,14 +104,35 @@ class StripePaymentTriggers(BasePaymentTriggers):
 
 @register(StripePayoutAccount)
 class StripePayoutAccountTriggers(TriggerManager):
-    def has_live_campaign(effect):
-        """has connected funding activity that is open"""
-        live_statuses = ["open", "on_hold"]
+    def has_funding_campaign(effect):
+        """has a funding campaign"""
+        return effect.instance.funding.count() > 0
 
+    def has_active_funding_campaign(effect):
+        """has a funding campaign that is open or on hold"""
+        live_statuses = ["open", "on_hold"]
         return (
-            Funding.objects.filter(bank_account__connect_account=effect.instance)
-            .filter(status__in=live_statuses)
-            .exists()
+            effect.instance.pk and
+            effect.instance.funding.filter(status__in=live_statuses).exists()
+        )
+
+    def has_draft_funding_campaign(effect):
+        """has a funding campaign that is in draft, submitted or needs_work"""
+        draft_statuses = ["draft", "needs_work", "submitted"]
+        return (
+            effect.instance.pk and
+            effect.instance.funding.filter(status__in=draft_statuses).exists()
+        )
+
+    def has_grant_application(effect):
+        """has a grant application"""
+        return effect.instance.grant_application.count() > 0
+
+    def has_granted_grant_application(effect):
+        """has a grant application that is granted"""
+        return (
+            effect.instance.pk and
+            effect.instance.grant_application.filter(status='granted').exists()
         )
 
     def account_verified(self):
@@ -158,8 +185,19 @@ class StripePayoutAccountTriggers(TriggerManager):
             StripePayoutAccountStateMachine.verify,
             effects=[
                 OpenActivitiesOnHoldEffect,
-                NotificationEffect(PayoutAccountVerified, conditions=[is_not_public]),
-                NotificationEffect(PayoutAccountVerified, conditions=[is_public]),
+                PrepareGrantApplicationPayoutsEffect,
+                NotificationEffect(
+                    GrantApplicationPayoutAccountVerified,
+                    conditions=[has_grant_application, has_grant_application]
+                ),
+                NotificationEffect(
+                    FundingPayoutAccountVerified,
+                    conditions=[is_not_public, has_funding_campaign]
+                ),
+                NotificationEffect(
+                    FundingPayoutAccountVerified,
+                    conditions=[is_public, has_funding_campaign]
+                ),
                 RelatedTransitionEffect(
                     'external_accounts',
                     StripeBankAccountStateMachine.verify
@@ -170,30 +208,36 @@ class StripePayoutAccountTriggers(TriggerManager):
             StripePayoutAccountStateMachine.set_incomplete,
             effects=[
                 NotificationEffect(
-                    PayoutAccountMarkedIncomplete,
-                    conditions=[is_not_public],
+                    GrantApplicationPayoutAccountMarkedIncomplete,
+                    conditions=[has_granted_grant_application]
                 ),
                 NotificationEffect(
-                    PublicPayoutAccountMarkedIncomplete,
-                    conditions=[is_public],
+                    FundingPayoutAccountMarkedIncomplete,
+                    conditions=[is_not_public, has_draft_funding_campaign],
+                ),
+                NotificationEffect(
+                    FundingPublicPayoutAccountMarkedIncomplete,
+                    conditions=[is_public, has_draft_funding_campaign],
                 ),
                 NotificationEffect(
                     LivePayoutAccountMarkedIncomplete,
-                    conditions=[has_live_campaign, is_not_public],
+                    conditions=[is_not_public, has_active_funding_campaign],
                 ),
                 NotificationEffect(
                     LivePublicPayoutAccountMarkedIncomplete,
-                    conditions=[has_live_campaign, is_public],
+                    conditions=[is_public, has_active_funding_campaign],
                 ),
                 TransitionEffect(
                     StripePayoutAccountStateMachine.disable,
-                    conditions=[payments_are_disabled],
+                    conditions=[payments_are_disabled, has_funding_campaign],
                 ),
             ],
         ),
         TransitionTrigger(
             StripePayoutAccountStateMachine.disable,
-            effects=[PutActivitiesOnHoldEffect],
+            effects=[
+                PutActivitiesOnHoldEffect
+            ],
         ),
         ModelChangedTrigger(
             ["verified", "requirements"],

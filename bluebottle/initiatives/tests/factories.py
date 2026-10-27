@@ -1,6 +1,8 @@
 from builtins import object
 import factory
 
+from bluebottle.test.factory_models import generate_rich_text
+
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -14,15 +16,14 @@ class InitiativeFactory(factory.DjangoModelFactory):
         model = Initiative
 
     title = factory.Faker('sentence')
-    story = factory.Faker('text')
+    story = factory.LazyFunction(generate_rich_text)
     pitch = factory.Faker('text')
     owner = factory.SubFactory(BlueBottleUserFactory)
-    activity_managers = factory.SubFactory(BlueBottleUserFactory)
     has_organization = False
 
     theme = factory.SubFactory(ThemeFactory)
     image = factory.SubFactory(ImageFactory)
-    place = factory.SubFactory(GeolocationFactory)
+    place = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
 
     @factory.post_generation
     def activity_managers(self, create, extracted, **kwargs):
@@ -32,12 +33,10 @@ class InitiativeFactory(factory.DjangoModelFactory):
         if not extracted:
             extracted = [BlueBottleUserFactory.create()]
 
-        self.activity_managers.clear()
         for manager in extracted:
             self.activity_managers.add(manager)
 
 
 class InitiativePlatformSettingsFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = InitiativePlatformSettings

@@ -1,8 +1,8 @@
-from django.conf.urls import url
+from django.urls import path
 
 from ..views import CategoryList, CategoryDetail
 
 urlpatterns = [
-    url(r'^$', CategoryList.as_view(), name='category-list'),
-    url(r'^(?P<pk>\d+)$', CategoryDetail.as_view(), name='category-detail'),
+    path('', CategoryList.as_view(), name='category-list'),
+    path('<int:pk>', CategoryDetail.as_view(), name='category-detail'),
 ]

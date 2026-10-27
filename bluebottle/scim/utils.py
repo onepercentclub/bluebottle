@@ -73,7 +73,7 @@ class SCIMPath():
                     # Not set, so create it
                     data[attr] = [{part[1]: part[2]}]
                 elif not any(item for item in data if data.get(part[1]) == part[2]):
-                    data[attr] = [{part[1]: part[2], **data[attr][0]}]
+                    data[attr].append({part[1]: part[2]})
 
                 # Return the correct item from the list
                 data = [item for item in data[attr] if item[part[1]] == part[2]][0]

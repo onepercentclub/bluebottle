@@ -33,6 +33,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('initiatives', '0045_auto_20230331_1410'),
+        ('segments', '0025_segmenttype_required')
     ]
 
     operations = [

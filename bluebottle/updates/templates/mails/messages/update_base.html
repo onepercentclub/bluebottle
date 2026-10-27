@@ -1,0 +1,21 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans context 'platform-email' %}
+        Hi {{ recipient_name }},
+    {% endblocktrans %}
+    <br/><br/>
+    {% block message %}
+    {% endblock %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ action_link }}" class="action-email">
+        {% if update_type == 'activity-update' %}
+            {% blocktrans context 'platform-email' %}View update{% endblocktrans %}
+        {% else %}
+            {% blocktrans context 'platform-email' %}View comment{% endblocktrans %}
+        {% endif %}
+    </a>
+{% endblock %}`

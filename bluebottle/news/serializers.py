@@ -13,7 +13,10 @@ from .models import NewsItem
 class NewsItemContentsField(serializers.Field):
     def to_representation(self, obj):
         request = self.context.get('request', None)
-        contents_html = mark_safe(render_placeholder(request, obj).html)
+        try:
+            contents_html = mark_safe(render_placeholder(request, obj).html)
+        except FileNotFoundError:
+            contents_html = "Missing image"
         return contents_html
 
 

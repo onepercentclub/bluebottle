@@ -34,9 +34,9 @@ form .aligned p.file-upload + p.help {
 }
 
 .site-title {
-    text-align: right;
-    padding: 0 6px 8px 0;
+    padding: 8px 0;
     font-size: 1.2rem;
+    text-align: right;
 }
 
 #branding-menu {
@@ -49,6 +49,15 @@ form .aligned p.file-upload + p.help {
 #branding-menu:before {
     content: ''
 }
+
+label + div {
+    display: inline-block;
+}
+
+.aligned label + div input[type=checkbox] + label {
+    width: 30px;
+}
+
 
 .video-container {
     position: relative;
@@ -200,12 +209,12 @@ form .aligned p.file-upload + p.help {
     padding-left: 50px;
 }
 
-.js-inline-admin-formset.nested-inline {
+.cp-content .js-inline-admin-formset.nested-inline {
     display: inline-block;
     margin-left: 60px;
 }
 
-.js-inline-admin-formset fieldset {
+.cp-content .js-inline-admin-formset fieldset {
     padding: 4px
 }
 
@@ -280,8 +289,36 @@ ul#id_method-method li {
 }
 
 .two-factor-back {
+    padding: 16px;
+    display: flex;
+    background: #eee;
+    border-radius: 8px 8px 0 0;
+}
+
+.two-factor {
     padding: 8px;
-    position: absolute;
+    position: relative;
+}
+
+.two-factor .form-row {
+    padding: 8px;
+    position: relative;
+}
+
+
+.two-factor-footer {
+    display: flex;
+    flex-direction: column;
+}
+
+.two-factor-actions {
+    justify-content: space-between;
+    display: flex;
+    padding-top: 24px;
+}
+
+body.login .two-factor-actions .submit-row {
+    padding: 0;
 }
 
 #id_understand {
@@ -314,9 +351,21 @@ fieldset {
         min-height: 24px;
         display: block;
     }
+
     .field-box {
         float: none
     }
+}
+
+fieldset #tabular_permissions {
+    input.checkbox {
+        min-height: 24px;
+        display: none;
+    }
+}
+
+.user-permissions-app-separator {
+    padding: 0
 }
 
 .inline-description {
@@ -365,7 +414,279 @@ html {
 }
 
 
-form .aligned .form-row label+p.help {
+form .aligned .form-row label + p.help {
     margin-left: 12.85714rem;
     padding-left: 0;
+}
+
+
+form .aligned .django-quill-widget p,
+form .aligned .django-quill-widget ol,
+form .aligned .django-quill-widget ul {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+
+.django-quill-widget.ql-container {
+    height: 200px;
+}
+
+form .form-row .django-quill-widget p {
+    font-size: 14.4px;
+}
+
+
+.django-quill-widget.ql-snow .ql-editor h4 {
+    font-weight: 500;
+    font-size: 24px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    line-height: 32px;
+    letter-spacing: 0;
+}
+
+.django-quill-widget.ql-snow .ql-editor h5 {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 32px;
+    margin-top: 0;
+    margin-bottom: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="4"]::before {
+    content: "Heading";
+    /* Rename H4 */
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="4"]::before {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+    content: "Heading";
+    /* Rename H4 */
+    letter-spacing: 0;
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="5"]::before {
+    content: "Sub-heading";
+    /* Rename H5 */
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="5"]::before {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 32px;
+    content: "Sub-heading";
+    /* Rename H5 */
+    letter-spacing: 0;
+}
+
+
+.ql-toolbar.ql-snow .ql-picker.ql-header {
+    width: 120px;
+}
+
+div.inline.radiolist {
+    display: inline-block;
+}
+
+.form-row.vLargeTextField {
+    padding: 8px;
+}
+
+
+.colM .aligned .vLargeTextField {
+    padding: 8px;
+}
+
+
+#login-form {
+    margin-top: 24px;
+}
+
+#login-form input {
+    float: right
+}
+
+#login-form .password-reset-link {
+    padding-top: 24px;
+    clear: both
+}
+
+#participants-group .field-checked .inline-deletelink {
+    display: none !important;
+}
+
+#login-form input[type=checkbox] {
+    display: block;
+}
+
+.flex-row {
+    display: flex;
+}
+
+/* Radio button styling */
+input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #281E50;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    background-color: #fff;
+    vertical-align: middle;
+    margin: 0 8px 0 0;
+    border-color: #281E50;
+}
+
+input[type="radio"]:checked {
+    border-color: #281E50;
+}
+
+input[type="radio"]:checked::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #34323d;
+}
+
+input[type="radio"]:hover {
+    border-color: #333;
+}
+
+input[type="radio"]:focus {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Radio button labels */
+
+.radiolist label,
+ul.radiolist label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 0;
+    font-size: 14px;
+}
+
+ul.radiolist {
+    padding-left: 0;
+    list-style: none;
+}
+
+ul.radiolist li {
+    padding: 4px 0;
+}
+
+.radiolist.inline {
+    margin-bottom: 8px;
+}
+
+.checkbox_help {
+    display: block;
+}
+
+.checkbox_help + .checkbox_help {
+    display: block;
+    margin-left: 12.85714rem;
+    color: #9b9b9b;
+    font-size: 0.85714rem;
+    margin-top: 8px;
+}
+
+form .aligned p.help {
+    margin-top: 8px;
+}
+
+input[type=email],
+.vTextField {
+    width: 400px
+}
+
+
+label.translatable-field:before {
+    content: '🌐';
+    display: inline-block;
+    float: right;
+    margin-top: 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.dynamic-array-widget .array-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.field-activity_pub label {
+    display: none;
+}
+
+a.button, a.button:hover {
+    text-decoration: none;
+}
+
+.empty-comment {
+    font-style: italic;
+    color: #aaa;
+}
+
+#homepage_form label[for=id_content],
+#page_form label[for=id_body],
+#platformpage_form label[for=id_body] {
+    display: none;
+}
+
+.cp-content .js-inline-admin-formset {
+    margin: 0 64px;
+}
+
+.cp-content .js-inline-admin-formset .inline-related {
+    margin: 16px 0;
+    width: auto;
+}
+
+.cp-content .form-row.categories select {
+    height: 300px;
+}
+
+.cp-content .js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
+    font-family: 'dashboard' !important;
+    font-size: 10px;
+    margin-right: 8px;
+    color: #ffffff;
+}
+
+
+.js-inline-admin-formset .inline-related h3 {
+    padding: 4px;
+}
+
+.js-inline-admin-formset .inline-related h3 .inline-deletelink {
+    display: none !important;
+}
+
+.js-inline-admin-formset .inline-related h3 .inline-deletelink:hover {
+    background-color: #b30000
+}
+
+.js-inline-admin-formset .inline-related .form-row {
+    padding: 6px 12px;
+}
+
+.js-inline-admin-formset span.delete {
+    display: none;
 }

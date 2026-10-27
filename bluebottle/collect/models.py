@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta  # noqa
 from urllib.parse import urlencode
 
 from django.db import models, connection
@@ -8,6 +8,7 @@ from parler.models import TranslatedFields
 
 from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.deeds.validators import EndDateValidator
+from bluebottle.funding.validators import TosAcceptedValidator
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import SortableTranslatableModel
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -50,12 +51,17 @@ class CollectType(SortableTranslatableModel):
     class Meta(object):
         verbose_name = _('items')
         verbose_name_plural = _('item')
+        ordering = ('pk',)
         permissions = (
             ('api_read_collecttype', 'Can view collect items through API'),
         )
 
 
 class CollectActivity(Activity):
+    """
+    Campaign to collect goods
+    """
+    include_in_documentation = True
 
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
@@ -70,7 +76,9 @@ class CollectActivity(Activity):
     target = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
     realized = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
 
-    auto_approve = True
+    @property
+    def type(self):
+        return self.collect_type.translations.name if self.collect_type else None
 
     activity_type = _('Collect activity')
 
@@ -82,18 +90,21 @@ class CollectActivity(Activity):
         verbose_name = _("Collect Campaign")
         verbose_name_plural = _("Collect Campaigns")
         permissions = (
-            ('api_read_collect', 'Can view collect campaign through the API'),
-            ('api_add_collect', 'Can add collect campaign through the API'),
-            ('api_change_collect', 'Can change collect campaign through the API'),
-            ('api_delete_collect', 'Can delete collect campaign through the API'),
+            ('api_read_collectactivity', 'Can view collect campaign through the API'),
+            ('api_add_collectactivity', 'Can add collect campaign through the API'),
+            ('api_change_collectactivity', 'Can change collect campaign through the API'),
+            ('api_delete_collectactivity', 'Can delete collect campaign through the API'),
 
-            ('api_read_own_collect', 'Can view own collect campaign through the API'),
-            ('api_add_own_collect', 'Can add own collect campaign through the API'),
-            ('api_change_own_collect', 'Can change own collect campaign through the API'),
-            ('api_delete_own_collect', 'Can delete own collect campaign through the API'),
+            ('api_read_own_collectactivity', 'Can view own collect campaign through the API'),
+            ('api_add_own_collectactivity', 'Can add own collect campaign through the API'),
+            ('api_change_own_collectactivity', 'Can change own collect campaign through the API'),
+            ('api_delete_own_collectactivity', 'Can delete own collect campaign through the API'),
         )
 
-    validators = [EndDateValidator]
+    validators = [
+        EndDateValidator,
+        TosAcceptedValidator
+    ]
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'
@@ -112,9 +123,14 @@ class CollectActivity(Activity):
         return '{}-collect-{}'.format(connection.tenant.client_name, self.pk)
 
     @property
+    def details(self):
+        collect_type = _('Collecting {type}').format(type=self.collect_type)
+        return f"{self.description.html},\n {collect_type}, {self.get_absolute_url()}"
+
+    @property
     def google_calendar_link(self):
 
-        details = self.description
+        details = self.description.html
         details += _('\nCollecting {type}').format(type=self.collect_type)
 
         end = self.end + timedelta(days=1)
@@ -136,7 +152,10 @@ class CollectActivity(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(CollectContributor)
+        if self.pk:
+            return self.contributors.instance_of(CollectContributor)
+        else:
+            return CollectContributor.objects.none()
 
     @property
     def active_contributors(self):
@@ -151,11 +170,16 @@ class CollectActivity(Activity):
     @property
     def required_fields(self):
         return super().required_fields + [
-            'title', 'description', 'collect_type'
+            'title', 'description.html', 'collect_type'
         ]
 
 
 class CollectContributor(Contributor):
+    """
+    A contributor to a collect campaign.
+    """
+    include_in_documentation = True
+
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
 
     class Meta(object):
@@ -179,6 +203,11 @@ class CollectContributor(Contributor):
 
 
 class CollectContribution(Contribution):
+    """
+    A contribution to a collect campaign.
+    """
+    include_in_documentation = True
+
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
     type = models.ForeignKey(CollectType, null=True, on_delete=SET_NULL)
 

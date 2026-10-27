@@ -1,4 +1,5 @@
-from django.conf.urls import url
+from django.urls import path
+from django.urls import re_path
 
 from bluebottle.deeds.views import (
     DeedListView, DeedDetailView, DeedTransitionList,
@@ -8,37 +9,55 @@ from bluebottle.deeds.views import (
 
 
 urlpatterns = [
-    url(r'^$',
+    path(
+        '',
         DeedListView.as_view(),
-        name='deed-list'),
+        name='deed-list'
+    ),
 
-    url(r'^/(?P<pk>\d+)$',
+    path(
+        '/<int:pk>',
         DeedDetailView.as_view(),
-        name='deed-detail'),
+        name='deed-detail'
+    ),
 
-    url(r'^/transitions$',
+    path(
+        '/transitions',
         DeedTransitionList.as_view(),
-        name='deed-transition-list'),
+        name='deed-transition-list'
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/participants$',
+    path(
+        '/<int:activity_id>/participants',
         DeedRelatedParticipantList.as_view(),
-        name='related-deed-participants'),
+        name='related-deed-participants'
+    ),
 
-    url(r'^/participants$',
+    path(
+        '/participants',
         ParticipantList.as_view(),
-        name='deed-participant-list'),
-    url(r'^/participants/(?P<pk>\d+)$',
+        name='deed-participant-list'
+    ),
+    path(
+        '/participants/<int:pk>',
         ParticipantDetail.as_view(),
-        name='deed-participant-detail'),
-    url(r'^/participants/transitions$',
+        name='deed-participant-detail'
+    ),
+    path(
+        '/participants/transitions',
         ParticipantTransitionList.as_view(),
-        name='deed-participant-transition-list'),
+        name='deed-participant-transition-list'
+    ),
 
-    url(r'^/export/(?P<pk>[\d]+)$',
+    re_path(
+        r'^/export/(?P<pk>[\d]+)$',
         ParticipantExportView.as_view(),
-        name='deed-participant-export'),
+        name='deed-participant-export'
+    ),
 
-    url(r'^/ical/(?P<pk>\d+)$',
+    path(
+        '/ical/<int:pk>',
         DeedIcalView.as_view(),
-        name='deed-ical'),
+        name='deed-ical'
+    ),
 ]

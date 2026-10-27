@@ -97,6 +97,12 @@ class PolymorphicParentAdminInvalidIdTestCase(BluebottleAdminTestCase):
         url = reverse('admin:activities_activity_change', args=('foo',))
         self.app.get(url, status=404)
 
+    def test_delete_and_history_non_numeric_id(self):
+        for model in ['contribution', 'activity']:
+            for view in ['delete', 'history']:
+                url = reverse(f'admin:activities_{model}_{view}', args=('foo',))
+                self.app.get(url, status=404)
+
     def test_activity_change_redirects_to_child_admin(self):
         activity = DateActivityFactory.create()
         url = reverse('admin:activities_activity_change', args=(activity.id,))

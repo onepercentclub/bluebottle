@@ -4,6 +4,7 @@
 {% load jet_tags %}
 
 {% block extrastyle %}
+    <link rel="stylesheet" type="text/css" href="{% static "hijack/hijack.css" %}">
     <link rel="stylesheet" type="text/css" href="{% static "/admin/css/dashboard.css" as url %}{{ url|jet_append_version }}" />
 {% endblock %}
 {% block extrahead %}
@@ -47,6 +48,9 @@
 <form id="admin-logout-form" method="POST" action="{% url 'admin:logout' %}">
     {% csrf_token %}
 </form>
+{% if request.user.is_hijacked %}
+    {% include "hijack/notification.html" %}
+{% endif %}
 {% endblock %}
 
 

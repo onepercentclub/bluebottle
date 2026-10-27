@@ -2,9 +2,7 @@ import hashlib
 import re
 
 from django.http.response import HttpResponse
-from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -171,10 +169,6 @@ class IbanCheckView(JsonApiViewMixin, CreateAPIView):
         )
         instance.iban = iban
         instance.check_iban()
-        if not instance.token:
-            raise ValidationError({
-                'name': [_('The name does not match the account number.')]
-            })
 
 
 class FundingTransitionList(TransitionList):

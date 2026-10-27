@@ -901,6 +901,7 @@ class IbanCheck(models.Model):
         ('mistype', _('Mistype')),
         ('close_match', _('Close match')),
         ('no_match', _('No match')),
+        ('could_not_match', _('Could not match')),
     )
 
     fingerprint = models.CharField(max_length=100, blank=True, null=True)
@@ -953,7 +954,11 @@ class IbanCheck(models.Model):
 
         if self.matched in ('close_match', 'mistype'):
             self.name = self.result.get('nameSuggestion', self.name)
-        if self.matched != 'no_match':
+        if self.matched in ['no_match', 'could_not_match']:
+            raise ValidationError({
+                'name': [_('The name does not match the account number.')]
+            })
+        else:
             token = self.get_stripe_token()
             self.token = token.id
             self.fingerprint = token.bank_account.fingerprint

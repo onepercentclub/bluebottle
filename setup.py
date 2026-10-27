@@ -48,6 +48,7 @@ install_requires = [
     'django-fluent-contents==3.1',
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.5.0',
+    'django-hijack==3.7.6',
     'django-ipware==3.0.2',
     'django-jet-reboot==1.3.10',
     'django-localflavor==3.0.1',

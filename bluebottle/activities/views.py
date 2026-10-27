@@ -8,7 +8,6 @@ from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
 from rest_framework import response, filters
-from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import UserRateThrottle
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -183,6 +182,7 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     model = Activity
 
     permission_classes = (
+        IsAuthenticated,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
@@ -196,8 +196,6 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
-        if not user or not user.is_authenticated:
-            raise NotAuthenticated()
         return queryset.filter(
             Q(owner=user) |
             Q(initiative__owner=user) |

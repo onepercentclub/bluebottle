@@ -7,6 +7,7 @@ import munch
 import requests
 import stripe
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
@@ -2128,7 +2129,10 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
 
         with mock.patch(
             "bluebottle.funding.adapters.rabobank.requests.post",
-            return_value=self._surepay_error(400, '{"code": "INVALID_ACCOUNT_ID"}')
+            return_value=self._surepay_error(
+                400,
+                '{"code": "INVALID_ACCOUNT_ID", "message": "NL78RABO5394792070 Nadine Bok"}'
+            )
         ):
             with mock.patch('bluebottle.funding.views.logger') as logger:
                 self.perform_create(user=self.user, data=data)
@@ -2138,10 +2142,12 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
             self.response.json()['errors'][0]['source']['pointer'],
             '/data/attributes/iban'
         )
-        log_args = logger.warning.call_args[0]
+        log_args = logger.error.call_args[0]
+        self.assertIn(connection.tenant.client_name, log_args)
         self.assertIn(400, log_args)
-        self.assertIn('INVALID_ACCOUNT_ID', log_args[2])
+        self.assertIn('INVALID_ACCOUNT_ID', log_args)
         self.assertNotIn('NL78RABO5394792070', str(log_args))
+        self.assertNotIn('Nadine Bok', str(log_args))
         self.assertFalse(IbanCheck.objects.exists())
 
     def test_surepay_unavailable(self):
@@ -2159,9 +2165,13 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
             "bluebottle.funding.adapters.rabobank.requests.post",
             side_effect=requests.ConnectionError()
         ):
-            self.perform_create(user=self.user, data=data)
+            with mock.patch('bluebottle.funding.views.logger') as logger:
+                self.perform_create(user=self.user, data=data)
 
         self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+        log_args = logger.error.call_args[0]
+        self.assertIn(connection.tenant.client_name, log_args)
+        self.assertIn('ConnectionError', log_args)
         self.assertFalse(IbanCheck.objects.exists())
 
 

@@ -3,7 +3,7 @@ import logging
 import re
 
 import requests
-from django.db import transaction
+from django.db import connection, transaction
 from django.http.response import HttpResponse
 from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import TokenAuthentication
@@ -180,10 +180,19 @@ class IbanCheckView(JsonApiViewMixin, CreateAPIView):
             instance.check_iban()
         except requests.RequestException as e:
             response = e.response
-            logger.warning(
-                'IBAN check failed: status=%s body=%s',
+            error_code = None
+            if response is not None:
+                try:
+                    error_code = response.json().get('code')
+                except (ValueError, AttributeError):
+                    pass
+            logger.error(
+                'IBAN check failed: tenant=%s iban_check=%s status=%s code=%s error=%s',
+                connection.tenant.client_name,
+                instance.pk,
                 getattr(response, 'status_code', None),
-                getattr(response, 'text', str(e)),
+                error_code,
+                type(e).__name__,
             )
             raise ValidationError({'iban': [_('This IBAN and name could not be verified.')]})
 

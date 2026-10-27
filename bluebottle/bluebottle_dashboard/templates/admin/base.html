@@ -73,24 +73,30 @@
 
 {% block nav-global %}
     {% if user.is_active and user.is_staff %}
-        <a href="{% url 'admin:members_member_changelist' %}" class="sidebar-link icon">
-            <span class="sidebar-link-label">
-                <span class="sidebar-link-icon bb-icon-user"></span>
-                {% trans 'Users' %}
-            </span>
-        </a>
-        <a href="{% url 'admin:initiatives_initiative_changelist' %}" class="sidebar-link icon">
-            <span class="sidebar-link-label">
-                <span class="sidebar-link-icon bb-icon-project"></span>
-                {% trans 'Initiatives' %}
-            </span>
-        </a>
-        <a href="{% url 'admin:activities_activity_changelist' %}" class="sidebar-link icon">
-            <span class="sidebar-link-label">
-                <span class="sidebar-link-icon bb-icon-task"></span>
-                {% trans 'Activities' %}
-            </span>
-        </a>
+        {% if perms.members.view_member or perms.members.change_member %}
+            <a href="{% url 'admin:members_member_changelist' %}" class="sidebar-link icon">
+                <span class="sidebar-link-label">
+                    <span class="sidebar-link-icon bb-icon-user"></span>
+                    {% trans 'Users' %}
+                </span>
+            </a>
+        {% endif %}
+        {% if perms.initiatives.view_initiative or perms.initiatives.change_initiative %}
+            <a href="{% url 'admin:initiatives_initiative_changelist' %}" class="sidebar-link icon">
+                <span class="sidebar-link-label">
+                    <span class="sidebar-link-icon bb-icon-project"></span>
+                    {% trans 'Initiatives' %}
+                </span>
+            </a>
+        {% endif %}
+        {% if perms.activities.view_activity or perms.activities.change_activity %}
+            <a href="{% url 'admin:activities_activity_changelist' %}" class="sidebar-link icon">
+                <span class="sidebar-link-label">
+                    <span class="sidebar-link-icon bb-icon-task"></span>
+                    {% trans 'Activities' %}
+                </span>
+            </a>
+        {% endif %}
         <a href="https://support.goodup.com" target="_blank" class="sidebar-link icon">
             <span class="sidebar-link-label">
                 <span class="sidebar-link-icon bb-icon-customer-support"></span>

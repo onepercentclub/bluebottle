@@ -1,6 +1,5 @@
 def can_hijack(*, hijacker, hijacked):
-    if not hijacker or not hijacked:
-        return False
+    """Superusers may impersonate active staff members, but not other superusers."""
     if not hijacked.is_active:
         return False
     if not hijacker.is_superuser:

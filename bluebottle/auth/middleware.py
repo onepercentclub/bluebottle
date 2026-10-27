@@ -13,6 +13,7 @@ from django.http.request import RawPostDataException
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.functional import SimpleLazyObject
 from lockdown import settings as lockdown_settings
 from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
                                  compile_url_exceptions, get_lockdown_form)
@@ -73,10 +74,27 @@ class UserJwtTokenMiddleware(MiddlewareMixin):
             return
 
 
+def get_jwt_payload(request):
+    """Payload of a valid JWT in the request, or an empty dict."""
+    try:
+        user_auth_tuple = JSONWebTokenAuthentication().authenticate(request)
+    except exceptions.APIException:
+        user_auth_tuple = None
+    if user_auth_tuple is None:
+        return {}
+    return api_settings.JWT_DECODE_HANDLER(user_auth_tuple[1])
+
+
 class SlidingJwtTokenMiddleware(MiddlewareMixin):
     """
     Custom middleware to set a sliding window for the jwt auth token expiration.
+
+    Also exposes the token payload as ``request.jwt_payload``, decoded on first use,
+    so views and serializers can read claims such as ``impersonated``.
     """
+
+    def process_request(self, request):
+        request.jwt_payload = SimpleLazyObject(lambda: get_jwt_payload(request))
 
     def process_response(self, request, response):
         """ Override only the request to add the new token """

@@ -19,6 +19,37 @@ from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.updates.dashboard import RecentUpdates
 
 
+def can_view(user, app_label, model_name):
+    return (
+        user.has_perm('{}.view_{}'.format(app_label, model_name)) or
+        user.has_perm('{}.change_{}'.format(app_label, model_name))
+    )
+
+
+MODULE_PERMISSIONS = [
+    (MyReviewingInitiatives, ('initiatives', 'initiative')),
+    (RecentlySubmittedInitiatives, ('initiatives', 'initiative')),
+    (RecentlyPublishedInitiatives, ('initiatives', 'initiative')),
+    (UnPublishedActivities, ('activities', 'activity')),
+    (RecentlySubmittedActivities, ('activities', 'activity')),
+    (RecentlyPublishedActivities, ('activities', 'activity')),
+    (RecentFunding, ('funding', 'funding')),
+    (RecentContributors, ('activities', 'contributor')),
+    (GrantApplicationsReadyForApprovalDashboardModule, ('grant_management', 'grantapplication')),
+    (RecentUpdates, ('updates', 'update')),
+    (PayoutsReadyForApprovalDashboardModule, ('funding', 'payout')),
+    (GrantPayoutsReadyForApprovalDashboardModule, ('grant_management', 'grantpayout')),
+    (RecentMembersDashboard, ('members', 'member')),
+]
+
+
+def can_view_module(user, module):
+    for module_class, (app_label, model_name) in MODULE_PERMISSIONS:
+        if isinstance(module, module_class):
+            return can_view(user, app_label, model_name)
+    return True
+
+
 class CustomIndexDashboard(Dashboard):
     columns = 2
 
@@ -53,6 +84,15 @@ class CustomIndexDashboard(Dashboard):
             order=0
         ))
         self.children.append(RecentMembersDashboard())
+
+        user = context['request'].user
+        self.children = [module for module in self.children if can_view_module(user, module)]
+
+    def load_modules(self):
+        # Layouts are stored per user, so modules saved before a permission change still have to be filtered.
+        super().load_modules()
+        user = self.context['request'].user
+        self.modules = [module for module in self.modules if can_view_module(user, module)]
 
 
 class CustomAppIndexDashboard(DefaultAppIndexDashboard):

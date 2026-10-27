@@ -7,8 +7,8 @@ from django.urls import reverse
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from bluebottle.auth.middleware import HIJACK_OTP_DEVICE_SESSION_KEY, OTPMiddleware
-from bluebottle.members.hijack import can_hijack
+from bluebottle.auth.middleware import HIJACK_OTP_DEVICE_SESSION_KEY, OTPMiddleware, SlidingJwtTokenMiddleware
+from bluebottle.auth.permissions import can_hijack
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 
@@ -220,3 +220,38 @@ class LoginAsAdminTest(BluebottleAdminTestCase):
         inactive = BlueBottleUserFactory.create(is_active=False)
         response = self._confirm_login_as(self.superuser, member=inactive)
         self.assertEqual(response.status_code, 403)
+
+
+class JwtPayloadMiddlewareTest(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
+        self.member = BlueBottleUserFactory.create()
+
+    def get_request(self, token=None):
+        headers = {'HTTP_AUTHORIZATION': 'JWT {}'.format(token)} if token else {}
+        request = RequestFactory().get('/api/members/me', **headers)
+        SlidingJwtTokenMiddleware(lambda request: None).process_request(request)
+        return request
+
+    def test_impersonation_token(self):
+        request = self.get_request(self.member.get_jwt_token(impersonator=self.superuser))
+
+        self.assertTrue(request.jwt_payload.get('impersonated'))
+        self.assertEqual(request.jwt_payload.get('impersonator'), self.superuser.pk)
+
+    def test_regular_token(self):
+        request = self.get_request(self.member.get_jwt_token())
+
+        self.assertEqual(request.jwt_payload.get('username'), self.member.pk)
+        self.assertIsNone(request.jwt_payload.get('impersonated'))
+
+    def test_invalid_token(self):
+        request = self.get_request('not-a-token')
+
+        self.assertIsNone(request.jwt_payload.get('impersonated'))
+
+    def test_no_token(self):
+        request = self.get_request()
+
+        self.assertIsNone(request.jwt_payload.get('impersonated'))

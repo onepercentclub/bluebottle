@@ -17,6 +17,7 @@ from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
+from stripe import InvalidRequestError
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution, Contributor
@@ -955,13 +956,14 @@ class IbanCheck(models.Model):
         if self.matched in ('close_match', 'mistype'):
             self.name = self.result.get('nameSuggestion', self.name)
         if self.matched in ['no_match', 'could_not_match']:
-            raise ValidationError({
-                'name': [_('The name does not match the account number.')]
-            })
+            return _('The name does not match the account number.')
         else:
-            token = self.get_stripe_token()
-            self.token = token.id
-            self.fingerprint = token.bank_account.fingerprint
+            try:
+                token = self.get_stripe_token()
+                self.token = token.id
+                self.fingerprint = token.bank_account.fingerprint
+            except InvalidRequestError as error:
+                return error.error.message
         self.save()
 
 

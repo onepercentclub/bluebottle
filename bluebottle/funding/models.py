@@ -955,7 +955,7 @@ class IbanCheck(models.Model):
 
         if self.matched in ('close_match', 'mistype'):
             self.name = self.result.get('nameSuggestion', self.name)
-        if self.matched in ['no_match', 'could_not_match']:
+        if self.matched in ('no_match', 'could_not_match'):
             return _('The name does not match the account number.')
         else:
             try:

@@ -33,10 +33,6 @@ from bluebottle.time_based.messages import (
     ParticipantSlotParticipantRegisteredNotification, ParticipantChangedNotification,
     ManagerSlotParticipantWithdrewNotification,
 )
-from bluebottle.time_based.models import (
-    DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
-)
 from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
@@ -44,7 +40,11 @@ from bluebottle.time_based.messages.participants import (
     ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
     UserDateParticipantWithdrewNotification,
 )
-from bluebottle.time_based.triggers.triggers import spots_taken_after_release
+from bluebottle.time_based.messages.registrations import UserReminderNotification
+from bluebottle.time_based.models import (
+    DeadlineParticipant,
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
+)
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
     DeadlineParticipantStateMachine,
@@ -58,6 +58,7 @@ from bluebottle.time_based.states import (
     RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
     RegistrationStateMachine
 )
+from bluebottle.time_based.triggers.triggers import spots_taken_after_release
 
 
 def activity_is_expired(effect):
@@ -491,6 +492,30 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
             and effect.instance.registration.status == "accepted"
         )
 
+    def send_daily_reminder(effect):
+        """Is daily recurring, after 4 iterations send every day"""
+        if not effect.instance.registration:
+            return False
+        period = effect.instance.activity.period
+        count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
+        return period == 'days' and count >= 4 and (count - 4) % 3 == 0
+
+    def send_weekly_reminder(effect):
+        """Is weekly recurring, after 2 iterations send every week"""
+        if not effect.instance.registration:
+            return False
+        period = effect.instance.activity.period
+        count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
+        return period == "weeks" and count > 1
+
+    def send_monthly_reminder(effect):
+        """Is monthly recurring, after 2 iterations send every month"""
+        if not effect.instance.registration:
+            return False
+        period = effect.instance.activity.period
+        count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
+        return period == "months" and count > 1
+
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
             PeriodicParticipantStateMachine.initiate,
@@ -500,6 +525,18 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
+                ),
+                NotificationEffect(
+                    UserReminderNotification,
+                    conditions=[send_daily_reminder],
+                ),
+                NotificationEffect(
+                    UserReminderNotification,
+                    conditions=[send_weekly_reminder],
+                ),
+                NotificationEffect(
+                    UserReminderNotification,
+                    conditions=[send_monthly_reminder],
                 ),
             ],
         ),
@@ -1128,9 +1165,9 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         ).count()
 
         if (
-                effect.instance.slot.capacity and
-                effect.instance.status == 'accepted' and
-                participant_count + 1 >= effect.instance.slot.capacity
+            effect.instance.slot.capacity and
+            effect.instance.status == 'accepted' and
+            participant_count + 1 >= effect.instance.slot.capacity
         ):
             return True
         return False
@@ -1165,7 +1202,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         """Review needed"""
         return (
             effect.instance.registration
-            and effect.instance.registration.status in ("accepted", )
+            and effect.instance.registration.status in ("accepted",)
         )
 
     def registration_is_withdrawn(effect):

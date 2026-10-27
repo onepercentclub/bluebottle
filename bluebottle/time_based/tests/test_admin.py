@@ -18,7 +18,7 @@ from bluebottle.time_based.admin import (
     SkillAdmin,
     SlotInterestAdminInline,
 )
-from bluebottle.time_based.models import DateActivity, ScheduleActivity, Skill
+from bluebottle.time_based.models import DateActivity, DateParticipant, ScheduleActivity, Skill
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
     DateParticipantFactory, DateRegistrationFactory,
@@ -398,6 +398,28 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         page = form.submit()
         self.assertEqual(page.status, '200 OK')
         self.assertTrue('This field is required.' in page.text)
+
+    def test_add_form(self):
+        for model in [
+            'dateparticipant', 'periodicparticipant', 'scheduleparticipant',
+            'deadlineparticipant', 'teamscheduleparticipant', 'teammember',
+        ]:
+            with self.subTest(model=model):
+                page = self.app.get(reverse('admin:time_based_{}_add'.format(model)))
+                self.assertEqual(page.status, '200 OK')
+
+    def test_add_date_participant(self):
+        slot = self.registration.activity.slots.first()
+        page = self.app.get(reverse('admin:time_based_dateparticipant_add'), user=self.staff_member)
+        form = page.forms[1]
+        form['user'] = self.supporter.pk
+        form['slot'] = slot.pk
+        page = form.submit(user=self.staff_member).follow(user=self.staff_member)
+        self.assertEqual(page.status, '200 OK')
+
+        participant = DateParticipant.objects.get(user=self.supporter)
+        self.assertEqual(participant.slot, slot)
+        self.assertEqual(participant.activity, slot.activity)
 
     def test_document(self):
         self.registration.document = PrivateDocumentFactory.create()

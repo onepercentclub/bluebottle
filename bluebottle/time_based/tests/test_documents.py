@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.gis.geos import Point
+from django.test import tag
 from django.urls import reverse
 from django.utils.timezone import now
 
@@ -165,6 +166,7 @@ class GeolocationRelatedInstancesTestCase(BluebottleTestCase):
         self.assertEqual(list(DeadlineActivityDocument().get_instances_from_related(location)), [])
 
 
+@tag('elasticsearch')
 class GeolocationChangeSearchTestCase(ElasticsearchTestCase):
     def search_near(self, place):
         response = self.client.get(

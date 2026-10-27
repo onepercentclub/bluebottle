@@ -9,7 +9,7 @@ from jet.dashboard.models import UserDashboardModule
 
 from bluebottle.cms.models import ImagePlainTextItem, PeopleContent, PollContent
 from bluebottle.pages.admin import PageAdmin
-from bluebottle.pages.models import Page, DocumentItem
+from bluebottle.pages.models import Page, DocumentItem, ImageTextItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -376,6 +376,86 @@ class TestPageAdmin(BluebottleAdminTestCase):
         )
         self.assertEqual(page.content.contentitems.count(), 0)
         self.assertEqual(DocumentItem.objects.count(), 0)
+
+    def test_save_image_text_item_with_blank_ratio(self):
+        page = PageFactory.create()
+        placeholder = Placeholder.objects.create_for_object(page, 'blog_contents')
+        placeholder.save()
+        item = ImageTextItem.objects.create_for_placeholder(
+            placeholder, text='Some text', image='pages/test.png', ratio=8
+        )
+        page_admin_url = reverse('admin:pages_page_change', args=(page.id,))
+        response = self.client.get(page_admin_url)
+        csrf = self.get_csrf_token(response)
+        data = {
+            "csrfmiddlewaretoken": csrf,
+            "slug": page.slug,
+            "title": page.title,
+            "language": 'en',
+            "author": page.author.id,
+            "status": "published",
+            "publication_date_0": "2013-07-05",
+            "publication_date_1": "14:13:53",
+            "initial-publication_date_0": "2013-07-05",
+            "initial-publication_date_1": "14:13:53",
+            "publication_end_date_0": "",
+            "publication_end_date_1": "",
+
+            "placeholder-fs-TOTAL_FORMS": 1,
+            "placeholder-fs-INITIAL_FORMS": 1,
+            "placeholder-fs-MIN_NUM_FORMS": 0,
+            "placeholder-fs-MAX_NUM_FORMS": 1000,
+            "placeholder-fs-0-id": placeholder.id,
+            "placeholder-fs-0-slot": 'blog_contents',
+            "placeholder-fs-0-role": "m",
+            "placeholder-fs-0-title": "Body",
+
+            "imagetextitem-TOTAL_FORMS": "1",
+            "imagetextitem-INITIAL_FORMS": "1",
+            "imagetextitem-MIN_NUM_FORMS": 0,
+            "imagetextitem-MAX_NUM_FORMS": 1000,
+            "imagetextitem-0-contentitem_ptr": item.pk,
+            "imagetextitem-0-placeholder": placeholder.id,
+            "imagetextitem-0-placeholder_slot": "blog_contents",
+            "imagetextitem-0-sort_order": 0,
+            "imagetextitem-0-text": "",
+            "imagetextitem-0-image": "",
+            "imagetextitem-0-align": "",
+            "imagetextitem-0-ratio": "",
+
+            "documentitem-TOTAL_FORMS": "0",
+            "documentitem-INITIAL_FORMS": "0",
+            "actionitem-TOTAL_FORMS": "0",
+            "actionitem-INITIAL_FORMS": "0",
+            "rawhtmlitem-TOTAL_FORMS": "0",
+            "rawhtmlitem-INITIAL_FORMS": "0",
+            "oembeditem-TOTAL_FORMS": "0",
+            "oembeditem-INITIAL_FORMS": "0",
+            "pictureitem-TOTAL_FORMS": "0",
+            "pictureitem-INITIAL_FORMS": "0",
+            "scaledimagetextitem-TOTAL_FORMS": "0",
+            "scaledimagetextitem-INITIAL_FORMS": "0",
+            "imageplaintextitem-TOTAL_FORMS": "0",
+            "imageplaintextitem-INITIAL_FORMS": "0",
+            "textitem-TOTAL_FORMS": "0",
+            "textitem-INITIAL_FORMS": "0",
+            "imagetextrounditem-TOTAL_FORMS": "0",
+            "imagetextrounditem-INITIAL_FORMS": "0",
+            "columnsitem-TOTAL_FORMS": "0",
+            "columnsitem-INITIAL_FORMS": "0",
+            "peoplecontent-TOTAL_FORMS": "0",
+            "peoplecontent-INITIAL_FORMS": "0",
+            "pollcontent-TOTAL_FORMS": "0",
+            "pollcontent-INITIAL_FORMS": "0",
+
+            '_continue': 'Save and continue editing',
+        }
+
+        response = self.client.post(page_admin_url, data, format='multipart')
+
+        self.assertEqual(response.status_code, 302)
+        item.refresh_from_db()
+        self.assertEqual(item.ratio, 6)
 
 
 class ContentEditorPageAdminTestCase(BluebottleAdminTestCase):

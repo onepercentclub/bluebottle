@@ -32,21 +32,32 @@ def load_drf_strategy(request=None):
     return get_strategy('bluebottle.social.strategy.DRFStrategy', STORAGE, request)
 
 
+def login_failed(backend, error):
+    logger.warning(
+        'Social login with %s failed: %s (status %s)',
+        backend,
+        type(error).__name__,
+        getattr(getattr(error, 'response', None), 'status_code', None),
+    )
+    return AuthenticationFailed(
+        _('Logging in failed, please try again'),
+        code="failed"
+    )
+
+
 @psa(load_strategy=load_drf_strategy)
 def complete(request, backend):
     try:
         user = request.backend.complete(request=request)
-    except AuthCanceled:
+    except AuthCanceled as e:
+        if e.response is not None:
+            raise login_failed(backend, e)
         raise AuthenticationFailed(
             _('Authentication was cancelled'),
             code="cancelled"
         )
-    except (AuthException, RequestException, TypeError) as e:
-        logger.warning('Social login with %s failed: %r', backend, e)
-        raise AuthenticationFailed(
-            _('Logging in failed, please try again'),
-            code="failed"
-        )
+    except (AuthException, RequestException) as e:
+        raise login_failed(backend, e)
     if not user.email:
         if user.date_joined > now() - timedelta(hours=1):
             user.delete()

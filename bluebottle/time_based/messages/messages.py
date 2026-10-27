@@ -18,7 +18,7 @@ from bluebottle.time_based.models import (
 
 
 def get_slot_info(slot):
-    if slot.location and not slot.is_online:
+    if slot.location and slot.location.timezone and not slot.is_online:
         tz = timezone(slot.location.timezone)
     else:
         tz = get_current_timezone()
@@ -989,6 +989,7 @@ class SpotOpenedNotification(TransitionMessage):
             if context['is_online']:
                 location = None
         context['title'] = activity.title
+        context['review'] = activity.review
         context['location'] = location.formatted_address if location else None
         return context
 
@@ -1016,4 +1017,5 @@ class InterestRegisteredNotification(TransitionMessage):
         context = super().get_context(recipient)
         activity = self.obj.activity
         context['title'] = activity.title
+        context['review'] = activity.review
         return context

@@ -11,8 +11,9 @@ from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
+from bluebottle.bluebottle_dashboard.utils import get_menu_items
 from bluebottle.time_based.admin import (
-    ActivityInterestAdminInline,
+    DateActivityInterestAdminInline,
     ScheduleActivityAdmin,
     SkillAdmin,
     SlotInterestAdminInline,
@@ -36,11 +37,11 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         super().setUp()
         self.app.set_user(self.staff_member)
 
-    def test_activity_inline_shows_activity_level_interests_only(self):
+    def test_activity_inline_shows_activity_and_slot_interests(self):
         activity = DateActivityFactory.create()
         activity_interest = InterestFactory.create(activity=activity, slot=None)
         slot = DateActivitySlotFactory.create(activity=activity)
-        InterestFactory.create(activity=activity, slot=slot)
+        slot_interest = InterestFactory.create(activity=activity, slot=slot)
 
         url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
         page = self.app.get(url)
@@ -48,14 +49,17 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         self.assertEqual(page.status_code, 200)
         self.assertIn('Interested members', page.text)
         self.assertIn(str(activity_interest.user), page.text)
+        self.assertIn(str(slot_interest.user), page.text)
 
-        inline = ActivityInterestAdminInline(InterestFactory._meta.model, AdminSite())
+        inline = DateActivityInterestAdminInline(
+            InterestFactory._meta.model, AdminSite()
+        )
         request = RequestFactory().get('/')
         request.user = self.staff_member
         queryset = inline.get_queryset(request).filter(
             activity=activity
         )
-        self.assertEqual(list(queryset), [activity_interest])
+        self.assertCountEqual(list(queryset), [activity_interest, slot_interest])
 
     def test_slot_inline_shows_slot_interests(self):
         activity = DateActivityFactory.create()
@@ -97,6 +101,39 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
         self.assertFalse(
             InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
         )
+
+    def test_delete_slot_interest_from_date_activity_inline(self):
+        activity = DateActivityFactory.create()
+        slot = DateActivitySlotFactory.create(activity=activity)
+        interest = InterestFactory.create(activity=activity, slot=slot)
+
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+        form = page.forms['dateactivity_form']
+        delete_field = next(
+            name for name in form.fields if name.endswith('-DELETE')
+            and name.startswith('interests-')
+        )
+        form[delete_field] = True
+        page = form.submit()
+        if 'confirm' in page.forms:
+            page = page.forms['confirm'].submit()
+
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_side_menu_shows_waiting_list(self):
+        request = RequestFactory().get(reverse('admin:index'))
+        request.user = self.superuser
+        menu_groups = get_menu_items(
+            {'user': self.superuser, 'request': request}
+        )
+        time_based = next(
+            group for group in menu_groups if group['app_label'] == 'time_based'
+        )
+        labels = [str(item['label']) for item in time_based['items']]
+        self.assertIn('Waiting list', labels)
 
 
 class ScheduleActivityAdminRegistrationFieldsTest(BluebottleTestCase):

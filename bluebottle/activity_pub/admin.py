@@ -957,11 +957,8 @@ class EventAdminMixin:
         "name",
         "display_description",
         "display_image",
-        "source",
-        "activity",
-        "url",
         "video_url",
-        "iri",
+        "source",
     )
     fields = readonly_fields
     list_filter = [AdoptedFilter, SourceFilter]
@@ -1272,11 +1269,9 @@ class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
 class GoodDeedAdmin(EventChildAdmin):
     base_model = Event
     model = GoodDeed
-    list_display = EventAdminMixin.list_display + ('contributor_count',)
     readonly_fields = EventChildAdmin.readonly_fields + (
         'start_time',
         'end_time',
-        'contributor_count',
     )
     fields = readonly_fields
 
@@ -1318,7 +1313,6 @@ class CollectCampaignAdmin(EventChildAdmin):
         'collect_type',
         'target',
         'donated',
-        'contributor_count'
     )
     fields = readonly_fields
 
@@ -1341,7 +1335,6 @@ class SubEventInline(admin.TabularInline):
         'start_time',
         'end_time',
         'capacity',
-        'contributor_count',
         'display_location'
     ]
 
@@ -1375,11 +1368,7 @@ class DoGoodEventAdmin(EventChildAdmin):
         'duration',
         'application_deadline',
         'event_attendance_mode',
-        'repetition_mode',
-        'join_mode',
-        'slot_mode',
         'capacity',
-        'contributor_count'
     )
     fields = readonly_fields
 
@@ -1388,5 +1377,5 @@ class DoGoodEventAdmin(EventChildAdmin):
 class SubEventAdmin(EventChildAdmin):
     base_model = Event
     model = SubEvent
-    readonly_fields = ('start_time', 'end_time', 'capacity', 'contributor_count')
+    readonly_fields = ('start_time', 'end_time', 'capacity', )
     fields = readonly_fields

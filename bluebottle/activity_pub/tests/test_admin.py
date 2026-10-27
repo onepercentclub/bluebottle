@@ -416,8 +416,10 @@ class EventChildAdminTestMixin:
         self.assertFieldContains(page, 'name', self.event.name)
         self.assertFieldContains(page, 'display_description', self.event.summary)
         self.assertFieldContains(page, 'source', 'Supplier platform')
-        self.assertFieldContains(page, 'url', self.event.url)
-        self.assertFieldContains(page, 'iri', self.event.iri)
+        self.assertIsNone(self.get_field(page, 'url'))
+        self.assertIsNone(self.get_field(page, 'iri'))
+        self.assertIsNone(self.get_field(page, 'activity'))
+        self.assertIsNone(self.get_field(page, 'contributor_count'))
         self.assertIn(
             self.event.image.url,
             self.get_field(page, 'display_image').find('img')['src']
@@ -511,8 +513,8 @@ class GoodDeedAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCase):
     adopted_model = Deed
     linked_model = LinkedDeed
     expected_fields = (
-        'name', 'display_description', 'display_image', 'source', 'activity', 'url',
-        'video_url', 'iri', 'start_time', 'end_time', 'contributor_count',
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'start_time', 'end_time',
     )
 
 
@@ -521,8 +523,8 @@ class CrowdFundingAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCas
     adopted_model = Funding
     linked_model = LinkedFunding
     expected_fields = (
-        'name', 'display_description', 'display_image', 'source', 'activity', 'url',
-        'video_url', 'iri', 'end_time', 'target', 'donated', 'location',
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'end_time', 'target', 'donated', 'location',
     )
 
     def assertExtraFields(self, page):
@@ -539,8 +541,8 @@ class GrantApplicationAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTes
     adopted_model = GrantApplication
     linked_model = LinkedGrantApplication
     expected_fields = (
-        'name', 'display_description', 'display_image', 'source', 'activity', 'url',
-        'video_url', 'iri', 'start_time', 'end_time', 'target', 'location',
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'start_time', 'end_time', 'target', 'location',
     )
 
     def assertExtraFields(self, page):
@@ -560,9 +562,9 @@ class CollectCampaignAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTest
     adopted_model = CollectActivity
     linked_model = LinkedCollectCampaign
     expected_fields = (
-        'name', 'display_description', 'display_image', 'source', 'activity', 'url',
-        'video_url', 'iri', 'start_time', 'end_time', 'location', 'collect_type',
-        'target', 'donated', 'contributor_count',
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'start_time', 'end_time', 'location', 'collect_type',
+        'target', 'donated',
     )
 
     def assertExtraFields(self, page):
@@ -586,10 +588,10 @@ class DoGoodEventAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCase
     adopted_model = DeadlineActivity
     linked_model = LinkedDeadlineActivity
     expected_fields = (
-        'name', 'display_description', 'display_image', 'source', 'activity', 'url',
-        'video_url', 'iri', 'start_time', 'end_time', 'duration', 'application_deadline',
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'start_time', 'end_time', 'duration', 'application_deadline',
         'event_attendance_mode', 'repetition_mode', 'join_mode', 'slot_mode',
-        'capacity', 'contributor_count',
+        'capacity',
     )
 
     def assertExtraFields(self, page):

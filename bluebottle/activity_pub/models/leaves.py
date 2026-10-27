@@ -89,5 +89,12 @@ class SlotParticipantLeave(Leave):
         proxy = True
 
     @property
+    def contributor(self):
+        return self.object.origin.activity.contributors.get(
+            remote_user=self.actor.adopted,
+            dateparticipant__slot=self.object.origin
+        )
+
+    @property
     def default_recipients(self):
-        return self.object.partent.source
+        yield self.object.parent.source

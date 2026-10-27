@@ -20,8 +20,6 @@ def swap_lat_long(apps, schema_editor):
             location.position.x = y
             location.position.y = x
 
-            print('After', location.position.x, location.position.y)
-
             location.save()
 
 

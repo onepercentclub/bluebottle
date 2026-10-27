@@ -18,7 +18,7 @@ from bluebottle.time_based.models import (
 
 
 def get_slot_info(slot):
-    if slot.location and not slot.is_online:
+    if slot.location and slot.location.timezone and not slot.is_online:
         tz = timezone(slot.location.timezone)
     else:
         tz = get_current_timezone()

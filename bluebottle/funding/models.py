@@ -963,7 +963,7 @@ class IbanCheck(models.Model):
                 self.token = token.id
                 self.fingerprint = token.bank_account.fingerprint
             except InvalidRequestError as error:
-                return error.error.message
+                return getattr(error.error, 'message', _("Unknown error"))
         self.save()
 
 

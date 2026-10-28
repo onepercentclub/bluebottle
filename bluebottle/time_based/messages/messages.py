@@ -3,9 +3,7 @@ from urllib.parse import urlencode
 
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
-from django.utils.timezone import get_current_timezone
 from django.utils.translation import pgettext_lazy as pgettext
-from pytz import timezone
 
 from bluebottle.activities.ical import ActivityIcal
 from bluebottle.clients.utils import tenant_url
@@ -15,13 +13,11 @@ from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
     DateParticipant, PeriodParticipant, DateActivitySlot
 )
+from bluebottle.utils.utils import get_current_timezone_for_location
 
 
 def get_slot_info(slot):
-    if slot.location and not slot.is_online:
-        tz = timezone(slot.location.timezone)
-    else:
-        tz = get_current_timezone()
+    tz = get_current_timezone_for_location(slot.location, slot.is_online)
 
     if not slot.end:
         return
@@ -989,6 +985,7 @@ class SpotOpenedNotification(TransitionMessage):
             if context['is_online']:
                 location = None
         context['title'] = activity.title
+        context['review'] = activity.review
         context['location'] = location.formatted_address if location else None
         return context
 
@@ -1016,4 +1013,5 @@ class InterestRegisteredNotification(TransitionMessage):
         context = super().get_context(recipient)
         activity = self.obj.activity
         context['title'] = activity.title
+        context['review'] = activity.review
         return context

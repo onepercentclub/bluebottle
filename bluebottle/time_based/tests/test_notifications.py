@@ -7,6 +7,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import NotificationTestCase
+from django.contrib.gis.geos import Point
 from django.template import defaultfilters
 from datetime import date, timedelta
 from bluebottle.time_based.messages import (
@@ -191,6 +192,23 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('has registered for a time slot for your activity')
         self.assertBodyContains('What is your favorite color?')
         self.assertBodyContains('Par-bleu yellow')
+
+    def test_participant_registered_manager_location_without_timezone(self):
+        slot = self.activity.slots.first()
+        slot.location = GeolocationFactory.create(position=Point(51.4, 5.4))
+        slot.is_online = False
+        slot.save()
+        self.assertIsNone(slot.location.timezone)
+
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=slot,
+            user=self.supporter,
+        )
+        self.message_class = ManagerSlotParticipantRegisteredNotification
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertBodyContains('has registered for a time slot for your activity')
 
     def test_new_participant_notification(self):
         self.activity.review_title = 'What is your favorite color?'
@@ -437,7 +455,9 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Good news, a spot has opened up for the activity:')
         self.assertBodyContains('Save the world!')
         self.assertBodyContains('first-come, first-served')
-        self.assertBodyContains("If you're no longer interested, you don't need to do anything.")
+        self.assertBodyContains(
+            'Changed your mind? You can withdraw your interest at any time on the activity page.'
+        )
         self.assertActionLink(self.obj.get_absolute_url() + '?spotOpened=true')
         self.assertActionTitle('View activity')
 
@@ -540,6 +560,44 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertBodyNotContains(defaultfilters.date(start))
         self.assertBodyNotContains(defaultfilters.date(deadline))
 
+    def test_deadline_activity_with_review(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        self.obj = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            review=True,
+        )
+        InterestFactory.create(activity=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertBodyContains(
+            "Head to the activity page to apply. You'll need to wait to be approved before you can participate."
+        )
+        self.assertBodyNotContains('first-come, first-served')
+
+    def test_date_slot_with_review(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+            review=True,
+        )
+        self.obj = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        InterestFactory.create(activity=activity, slot=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertBodyContains(
+            "Head to the activity page to apply. You'll need to wait to be approved before you can participate."
+        )
+        self.assertBodyNotContains('first-come, first-served')
+
     def test_no_recipients_without_interest(self):
         self.obj = DeadlineActivityFactory.create(
             title="Save the world!",
@@ -601,3 +659,20 @@ class InterestRegisteredNotificationTestCase(NotificationTestCase):
         )
         self.assertActionLink(activity.get_absolute_url())
         self.assertActionTitle('View activity')
+
+    def test_deadline_activity_with_review(self):
+        user = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            review=True,
+        )
+        self.obj = InterestFactory.create(activity=activity, user=user)
+
+        self.message_class = InterestRegisteredNotification
+        self.create()
+        self.assertBodyContains(
+            "You'll need to apply and wait to be approved before you can participate."
+        )
+        self.assertBodyNotContains('first-come, first-served')

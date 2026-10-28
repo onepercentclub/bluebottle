@@ -182,6 +182,7 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     model = Activity
 
     permission_classes = (
+        IsAuthenticated,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
@@ -195,8 +196,6 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
-        if not user or not user.is_authenticated:
-            raise PermissionError()
         return queryset.filter(
             Q(owner=user) |
             Q(initiative__owner=user) |

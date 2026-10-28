@@ -441,11 +441,15 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
                     Q(user=self.request.user)
                     | Q(activity__owner=self.request.user)
                     | Q(activity__initiative__activity_manager=self.request.user)
-                    | Q(status__in=("accepted", "succeeded", "scheduled"))
+                    | (
+                        Q(status__in=("accepted", "succeeded", "scheduled")) &
+                        Q(remote_user__isnull=True)
+                    )
                 ).order_by("-id")
         else:
             queryset = self.queryset.filter(
-                status__in=("accepted", "succeeded", "scheduled")
+                status__in=("accepted", "succeeded", "scheduled"),
+                remote_user__isnull=True
             ).order_by("-id")
 
         status = self.request.query_params.get('filter[status]')

@@ -14,6 +14,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
+from bluebottle.activities.tests.factories import RemoteMemberFactory
 from bluebottle.funding.models import (
     Donor,
     Funding,
@@ -802,6 +803,34 @@ class FundingDetailTestCase(BluebottleTestCase):
         response = self.client.put(self.funding_url, json.dumps(self.data), user=self.funding.owner)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_remote_contributor_count(self):
+        DonorFactory.create(activity=self.funding, status='succeeded')
+        for _ in range(2):
+            DonorFactory.create(
+                activity=self.funding, status='succeeded', user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+        for contributor_status in ('new', 'failed'):
+            DonorFactory.create(
+                activity=self.funding, status=contributor_status, user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+
+        response = self.client.get(self.funding_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['meta']['remote-contributor-count'], 2
+        )
+
+    def test_get_remote_contributor_count_no_remote_users(self):
+        DonorFactory.create(activity=self.funding, status='succeeded')
+
+        response = self.client.get(self.funding_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['meta']['remote-contributor-count'], 0
+        )
 
 
 class FundingTestCase(BluebottleTestCase):

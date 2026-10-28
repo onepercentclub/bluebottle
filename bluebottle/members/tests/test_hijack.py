@@ -452,6 +452,58 @@ class HijackSecurityTest(BluebottleAdminTestCase):
         )
 
 
+class MemberAdminImpersonateLinksTest(BluebottleAdminTestCase):
+    def setUp(self):
+        super().setUp()
+        self.staff = BlueBottleUserFactory.create(is_staff=True, is_superuser=False)
+        self.member = BlueBottleUserFactory.create(is_staff=False)
+
+    def change_page(self, obj, user=None):
+        self.client.force_login(user or self.superuser)
+        return self.client.get(reverse('admin:members_member_change', args=(obj.pk,)))
+
+    def front_end_url(self, obj):
+        return reverse('admin:members_member_login_as', args=(obj.pk,))
+
+    def test_list_has_no_impersonation_columns(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(reverse('admin:members_member_changelist'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'data-hijack-user')
+        self.assertNotContains(response, self.front_end_url(self.staff))
+        self.assertNotContains(response, 'column-login_as_link')
+
+    def test_staff_detail_has_back_office_and_front_end(self):
+        response = self.change_page(self.staff)
+
+        self.assertContains(response, 'data-hijack-user="{}"'.format(self.staff.pk))
+        self.assertContains(response, 'Back-office')
+        self.assertContains(response, self.front_end_url(self.staff))
+        self.assertContains(response, 'Front-end')
+
+    def test_member_detail_has_only_front_end(self):
+        response = self.change_page(self.member)
+
+        self.assertNotContains(response, 'data-hijack-user')
+        self.assertContains(response, self.front_end_url(self.member))
+
+    def test_inactive_member_detail_has_no_links(self):
+        self.staff.is_active = False
+        self.staff.save()
+        response = self.change_page(self.staff)
+
+        self.assertNotContains(response, 'data-hijack-user')
+        self.assertNotContains(response, self.front_end_url(self.staff))
+
+    def test_staff_viewer_gets_no_links(self):
+        response = self.change_page(self.member, user=self.staff_member)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'data-hijack-user')
+        self.assertNotContains(response, self.front_end_url(self.member))
+
+
 class LoginAsAdminTest(BluebottleAdminTestCase):
     def setUp(self):
         super().setUp()

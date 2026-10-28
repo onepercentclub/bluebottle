@@ -125,7 +125,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     deleted_successful_contributors = models.PositiveIntegerField(
         _("Number of deleted successful contributors"), default=0, null=True, blank=True
     )
-    synced_contributor_count = models.PositiveIntegerField(default=0)
 
     title = models.CharField(_("Title"), max_length=255)
     slug = models.SlugField(_("Slug"), max_length=100, default="new")

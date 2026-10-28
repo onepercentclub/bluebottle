@@ -21,6 +21,21 @@ class Poll(TriggerMixin, TranslatableModel):
 
     end_date = models.DateField(_('end date'), null=True, blank=True)
     status = models.CharField(max_length=40)
+    show_vote_count = models.BooleanField(
+        _('Show vote count per option'),
+        help_text=_(
+            "When enabled, each option's vote count is shown while the poll is open and after it closes. "
+            "The total number of votes on the poll is always visible, regardless of this setting."
+        ),
+        default=False
+    )
+    highlight_winning_option = models.BooleanField(
+        _('Highlight the winning option'),
+        help_text=_(
+            "When enabled, the winning option will be highlighted when the poll is closed."
+        ),
+        default=True
+    )
 
     class Meta:
         verbose_name = _('poll')
@@ -64,6 +79,10 @@ class PollOption(SortableMixin, TranslatableModel):
 
     image = ImageField(
         _('image'),
+        help_text=_(
+            'Use a wide image (16:9) for the best result. Other shapes will be cropped to fit. '
+            'JPEG or PNG files are accepted.'
+        ),
         max_length=255,
         blank=True,
         null=True,
@@ -77,6 +96,7 @@ class PollOption(SortableMixin, TranslatableModel):
     )
     video_url = models.URLField(
         _('video URL'),
+        help_text=_('Enter a link to a YouTube or Vimeo video.'),
         max_length=255,
         blank=True,
         null=True,

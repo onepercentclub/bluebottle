@@ -2106,3 +2106,91 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
         )
         # Check that the name was updated with the suggestion
         self.assertEqual(data["attributes"]["name"], "Nadine Bok")
+
+
+class FundingDeadlineValidationTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(FundingDeadlineValidationTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create(owner=self.user)
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            owner=self.user,
+            target=Money(5000, 'EUR'),
+            deadline=now() + timedelta(days=15),
+        )
+        BudgetLineFactory.create(activity=self.funding)
+        self.funding.bank_account = generate_mock_bank_account()
+        self.funding.save()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
+
+        self.url = reverse('funding-detail', args=(self.funding.pk,))
+
+    def _patch(self, deadline):
+        return self.client.patch(
+            self.url,
+            json.dumps({
+                'data': {
+                    'type': 'activities/fundings',
+                    'id': str(self.funding.pk),
+                    'attributes': {'deadline': deadline},
+                }
+            }),
+            user=self.user,
+        )
+
+    def test_null_deadline_with_stored_deadline_is_rejected(self):
+        """Clearing a published deadline is a change: 400, not 500."""
+        response = self._patch(None)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/deadline',
+        )
+
+    def test_null_deadline_with_no_stored_deadline_is_unchanged(self):
+        """null -> null is not a change, so it must pass validation."""
+        self.funding.deadline = None
+        self.funding.save()
+
+        response = self._patch(None)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.funding.refresh_from_db()
+        self.assertIsNone(self.funding.deadline)
+
+    def test_deadline_set_with_no_stored_deadline_is_rejected(self):
+        """null -> date is a change. Previously crashed on the stored side."""
+        self.funding.deadline = None
+        self.funding.save()
+
+        response = self._patch(str(now() + timedelta(days=20)))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/deadline',
+        )
+
+    def test_unchanged_deadline_is_accepted(self):
+        """date -> same date is not a change."""
+        response = self._patch(str(self.funding.deadline))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_changed_deadline_is_still_rejected(self):
+        """date -> different date is still a change."""
+        response = self._patch(str(self.funding.deadline + timedelta(days=1)))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/deadline',
+        )

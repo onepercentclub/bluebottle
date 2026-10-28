@@ -1,12 +1,14 @@
 from builtins import str
 
+from django.core.exceptions import FieldDoesNotExist
+from django.db.models import Q
 from django_elasticsearch_dsl import Document, fields
 from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
-from bluebottle.geo.models import Location
+from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.documents import (
     deduplicate,
     get_translated_country_list,
@@ -100,6 +102,29 @@ def geofeatures_for_geolocation(geolocation):
             is_primary=geofeature.pk == primary_id,
         ))
     return geofeatures
+
+
+GEOLOCATION_LOOKUPS = ('location', 'impact_location', 'slots__location', 'initiative__place')
+
+
+def _has_lookup(model, lookup):
+    for name in lookup.split('__'):
+        try:
+            model = model._meta.get_field(name).related_model
+        except FieldDoesNotExist:
+            return False
+    return True
+
+
+def activities_for_geolocation(model, geolocation):
+    lookups = [lookup for lookup in GEOLOCATION_LOOKUPS if _has_lookup(model, lookup)]
+    if not lookups:
+        return model.objects.none()
+
+    query = Q()
+    for lookup in lookups:
+        query |= Q(**{lookup: geolocation})
+    return model.objects.filter(query).distinct()
 
 
 def geolocation_for_activity(instance):
@@ -352,12 +377,14 @@ class ActivityDocument(Document):
             return model.objects.filter(segments=related_instance)
         if isinstance(related_instance, Location):
             return model.objects.filter(office_location=related_instance)
+        if isinstance(related_instance, Geolocation):
+            return activities_for_geolocation(model, related_instance)
         if isinstance(related_instance, Theme.translations.field.model):
             return model.objects.filter(initiative__theme=related_instance.master)
 
     class Django:
         related_models = (
-            Initiative, Theme, Theme.translations.field.model, Segment, Location
+            Initiative, Theme, Theme.translations.field.model, Segment, Location, Geolocation
         )
         model = Activity
 

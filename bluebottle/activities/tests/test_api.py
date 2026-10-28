@@ -7,8 +7,8 @@ from unittest import mock
 
 import dateutil
 from django.contrib.auth.models import Permission
-from django.db import connection
 from django.contrib.gis.geos import Point
+from django.db import connection
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -185,7 +185,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity)
         DateActivitySlotFactory.create(
-            status='succeeded', activity=activity, start=now() - timedelta(days=10)
+            status='finished', activity=activity, start=now() - timedelta(days=10)
         )
         response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
@@ -205,6 +205,28 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             attributes['expertise'],
             activity.expertise.name
         )
+        self.assertEqual(attributes['slot-count'], 3)
+        self.assertEqual(
+            dateutil.parser.parse(attributes['start']),
+            min([slot.start for slot in activity.slots.all() if slot.start > now()])
+        )
+
+        self.assertEqual(
+            dateutil.parser.parse(attributes['end']),
+            min([slot.end for slot in activity.slots.all() if slot.start > now()])
+        )
+        self.assertEqual(attributes['has-multiple-locations'], True)
+        self.assertIsNone(attributes['location'])
+
+    def test_date_preview_multiple_slots_highlight(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        DateActivitySlotFactory.create_batch(3, activity=activity)
+        DateActivitySlotFactory.create(
+            status='finished', activity=activity, start=now() - timedelta(days=10)
+        )
+        response = self.client.get(self.url + '?filter[hightlight]=1', user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
+        attributes = response.json()['data'][0]['attributes']
+
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(
             dateutil.parser.parse(attributes['start']),
@@ -1639,6 +1661,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = DateActivityFactory.create_batch(
             2,
             status='open',
+            initiative=None,
         )
         for activity in matching:
             DateActivitySlotFactory.create_batch(
@@ -1650,6 +1673,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = DateActivityFactory.create_batch(
             3,
             status='open',
+            initiative=None,
         )
         for activity in other:
             DateActivitySlotFactory.create_batch(
@@ -1708,6 +1732,30 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertFound(matching)
+
+    def date_filter_response(self, value):
+        return self.client.get(
+            '{}?filter[date]={}'.format(self.url, value),
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
+
+    def test_filter_date_truncated_value(self):
+        """The value seen in production: the end of the range cut off mid-time."""
+        response = self.date_filter_response('2026-09-30T22:00:00.000Z,2026-10-31T2\u2026')
+        self.assertEqual(response.status_code, 400)
+
+    def test_filter_date_unparseable_start(self):
+        response = self.date_filter_response('not-a-date,2026-10-31T22:00:00.000Z')
+        self.assertEqual(response.status_code, 400)
+
+    def test_filter_date_without_separator(self):
+        response = self.date_filter_response('2026-09-30T22:00:00.000Z')
+        self.assertEqual(response.status_code, 400)
+
+    def test_filter_date_open_ended_range(self):
+        for value in ('2025-04-01,', ',2025-04-08', ','):
+            response = self.date_filter_response(value)
+            self.assertEqual(response.status_code, 200, 'rejected {}'.format(value))
 
     def test_filter_past_dates(self):
         activity1 = DateActivityFactory.create(status="succeeded")
@@ -2234,6 +2282,33 @@ class ActivityLocationAPITestCase(APITestCase):
         with self.closed_site():
             self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_200_OK)
+
+
+class ActivityListAPITestCase(APITestCase):
+    model = Activity
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        DeedFactory.create(owner=self.user)
+        DeedFactory.create(initiative=InitiativeFactory.create(owner=self.user))
+        DeedFactory.create()
+
+        self.url = reverse('activity-list')
+
+    def test_get(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
+
+    def test_get_anon(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_platform_anon(self):
+        with self.closed_site():
+            self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
 class ActivityMessageAPITestCase(BluebottleTestCase):

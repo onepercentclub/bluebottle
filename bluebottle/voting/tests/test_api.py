@@ -64,13 +64,80 @@ class PollDetailAPITestCase(APITestCase):
             None
         )
 
-    def test_get_closed_poll(self):
+    def test_get_closed_both(self):
+        self.poll.status = 'closed'
+        self.poll.highlight_winner = True
+        self.poll.show_vote_count = True
+        self.poll.save()
+
+        other = PollOptionFactory.create(poll=self.poll, title='Green')
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        PollVoteFactory.create(poll=self.poll, option=other)
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('status', 'closed')
+        self.assertAttribute('votes_cast', 4)
+
+        options = {
+            included['id']: included
+            for included in self.response.json()['included']
+            if included['type'] == 'polls/options'
+        }
+        option = options[str(self.option.pk)]['attributes']
+        other_option = options[str(other.pk)]['attributes']
+
+        self.assertTrue(option['winner'])
+        self.assertEqual(option['votes'], 3)
+        self.assertEqual(option['percentage'], 75)
+
+        self.assertFalse(other_option['winner'])
+        self.assertEqual(other_option['votes'], 1)
+        self.assertEqual(other_option['percentage'], 25)
+
+    def test_get_closed_poll_without_winner_with_highlight(self):
+        self.poll.status = 'closed'
+        self.poll.highlight_winning_option = False
+        self.poll.show_vote_count = True
+        self.poll.save()
+
+        other = PollOptionFactory.create(poll=self.poll, title='Green')
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        PollVoteFactory.create(poll=self.poll, option=other)
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('status', 'closed')
+        self.assertAttribute('votes_cast', 4)
+
+        options = {
+            included['id']: included['attributes']
+            for included in self.response.json()['included']
+            if included['type'] == 'polls/options'
+        }
+        option = options[str(self.option.pk)]
+        other_option = options[str(other.pk)]
+
+        self.assertNotIn('winner', option)
+        self.assertEqual(option['votes'], 3)
+        self.assertEqual(option['percentage'], 75)
+
+        self.assertNotIn('winner', other_option)
+        self.assertEqual(other_option['votes'], 1)
+        self.assertEqual(other_option['percentage'], 25)
+
+    def test_get_closed_poll_with_highlight_winner_without_voute_count(self):
+        self.poll.status = 'closed'
+        self.poll.highlight_winning_option = True
+        self.poll.show_vote_count = False
+        self.poll.save()
+
         other = PollOptionFactory.create(poll=self.poll, title='Green')
         PollVoteFactory.create(poll=self.poll, option=self.option)
         PollVoteFactory.create(poll=self.poll, option=self.option)
         PollVoteFactory.create(poll=self.poll, option=other)
-        self.poll.status = 'closed'
-        self.poll.save()
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('status', 'closed')
@@ -81,14 +148,37 @@ class PollDetailAPITestCase(APITestCase):
             for included in self.response.json()['included']
             if included['type'] == 'polls/options'
         }
-        self.assertEqual(options[str(self.option.pk)]['votes'], 2)
-        self.assertEqual(options[str(self.option.pk)]['percentage'], 67)
-        self.assertTrue(options[str(self.option.pk)]['winner'])
-        self.assertEqual(options[str(other.pk)]['votes'], 1)
-        self.assertEqual(options[str(other.pk)]['percentage'], 33)
-        self.assertFalse(options[str(other.pk)]['winner'])
+        option = options[str(self.option.pk)]
+        other_option = options[str(other.pk)]
 
-    def test_get_open_poll_omits_option_results(self):
+        self.assertTrue(option['winner'])
+        self.assertNotIn('votes', option)
+        self.assertNotIn('percentage', option)
+
+        self.assertFalse(other_option['winner'])
+        self.assertNotIn('votes', other_option)
+        self.assertNotIn('percentage', other_option)
+
+    def test_get_open_poll_with_vote_count(self):
+        self.poll.show_vote_count = True
+        self.poll.save()
+
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        option = [
+            included for included in self.response.json()['included']
+            if included['type'] == 'polls/options'
+        ][0]
+
+        self.assertIn('votes', option['attributes'])
+        self.assertIn('percentage', option['attributes'])
+        self.assertNotIn('winner', option['attributes'])
+
+    def test_get_open_poll_without_vote_count(self):
+        self.poll.show_vote_count = False
+        self.poll.save()
+
         PollVoteFactory.create(poll=self.poll, option=self.option)
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
@@ -218,9 +308,7 @@ class PollVoteListAPITestCase(APITestCase):
             if included['type'] == 'polls/options'
             and included['id'] in {str(winning.pk), str(losing.pk)}
         }
-        self.assertEqual(options[str(winning.pk)]['votes'], 2)
         self.assertTrue(options[str(winning.pk)]['winner'])
-        self.assertEqual(options[str(losing.pk)]['votes'], 1)
         self.assertFalse(options[str(losing.pk)]['winner'])
 
     def test_list_filter_by_status(self):

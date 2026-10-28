@@ -24,8 +24,8 @@ from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from django_tools.middlewares.ThreadLocal import get_current_request
-from parler.admin import TranslatableAdmin
 from hijack.contrib.admin import HijackUserAdminMixin
+from parler.admin import TranslatableAdmin
 from rest_framework.authtoken.models import Token
 
 from bluebottle.auth.permissions import can_hijack
@@ -1088,8 +1088,8 @@ class MemberAdmin(HijackUserAdminMixin, RegionManagerAdminMixin, MemberSegmentAd
         links = []
         if can_hijack(hijacker=request.user, hijacked=obj):
             links.append(format_html(
-                '<button type="button" class="button" data-hijack-user="{}" '
-                'data-hijack-next="{}" data-hijack-url="{}">{}</button>',
+                '<a style="margin-right:16px" class="button" data-hijack-user="{}" '
+                'data-hijack-next="{}" data-hijack-url="{}">{}</a>',
                 obj.pk,
                 self.get_hijack_success_url(request, obj),
                 reverse('hijack:acquire'),

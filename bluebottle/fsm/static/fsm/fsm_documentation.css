@@ -345,3 +345,150 @@ nav a:hover {
   }
 }
 
+
+/* Families */
+.fsm-family {
+  margin-bottom: 48px;
+}
+
+.fsm-family > .fsm-family-title {
+  color: white;
+  font-size: 32px;
+  margin: 24px 0 12px;
+}
+
+.fsm-family > .help,
+.fsm-family > .fsm-graph {
+  background: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.fsm-family > .help {
+  margin-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  padding-bottom: 0;
+}
+
+.fsm-family > .help + .fsm-graph {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Graphs */
+.fsm-graph {
+  overflow-x: auto;
+  min-height: 60px;
+  margin: 8px 0;
+}
+
+.fsm-graph svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.fsm-graph-small svg {
+  max-height: 520px;
+}
+
+.fsm-graph.is-loading::before {
+  content: 'Rendering graph…';
+  color: #8a94a3;
+  font-size: 13px;
+}
+
+.fsm-graph svg .node,
+.fsm-graph svg .edge {
+  transition: opacity 0.15s;
+}
+
+.fsm-graph svg.fsm-dim .node,
+.fsm-graph svg.fsm-dim .edge {
+  opacity: 0.15;
+}
+
+.fsm-graph svg.fsm-dim .fsm-hl {
+  opacity: 1;
+}
+
+.fsm-graph svg.fsm-dim .edge.fsm-hl path {
+  stroke-width: 2px;
+}
+
+.fsm-graph svg a:hover text {
+  text-decoration: underline;
+}
+
+.fsm-graph-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  font-size: 13px;
+  color: #555;
+}
+
+.fsm-graph-toolbar label {
+  cursor: pointer;
+}
+
+.fsm-legend {
+  display: inline-flex;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.fsm-legend span::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 0;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.fsm-legend .legend-manual::before {
+  border-top: 2px solid #1f2d3d;
+}
+
+.fsm-legend .legend-automatic::before {
+  border-top: 2px dashed #8a94a3;
+}
+
+.fsm-legend .legend-terminal::before {
+  width: 16px;
+  height: 10px;
+  border: 3px double #4a6fa5;
+  border-radius: 3px;
+}
+
+.fsm-globals {
+  font-size: 13px;
+  color: #555;
+}
+
+.fsm-cascade-toggle {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border: 1px solid #4a6fa5;
+  border-radius: 4px;
+  background: white;
+  color: #4a6fa5;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.fsm-cascade-toggle:hover {
+  background: #eef4fb;
+}
+
+.fsm-cascade {
+  border-left: 3px solid #d0d7e2;
+  padding-left: 12px;
+}
+
+@media (max-width: 600px) {
+  .fsm-legend {
+    margin-left: 0;
+  }
+}

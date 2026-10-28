@@ -357,3 +357,55 @@ class PlaceDetailTestCase(APITestCase):
         self.perform_get(user=BlueBottleUserFactory.create())
         # Share places
         self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+
+class PlaceListTestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = PlaceSerializer
+        self.url = reverse('place-list')
+
+    def get_data(self, mapbox_id):
+        return {
+            'data': {
+                'type': 'places',
+                'attributes': {
+                    'locality': 'Amsterdam',
+                    'mapbox-id': mapbox_id,
+                    'position': {'latitude': 52.37, 'longitude': 4.89},
+                }
+            }
+        }
+
+    def test_create(self):
+        self.perform_create(user=self.user, data=self.get_data('dXJuOm1ieHBsYzpBbXN0ZXJkYW0'))
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.mapbox_id, 'dXJuOm1ieHBsYzpBbXN0ZXJkYW0')
+
+    def test_create_reuses_existing_mapbox_id(self):
+        existing = PlaceFactory.create(mapbox_id='dXJuOm1ieHBsYzpBbXN0ZXJkYW0')
+
+        self.perform_create(user=self.user, data=self.get_data('dXJuOm1ieHBsYzpBbXN0ZXJkYW0'))
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model, existing)
+
+    def test_create_duplicate_mapbox_id(self):
+        first = PlaceFactory.create(mapbox_id='dXJuOm1ieHBsYzpBbXN0ZXJkYW0')
+        PlaceFactory.create(mapbox_id='dXJuOm1ieHBsYzpBbXN0ZXJkYW0')
+
+        self.perform_create(user=self.user, data=self.get_data('dXJuOm1ieHBsYzpBbXN0ZXJkYW0'))
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model, first)
+
+    def test_create_without_mapbox_id(self):
+        existing = [PlaceFactory.create(mapbox_id=None), PlaceFactory.create(mapbox_id=None)]
+
+        self.perform_create(user=self.user, data=self.get_data(None))
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertNotIn(self.model, existing)

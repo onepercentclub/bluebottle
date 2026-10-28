@@ -320,7 +320,10 @@ class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
         except ValueError:
             raise ValidationError('Invalid token')
 
-        user = USER_MODEL.objects.get(pk=base36_to_int(uidb36))
+        try:
+            user = USER_MODEL.objects.get(pk=base36_to_int(uidb36))
+        except (ValueError, OverflowError, USER_MODEL.DoesNotExist):
+            raise ValidationError('Token expired')
 
         if default_token_generator.check_token(user, token):
 

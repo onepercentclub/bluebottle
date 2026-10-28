@@ -135,3 +135,6 @@ postgres-data
 **/*.code-workspace
 
 bluebottle/fsm/static/fsm/vendor/
+
+# worktrees
+.claude/worktrees

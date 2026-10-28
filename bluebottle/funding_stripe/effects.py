@@ -32,7 +32,7 @@ class AcceptTosEffect(Effect):
 class PutActivitiesOnHoldEffect(Effect):
     conditions = []
     title = _("Put activities on hold")
-    template = "admin/put_activities_on_hold.html"
+    template = "admin/funding_stripe/stripepayoutaccount/put_activities_on_hold.html"
 
     def post_save(self, **kwargs):
         fundings = Funding.objects.filter(
@@ -49,7 +49,7 @@ class PutActivitiesOnHoldEffect(Effect):
 class OpenActivitiesOnHoldEffect(Effect):
     conditions = []
     title = _("Open activities that are on hold")
-    template = "admin/open_activities_on_hold.html"
+    template = "admin/funding_stripe/stripepayoutaccount/open_activities_on_hold.html"
 
     def post_save(self, **kwargs):
         fundings = Funding.objects.filter(

@@ -7,6 +7,7 @@ from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.timezone import now
 
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -457,6 +458,34 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
 
         page = page.click('Upcoming')
         self.assertTrue('3 slots' in page.text)
+
+    def test_change_slot_fields_editable(self):
+        slot = self.activity1.slots.first()
+        url = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
+        page = self.app.get(url)
+        self.assertEqual(page.status, '200 OK')
+
+        form = page.forms['dateactivityslot_form']
+        for field in [
+            'title', 'start_0', 'duration_0', 'capacity', 'is_online',
+            'online_meeting_url', 'location', 'location_hint',
+        ]:
+            self.assertIn(field, form.fields)
+
+    def test_change_adopted_slot_fields_readonly(self):
+        DoGoodEventFactory.create(adopted=self.activity1)
+        slot = self.activity1.slots.first()
+
+        url = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
+        page = self.app.get(url)
+        self.assertEqual(page.status, '200 OK')
+
+        form = page.forms['dateactivityslot_form']
+        for field in [
+            'title', 'start_0', 'duration_0', 'capacity', 'is_online',
+            'online_meeting_url', 'location', 'location_hint',
+        ]:
+            self.assertNotIn(field, form.fields)
 
 
 class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):

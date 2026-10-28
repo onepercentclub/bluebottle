@@ -1,12 +1,37 @@
 from datetime import datetime, timedelta
 
 from django.contrib.sessions.backends.db import SessionStore as DBSessionStore
+from django.db import connection
 from django.utils import timezone
 
 from bluebottle.clients import properties
 
+TENANT_SESSION_KEY = '_tenant'
+
+
+def current_schema():
+    tenant = getattr(connection, 'tenant', None)
+    return getattr(tenant, 'schema_name', None)
+
 
 class SessionStore(DBSessionStore):
+    """
+    Sessions are stored in the shared schema, so bind each one to the tenant
+    that created it and ignore it on any other tenant.
+    """
+
+    def load(self):
+        data = super().load()
+        if data and data.get(TENANT_SESSION_KEY) != current_schema():
+            self._session_key = None
+            return {}
+        return data
+
+    def create_model_instance(self, data):
+        return super().create_model_instance(
+            {**data, TENANT_SESSION_KEY: current_schema()}
+        )
+
     def get_expiry_age(self, **kwargs):
         """Get the number of seconds until the session expires.
 

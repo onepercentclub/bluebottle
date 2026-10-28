@@ -38,11 +38,6 @@ def set_last_login(user, response, *args, **kwargs):
 
 
 class AdminSiteOTPRequired(BaseAdminSiteOTPRequired):
-    def has_permission(self, request):
-        if getattr(request.user, 'is_hijacked', False):
-            return AdminSite.has_permission(self, request)
-        return super().has_permission(request)
-
     def login(self, request, extra_context=None):
         if getattr(request.user, 'is_hijacked', False):
             return AdminSite.login(self, request, extra_context)

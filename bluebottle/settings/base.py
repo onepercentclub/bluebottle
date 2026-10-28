@@ -212,7 +212,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/media', '/downloads', '/login-with',
                           '/surveys', '/token', '/jet', '/.well-known')
 
-HIJACK_PERMISSION_CHECK = 'bluebottle.members.hijack.can_hijack'
+HIJACK_PERMISSION_CHECK = 'bluebottle.auth.permissions.can_hijack'
 HIJACK_INSERT_BEFORE = None
 
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'

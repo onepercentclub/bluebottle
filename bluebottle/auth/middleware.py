@@ -13,6 +13,7 @@ from django.http.request import RawPostDataException
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.functional import SimpleLazyObject
 from lockdown import settings as lockdown_settings
 from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
                                  compile_url_exceptions, get_lockdown_form)
@@ -73,10 +74,27 @@ class UserJwtTokenMiddleware(MiddlewareMixin):
             return
 
 
+def get_jwt_payload(request):
+    """Payload of a valid JWT in the request, or an empty dict."""
+    try:
+        user_auth_tuple = JSONWebTokenAuthentication().authenticate(request)
+    except exceptions.APIException:
+        user_auth_tuple = None
+    if user_auth_tuple is None:
+        return {}
+    return api_settings.JWT_DECODE_HANDLER(user_auth_tuple[1])
+
+
 class SlidingJwtTokenMiddleware(MiddlewareMixin):
     """
     Custom middleware to set a sliding window for the jwt auth token expiration.
+
+    Also exposes the token payload as ``request.jwt_payload``, decoded on first use,
+    so views and serializers can read claims such as ``impersonated``.
     """
+
+    def process_request(self, request):
+        request.jwt_payload = SimpleLazyObject(lambda: get_jwt_payload(request))
 
     def process_response(self, request, response):
         """ Override only the request to add the new token """
@@ -369,17 +387,15 @@ class OTPMiddleware(BaseOTPMiddleware):
             user.is_verified = functools.partial(is_verified, user)
 
         if user.is_authenticated:
+            if getattr(user, 'is_hijacked', False):
+                return self._verify_hijacked_user(request, user)
+
             persistent_id = request.session.get(DEVICE_ID_SESSION_KEY)
             device = (
                 self._device_from_persistent_id(persistent_id)
                 if persistent_id
                 else None
             )
-
-            if getattr(user, 'is_hijacked', False):
-                user.is_verified = lambda: True
-                user.otp_device = device
-                return user
 
             if (device is not None) and (device.user_id != user.pk):
                 device = None
@@ -389,4 +405,29 @@ class OTPMiddleware(BaseOTPMiddleware):
 
             user.otp_device = device
 
+        return user
+
+    def _verify_hijacked_user(self, request, user):
+        """
+        A hijacked session is verified by the OTP device of the original hijacker.
+        """
+        persistent_id = request.session.get(
+            HIJACK_OTP_DEVICE_SESSION_KEY
+        ) or request.session.get(DEVICE_ID_SESSION_KEY)
+        device = (
+            self._device_from_persistent_id(persistent_id)
+            if persistent_id
+            else None
+        )
+
+        hijack_history = request.session.get('hijack_history') or []
+        if (
+            device is None
+            or not device.confirmed
+            or not hijack_history
+            or str(device.user_id) != str(hijack_history[0])
+        ):
+            device = None
+
+        user.otp_device = device
         return user

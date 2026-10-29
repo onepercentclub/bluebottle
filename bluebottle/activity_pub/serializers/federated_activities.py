@@ -307,18 +307,28 @@ class TeamSerializer(FederatedObjectBaseSerializer):
         )
 
 
+class FormattedAddressField(serializers.CharField):
+    def __init__(self, *args, **kwargs):
+        kwargs['source'] = '*'
+
+        super().__init__(*args, **kwargs)
+
+    def to_representation(self, value):
+        if value.geofeature:
+            return value.geofeature.place_name
+        return value.formatted_address or value.locality or '-'
+
+    def to_internal_value(self, value):
+        return {'formatted_address': value}
+
+
 class LocationSerializer(FederatedObjectBaseSerializer):
     type = TypeField('Place')
     latitude = serializers.FloatField(source='position.x', allow_null=True)
     longitude = serializers.FloatField(source='position.y', allow_null=True)
-    name = serializers.SerializerMethodField()
+    name = FormattedAddressField()
     place_type = serializers.SerializerMethodField()
     identifier = IdentifierField(required=False, allow_null=True)
-
-    def get_name(self, obj):
-        if obj.geofeature:
-            return obj.geofeature.place_name
-        return obj.formatted_address or obj.locality or '-'
 
     def get_place_type(self, obj):
         if obj.geofeature and obj.geofeature.feature_type:
@@ -356,12 +366,9 @@ class LocationSerializer(FederatedObjectBaseSerializer):
     def create(self, validated_data):
         identifiers = validated_data.pop('identifier', None)
         validated_data.pop('place_type', None)
-        name = validated_data.pop('name', None)
         mapbox_id = mapbox_id_from_federated_identifiers(identifiers)
         if mapbox_id:
             validated_data['mapbox_id'] = mapbox_id
-        if name:
-            validated_data.setdefault('formatted_address', name)
 
         return super().create(validated_data)
 

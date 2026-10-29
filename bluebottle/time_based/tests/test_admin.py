@@ -3,29 +3,36 @@ import json
 from datetime import timedelta
 
 from django.contrib.admin.sites import AdminSite
+from django.contrib.gis.geos import Point
 from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.timezone import now
 
+from bluebottle.bluebottle_dashboard.utils import get_menu_items
 from bluebottle.files.tests.factories import PrivateDocumentFactory
+from bluebottle.fsm.effects import TransitionEffect
+from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
-from bluebottle.bluebottle_dashboard.utils import get_menu_items
 from bluebottle.time_based.admin import (
     DateActivityInterestAdminInline,
     ScheduleActivityAdmin,
     SkillAdmin,
     SlotInterestAdminInline,
 )
-from bluebottle.time_based.models import DateActivity, ScheduleActivity, Skill
+from bluebottle.time_based.models import DateActivity, DateParticipant, ScheduleActivity, Skill
+from bluebottle.time_based.models import TimeContribution
+from bluebottle.time_based.states import TimeContributionStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
     DateParticipantFactory, DateRegistrationFactory,
     DeadlineActivityFactory,
     InterestFactory,
     ScheduleActivityFactory, ScheduleRegistrationFactory,
+    TimeContributionFactory,
 )
+from bluebottle.time_based.triggers.contributions import should_succeed_instantly
 
 
 class InterestAdminInlineTestCase(BluebottleAdminTestCase):
@@ -399,6 +406,28 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(page.status, '200 OK')
         self.assertTrue('This field is required.' in page.text)
 
+    def test_add_form(self):
+        for model in [
+            'dateparticipant', 'periodicparticipant', 'scheduleparticipant',
+            'deadlineparticipant', 'teamscheduleparticipant', 'teammember',
+        ]:
+            with self.subTest(model=model):
+                page = self.app.get(reverse('admin:time_based_{}_add'.format(model)))
+                self.assertEqual(page.status, '200 OK')
+
+    def test_add_date_participant(self):
+        slot = self.registration.activity.slots.first()
+        page = self.app.get(reverse('admin:time_based_dateparticipant_add'), user=self.staff_member)
+        form = page.forms[1]
+        form['user'] = self.supporter.pk
+        form['slot'] = slot.pk
+        page = form.submit(user=self.staff_member).follow(user=self.staff_member)
+        self.assertEqual(page.status, '200 OK')
+
+        participant = DateParticipant.objects.get(user=self.supporter)
+        self.assertEqual(participant.slot, slot)
+        self.assertEqual(participant.activity, slot.activity)
+
     def test_document(self):
         self.registration.document = PrivateDocumentFactory.create()
         self.registration.save()
@@ -414,6 +443,46 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
                 reverse('registration-document', args=(self.registration.pk,))
             )
         )
+
+
+class TimeContributionAdminTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.superuser)
+
+    def test_add_without_contributor(self):
+        page = self.app.get(reverse('admin:time_based_timecontribution_add'))
+        self.assertEqual(page.status, '200 OK')
+        form = page.forms['timecontribution_form']
+        form['contributor'] = ''
+        form['start_0'] = '2026-08-03'
+        form['start_1'] = '10:00'
+        form['end_0'] = '2026-08-03'
+        form['end_1'] = '12:00'
+        form['value'] = '02:00:00'
+        page = form.submit()
+        self.assertEqual(page.status, '200 OK')
+        self.assertTrue('contributor' in page.context['adminform'].form.errors)
+        self.assertEqual(page.forms['timecontribution_form']['value'].value, '02:00:00')
+
+    def test_change_without_contributor(self):
+        contribution = TimeContributionFactory.create(contributor=None)
+        page = self.app.get(reverse('admin:time_based_timecontribution_change', args=(contribution.pk,)))
+        form = page.forms['timecontribution_form']
+        form['value'] = '03:00:00'
+        page = form.submit()
+        self.assertEqual(page.status, '302 Found')
+        contribution.refresh_from_db()
+        self.assertIsNone(contribution.contributor)
+        self.assertEqual(contribution.value, timedelta(hours=3))
+
+    def test_should_succeed_instantly_without_contributor(self):
+        effect = TransitionEffect(TimeContributionStateMachine.succeed)(TimeContribution())
+        self.assertFalse(should_succeed_instantly(effect))
 
 
 class TestSkillAdmin(BluebottleAdminTestCase):
@@ -536,6 +605,16 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
             [s.start.date() for s in self.activity.slots.all()],
             [datetime.date.today() + timedelta(days=offset) for offset in range(-1, 5)]
         )
+
+    def test_location_without_timezone(self):
+        Geolocation.objects.filter(pk=self.slot.location.pk).update(position=Point(51.44, 5.47))
+        self.slot.refresh_from_db()
+        self.assertIsNone(self.slot.location.timezone)
+
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+        page = page.click('Repeat this slot')
+        self.assertEqual(page.status, '200 OK')
 
     def test_duplicate_reopen(self):
         self.assertEqual(self.activity.status, 'expired')

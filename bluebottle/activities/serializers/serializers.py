@@ -88,7 +88,7 @@ from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedFi
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
 
-ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
+ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity", ])
 
 
 class ActivityLocationRelationSerializer(Serializer):
@@ -103,9 +103,19 @@ class ActivityLocationSerializer(Serializer):
         read_only=True,
         model=ActivityLocation,
     )
+    link = PolymorphicSerializerMethodResourceRelatedField(
+        ActivityLocationRelationSerializer,
+        read_only=True,
+        model=ActivityLocation,
+    )
 
     def get_activity(self, obj):
-        return obj.activity
+        if isinstance(obj.activity, Activity):
+            return obj.activity
+
+    def get_link(self, obj):
+        if not isinstance(obj.activity, Activity):
+            return obj.activity
 
     class JSONAPIMeta:
         resource_name = "activity-locations"

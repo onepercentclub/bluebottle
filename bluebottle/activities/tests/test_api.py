@@ -18,7 +18,11 @@ from pytz import UTC
 from rest_framework import status
 
 from bluebottle.activities.models import Activity, ActivityMessage
-from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
+from bluebottle.activity_links.tests.factories import (
+    LinkedDateActivityFactory, LinkedDateSlotFactory, LinkedDeadlineActivityFactory,
+    LinkedDeedFactory, LinkedFundingFactory,
+    LinkedCollectCampaignFactory, LinkedScheduleActivityFactory, LinkedPeriodicActivityFactory
+)
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory,
     CollectContributorFactory,
@@ -2241,19 +2245,39 @@ class ActivityLocationAPITestCase(APITestCase):
             location_id=slot.location_id
         ))
 
+        for factory in [
+            LinkedDeadlineActivityFactory, LinkedCollectCampaignFactory, LinkedFundingFactory,
+            LinkedScheduleActivityFactory, LinkedPeriodicActivityFactory
+        ]:
+            factory.create(
+                status='succeeded',
+                location=GeolocationFactory.create()
+            )
+
+        linkded_date_activity = LinkedDateActivityFactory.create()
+        linkded_date_activity.slots.set([LinkedDateSlotFactory.create(location=GeolocationFactory.create())])
+
         self.url = reverse('activity-location-list')
 
     def test_get(self):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(7)
+        self.assertTotal(13)
         self.assertAttribute('position')
         self.assertRelationship('activity')
+
+        for location in self.response.json()['data']:
+            if location['id'].startswith('Linked'):
+                self.assertTrue(location['relationships']['link']['data'])
+                self.assertIsNone(location['relationships']['activity']['data'])
+            else:
+                self.assertIsNone(location['relationships']['link']['data'])
+                self.assertTrue(location['relationships']['activity']['data'])
 
     def test_get_anon(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(7)
+        self.assertTotal(13)
         self.assertAttribute('position')
         self.assertRelationship('activity')
 
@@ -2282,6 +2306,33 @@ class ActivityLocationAPITestCase(APITestCase):
         with self.closed_site():
             self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_200_OK)
+
+
+class ActivityListAPITestCase(APITestCase):
+    model = Activity
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        DeedFactory.create(owner=self.user)
+        DeedFactory.create(initiative=InitiativeFactory.create(owner=self.user))
+        DeedFactory.create()
+
+        self.url = reverse('activity-list')
+
+    def test_get(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
+
+    def test_get_anon(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_platform_anon(self):
+        with self.closed_site():
+            self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
 class ActivityMessageAPITestCase(BluebottleTestCase):

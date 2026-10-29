@@ -6,10 +6,9 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
-
-from django_quill.fields import QuillField
 
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import get_class
@@ -111,3 +110,56 @@ class MessageTemplate(TranslatableModel):
         subject=models.CharField(_('Subject'), max_length=200),
         body_html=QuillField(_('Message'), blank=True),
     )
+
+
+class ActivityMessageTemplate(models.Model):
+
+    ACTIONS = (
+        ('join', _('Participant joined')),
+        ('apply', _('Participant applied')),
+        ('accept', _('Participant accepted')),
+        ('reject', _('Participant rejected')),
+    )
+
+    activity = models.ForeignKey(
+        'activities.Activity',
+        related_name='message_templates',
+        on_delete=models.CASCADE
+    )
+    action = models.CharField(_('Action'), choices=ACTIONS, max_length=20)
+    insert_method = models.CharField(
+        _('Insert method'),
+        max_length=20,
+        choices=MessageTemplate.INSERT_METHODS,
+        default='append'
+    )
+    subject = models.CharField(_('Subject'), max_length=200, blank=True)
+    body_html = QuillField(_('Message'), blank=True)
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @property
+    def owner(self):
+        return self.activity.owner
+
+    def __str__(self):
+        return self.get_action_display()
+
+    class Meta:
+        verbose_name = _('Activity message template')
+        verbose_name_plural = _('Activity message templates')
+        unique_together = ('activity', 'action')
+        permissions = (
+            ('api_read_activitymessagetemplate', 'Can view activity message template through the API'),
+            ('api_add_activitymessagetemplate', 'Can add activity message template through the API'),
+            ('api_change_activitymessagetemplate', 'Can change activity message template through the API'),
+            ('api_delete_activitymessagetemplate', 'Can delete activity message template through the API'),
+            ('api_read_own_activitymessagetemplate', 'Can view own activity message template through the API'),
+            ('api_add_own_activitymessagetemplate', 'Can add own activity message template through the API'),
+            ('api_change_own_activitymessagetemplate', 'Can change own activity message template through the API'),
+            ('api_delete_own_activitymessagetemplate', 'Can delete own activity message template through the API'),
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activity-message-templates'

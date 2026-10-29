@@ -1,6 +1,7 @@
 from django.urls import path
 from django.urls import re_path
 
+from bluebottle.notifications.views import RelatedActivityMessageTemplateList
 from bluebottle.time_based.views import (
     PeriodicTransitionList,
     PeriodicActivityListView, PeriodicActivityDetailView,
@@ -58,6 +59,11 @@ urlpatterns = [
         '/<int:activity_id>/interests',
         PeriodicRelatedInterestList.as_view(),
         name='periodic-interests'
+    ),
+    path(
+        '/<int:activity_id>/message-templates',
+        RelatedActivityMessageTemplateList.as_view(),
+        name='periodic-message-templates'
     ),
     path(
         '/participants/transitions',

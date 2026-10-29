@@ -13,7 +13,9 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm, TranslatedField
 
-from bluebottle.notifications.models import Message, NotificationPlatformSettings, MessageTemplate
+from bluebottle.notifications.models import (
+    Message, NotificationPlatformSettings, MessageTemplate, ActivityMessageTemplate
+)
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.utils import to_text
 
@@ -34,6 +36,12 @@ class MessageAdminInline(GenericStackedInline):
     ordering = ('-sent',)
 
     can_delete = False
+
+
+class ActivityMessageTemplateAdminInline(admin.StackedInline):
+    model = ActivityMessageTemplate
+    fields = ['action', 'insert_method', 'subject', 'body_html']
+    extra = 0
 
 
 @admin.register(NotificationPlatformSettings)

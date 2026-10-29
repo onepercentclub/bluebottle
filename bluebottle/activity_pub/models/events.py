@@ -69,10 +69,6 @@ class Event(ActivityPubModel):
         blank=True,
         null=True,
         default="",
-        help_text=_(
-            "Make your activity come alive with a video. "
-            "You can paste the link to YouTube or Vimeo here."
-        ),
     )
 
     organization = models.ForeignKey(
@@ -208,8 +204,14 @@ class GrantApplication(Event):
 
 
 class EventAttendanceModeChoices(DjangoChoices):
-    online = ChoiceItem('OnlineEventAttendanceMode')
-    offline = ChoiceItem('OfflineEventAttendanceMode')
+    online = ChoiceItem(
+        'OnlineEventAttendanceMode',
+        label=_('No, participants can join from anywhere or the activity takes place online.')
+    )
+    offline = ChoiceItem(
+        'OfflineEventAttendanceMode',
+        label=_('Yes, participants have to be present in a specific location')
+    )
 
 
 class JoinModeChoices(DjangoChoices):
@@ -296,6 +298,7 @@ class SubEvent(ActivityPubModel):
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
     event_attendance_mode = models.CharField(
+        _('Do participants have to come to a location?'),
         choices=EventAttendanceModeChoices.choices,
         null=True,
         blank=True,
@@ -350,7 +353,7 @@ class SubEvent(ActivityPubModel):
 class DoGoodEvent(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
-    application_deadline = models.DateTimeField(null=True)
+    application_deadline = models.DateTimeField(_('Registration deadline'), null=True)
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
@@ -359,6 +362,7 @@ class DoGoodEvent(Event):
         null=True
     )
     event_attendance_mode = models.CharField(
+        _('Do participants have to come to a location?'),
         choices=EventAttendanceModeChoices.choices,
         null=True,
         blank=True,
@@ -380,10 +384,9 @@ class DoGoodEvent(Event):
         blank=True,
     )
     capacity = models.PositiveIntegerField(
-        _('maximum attendee capacity'),
+        _('attendee limit'),
         null=True,
         blank=True,
-        help_text=_('Overall attendee limit (schema.org maximumAttendeeCapacity). Mirrors time-based activity.'),
     )
 
     @property

@@ -1,24 +1,39 @@
 from io import BytesIO
 
+import httmock
 import mock
 import requests
 from django.contrib.admin.sites import AdminSite
+from django.contrib.messages import get_messages
 from django.core.files import File
 from django.urls import reverse
 
+from bluebottle.activity_links.models import (
+    LinkedActivity, LinkedCollectCampaign, LinkedDateActivity, LinkedDeadlineActivity,
+    LinkedDeed, LinkedFunding, LinkedGrantApplication,
+)
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.admin import FollowerAdmin, FollowingAdminForm, PublishedActivityAdmin
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import Accept, Follow, Follower, Following, PublishedActivity, Recipient
-from bluebottle.activity_pub.tests.factories import OrganizationFactory
+from bluebottle.activity_pub.tests.factories import (
+    CollectCampaignFactory, CreateFactory, CrowdFundingFactory, DoGoodEventFactory,
+    GoodDeedFactory, GrantApplicationFactory, OrganizationFactory, SubEventFactory,
+)
+from bluebottle.activity_pub.tests.test_federated_serializers import image_mock
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.collect.models import CollectActivity
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.deeds.models import Deed
 from bluebottle.deeds.tests.factories import DeedFactory
+from bluebottle.funding.models import Funding
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.time_based.models import DateActivity, DeadlineActivity
 from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
@@ -323,3 +338,287 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.assertNotIn('adopted', admin.list_display)
         self.assertIsNone(event.adopted)
         self.assertEqual(admin.adopted_count(event), 2)
+
+
+class EventChildAdminTestMixin:
+    factory = None
+    factory_kwargs = {}
+    adopted_model = None
+    linked_model = None
+    # Field names that should be rendered as read-only boxes on the change page
+    expected_fields = ()
+
+    def setUp(self):
+        super().setUp()
+        site_settings = SitePlatformSettings.load()
+        with open('./bluebottle/utils/tests/test_images/upload.svg', 'rb') as image:
+            site_settings.logo = File(BytesIO(image.read()), name='upload.svg')
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.activity_types = [
+            activity_type for (activity_type, _) in InitiativePlatformSettings.ACTIVITY_TYPES
+        ]
+        initiative_settings.save()
+
+        self.supplier = OrganizationFactory.create(
+            iri='http://example.com/organization/supplier',
+            name='Supplier platform',
+        )
+        self.follow = Following.objects.create(
+            object=self.supplier,
+            adoption_type='sync',
+        )
+
+        self.event = self.factory.create(
+            iri='http://example.com/event/1',
+            organization=self.supplier,
+            url='https://example.com/activity/1',
+            **self.factory_kwargs
+        )
+        CreateFactory.create(object=self.event, actor=self.supplier)
+
+        self.app.set_user(self.superuser)
+        self.url = reverse(
+            f'admin:activity_pub_{self.event._meta.model_name}_change',
+            args=(self.event.pk,)
+        )
+        self.adopt_url = reverse('admin:activity_pub_event_adopt', args=(self.event.pk,))
+        self.link_url = reverse('admin:activity_pub_event_link', args=(self.event.pk,))
+
+    def get_field(self, page, name):
+        return page.html.find(class_=f'field-{name}')
+
+    def assertFieldContains(self, page, name, value):
+        field = self.get_field(page, name)
+        self.assertIsNotNone(field, f'Field "{name}" is not shown')
+        self.assertIn(str(value), field.text)
+
+    def assertExtraFields(self, page):
+        pass
+
+    def assertAdopted(self, activity):
+        pass
+
+    def test_change_view_shows_event_data(self):
+        page = self.app.get(self.url)
+        self.assertEqual(page.status_code, 200)
+
+        for name in self.expected_fields:
+            self.assertIsNotNone(self.get_field(page, name), f'Field "{name}" is not shown')
+
+        self.assertFieldContains(page, 'adopt_info', 'Adopting creates a draft.')
+        self.assertFieldContains(
+            page, 'adopt_info',
+            'The other fields are managed by the organisation, and contributions are shared with them.'
+        )
+        self.assertFieldContains(page, 'name', self.event.name)
+        self.assertFieldContains(page, 'display_description', self.event.summary)
+        self.assertFieldContains(page, 'source', 'Supplier platform')
+        self.assertIsNone(self.get_field(page, 'url'))
+        self.assertIsNone(self.get_field(page, 'iri'))
+        self.assertIsNone(self.get_field(page, 'activity'))
+        self.assertIsNone(self.get_field(page, 'contributor_count'))
+        self.assertIn(
+            self.event.image.url,
+            self.get_field(page, 'display_image').find('img')['src']
+        )
+        self.assertExtraFields(page)
+
+        buttons = page.html.find_all('a', href=self.adopt_url)
+        self.assertTrue(buttons)
+        for button in buttons:
+            self.assertEqual(button.text.strip(), 'Adopt activity')
+
+    def test_adopt_event(self):
+        page = self.app.get(self.url)
+        with httmock.HTTMock(image_mock):
+            response = page.click(href=self.adopt_url, index=0)
+
+        self.event.refresh_from_db()
+        activity = self.event.adopted
+        self.assertIsNotNone(activity)
+        self.assertEqual(
+            response.location,
+            reverse('admin:activities_activity_change', args=(activity.pk,))
+        )
+        self.assertTrue(isinstance(activity.get_real_instance(), self.adopted_model))
+        self.assertEqual(activity.title, self.event.name)
+        self.assertEqual(activity.owner, self.superuser)
+        self.assertAdopted(activity.get_real_instance())
+
+        page = self.app.get(self.url)
+        self.assertIn('View adopted activity', page.text)
+        self.assertIn(
+            reverse('admin:activities_activity_change', args=(activity.pk,)),
+            page.text
+        )
+        self.assertNotIn(self.adopt_url, page.text)
+
+    def test_adopt_event_twice(self):
+        self.client.force_login(self.superuser)
+        with httmock.HTTMock(image_mock):
+            self.client.get(self.adopt_url)
+            response = self.client.get(self.adopt_url)
+
+        self.assertEqual(
+            response.url,
+            reverse('admin:activity_pub_event_change', args=(self.event.pk,))
+        )
+        self.assertEqual(
+            str(list(get_messages(response.wsgi_request))[-1]),
+            'This event has already been adopted.'
+        )
+        self.assertEqual(self.adopted_model.objects.count(), 1)
+
+    def test_link_event(self):
+        Following.objects.filter(pk=self.follow.pk).update(adoption_type='link')
+
+        page = self.app.get(self.url)
+        self.assertFieldContains(
+            page, 'adopt_info', 'Linking shows this activity on your platform straight away.'
+        )
+        self.assertFieldContains(
+            page, 'adopt_info', 'People contribute on the organisation’s platform.'
+        )
+        self.assertNotIn('Adopting creates a draft.', self.get_field(page, 'adopt_info').text)
+        self.assertNotIn(self.adopt_url, page.text)
+        buttons = page.html.find_all('a', href=self.link_url)
+        self.assertTrue(buttons)
+        for button in buttons:
+            self.assertEqual(button.text.strip(), 'Link activity')
+
+        with httmock.HTTMock(image_mock):
+            response = page.click(href=self.link_url, index=0)
+
+        self.event.refresh_from_db()
+        linked = self.event.link
+        self.assertIsNotNone(linked)
+        self.assertEqual(
+            response.location,
+            reverse('admin:activity_links_linkedactivity_change', args=(linked.pk,))
+        )
+        self.assertTrue(isinstance(linked.get_real_instance(), self.linked_model))
+        self.assertEqual(linked.title, self.event.name)
+        self.assertEqual(linked.link, self.event.url)
+
+        self.assertIsNone(self.event.adopted)
+        self.assertEqual(self.adopted_model.objects.count(), 0)
+        self.assertEqual(LinkedActivity.objects.count(), 1)
+
+
+class GoodDeedAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCase):
+    factory = GoodDeedFactory
+    adopted_model = Deed
+    linked_model = LinkedDeed
+    expected_fields = (
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'start_time', 'end_time',
+    )
+
+
+class CrowdFundingAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCase):
+    factory = CrowdFundingFactory
+    adopted_model = Funding
+    linked_model = LinkedFunding
+    expected_fields = (
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'end_time', 'target', 'donated', 'location',
+    )
+
+    def assertExtraFields(self, page):
+        self.assertFieldContains(page, 'target', '5000')
+        self.assertFieldContains(page, 'donated', '2000')
+
+    def assertAdopted(self, activity):
+        self.assertEqual(activity.target.amount, 5000)
+        self.assertEqual(str(activity.target.currency), 'EUR')
+
+
+class GrantApplicationAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCase):
+    factory = GrantApplicationFactory
+    adopted_model = GrantApplication
+    linked_model = LinkedGrantApplication
+    expected_fields = (
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'start_time', 'end_time', 'target', 'location',
+    )
+
+    def assertExtraFields(self, page):
+        self.assertFieldContains(page, 'target', '2500')
+
+    def assertAdopted(self, activity):
+        self.assertEqual(activity.target.amount, 2500)
+
+
+class CollectCampaignAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCase):
+    factory = CollectCampaignFactory
+    factory_kwargs = {
+        'collect_type': 'Clothes',
+        'target': 100,
+        'donated': 25,
+    }
+    adopted_model = CollectActivity
+    linked_model = LinkedCollectCampaign
+    expected_fields = (
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'start_time', 'end_time', 'location', 'collect_type',
+        'target', 'donated',
+    )
+
+    def assertExtraFields(self, page):
+        self.assertFieldContains(page, 'collect_type', 'Clothes')
+        self.assertFieldContains(page, 'target', '100')
+        self.assertFieldContains(page, 'donated', '25')
+
+    def assertAdopted(self, activity):
+        self.assertEqual(activity.collect_type.name, 'Clothes')
+        self.assertEqual(activity.target, 100)
+
+
+class DoGoodEventAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCase):
+    factory = DoGoodEventFactory
+    factory_kwargs = {
+        'slot_mode': None,
+        'join_mode': None,
+        'event_attendance_mode': 'OnlineEventAttendanceMode',
+        'capacity': 10,
+    }
+    adopted_model = DeadlineActivity
+    linked_model = LinkedDeadlineActivity
+    expected_fields = (
+        'name', 'display_description', 'display_image', 'video_url', 'source',
+        'start_time', 'end_time', 'duration', 'application_deadline',
+        'event_attendance_mode', 'capacity',
+    )
+
+    def assertExtraFields(self, page):
+        self.assertFieldContains(page, 'event_attendance_mode', 'online')
+        self.assertFieldContains(page, 'capacity', '10')
+        self.assertIsNone(page.html.find(id='sub_event-group'))
+
+
+class DoGoodEventWithSubEventsAdminTestCase(DoGoodEventAdminTestCase):
+    adopted_model = DateActivity
+    linked_model = LinkedDateActivity
+
+    def setUp(self):
+        super().setUp()
+        self.sub_events = SubEventFactory.create_batch(
+            2,
+            parent=self.event,
+            event_attendance_mode='OnlineEventAttendanceMode',
+            capacity=5,
+        )
+
+    def assertExtraFields(self, page):
+        self.assertFieldContains(page, 'event_attendance_mode', 'online')
+        inline = page.html.find(id='sub_event-group')
+        self.assertIsNotNone(inline)
+        self.assertIn('Slots', inline.text)
+        for sub_event in self.sub_events:
+            self.assertIn(sub_event.location.name, inline.text)
+
+    def assertAdopted(self, activity):
+        self.assertEqual(activity.slots.count(), 2)

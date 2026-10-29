@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from bluebottle.activity_pub.models import (
     Organization, Inbox, Outbox, PublicKey, PrivateKey, Follow, Person, Place, Event,
-    DoGoodEvent, SubEvent, Address, Image, GoodDeed, CrowdFunding, Create, CollectCampaign
+    DoGoodEvent, SubEvent, Address, Image, GoodDeed, CrowdFunding, Create, CollectCampaign, GrantApplication
 )
 
 
@@ -140,6 +140,7 @@ class ImageFactory(factory.DjangoModelFactory):
         model = Image
 
     url = 'http://example.com/image/1'
+    name = 'upload.png'
 
 
 class DoGoodEventFactory(factory.DjangoModelFactory):
@@ -207,3 +208,19 @@ class CrowdFundingFactory(factory.DjangoModelFactory):
     donated_currency = 'EUR'
     start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
     end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))
+
+
+class GrantApplicationFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = GrantApplication
+
+    name = factory.Faker('sentence', nb_words=4)
+    summary = factory.Faker('text', max_nb_chars=500)
+    image = factory.SubFactory(ImageFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+
+    start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
+    end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))
+
+    target = 2500
+    target_currency = 'EUR'

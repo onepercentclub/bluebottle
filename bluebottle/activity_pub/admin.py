@@ -957,11 +957,8 @@ class EventAdminMixin:
         "name",
         "display_description",
         "display_image",
-        "source",
-        "activity",
-        "url",
         "video_url",
-        "iri",
+        "source",
     )
     fields = readonly_fields
     list_filter = [AdoptedFilter, SourceFilter]
@@ -1118,7 +1115,7 @@ class EventAdminMixin:
             )
 
         try:
-            activity = adapter.link(event, request)
+            activity = adapter.link(event)
 
             self.message_user(
                 request,
@@ -1246,20 +1243,35 @@ class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
         return fields
 
     def adopt_info(self, obj):
-        return admin_info_box(
-            _('You can make changes to this activity after you adopt it '
-              'which will create a draft version of this activity.'))
+        adoption_type = obj.source.follow.adoption_type
+
+        if adoption_type == 'sync':
+            message = _(
+                'Adopting creates a draft. '
+                'Fill in the fields that are specific to your platform and publish it. '
+                'The other fields are managed by the organisation, and contributions are shared with them.'
+            )
+        elif adoption_type == 'link':
+            message = _(
+                'Linking shows this activity on your platform straight away. '
+                'People contribute on the organisation’s platform.'
+            )
+        else:
+            message = _(
+                'Adopting creates a draft copy that you can fully edit and publish. '
+                'It’s not connected to the original, so changes and contributions aren’t synced.'
+            )
+
+        return admin_info_box(message)
 
 
 @admin.register(GoodDeed)
 class GoodDeedAdmin(EventChildAdmin):
     base_model = Event
     model = GoodDeed
-    list_display = EventAdminMixin.list_display + ('contributor_count',)
     readonly_fields = EventChildAdmin.readonly_fields + (
         'start_time',
         'end_time',
-        'contributor_count',
     )
     fields = readonly_fields
 
@@ -1301,7 +1313,6 @@ class CollectCampaignAdmin(EventChildAdmin):
         'collect_type',
         'target',
         'donated',
-        'contributor_count'
     )
     fields = readonly_fields
 
@@ -1324,7 +1335,6 @@ class SubEventInline(admin.TabularInline):
         'start_time',
         'end_time',
         'capacity',
-        'contributor_count',
         'display_location'
     ]
 
@@ -1358,11 +1368,7 @@ class DoGoodEventAdmin(EventChildAdmin):
         'duration',
         'application_deadline',
         'event_attendance_mode',
-        'repetition_mode',
-        'join_mode',
-        'slot_mode',
         'capacity',
-        'contributor_count'
     )
     fields = readonly_fields
 
@@ -1371,5 +1377,5 @@ class DoGoodEventAdmin(EventChildAdmin):
 class SubEventAdmin(EventChildAdmin):
     base_model = Event
     model = SubEvent
-    readonly_fields = ('start_time', 'end_time', 'capacity', 'contributor_count')
+    readonly_fields = ('start_time', 'end_time', 'capacity', )
     fields = readonly_fields

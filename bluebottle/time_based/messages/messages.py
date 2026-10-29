@@ -736,7 +736,7 @@ class ParticipantWithdrewNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        if not self.obj.slot.activity.is_adopted:
+        if not self.obj.activity.is_adopted:
             return [self.obj.activity.owner]
         else:
             return []

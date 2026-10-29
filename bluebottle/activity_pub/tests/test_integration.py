@@ -982,6 +982,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.model.save()
 
         with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
             self.join()
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()

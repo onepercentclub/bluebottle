@@ -295,8 +295,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         if not self.theme_id and self.initiative_id:
             self.theme = self.initiative.theme
         if self.slug in ["", "new"]:
-            if self.title and slugify(self.title):
-                self.slug = slugify(self.title)
+            slug = slugify(self.title) if self.title else ""
+            if slug:
+                max_length = self._meta.get_field("slug").max_length
+                self.slug = slug[:max_length].rstrip("-")
             else:
                 self.slug = "new"
 

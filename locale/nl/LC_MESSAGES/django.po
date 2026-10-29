@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-10-29 08:51+0100\n"
-"PO-Revision-Date: 2026-10-29 07:51\n"
+"PO-Revision-Date: 2026-10-29 07:54\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -14599,7 +14599,7 @@ msgstr "\n"
 
 #: bluebottle/utils/fields.py:93
 msgid "Select a currency."
-msgstr "Selecteer een valuta"
+msgstr "Kies een valuta."
 
 #: bluebottle/utils/forms.py:83
 msgid "Transition"
@@ -14891,3 +14891,4 @@ msgstr "Heropen de peiling voor stemmen."
 #: bluebottle/voting/views.py:54
 msgid "You have already voted in this poll"
 msgstr "Je hebt al gestemd in deze peiling"
+

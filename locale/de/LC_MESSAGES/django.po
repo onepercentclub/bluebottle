@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-10-29 08:51+0100\n"
-"PO-Revision-Date: 2026-10-29 07:51\n"
+"PO-Revision-Date: 2026-10-29 07:54\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -14627,7 +14627,7 @@ msgstr "\n"
 
 #: bluebottle/utils/fields.py:93
 msgid "Select a currency."
-msgstr ""
+msgstr "Wähle eine Währung aus."
 
 #: bluebottle/utils/forms.py:83
 msgid "Transition"

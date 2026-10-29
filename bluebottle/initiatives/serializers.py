@@ -144,6 +144,7 @@ class CurrentMemberSerializer(MemberSerializer):
     has_votes = serializers.SerializerMethodField()
     can_pledge = serializers.BooleanField(read_only=True)
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
+    impersonated = serializers.SerializerMethodField()
 
     payout_account = SerializerMethodResourceRelatedField(
         model=StripePayoutAccount,
@@ -160,6 +161,10 @@ class CurrentMemberSerializer(MemberSerializer):
     def get_has_votes(self, obj):
         return obj.poll_votes.exists()
 
+    def get_impersonated(self, obj):
+        payload = getattr(self.context.get('request'), 'jwt_payload', None) or {}
+        return bool(payload.get('impersonated'))
+
     class Meta(MemberSerializer.Meta):
         fields = MemberSerializer.Meta.fields + (
             "hours_spent",
@@ -174,7 +179,7 @@ class CurrentMemberSerializer(MemberSerializer):
             "primary_language",
             "translate_user_content"
         )
-        meta_fields = ('permissions',)
+        meta_fields = ('permissions', 'impersonated')
 
     class JSONAPIMeta:
         resource_name = 'members'

@@ -18,14 +18,17 @@ from django.template import loader
 from django.template.response import TemplateResponse
 from django.urls import NoReverseMatch, reverse
 from django.urls import path
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
+from django_tools.middlewares.ThreadLocal import get_current_request
+from hijack.contrib.admin import HijackUserAdminMixin
 from parler.admin import TranslatableAdmin
 from rest_framework.authtoken.models import Token
 
+from bluebottle.auth.permissions import can_hijack
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
@@ -513,7 +516,7 @@ class MemberMessagesInline(TabularInlinePaginated):
 
 
 @admin.register(Member)
-class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
+class MemberAdmin(HijackUserAdminMixin, RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
 
@@ -812,7 +815,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         ('groups', UnionFieldListFilter)
     )
     list_display = ('email', 'first_name', 'last_name', 'is_staff',
-                    'date_joined', 'is_active', 'login_as_link')
+                    'date_joined', 'is_active')
     ordering = ('-date_joined', 'email',)
 
     inlines = (UserActivityInline, MemberMessagesInline)
@@ -980,13 +983,20 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             return []
         return super(MemberAdmin, self).get_inline_instances(request, obj)
 
+    def get_hijack_success_url(self, request, obj):
+        return reverse('admin:index')
+
+    def get_changelist_instance(self, request):
+        # Skip the impersonate column HijackUserAdminMixin adds to the list view
+        return super(HijackUserAdminMixin, self).get_changelist_instance(request)
+
     def get_urls(self):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
             path(
                 'login-as/<int:pk>/',
-                self.admin_site.admin_view(self.login_as),
+                self.admin_site.admin_view(self.login_as_view),
                 name='members_member_login_as'
             ),
             path(
@@ -1047,24 +1057,52 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)))
 
+    def login_as_view(self, request, pk):
+        if not request.user.is_superuser:
+            return HttpResponseForbidden('Not allowed to login as user')
+        return self.login_as(request, pk)
+
     @confirmation_form(
         LoginAsConfirmationForm,
         Member,
         'admin/members/login_as.html'
     )
     def login_as(self, request, user):
+        if not user.is_active:
+            return HttpResponseForbidden('Cannot login as inactive user')
         template = loader.get_template('utils/login_with.html')
-        context = {'token': user.get_jwt_token(), 'link': '/'}
+        context = {
+            'token': user.get_jwt_token(impersonator=request.user),
+            'original_token': request.user.get_jwt_token(),
+            'link': '/',
+        }
         response = HttpResponse(template.render(context, request), content_type='text/html')
         response['cache-control'] = "no-store, no-cache, private"
         return response
 
     def login_as_link(self, obj):
-        url = reverse('admin:members_member_login_as', args=(obj.pk,))
-        return format_html(
-            u"<a target='_blank' href='{}'>{}</a>",
-            url, _('Login as user')
-        )
+        request = get_current_request()
+        if not request or not obj:
+            return '-'
+
+        links = []
+        if can_hijack(hijacker=request.user, hijacked=obj):
+            links.append(format_html(
+                '<a style="margin-right:16px" class="button" data-hijack-user="{}" '
+                'data-hijack-next="{}" data-hijack-url="{}">{}</a>',
+                obj.pk,
+                self.get_hijack_success_url(request, obj),
+                reverse('hijack:acquire'),
+                _('Back-office'),
+            ))
+        if request.user.is_superuser and obj.is_active:
+            links.append(format_html(
+                '<a class="button" target="_blank" href="{}">{}</a>',
+                reverse('admin:members_member_login_as', args=(obj.pk,)),
+                _('Front-end'),
+            ))
+
+        return format_html_join(' ', '{}', ((link, ) for link in links)) or '-'
 
     login_as_link.short_description = _('Login as')
 

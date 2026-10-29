@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 class PreviewMember:
     def __init__(self):
-        self.first_name = pgettext('platform-email', "[participant's first name]")
-        self.full_name = pgettext('platform-email', "[participant's name]")
+        self.first_name = pgettext('platform-email', "[name]")
+        self.full_name = pgettext('platform-email', "[name]")
         self.primary_language = get_current_language()
         self.email = ''
 

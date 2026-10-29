@@ -96,6 +96,7 @@ class UserRegistrationNotification(BaseParticipantNotification):
 class UserRegistrationAcceptedNotification(UserRegistrationNotification):
     subject = pgettext('platform-email', 'You have been selected for the activity "{title}"')
     template = 'messages/registrations/user_accepted'
+    append_custom_message = True
 
 
 class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
@@ -103,11 +104,13 @@ class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
         "platform-email", 'Your team has been selected for the activity "{title}"'
     )
     template = "messages/registrations/team_accepted"
+    append_custom_message = True
 
 
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext('platform-email', 'You have not been selected for the activity "{title}"')
     template = 'messages/registrations/user_rejected'
+    append_custom_message = True
     link_to_overview = True
 
 
@@ -122,6 +125,7 @@ class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
         "platform-email", 'Your team has not been selected for the activity "{title}"'
     )
     template = "messages/registrations/team_rejected"
+    append_custom_message = True
     link_to_overview = True
 
 

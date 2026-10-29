@@ -61,7 +61,7 @@ class Migration(migrations.Migration):
         ('text', '0002_textitem_text_final'),
         ('oembeditem', '0001_initial'),
         ('rawhtml', '0001_initial'),
-        ('fluent_contents', '0002_poll'),
+        ('fluent_contents', '0001_initial'),
     ]
 
     operations = [

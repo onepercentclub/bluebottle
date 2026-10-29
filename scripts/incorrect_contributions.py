@@ -1,4 +1,4 @@
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F, Max
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -29,6 +29,18 @@ def get_buckets():
         user__isnull=False,
         slot__isnull=False
     )
+    kept_their_hours = DateParticipant.objects.filter(
+        status='succeeded',
+        registration__status='withdrawn',
+    ).annotate(
+        withdrawn_at=Max(
+            'registration__participants__updated',
+            filter=Q(registration__participants__status='withdrawn'),
+        ),
+    ).filter(
+        Q(withdrawn_at__isnull=True) | Q(withdrawn_at__gt=F('created'))
+    )
+
     succeeded_date_contributions = TimeContribution.objects.filter(
         status='succeeded',
         contributor__in=DateParticipant.objects.filter(
@@ -41,6 +53,8 @@ def get_buckets():
             status__in=('succeeded', 'new', 'accepted'),
             activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
         ),
+    ).exclude(
+        contributor__in=kept_their_hours,
     )
     succeeded_periodic_contributions = TimeContribution.objects.filter(
         status='succeeded',

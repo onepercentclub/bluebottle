@@ -118,7 +118,7 @@ class LinkedDeed(LinkedActivity):
         return None
 
     class JSONAPIMeta(object):
-        resource_name = 'activities/deeds'
+        resource_name = 'activities/deed-links'
 
 
 class LinkedCollectCampaign(LinkedActivity):
@@ -130,7 +130,7 @@ class LinkedCollectCampaign(LinkedActivity):
     activity_type = _('Collect campaign')
 
     class JSONAPIMeta(object):
-        resource_name = 'activities/collects'
+        resource_name = 'activities/collect-links'
 
 
 class LinkedFunding(LinkedActivity):
@@ -141,6 +141,9 @@ class LinkedFunding(LinkedActivity):
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     activity_type = _('Crowd-funding')
 
+    class JSONAPIMeta(object):
+        resource_name = 'activities/funding-links'
+
 
 class LinkedGrantApplication(LinkedActivity):
     target = MoneyField(null=True, blank=True)
@@ -148,6 +151,9 @@ class LinkedGrantApplication(LinkedActivity):
     end = models.DateTimeField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     activity_type = _('Grant application')
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/grant-application-links'
 
 
 class LinkedDeadlineActivity(LinkedActivity):
@@ -157,9 +163,15 @@ class LinkedDeadlineActivity(LinkedActivity):
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     activity_type = _('Flexible activity')
 
+    class JSONAPIMeta(object):
+        resource_name = 'activities/deadline-links'
+
 
 class LinkedDateActivity(LinkedActivity):
     activity_type = _('Date activity')
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/date-links'
 
 
 class LinkedDateSlot(models.Model):
@@ -180,6 +192,9 @@ class LinkedDateSlot(models.Model):
             return self.end - self.start
         return None
 
+    class JSONAPIMeta(object):
+        resource_name = 'activities/date-link-slots'
+
 
 class LinkedPeriodicActivity(LinkedActivity):
     start = models.DateTimeField(null=True, blank=True)
@@ -189,6 +204,9 @@ class LinkedPeriodicActivity(LinkedActivity):
     period = models.CharField(null=True, blank=True, max_length=255)
     activity_type = _('Recurring activity')
 
+    class JSONAPIMeta(object):
+        resource_name = 'activities/periodic-links'
+
 
 class LinkedScheduleActivity(LinkedActivity):
     start = models.DateTimeField(null=True, blank=True)
@@ -196,6 +214,9 @@ class LinkedScheduleActivity(LinkedActivity):
     duration = models.DurationField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     activity_type = _('Past date activity')
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/schedule-links'
 
 
 from bluebottle.activity_links.signals import *  # noqa

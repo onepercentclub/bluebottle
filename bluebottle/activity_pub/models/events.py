@@ -407,5 +407,5 @@ class DoGoodEvent(Event):
         return self.participation_mode == ParticipationModeChoices.teams
 
     class Meta(Event.Meta):
-        verbose_name = _('Date activity')
-        verbose_name_plural = _('Date activities')
+        verbose_name = _('Time-based activity')
+        verbose_name_plural = _('Time-based activities')

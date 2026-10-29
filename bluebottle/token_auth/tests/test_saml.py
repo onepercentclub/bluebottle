@@ -67,6 +67,16 @@ class TestSAMLTokenAuthentication(TestCase):
                 auth_backend.auth.get_last_request_id()
             )
 
+    def test_metadata_without_idp(self):
+        settings = dict(TOKEN_AUTH_SETTINGS)
+        del settings['idp']
+        with self.settings(TOKEN_AUTH=settings):
+            request = self._request('get', '/token/metadata/', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            metadata = ET.fromstring(auth_backend.get_metadata())
+            self.assertEqual(metadata.get('entityID'), TOKEN_AUTH_SETTINGS['sp']['entityId'])
+
     def test_sso_url_custom_target(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')

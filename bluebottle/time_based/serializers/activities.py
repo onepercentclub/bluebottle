@@ -14,7 +14,9 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Organizer
-from bluebottle.activities.utils import BaseActivitySerializer
+from bluebottle.activities.utils import (
+    BaseActivitySerializer
+)
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.geo.serializers import activity_geolocation_display
@@ -29,7 +31,6 @@ from bluebottle.time_based.models import (
     Interest
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
-from bluebottle.utils.fields import RichTextField
 from bluebottle.time_based.serializers.interest_link_field import (
     InterestLinkField,
     remove_interests_field_for_non_managers,
@@ -42,6 +43,7 @@ from bluebottle.time_based.serializers.interest_validators import (
     PARTICIPATING_REGISTERED_DATE_PARTICIPANT_STATUSES,
     PARTICIPATING_SCHEDULE_PARTICIPANT_STATUSES,
 )
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -72,13 +74,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
-
-        if not instance or instance.status in ('draft', 'needs_work'):
-            for key in self.fields:
-                self.fields[key].allow_blank = True
-                self.fields[key].validators = []
-                self.fields[key].allow_null = True
-                self.fields[key].required = False
 
         self.fields['permissions'] = ResourcePermissionField(self.detail_view_name, view_args=('pk',))
 

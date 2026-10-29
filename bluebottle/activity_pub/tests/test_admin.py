@@ -590,8 +590,7 @@ class DoGoodEventAdminTestCase(EventChildAdminTestMixin, BluebottleAdminTestCase
     expected_fields = (
         'name', 'display_description', 'display_image', 'video_url', 'source',
         'start_time', 'end_time', 'duration', 'application_deadline',
-        'event_attendance_mode', 'repetition_mode', 'join_mode', 'slot_mode',
-        'capacity',
+        'event_attendance_mode', 'capacity',
     )
 
     def assertExtraFields(self, page):

@@ -813,6 +813,10 @@ class DateActivitySlotTriggers(TriggerManager):
             ]
         ),
         ModelChangedTrigger(
+            ['start', 'duration', 'is_online', 'location_id', 'location_hint', 'title', 'capacity'],
+            effects=[SyncEffect]
+        ),
+        ModelChangedTrigger(
             [
                 'title',
                 'capacity',

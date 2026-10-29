@@ -247,8 +247,11 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     translate_user_content = models.BooleanField(
-        _('translate user content'),
-        help_text=_('Give users the option to translate user generated content.'),
+        _("Translate user content into each visitor's chosen language."),
+        help_text=_(
+            'Visitors see translated content by default and can switch back to the original. '
+            'Content is translated by DeepL.'
+        ),
         default=False
     )
 

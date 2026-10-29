@@ -116,6 +116,35 @@ def get_buckets():
         succeeded_team_schedule_contributions
     )
 
+    # BB-30016: unscheduled (Team)ScheduleParticipants use status 'accepted';
+    # their contributions must not stay 'succeeded' from the old
+    # fabricated end-date path. Reset them to 'new'.
+    unscheduled_schedule_contributions = TimeContribution.objects.filter(
+        status='succeeded',
+        contributor__in=ScheduleParticipant.objects.filter(
+            activity__team_activity='individuals',
+            user__isnull=False,
+            status__in=('new', 'accepted', 'unscheduled'),
+            registration__status__in=('accepted', 'new'),
+            activity__status__in=('open', 'registration_closed', 'full'),
+        ),
+    )
+    unscheduled_team_schedule_contributions = TimeContribution.objects.filter(
+        status='succeeded',
+        contributor__in=TeamScheduleParticipant.objects.filter(
+            activity__team_activity='teams',
+            user__isnull=False,
+            status__in=('new', 'accepted', 'unscheduled'),
+            team_member__status__in=('active',),
+            team_member__team__status__in=('accepted',),
+            activity__status__in=('open', 'registration_closed', 'full'),
+        ),
+    )
+    succeeded_should_be_new = (
+        unscheduled_schedule_contributions |
+        unscheduled_team_schedule_contributions
+    )
+
     new_failed_date_contributions = TimeContribution.objects.filter(
         status='new',
         contributor__in=DateParticipant.objects.filter(
@@ -332,6 +361,25 @@ def get_buckets():
         status='failed',
         contributor__in=accepted_schedule_participants.filter(unfinished_slot),
     )
+
+    # BB-30287: individual schedule participants that are scheduled on a slot
+    # that has finished, but whose contribution never followed the slot (e.g. the
+    # slot was finished manually and the succeed cascade was missed). The slot is
+    # done, so the participant succeeded and its contribution should be
+    # 'succeeded'. These are keyed off the finished slot, not the participant
+    # status, so they do not overlap the unscheduled ('accepted') reset above.
+    scheduled_finished_schedule_participants = ScheduleParticipant.objects.filter(
+        activity__team_activity='individuals',
+        user__isnull=False,
+        status__in=('scheduled', 'succeeded'),
+        slot__status='finished',
+        registration__status__in=('accepted', 'stopped'),
+        activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
+    )
+    scheduled_finished_schedule_contributions = TimeContribution.objects.filter(
+        status__in=('new', 'failed'),
+        contributor__in=scheduled_finished_schedule_participants,
+    )
     failed_schedule_team_contributions = TimeContribution.objects.filter(
         status='failed',
         contributor__in=TeamScheduleParticipant.objects.filter(
@@ -442,6 +490,8 @@ def get_buckets():
         'new_should_be_failed': new_should_be_failed,
         'new_should_be_succeeded': new_should_be_succeeded,
         'new_succeeded_collect_contributions': new_succeeded_collect_contributions,
+        'succeeded_should_be_new': succeeded_should_be_new,
+        'scheduled_finished_contributions': scheduled_finished_schedule_contributions,
     }
 
 
@@ -461,6 +511,8 @@ def apply_fixes(buckets):
     new_should_be_failed = buckets['new_should_be_failed']
     new_should_be_succeeded = buckets['new_should_be_succeeded']
     new_succeeded_collect_contributions = buckets['new_succeeded_collect_contributions']
+    succeeded_should_be_new = buckets['succeeded_should_be_new']
+    scheduled_finished_contributions = buckets['scheduled_finished_contributions']
 
     DeadlineParticipant.objects.filter(status='stopped').update(status='succeeded')
     for participant in DeadlineParticipant.objects.filter(registration__isnull=True):
@@ -513,6 +565,27 @@ def apply_fixes(buckets):
     failed_collect_contributions.update(status='succeeded')
     failed_contributions_new.update(status='new')
     new_succeeded_collect_contributions.update(status='succeeded')
+    unscheduled_ids = list(
+        succeeded_should_be_new.values_list('id', flat=True)
+    )
+    TimeContribution.objects.filter(
+        id__in=unscheduled_ids
+    ).update(status='new')
+
+    # BB-30287: a scheduled individual participant whose slot has finished should
+    # be succeeded, and so should its contribution. Succeed the participant first
+    # so the state matches the finished slot, then succeed the lagging
+    # contribution. Keyed off the finished slot, so unscheduled ('accepted')
+    # participants reset just above are untouched.
+    ScheduleParticipant.objects.filter(
+        activity__team_activity='individuals',
+        status='scheduled',
+        slot__status='finished',
+        registration__status__in=('accepted', 'stopped'),
+        activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
+    ).update(status='succeeded')
+    scheduled_finished_contributions.update(status='succeeded')
+
     for registration in registrations_without_participant.all():
         slot = registration.activity.slots.last()
         participant = DateParticipant(
@@ -578,7 +651,9 @@ def run(*args):
                 buckets['registrations_without_participant'].count() or
                 buckets['date_participants_without_registration'].count() or
                 buckets['new_should_be_failed'].count() or
-                buckets['new_succeeded_collect_contributions'].count()
+                buckets['succeeded_should_be_new'].count() or
+                buckets['new_succeeded_collect_contributions'].count() or
+                buckets['scheduled_finished_contributions'].count()
             )
             if errors:
                 total_errors = True
@@ -595,6 +670,12 @@ def run(*args):
                             + [str(c.id) for c in buckets['failed_collect_contributions']]
                         )
                         print(f'IDs: {" ".join(failed_ids)}')
+                if buckets['scheduled_finished_contributions'].count():
+                    print(f'scheduled on a finished slot but not succeeded: '
+                          f'{buckets["scheduled_finished_contributions"].count()}')
+                    if verbose:
+                        ids = [str(c.id) for c in buckets["scheduled_finished_contributions"]]
+                        print(f'IDs: {" ".join(ids)}')
                 if buckets['failed_contributions_new'].count():
                     print(f'failed but should be new: {buckets["failed_contributions_new"].count()}')
                     if verbose:
@@ -607,6 +688,11 @@ def run(*args):
                     print(f'new but should be failed: {buckets["new_should_be_failed"].count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(c.id) for c in buckets["new_should_be_failed"]])}')
+                if buckets['succeeded_should_be_new'].count():
+                    print(f'succeeded but should be new (never scheduled): '
+                          f'{buckets["succeeded_should_be_new"].count()}')
+                    if verbose:
+                        print(f'IDs: {" ".join([str(c.id) for c in buckets["succeeded_should_be_new"]])}')
                 if buckets['new_should_be_succeeded'].count():
                     print(f'new but should be succeeded: {buckets["new_should_be_succeeded"].count()}')
                     if verbose:

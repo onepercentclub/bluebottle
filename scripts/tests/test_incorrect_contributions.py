@@ -295,6 +295,22 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
 
         self.assertStatus(contribution, 'new')
 
+    def test_schedule_succeeded_contribution_never_scheduled_is_set_to_new(self):
+        """
+        BB-30016: contributions that were auto-succeeded while the participant
+        was still unscheduled must be reset to 'new'.
+        """
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        self.assertStatus(participant, 'accepted')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'succeeded')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
     def test_schedule_failed_contribution_without_slot_is_set_to_new(self):
         participant = self.register(
             self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
@@ -307,16 +323,64 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
 
         self.assertStatus(contribution, 'new')
 
-    def test_schedule_failed_contribution_finished_slot_is_set_to_succeeded(self):
+    def test_schedule_failed_contribution_unscheduled_participant_is_set_to_new(self):
+        """
+        BB-30016: an individual schedule participant with status 'accepted' is
+        unscheduled, so its contribution must end up 'new' even when a slot is
+        attached and finished. The unscheduled reset takes precedence over the
+        finished-slot succeed, because 'accepted' means the work was never
+        actually scheduled.
+        """
         participant = self.register(
             self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
         )
+        self.assertStatus(participant, 'accepted')
         self.force_status(participant.slot, 'finished')
         contribution = self.contribution(participant)
         self.force_status(contribution, 'failed')
 
         self.run_script('fix')
 
+        self.assertStatus(contribution, 'new')
+
+    def test_schedule_failed_contribution_scheduled_finished_slot_is_set_to_succeeded(self):
+        """
+        BB-30287: a scheduled individual participant whose slot has finished did
+        the work, so a lagging 'failed' contribution must be set to 'succeeded'
+        and the participant itself succeeded to match the finished slot.
+        """
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        self.force_status(participant, 'scheduled')
+        self.force_status(participant.slot, 'finished')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'failed')
+
+        self.run_script('fix')
+
+        participant.refresh_from_db()
+        self.assertStatus(participant, 'succeeded')
+        self.assertStatus(contribution, 'succeeded')
+
+    def test_schedule_new_contribution_scheduled_finished_slot_is_set_to_succeeded(self):
+        """
+        BB-30287: same as above but for a contribution that was never advanced
+        past 'new' (the case reported on Essent, where a manually finished slot
+        did not cascade to the contribution).
+        """
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        self.force_status(participant, 'scheduled')
+        self.force_status(participant.slot, 'finished')
+        contribution = self.contribution(participant)
+        self.assertStatus(contribution, 'new')
+
+        self.run_script('fix')
+
+        participant.refresh_from_db()
+        self.assertStatus(participant, 'succeeded')
         self.assertStatus(contribution, 'succeeded')
 
     # Periodic activities

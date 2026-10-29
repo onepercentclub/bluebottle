@@ -15,7 +15,7 @@ from bluebottle.initiatives.tests.factories import (
 from bluebottle.notifications.models import ActivityMessageTemplate, MessageTemplate
 from bluebottle.notifications.serializers import ActivityMessageTemplateSerializer
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import APITestCase, BluebottleTestCase
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.notifications.activity_messages import get_message_action
 from bluebottle.time_based.messages import ParticipantSlotParticipantRegisteredNotification
 from bluebottle.time_based.messages.registrations import (
@@ -502,3 +502,74 @@ class TimeBasedMessageTemplateSendTestCase(BluebottleTestCase):
         ParticipantSlotParticipantRegisteredNotification(participant).compose_and_send()
 
         self.assertEqual(mail.outbox[0].subject, 'Date {}'.format(activity.title))
+
+
+class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.url = reverse('activity-message-default-list')
+
+    def get(self, activity, user=None):
+        return self.client.get(
+            self.url, {'filter[activity]': activity.pk}, user=user or self.owner
+        )
+
+    def previews(self, response):
+        return {
+            item['attributes']['action']: item['attributes']
+            for item in response.json()['data']
+        }
+
+    def test_deadline(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, title='Clean the park')
+        response = self.get(activity)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        previews = self.previews(response)
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+        self.assertEqual(
+            previews['accept']['subject'],
+            'You have been selected for the activity "Clean the park"'
+        )
+        self.assertIn('Clean the park', previews['accept']['body'])
+        self.assertIn("[participant&#x27;s first name]", previews['accept']['body'])
+        self.assertNotIn('<html', previews['accept']['body'])
+        self.assertEqual(previews['accept']['action-title'], 'View activity')
+        self.assertEqual(previews['reject']['action-title'], 'View all activities')
+
+    def test_deed(self):
+        activity = DeedFactory.create(owner=self.owner, title='Plant a tree')
+        previews = self.previews(self.get(activity))
+
+        self.assertEqual(set(previews), {'join'})
+        self.assertEqual(previews['join']['subject'], 'You have joined the activity "Plant a tree"')
+
+    def test_collect(self):
+        previews = self.previews(self.get(CollectActivityFactory.create(owner=self.owner)))
+        self.assertEqual(set(previews), {'join'})
+
+    def test_date(self):
+        activity = DateActivityFactory.create(owner=self.owner)
+        previews = self.previews(self.get(activity))
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+
+    def test_schedule_teams(self):
+        activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
+        previews = self.previews(self.get(activity))
+        self.assertIn('team', previews['accept']['subject'])
+
+    def test_unsupported_type(self):
+        response = self.get(RegisteredDateActivityFactory.create(owner=self.owner))
+        self.assertEqual(response.json()['data'], [])
+
+    def test_other_user(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner)
+        response = self.get(activity, user=BlueBottleUserFactory.create())
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_anonymous(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner)
+        response = self.client.get(self.url, {'filter[activity]': activity.pk})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

@@ -12,6 +12,9 @@ from bluebottle.activity_links.models import (
     LinkedDeed,
     LinkedFunding,
     LinkedGrantApplication,
+    LinkedCollectCampaign,
+    LinkedScheduleActivity,
+    LinkedPeriodicActivity
 )
 from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -90,4 +93,40 @@ class LinkedDeadlineActivityFactory(factory.DjangoModelFactory):
     start = now() + timedelta(weeks=1)
     end = now() + timedelta(weeks=4)
     duration = timedelta(hours=2)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
+
+
+class LinkedCollectCampaignFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = LinkedCollectCampaign
+
+    title = factory.Faker('sentence')
+    description = factory.LazyFunction(generate_rich_text)
+    status = 'open'
+    start = now() + timedelta(weeks=1)
+    end = now() + timedelta(weeks=4)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
+
+
+class LinkedScheduleActivityFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = LinkedScheduleActivity
+
+    title = factory.Faker('sentence')
+    description = factory.LazyFunction(generate_rich_text)
+    status = 'open'
+    start = now() + timedelta(weeks=1)
+    end = now() + timedelta(weeks=4)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
+
+
+class LinkedPeriodicActivityFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = LinkedPeriodicActivity
+
+    title = factory.Faker('sentence')
+    description = factory.LazyFunction(generate_rich_text)
+    status = 'open'
+    start = now() + timedelta(weeks=1)
+    end = now() + timedelta(weeks=4)
     location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)

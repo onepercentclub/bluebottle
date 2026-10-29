@@ -194,8 +194,8 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
                 'attributes.locationHint',
                 'attributes.start',
                 'attributes.deadline',
+                'attributes.onlineMeetingUrl',
                 'attributes.duration',
-                'attributes.onlineMeetingUrl'
             ],
         )
 

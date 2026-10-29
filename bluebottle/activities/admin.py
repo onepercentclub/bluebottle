@@ -349,6 +349,12 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin
         'force_status',
     ]
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if obj is None and 'contributor' in form.base_fields:
+            form.base_fields['contributor'].required = True
+        return form
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             (_('Details'), {'fields': self.fields}),

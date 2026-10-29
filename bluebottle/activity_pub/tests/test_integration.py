@@ -2096,6 +2096,28 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         second_supplier_slot = self.model.slots.order_by('start', 'id')[1]
         self.assertEqual(second_supplier_slot.contributor_count, 1)
 
+    def test_update_slot_title(self):
+        self.test_adopt()
+
+        slot = self.model.slots.order_by('start', 'id').first()
+        slot.title = 'Some new slot title'
+        slot.save()
+
+        with LocalTenant(self.consumer):
+            adopted_slot = self.adopted.slots.order_by('start', 'id').first()
+            self.assertEqual(adopted_slot.title, 'Some new slot title')
+
+    def test_update_slot_capacity(self):
+        self.test_adopt()
+
+        slot = self.model.slots.order_by('start', 'id').first()
+        slot.capacity = 42
+        slot.save()
+
+        with LocalTenant(self.consumer):
+            adopted_slot = self.adopted.slots.order_by('start', 'id').first()
+            self.assertEqual(adopted_slot.capacity, 42)
+
     def test_join_with_review(self):
         self.test_adopt()
         self.model.review = True

@@ -234,7 +234,6 @@ class ResourceRolesField(serializers.ReadOnlyField):
         }
 
 
-# This can't be in serializers because of circular imports
 def is_editable_draft(instance):
     if instance is None:
         return True

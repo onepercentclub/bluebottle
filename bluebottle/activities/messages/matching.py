@@ -3,14 +3,15 @@ from datetime import timedelta
 from django.db.models import Sum, Q
 from django.template.defaultfilters import time, date
 from django.urls import reverse
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import now
 from django.utils.translation import pgettext_lazy as pgettext
-from pytz import timezone
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import (
+    get_current_host, get_current_language, get_current_timezone_for_location
+)
 
 
 class MatchingActivitiesNotification(TransitionMessage):
@@ -75,10 +76,7 @@ class MatchingActivitiesNotification(TransitionMessage):
             else:
                 slot = slots[0]
 
-                if slot.location and slot.location.timezone and not slot.is_online:
-                    tz = timezone(slot.location.timezone)
-                else:
-                    tz = get_current_timezone()
+                tz = get_current_timezone_for_location(slot.location, slot.is_online)
 
                 start = '{} {}'.format(
                     date(slot.start.astimezone(tz)), time(slot.start.astimezone(tz))

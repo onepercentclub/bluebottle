@@ -88,6 +88,11 @@ class MoneyFormField(DjangoMoneyFormField):
         currency_choices = PaymentProvider.get_currency_choices()
         super().__init__(currency_choices=currency_choices, default_currency=default_currency, **kwargs)
 
+    def compress(self, data_list):
+        if data_list and data_list[0] not in self.empty_values and not data_list[1]:
+            raise ValidationError(_('Select a currency.'), code='invalid_currency')
+        return super().compress(data_list)
+
     def get_default_currency(self):
         """Get the default currency from PaymentProvider."""
         from bluebottle.funding.models import PaymentProvider

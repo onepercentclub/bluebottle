@@ -325,9 +325,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_date_preview_multiple_slots_succeeded(self):
         activity = DateActivityFactory.create(slots=[])
-        first = DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=21))
-        DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=14))
-        last = DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=7))
+        nl = GeolocationFactory.create(country=CountryFactory.create(alpha2_code='NL', name='Netherlands'))
+        bg = GeolocationFactory.create(country=CountryFactory.create(alpha2_code='BG', name='Bulgaria'))
+        de = GeolocationFactory.create(country=CountryFactory.create(alpha2_code='DE', name='Germany'))
+        first = DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=21), location=nl)
+        DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=14), location=bg)
+        last = DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=7), location=de)
 
         activity.status = 'succeeded'
         activity.save()
@@ -1561,12 +1564,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        matching_country = CountryFactory.create()
-        other_country = CountryFactory.create()
+        matching_country = CountryFactory.create(alpha2_code='nl', name='Netherlands')
+        other_country = CountryFactory.create(alpha2_code='de', name='Germany')
 
-        # CountryFactory get-or-creates on alpha2_code, and both InitiativeFactory
-        # and DeadlineActivityFactory create extra locations by default. Those
-        # random countries can collide with matching_country and inflate facets.
         matching = [
             DeadlineActivityFactory.create(
                 initiative=None,

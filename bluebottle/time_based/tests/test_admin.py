@@ -444,6 +444,11 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
             )
         )
 
+    def test_add_view(self):
+        self.url = reverse('admin:time_based_dateregistration_add')
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+
 
 class TimeContributionAdminTestCase(BluebottleAdminTestCase):
     extra_environ = {}

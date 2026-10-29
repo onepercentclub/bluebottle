@@ -9,7 +9,11 @@
         <b>{{ title }}</b>
     </p>
     <p>
-        {% blocktrans context 'platform-email' %}If a spot becomes available, we'll send you an email. Spots are first-come, first-served.{% endblocktrans %}
+        {% if review %}
+            {% blocktrans context 'platform-email' %}If a spot becomes available, we'll send you an email. You'll need to apply and wait to be approved before you can participate.{% endblocktrans %}
+        {% else %}
+            {% blocktrans context 'platform-email' %}If a spot becomes available, we'll send you an email. Spots are first-come, first-served.{% endblocktrans %}
+        {% endif %}
     </p>
 {% endblock %}
 

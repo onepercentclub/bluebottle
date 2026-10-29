@@ -17,6 +17,7 @@ from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
+from stripe import InvalidRequestError
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution, Contributor
@@ -901,6 +902,7 @@ class IbanCheck(models.Model):
         ('mistype', _('Mistype')),
         ('close_match', _('Close match')),
         ('no_match', _('No match')),
+        ('could_not_match', _('Could not match')),
     )
 
     fingerprint = models.CharField(max_length=100, blank=True, null=True)
@@ -948,17 +950,20 @@ class IbanCheck(models.Model):
 
         result = adapter.check_iban_name(self.iban, self.name)
         self.result = result
-        self.matched = result.get('nameMatchResult', 'no_match').lower()
+        matched = result.get('nameMatchResult', 'no_match').lower()
+        self.matched = matched if matched in dict(self.MATCH_CHOICES) else 'no_match'
 
-        if self.matched == 'close_match' or self.matched == 'mistype':
+        if self.matched in ('close_match', 'mistype'):
             self.name = self.result.get('nameSuggestion', self.name)
-            token = self.get_stripe_token()
-            self.token = token.id
-            self.fingerprint = token.bank_account.fingerprint
-        if self.matched == 'match':
-            token = self.get_stripe_token()
-            self.token = token.id
-            self.fingerprint = token.bank_account.fingerprint
+        if self.matched in ('no_match', 'could_not_match'):
+            return _('The name does not match the account number.')
+        else:
+            try:
+                token = self.get_stripe_token()
+                self.token = token.id
+                self.fingerprint = token.bank_account.fingerprint
+            except InvalidRequestError as error:
+                return getattr(error.error, 'message', _("Unknown error"))
         self.save()
 
 

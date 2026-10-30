@@ -1,6 +1,4 @@
-import json
 from builtins import object
-from string import Formatter
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -27,43 +25,18 @@ class NotificationPlatformSettingsSerializer(serializers.ModelSerializer):
         )
 
 
-ALLOWED_PLACEHOLDERS = (
-    'title', 'first_name', 'recipient_name', 'applicant_name',
-    'site_name', 'contact_email', 'start', 'end', 'duration',
-)
-
-
-def validate_placeholders(value):
-    try:
-        fields = [field for _text, field, _spec, _conv in Formatter().parse(value) if field is not None]
-    except ValueError:
-        raise ValidationError(_('Invalid use of curly braces.'))
-
-    invalid = [field for field in fields if field not in ALLOWED_PLACEHOLDERS]
-    if invalid:
-        raise ValidationError(
-            _('Unknown placeholder(s): {invalid}. Allowed: {allowed}').format(
-                invalid=', '.join('{%s}' % field for field in invalid),
-                allowed=', '.join('{%s}' % field for field in ALLOWED_PLACEHOLDERS),
-            )
-        )
-    return value
-
-
 class ActivityMessageTemplateSerializer(ModelSerializer):
     permissions = ResourcePermissionField('activity-message-template-detail', view_args=('pk',))
     activity = PolymorphicResourceRelatedField(
         ActivitySerializer,
         queryset=Activity.objects.all(),
     )
-    subject = serializers.CharField(
-        max_length=200, allow_blank=True, required=False, validators=[validate_placeholders]
+    body = RichTextField(
+        source='body_html',
+        allow_blank=True,
+        allow_null=True,
+        required=False
     )
-    body = RichTextField(source='body_html', allow_blank=True, required=False)
-
-    def validate_body(self, value):
-        validate_placeholders(json.loads(value)['html'])
-        return value
 
     def validate(self, data):
         activity = data.get('activity', getattr(self.instance, 'activity', None))
@@ -83,8 +56,6 @@ class ActivityMessageTemplateSerializer(ModelSerializer):
             'id',
             'activity',
             'action',
-            'insert_method',
-            'subject',
             'body',
             'permissions',
             'created',

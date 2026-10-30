@@ -665,7 +665,7 @@ class RegistrationActivity(TimeBasedActivity):
 
         if hasattr(self, 'origin') and self.origin:
             readonly_fields = readonly_fields + [
-                'is_online', 'location', 'location_hint', 'start', 'deadline',
+                'is_online', 'location', 'location_hint', 'start', 'deadline', 'online_meeting_url'
             ]
 
         return readonly_fields
@@ -743,7 +743,7 @@ class DeadlineActivity(RegistrationActivity):
 
         if self.is_adopted:
             readonly_fields = readonly_fields + [
-                'duration', 'online_meeting_url',
+                'duration',
             ]
 
         return readonly_fields
@@ -843,7 +843,7 @@ class ScheduleActivity(RegistrationActivity):
 
         if hasattr(self, 'origin') and self.origin:
             readonly_fields = readonly_fields + [
-                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+                'start', 'duration', 'is_online', 'location', 'location_hint',
             ]
 
         return readonly_fields

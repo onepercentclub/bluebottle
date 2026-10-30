@@ -68,6 +68,7 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
     url_name = 'deadline-detail'
     serializer = DeadlineActivitySerializer
     factory = DeadlineActivityFactory
+    participant_factory = DeadlineParticipantFactory
 
     fields = TimeBasedActivityDetailAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
     attributes = TimeBasedActivityDetailAPITestCase.attributes + [
@@ -194,6 +195,7 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
                 'attributes.locationHint',
                 'attributes.start',
                 'attributes.deadline',
+                'attributes.onlineMeetingUrl',
                 'attributes.duration',
             ],
         )

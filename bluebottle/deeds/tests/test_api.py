@@ -9,7 +9,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.activities.tests.factories import TextQuestionFactory, \
-    TextAnswerFactory
+    TextAnswerFactory, RemoteMemberFactory
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.tests.factories import GoodDeedFactory, PersonFactory
 from bluebottle.cms.models import SitePlatformSettings
@@ -591,6 +591,27 @@ class DeedsDetailViewAPITestCase(APITestCase):
                              "WE'RE GOING TO CHANGE THE WORLD!")
             self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'bg')
 
+    def test_get_remote_contributor_count(self):
+        for _ in range(2):
+            DeedParticipantFactory.create(
+                activity=self.model, status='accepted', user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+        for contributor_status in ('new', 'failed'):
+            DeedParticipantFactory.create(
+                activity=self.model, status=contributor_status, user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+
+        self.perform_get(user=self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('remote-contributor-count', 2)
+
+    def test_get_remote_contributor_count_no_remote_users(self):
+        self.perform_get(user=self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('remote-contributor-count', 0)
+
 
 class DeedTransitionListViewAPITestCase(APITestCase):
     def setUp(self):
@@ -801,6 +822,66 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         with self.closed_site():
             self.perform_get()
             self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def create_remote_contributors(self):
+        return [
+            DeedParticipantFactory.create(
+                activity=self.activity,
+                status='accepted',
+                user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+            for _ in range(2)
+        ]
+
+    def assertRemoteContributors(self, remote_contributors, included):
+        ids = [item['id'] for item in self.response.json()['data']]
+        for contributor in remote_contributors:
+            self.assertEqual(str(contributor.pk) in ids, included)
+
+    def test_get_user_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=self.user, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+        self.assertRemoteContributors(remote_contributors, False)
+
+    def test_get_anonymous_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+        self.assertRemoteContributors(remote_contributors, False)
+
+    def test_get_owner_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=self.activity.owner, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
+
+    def test_get_activity_manager_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        manager = BlueBottleUserFactory.create()
+        self.activity.initiative.activity_manager = manager
+        self.activity.initiative.save()
+
+        self.perform_get(user=manager, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
+
+    def test_get_staff_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True), query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
 
 
 class DeedParticipantListViewAPITestCase(APITestCase):

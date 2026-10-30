@@ -7,6 +7,7 @@ from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.activities.tests.factories import RemoteMemberFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -241,6 +242,30 @@ class TimeBasedActivityDetailAPITestCase:
         self.perform_get(user=user)
 
         self.assertStatus(status.HTTP_200_OK)
+
+    def test_get_remote_contributor_count(self):
+        self.participant_factory.create(activity=self.model, status='accepted')
+        for _ in range(2):
+            self.participant_factory.create(
+                activity=self.model, status='accepted', user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+        for contributor_status in ('new', 'failed'):
+            self.participant_factory.create(
+                activity=self.model, status=contributor_status, user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+
+        self.perform_get(user=self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('remote-contributor-count', 2)
+
+    def test_get_remote_contributor_count_no_remote_users(self):
+        self.participant_factory.create(activity=self.model, status='accepted')
+
+        self.perform_get(user=self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('remote-contributor-count', 0)
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -589,6 +614,66 @@ class TimeBasedRegistrationRelatedAPIListTestCase:
             self.perform_get()
             self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
+    def create_remote_contributors(self):
+        return [
+            self.factory.create(
+                activity=self.activity,
+                status='accepted',
+                user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+            for _ in range(2)
+        ]
+
+    def assertRemoteContributors(self, remote_contributors, included):
+        ids = [item['id'] for item in self.response.json()['data']]
+        for contributor in remote_contributors:
+            self.assertEqual(str(contributor.pk) in ids, included)
+
+    def test_get_user_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=self.user, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+        self.assertRemoteContributors(remote_contributors, False)
+
+    def test_get_anonymous_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+        self.assertRemoteContributors(remote_contributors, False)
+
+    def test_get_owner_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=self.activity.owner, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
+
+    def test_get_activity_manager_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        manager = BlueBottleUserFactory.create()
+        self.activity.initiative.activity_manager = manager
+        self.activity.initiative.save()
+
+        self.perform_get(user=manager, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
+
+    def test_get_staff_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True), query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
+
 
 class TimeBasedRegistrationDetailAPITestCase:
     included = ['user', 'activity']
@@ -913,6 +998,66 @@ class TimeBasedParticipantRelatedListAPITestCase:
         with self.closed_site():
             self.perform_get()
             self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def create_remote_contributors(self):
+        return [
+            self.factory.create(
+                activity=self.activity,
+                status='succeeded',
+                user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+            for _ in range(2)
+        ]
+
+    def assertRemoteContributors(self, remote_contributors, included):
+        ids = [item['id'] for item in self.response.json()['data']]
+        for contributor in remote_contributors:
+            self.assertEqual(str(contributor.pk) in ids, included)
+
+    def test_get_user_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=self.user, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+        self.assertRemoteContributors(remote_contributors, False)
+
+    def test_get_anonymous_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+        self.assertRemoteContributors(remote_contributors, False)
+
+    def test_get_owner_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=self.activity.owner, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
+
+    def test_get_activity_manager_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        manager = BlueBottleUserFactory.create()
+        self.activity.initiative.activity_manager = manager
+        self.activity.initiative.save()
+
+        self.perform_get(user=manager, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
+
+    def test_get_staff_remote_user(self):
+        remote_contributors = self.create_remote_contributors()
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True), query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(12)
+        self.assertRemoteContributors(remote_contributors, True)
 
 
 class TimeBasedParticipantDetailAPITestCase:

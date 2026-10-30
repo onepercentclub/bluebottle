@@ -35,6 +35,7 @@ from bluebottle.time_based.tests.base import (
 from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleParticipantFactory,
+    TeamScheduleParticipantFactory,
     ScheduleRegistrationFactory,
     TeamFactory,
     TeamMemberFactory,
@@ -68,6 +69,7 @@ class ScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
     url_name = 'schedule-detail'
     serializer = ScheduleActivitySerializer
     factory = ScheduleActivityFactory
+    participant_factory = ScheduleParticipantFactory
 
     fields = TimeBasedActivityDetailAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
     attributes = TimeBasedActivityDetailAPITestCase.attributes + [
@@ -87,6 +89,7 @@ class TeamScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, 
     url_name = 'schedule-detail'
     serializer = ScheduleActivitySerializer
     factory = ScheduleActivityFactory
+    participant_factory = TeamScheduleParticipantFactory
 
     fields = TimeBasedActivityDetailAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
     attributes = TimeBasedActivityDetailAPITestCase.attributes + [

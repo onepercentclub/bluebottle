@@ -13,6 +13,7 @@ class Leave(Transition):
         for subclass in get_subclasses(self.__class__):
             if subclass.matches(self.object, self.actor):
                 self.__class__ = subclass
+                break
 
     def transition(self):
         self.contributor.states.withdraw(save=True)
@@ -80,14 +81,41 @@ class TeamMemberLeave(Leave):
         return self.object.adopted.team_members.get(remote_user=self.actor.adopted)
 
 
-class SlotParticipantLeave(Leave):
+class DateSlotParticipantLeave(Leave):
     @classmethod
     def matches(self, object, actor):
-        return isinstance(object, SubEvent)
+        return isinstance(object, SubEvent) and object.parent.activity_type == 'DateActivity'
 
     class Meta:
         proxy = True
 
     @property
+    def contributor(self):
+        return self.object.origin.activity.contributors.get(
+            remote_user=self.actor.adopted,
+            dateparticipant__slot=self.object.origin
+        )
+
+    @property
     def default_recipients(self):
-        return self.object.partent.source
+        yield self.object.parent.source
+
+
+class ScheduleSlotParticipantLeave(Leave):
+    @classmethod
+    def matches(self, object, actor):
+        return isinstance(object, SubEvent) and object.parent.activity_type == 'ScheduleActivity'
+
+    class Meta:
+        proxy = True
+
+    @property
+    def contributor(self):
+        return self.object.origin.activity.contributors.get(
+            remote_user=self.actor.adopted,
+            scheduleparticipant__slot=self.object.origin
+        )
+
+    @property
+    def default_recipients(self):
+        yield self.object.parent.source

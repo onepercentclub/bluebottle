@@ -9,6 +9,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.activities.tests.factories import RemoteMemberFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -125,6 +126,7 @@ class DateActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestC
     url_name = 'date-detail'
     serializer = DateActivitySerializer
     factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
 
     fields = ['initiative', 'title', 'description', 'review']
     attributes = ['title', 'description', 'review']
@@ -772,6 +774,73 @@ class DateSlotRelatedParticipantsListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         for member in self.included_by_type(self.response, 'members'):
             self.assertTrue(member['attributes']['last-name'])
+
+    def create_remote_participants(self):
+        return [
+            self.factory.create(
+                slot=self.slot,
+                status='accepted',
+                user=None,
+                remote_user=RemoteMemberFactory.create()
+            )
+            for _ in range(2)
+        ]
+
+    def assertRemoteParticipants(self, remote_participants, included):
+        ids = [item['id'] for item in self.response.json()['data']]
+        for participant in remote_participants:
+            self.assertEqual(str(participant.pk) in ids, included)
+
+    def test_get_user_remote_user(self):
+        remote_participants = self.create_remote_participants()
+        self.perform_get(user=self.user, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(4)
+        self.assertRemoteParticipants(remote_participants, False)
+
+    def test_get_user_status_filter_remote_user(self):
+        remote_participants = self.create_remote_participants()
+        self.perform_get(user=self.user, query={'page[size]': 20, 'filter[status]': 'accepted'})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(2)
+        self.assertRemoteParticipants(remote_participants, False)
+
+    def test_get_anonymous_remote_user(self):
+        remote_participants = self.create_remote_participants()
+        self.perform_get(query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(4)
+        self.assertRemoteParticipants(remote_participants, False)
+
+    def test_get_manager_remote_user(self):
+        remote_participants = self.create_remote_participants()
+        self.perform_get(user=self.manager, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(8)
+        self.assertRemoteParticipants(remote_participants, True)
+
+    def test_get_activity_manager_remote_user(self):
+        remote_participants = self.create_remote_participants()
+        activity_manager = BlueBottleUserFactory.create()
+        self.activity.initiative.activity_managers.add(activity_manager)
+
+        self.perform_get(user=activity_manager, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(8)
+        self.assertRemoteParticipants(remote_participants, True)
+
+    def test_get_admin_remote_user(self):
+        remote_participants = self.create_remote_participants()
+        self.perform_get(user=self.admin, query={'page[size]': 20})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(8)
+        self.assertRemoteParticipants(remote_participants, True)
 
 
 class DateActivitySpotsLeftAPITestCase(APITestCase):

@@ -10,7 +10,12 @@ class Transition(Activity):
 
     @property
     def default_recipients(self):
-        for create in self.object.create_set.all():
+        from bluebottle.activity_pub.models.events import SubEvent
+
+        # Slots are published as part of their parent event, so they share its recipients
+        obj = self.object.parent if isinstance(self.object, SubEvent) else self.object
+
+        for create in obj.create_set.all():
             for recipient in create.recipients.all():
                 yield recipient.actor
 
@@ -59,7 +64,7 @@ class Cancel(Transition):
         if self.object.adopted:
             self.object.adopted.states.cancel(save=True)
 
-        if self.object.link:
+        if getattr(self.object, 'link', None):
             self.object.link.states.cancel(save=True)
 
 

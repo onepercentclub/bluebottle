@@ -186,7 +186,7 @@ class MemberPlatformSettingsAdmin(
             }
         ),
         (
-            _('Translations'),
+            _('Automatic translations'),
             {
                 'fields': (
                     'translate_user_content',

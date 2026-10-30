@@ -140,7 +140,7 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
-        if not type_filter:
+        if not type_filter or type_filter == 'all':
             links = list(LinkedActivity.objects.filter(
                 status__in=("succeeded", "open", "full", "running"),
                 archived=False

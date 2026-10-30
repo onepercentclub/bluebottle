@@ -1,10 +1,15 @@
 from django.urls import path
 
 from bluebottle.notifications.views import (
-    ActivityMessageTemplateList, ActivityMessageTemplateDetail
+    ActivityMessageDefaultList, ActivityMessageTemplateList, ActivityMessageTemplateDetail
 )
 
 urlpatterns = [
+    path(
+        '/message-defaults',
+        ActivityMessageDefaultList.as_view(),
+        name='activity-message-default-list'
+    ),
     path(
         '/message-templates',
         ActivityMessageTemplateList.as_view(),

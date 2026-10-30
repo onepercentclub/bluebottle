@@ -102,7 +102,7 @@ class ReviewStateMachine(ModelStateMachine):
 
     def is_staff(self, user):
         """Check if the user is a staff member"""
-        return user.is_staff
+        return user.is_staff or user.is_superuser
 
     def review_needed(self):
         return InitiativePlatformSettings.load().enable_reviewing

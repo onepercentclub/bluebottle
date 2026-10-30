@@ -14920,4 +14920,3 @@ msgstr "Reabre la encuesta para votar."
 #: bluebottle/voting/views.py:54
 msgid "You have already voted in this poll"
 msgstr "Ya has votado en esta encuesta"
-

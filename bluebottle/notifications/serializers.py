@@ -73,3 +73,14 @@ class ActivityMessageTemplateSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = 'activity-message-templates'
+
+
+class ActivityMessageDefaultSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    action = serializers.CharField()
+    subject = serializers.CharField()
+    body = serializers.CharField()
+    action_title = serializers.CharField()
+
+    class JSONAPIMeta:
+        resource_name = 'activity-message-defaults'

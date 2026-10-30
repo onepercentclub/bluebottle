@@ -10,12 +10,15 @@
         {% blocktrans context 'platform-email' %}
             <p>Hi {{ recipient_name }},</p>
         {% endblocktrans %}
-        {% if custom_message %}
+        {% if custom_message and not append_custom_message %}
             <div>{{ custom_message|safe }}</div>
         {% endif %}
     {% endif %}
-    {% if only_message or not custom_message %}
+    {% if only_message or not custom_message or append_custom_message %}
         {% block message %}{% endblock %}
+    {% endif %}
+    {% if custom_message and append_custom_message and not only_message %}
+        <div>{{ custom_message|safe }}</div>
     {% endif %}
     {% if body_html and insert_method == 'append' %}
         <p>

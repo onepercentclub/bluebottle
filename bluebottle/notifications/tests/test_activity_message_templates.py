@@ -16,7 +16,8 @@ from bluebottle.notifications.activity_messages import get_message_action
 from bluebottle.notifications.models import ActivityMessageTemplate, MessageTemplate
 from bluebottle.notifications.serializers import ActivityMessageTemplateSerializer
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import APITestCase, BluebottleTestCase
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
+from bluebottle.notifications.activity_messages import get_message_action
 from bluebottle.time_based.messages import ParticipantSlotParticipantRegisteredNotification
 from bluebottle.time_based.messages.registrations import (
     DateUserAppliedNotification,
@@ -476,3 +477,142 @@ class TimeBasedMessageTemplateSendTestCase(BluebottleTestCase):
         ParticipantSlotParticipantRegisteredNotification(participant).compose_and_send()
 
         self.assertEqual(mail.outbox[0].subject, 'Date {}'.format(activity.title))
+
+
+class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.url = reverse('activity-message-default-list')
+
+    def get(self, activity, user=None):
+        return self.client.get(
+            self.url, {'filter[activity]': activity.pk}, user=user or self.owner
+        )
+
+    def previews(self, response):
+        return {
+            item['attributes']['action']: item['attributes']
+            for item in response.json()['data']
+        }
+
+    def test_deadline(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, title='Clean the park')
+        response = self.get(activity)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        previews = self.previews(response)
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+        self.assertEqual(
+            previews['accept']['subject'],
+            'You have been selected for the activity "Clean the park"'
+        )
+        self.assertIn('Clean the park', previews['accept']['body'])
+        self.assertIn('Hi [name],', previews['accept']['body'])
+        self.assertNotIn('<html', previews['accept']['body'])
+        self.assertEqual(previews['accept']['action-title'], 'View activity')
+        self.assertEqual(previews['reject']['action-title'], 'View all activities')
+
+    def test_deed(self):
+        activity = DeedFactory.create(owner=self.owner, title='Plant a tree')
+        previews = self.previews(self.get(activity))
+
+        self.assertEqual(set(previews), {'join'})
+        self.assertEqual(previews['join']['subject'], 'You have joined the activity "Plant a tree"')
+
+    def test_collect(self):
+        previews = self.previews(self.get(CollectActivityFactory.create(owner=self.owner)))
+        self.assertEqual(set(previews), {'join'})
+
+    def test_date(self):
+        activity = DateActivityFactory.create(owner=self.owner)
+        previews = self.previews(self.get(activity))
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+
+    def test_schedule_teams(self):
+        activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
+        previews = self.previews(self.get(activity))
+        self.assertIn('team', previews['accept']['subject'])
+
+    def test_unsupported_type(self):
+        response = self.get(RegisteredDateActivityFactory.create(owner=self.owner))
+        self.assertEqual(response.json()['data'], [])
+
+    def test_other_user(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner)
+        response = self.get(activity, user=BlueBottleUserFactory.create())
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_anonymous(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner)
+        response = self.client.get(self.url, {'filter[activity]': activity.pk})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class RegistrationReviewMessageTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        InitiativePlatformSettingsFactory.create(activity_types=['deadlineactivity'])
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        initiative = InitiativeFactory.create(owner=self.owner)
+        initiative.states.submit()
+        initiative.states.approve(save=True)
+        self.activity = DeadlineActivityFactory.create(
+            initiative=initiative, owner=self.owner, review=True, capacity=4,
+            registration_deadline=None,
+        )
+        self.activity.states.publish(save=True)
+        self.user = BlueBottleUserFactory.create(first_name='Henk')
+        self.registration = DeadlineRegistrationFactory.create(
+            activity=self.activity, user=self.user, as_user=self.user
+        )
+        mail.outbox = []
+
+    def transition(self, name, message):
+        data = {
+            'data': {
+                'type': 'contributors/time-based/deadline-registration-transitions',
+                'attributes': {'transition': name, 'message': message, 'send-email': True},
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'contributors/time-based/deadline-registrations',
+                            'id': self.registration.pk,
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            reverse('deadline-registration-transitions'), json.dumps(data), user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        return [m for m in mail.outbox if m.to == [self.user.email]][0]
+
+    def test_accept_appends_message(self):
+        message = self.transition('accept', '<p>Bring gloves</p>')
+
+        self.assertIn('Good news, you have been accepted', message.body)
+        self.assertIn('Bring gloves', message.body)
+        self.assertLess(
+            message.body.index('Good news'), message.body.index('Bring gloves')
+        )
+
+    def test_reject_appends_message(self):
+        message = self.transition('reject', '<p>Maybe next time</p>')
+
+        self.assertIn('Unfortunately, you have not been selected', message.body)
+        self.assertIn('Maybe next time', message.body)
+
+    def test_message_replaces_activity_template(self):
+        create_template(self.activity, action='accept', subject='')
+        message = self.transition('accept', '<p>Bring gloves</p>')
+
+        self.assertIn('Bring gloves', message.body)
+        self.assertNotIn('see you soon', message.body)
+        self.assertEqual(
+            message.subject,
+            'You have been selected for the activity "{}"'.format(self.activity.title)
+        )

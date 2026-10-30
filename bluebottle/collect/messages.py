@@ -97,7 +97,7 @@ class CollectThankYouNotification(ThankYouMessageMixin, TransitionMessage):
     The collect activity succeeded
     """
     subject = pgettext('platform-email', 'Thank you for participating in the activity "{title}"')
-    template = 'messages/collect_thank_you'
+    template = 'messages/activity_thank_you'
     send_once = True
     append_custom_message = True
     context = {
@@ -110,9 +110,5 @@ class CollectThankYouNotification(ThankYouMessageMixin, TransitionMessage):
         return self.obj.get_absolute_url()
 
     def get_thank_you_recipients(self):
-        """contributors"""
-        return list(dict.fromkeys(
-            contributor.user for contributor in
-            self.obj.participants.filter(status__in=('accepted', 'succeeded'))
-            if contributor.user
-        ))
+        """contributors with a succeeded contribution"""
+        return self.get_succeeded_contributors(self.obj)

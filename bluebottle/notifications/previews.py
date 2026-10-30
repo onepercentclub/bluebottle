@@ -41,6 +41,8 @@ class PreviewContributor:
         self.slot = slots.order_by('start').first() if slots is not None else None
 
     def __getattr__(self, name):
+        if name.startswith('__') or name == 'activity':
+            raise AttributeError(name)
         return getattr(self.activity, name)
 
 

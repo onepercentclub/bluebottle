@@ -54,6 +54,10 @@ class ThankYouTestCase(BluebottleTestCase):
             if message.to == [user.email] and message.subject.startswith('Thank you for participating')
         ]
 
+    def disable(self):
+        self.activity.send_thank_you_message = False
+        self.activity.save()
+
     def add_template(self, activity):
         ActivityMessageTemplate.objects.create(
             activity=activity,
@@ -62,7 +66,24 @@ class ThankYouTestCase(BluebottleTestCase):
         )
 
 
-class DeadlineThankYouTestCase(ThankYouTestCase):
+class SharedThankYouTests:
+    def succeed(self):
+        raise NotImplementedError
+
+    def test_sent(self):
+        self.succeed()
+
+        message = self.thank_you_mails()[0]
+        self.assertIn('Thank you for participating in an activity on', message.body)
+
+    def test_not_sent_when_disabled(self):
+        self.disable()
+        self.succeed()
+
+        self.assertEqual(len(self.thank_you_mails()), 0)
+
+
+class DeadlineThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     activity_type = 'deadlineactivity'
 
     def setUp(self):
@@ -76,6 +97,9 @@ class DeadlineThankYouTestCase(ThankYouTestCase):
         DeadlineRegistrationFactory.create(activity=self.activity, user=self.user, as_user=self.user)
         mail.outbox = []
 
+    def succeed(self):
+        self.activity.states.succeed_manually(save=True)
+
     def test_succeed_manually(self):
         self.activity.states.succeed_manually(save=True)
 
@@ -86,14 +110,6 @@ class DeadlineThankYouTestCase(ThankYouTestCase):
         )
         self.assertIn('Thank you for participating in an activity on', message.body)
         self.assertIn(self.activity.title, message.body)
-
-    def test_not_sent_when_disabled(self):
-        self.activity.send_thank_you_message = False
-        self.activity.save()
-
-        self.activity.states.succeed_manually(save=True)
-
-        self.assertEqual(len(self.thank_you_mails()), 0)
 
     def test_deadline_passed(self):
         self.activity.deadline = date.today() - timedelta(days=1)
@@ -125,23 +141,70 @@ class DeadlineThankYouTestCase(ThankYouTestCase):
         self.assertEqual(len(self.thank_you_mails()), 0)
 
 
-class PeriodicThankYouTestCase(ThankYouTestCase):
+class PeriodicThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     activity_type = 'periodicactivity'
 
-    def test_succeed_manually(self):
-        activity = self.publish(PeriodicActivityFactory.create(
+    def setUp(self):
+        super().setUp()
+        self.activity = self.publish(PeriodicActivityFactory.create(
             initiative=self.initiative, owner=self.owner, send_thank_you_message=True, review=False,
             registration_deadline=None,
+            start=date.today() - timedelta(days=14),
+            deadline=date.today() + timedelta(days=14),
         ))
-        PeriodicRegistrationFactory.create(activity=activity, user=self.user, as_user=self.user)
+        self.registration = PeriodicRegistrationFactory.create(
+            activity=self.activity, user=self.user, as_user=self.user
+        )
         mail.outbox = []
 
-        activity.states.succeed_manually(save=True)
+    def start_slot(self):
+        slot = self.activity.slots.get()
+        slot.states.start(save=True)
+        return slot
+
+    def finish_slot(self, slot=None):
+        slot = slot or self.start_slot()
+        slot.states.finish(save=True)
+        mail.outbox = []
+
+    def succeed(self):
+        self.finish_slot()
+        self.activity.states.succeed_manually(save=True)
+
+    def test_deadline_passed(self):
+        self.finish_slot()
+        self.activity.deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assertEqual(len(self.thank_you_mails()), 1)
+
+    def test_stopped_participant_thanked(self):
+        self.finish_slot()
+        self.registration.states.stop(save=True)
+
+        self.activity.states.succeed_manually(save=True)
 
         self.assertEqual(len(self.thank_you_mails()), 1)
 
+    def test_removed_participant_not_thanked(self):
+        slot = self.start_slot()
+        for participant in self.registration.participants.all():
+            participant.states.remove(save=True)
+        self.finish_slot(slot)
 
-class DateThankYouTestCase(ThankYouTestCase):
+        self.activity.states.succeed_manually(save=True)
+
+        self.assertEqual(len(self.thank_you_mails()), 0)
+
+    def test_no_succeeded_contribution_not_thanked(self):
+        self.activity.states.succeed_manually(save=True)
+
+        self.assertEqual(len(self.thank_you_mails()), 0)
+
+
+class DateThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     activity_type = 'dateactivity'
 
     def setUp(self):
@@ -165,6 +228,9 @@ class DateThankYouTestCase(ThankYouTestCase):
     def finish(self, slot):
         slot.start = now() - timedelta(days=2)
         slot.save()
+
+    def succeed(self):
+        self.finish(self.slot)
 
     def test_slot_finished(self):
         self.finish(self.slot)
@@ -198,87 +264,126 @@ class DateThankYouTestCase(ThankYouTestCase):
         self.assertEqual(len(self.thank_you_mails()), 1)
 
 
-class ScheduleThankYouTestCase(ThankYouTestCase):
+class ScheduleThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     activity_type = 'scheduleactivity'
 
-    def test_slot_finished(self):
-        activity = self.publish(ScheduleActivityFactory.create(
+    def setUp(self):
+        super().setUp()
+        self.activity = self.publish(ScheduleActivityFactory.create(
             initiative=self.initiative, owner=self.owner, send_thank_you_message=True, review=False,
             registration_deadline=None,
         ))
-        participant = ScheduleParticipantFactory.create(activity=activity, user=self.user)
-        slot = ScheduleSlotFactory.create(activity=activity, start=now() + timedelta(days=2))
-        participant.slot = slot
-        participant.save()
+        self.participant = ScheduleParticipantFactory.create(activity=self.activity, user=self.user)
         mail.outbox = []
+
+    def succeed(self):
+        slot = ScheduleSlotFactory.create(activity=self.activity, start=now() + timedelta(days=2))
+        self.participant.slot = slot
+        self.participant.save()
 
         slot.start = now() - timedelta(days=2)
         slot.save()
 
-        message = self.thank_you_mails()[0]
-        self.assertIn('Thank you for participating in an activity on', message.body)
+    def test_unscheduled_not_thanked(self):
+        self.activity.states.succeed_manually(save=True)
 
-    def test_team_slot_finished_thanks_captain(self):
-        activity = self.publish(ScheduleActivityFactory.create(
+        self.assertEqual(len(self.thank_you_mails()), 0)
+
+
+class TeamScheduleThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
+    activity_type = 'scheduleactivity'
+
+    def setUp(self):
+        super().setUp()
+        self.activity = self.publish(ScheduleActivityFactory.create(
             initiative=self.initiative, owner=self.owner, send_thank_you_message=True, review=False,
             registration_deadline=None, team_activity='teams',
         ))
-        registration = TeamScheduleRegistrationFactory.create(activity=activity, user=self.user)
-        team = TeamFactory.create(registration=registration, activity=activity, user=self.user)
-        members = TeamMemberFactory.create_batch(2, team=team)
+        self.team = self.create_team()
         mail.outbox = []
 
+    def create_team(self):
+        registration = TeamScheduleRegistrationFactory.create(activity=self.activity, user=self.user)
+        return TeamFactory.create(registration=registration, activity=self.activity, user=self.user)
+
+    def finish(self, team):
         slot = team.slots.first()
         slot.start = now() - timedelta(days=2)
         slot.save()
 
-        message = self.thank_you_mails()[0]
-        self.assertIn('Thank you for participating in an activity on', message.body)
+    def succeed(self):
+        self.finish(self.team)
+
+    def test_team_members_not_thanked(self):
+        members = TeamMemberFactory.create_batch(2, team=self.team)
+        mail.outbox = []
+
+        self.finish(self.team)
+
+        self.assertEqual(len(self.thank_you_mails()), 1)
         for member in members:
             self.assertEqual(len(self.thank_you_mails(member.user)), 0)
 
+    def test_captain_of_two_teams(self):
+        other_team = self.create_team()
+        mail.outbox = []
 
-class DeedThankYouTestCase(ThankYouTestCase):
+        self.finish(self.team)
+        self.finish(other_team)
+
+        self.assertEqual(len(self.thank_you_mails()), 2)
+
+
+class DeedThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     activity_type = 'deed'
 
-    def create(self, **kwargs):
-        activity = self.publish(DeedFactory.create(
+    def setUp(self):
+        super().setUp()
+        self.activity = self.publish(DeedFactory.create(
             initiative=self.initiative, owner=self.owner, send_thank_you_message=True,
-            start=date.today() - timedelta(days=5), **kwargs
+            start=date.today() - timedelta(days=5), end=None,
         ))
-        DeedParticipantFactory.create(activity=activity, user=self.user)
+        DeedParticipantFactory.create(activity=self.activity, user=self.user)
         mail.outbox = []
-        return activity
+
+    def succeed(self):
+        self.activity.states.succeed_manually(save=True)
 
     def test_end_passed(self):
-        activity = self.create(end=date.today() + timedelta(days=5))
-        activity.end = date.today() - timedelta(days=1)
-        activity.save()
+        self.activity.end = date.today() - timedelta(days=1)
+        self.activity.save()
 
-        activity.refresh_from_db()
-        self.assertEqual(activity.status, 'succeeded')
-        message = self.thank_you_mails()[0]
-        self.assertIn('Thank you for participating in an activity on', message.body)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assertEqual(len(self.thank_you_mails()), 1)
 
-    def test_succeed_manually(self):
-        activity = self.create(end=None)
-        activity.states.succeed_manually(save=True)
+    def test_send_once(self):
+        self.activity.states.succeed_manually(save=True)
+        self.activity.states.reopen(save=True)
+        self.activity.states.succeed_manually(save=True)
 
         self.assertEqual(len(self.thank_you_mails()), 1)
 
 
-class CollectThankYouTestCase(ThankYouTestCase):
+class CollectThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     activity_type = 'collectactivity'
 
-    def test_succeed_manually(self):
-        activity = self.publish(CollectActivityFactory.create(
+    def setUp(self):
+        super().setUp()
+        self.activity = self.publish(CollectActivityFactory.create(
             initiative=self.initiative, owner=self.owner, send_thank_you_message=True,
             start=date.today() - timedelta(days=5), end=None,
         ))
-        CollectContributorFactory.create(activity=activity, user=self.user)
+        CollectContributorFactory.create(activity=self.activity, user=self.user)
         mail.outbox = []
 
-        activity.states.succeed_manually(save=True)
+    def succeed(self):
+        self.activity.states.succeed_manually(save=True)
 
-        message = self.thank_you_mails()[0]
-        self.assertIn('Thank you for participating in an activity on', message.body)
+    def test_end_passed(self):
+        self.activity.end = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assertEqual(len(self.thank_you_mails()), 1)

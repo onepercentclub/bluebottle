@@ -112,16 +112,23 @@ class TransitionConfirmationForm(forms.Form):
         self.transition = kwargs.pop("transition", None)
         super().__init__(*args, **kwargs)
 
+        message_class = self.resolve_message_class()
+        append = getattr(message_class, 'append_custom_message', False)
+
         if self.use_custom_message() and 'custom_message' not in self.fields:
+            if append:
+                help_text = _('This message is added below the default email text.')
+            else:
+                help_text = _('Edit the message text only. The greeting and link are added automatically.')
             self.fields['custom_message'] = CustomMessageFormField(
                 label=_('Email message'),
                 required=False,
-                help_text=_('Edit the message text only. The greeting and link are added automatically.')
+                help_text=help_text,
             )
 
-        message_class = self.resolve_message_class()
         if (
             message_class
+            and not append
             and self.instance
             and not self.is_bound
             and 'custom_message' in self.fields

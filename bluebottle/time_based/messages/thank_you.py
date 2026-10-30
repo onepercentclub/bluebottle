@@ -18,8 +18,9 @@ class ThankYouNotification(ThankYouMessageMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    class Meta:
-        abstract = True
+    def get_thank_you_recipients(self):
+        """participant"""
+        return [self.obj.user]
 
 
 class DateParticipantThankYouNotification(ThankYouNotification):
@@ -27,13 +28,18 @@ class DateParticipantThankYouNotification(ThankYouNotification):
 
 
 class ScheduleParticipantThankYouNotification(ThankYouNotification):
-    pass
+    def get_thank_you_recipients(self):
+        """participant with a scheduled slot"""
+        if not (self.obj.slot and self.obj.slot.start):
+            return []
+        return [self.obj.user]
 
 
 class TeamThankYouNotification(ThankYouNotification):
-    def get_thank_you_recipients(self):
-        """team captain"""
-        return [self.obj.user]
+    """
+    Sent to the team captain only. Team members don't get a thank you email.
+    """
+    pass
 
 
 class RegistrationActivityThankYouNotification(ThankYouNotification):
@@ -46,19 +52,9 @@ class RegistrationActivityThankYouNotification(ThankYouNotification):
         return self.obj.get_absolute_url()
 
     def get_thank_you_recipients(self):
-        """participants"""
-        return list(dict.fromkeys(
-            participant.user for participant in
-            self.obj.participants.filter(status__in=('accepted', 'succeeded')).select_related('user')
-            if participant.user
-        ))
+        """participants with a succeeded contribution"""
+        return self.get_succeeded_contributors(self.obj)
 
 
 class PeriodicActivityThankYouNotification(RegistrationActivityThankYouNotification):
-    def get_thank_you_recipients(self):
-        """participants"""
-        return list(dict.fromkeys(
-            registration.user for registration in
-            self.obj.registrations.filter(status__in=('accepted', 'stopped')).select_related('user')
-            if registration.user
-        ))
+    pass

@@ -98,7 +98,7 @@ class DeedThankYouNotification(ThankYouMessageMixin, TransitionMessage):
     The deed succeeded
     """
     subject = pgettext('platform-email', 'Thank you for participating in the activity "{title}"')
-    template = 'messages/deed_thank_you'
+    template = 'messages/activity_thank_you'
     send_once = True
     append_custom_message = True
     context = {
@@ -111,7 +111,5 @@ class DeedThankYouNotification(ThankYouMessageMixin, TransitionMessage):
         return self.obj.get_absolute_url()
 
     def get_thank_you_recipients(self):
-        """participants"""
-        return list(dict.fromkeys(
-            participant.user for participant in self.obj.participants if participant.user
-        ))
+        """participants with a succeeded contribution"""
+        return self.get_succeeded_contributors(self.obj)

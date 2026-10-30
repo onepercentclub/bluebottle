@@ -40,4 +40,11 @@ class ThankYouMessageMixin:
         return self.get_thank_you_recipients()
 
     def get_thank_you_recipients(self):
-        return [self.obj.user]
+        raise NotImplementedError
+
+    def get_succeeded_contributors(self, activity):
+        from bluebottle.members.models import Member
+        return list(Member.objects.filter(
+            contributor__activity=activity,
+            contributor__contributions__status='succeeded',
+        ).distinct())

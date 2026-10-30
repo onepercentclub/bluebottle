@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import httmock
 import mock
+from django.core import mail
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
@@ -527,17 +528,30 @@ class SyncTestCase(ActivityPubTestCase):
         self.assertTrue(accept)
 
     def join(self):
-        self.participant = self.participant_factory.create(activity=self.adopted, user=self.adopted.owner)
+        user = BlueBottleUserFactory.create()
+        self.participant = self.participant_factory.create(
+            activity=self.adopted, user=user, as_user=user
+        )
 
     def re_accept(self, contributor):
         contributor.states.re_accept(save=True)
+
+    def assert_activity_manager_not_notified(self):
+        self.assertFalse(
+            [message for message in mail.outbox if self.adopted.owner.email in message.to],
+            'Activity manager of the adopted activity should not be notified'
+        )
 
     def test_join(self):
         self.test_adopt()
 
         with LocalTenant(self.consumer):
+            mail.outbox = []
             self.join()
             self.email = self.participant.user.email
+
+            self.assert_activity_manager_not_notified()
+
             self.adopted.origin.refresh_from_db()
             self.assertEqual(
                 next(
@@ -571,6 +585,7 @@ class SyncTestCase(ActivityPubTestCase):
 
     def test_leave(self):
         self.test_join()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.participant.states.withdraw(save=True)
@@ -585,8 +600,11 @@ class SyncTestCase(ActivityPubTestCase):
             self.synced_participant.status, 'withdrawn'
         )
 
+        self.assert_activity_manager_not_notified()
+
     def test_rejoin(self):
         self.test_leave()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.participant.states.reapply(save=True)
@@ -602,8 +620,11 @@ class SyncTestCase(ActivityPubTestCase):
             self.synced_participant.status, self.expected_participant_status
         )
 
+        self.assert_activity_manager_not_notified()
+
     def test_remove_supplier(self):
         self.test_join()
+        mail.outbox = []
 
         self.synced_participant.states.remove(save=True)
         self.assertEqual(self.synced_participant.status, self.removed_status)
@@ -611,6 +632,8 @@ class SyncTestCase(ActivityPubTestCase):
         with LocalTenant(self.consumer):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, self.removed_status)
+
+        self.assert_activity_manager_not_notified()
 
     def test_reaccept_supplier(self):
         self.test_remove_supplier()
@@ -632,6 +655,7 @@ class SyncTestCase(ActivityPubTestCase):
 
     def test_remove_consumer(self):
         self.test_join()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.participant.states.remove(save=True)
@@ -639,6 +663,8 @@ class SyncTestCase(ActivityPubTestCase):
 
         self.synced_participant.refresh_from_db()
         self.assertStatus(self.synced_participant, self.removed_status)
+
+        self.assert_activity_manager_not_notified()
 
     def test_update(self):
         self.test_adopt()
@@ -928,9 +954,12 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.assertStatus(self.adopted, 'full')
 
     def join(self):
+        user = BlueBottleUserFactory.create()
         registration = DeadlineRegistrationFactory.create(
             activity=self.adopted,
             answer=self.motivation,
+            user=user,
+            as_user=user
         )
         self.participant = registration.participants.get()
 
@@ -953,6 +982,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.model.save()
 
         with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
             self.join()
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()
@@ -992,7 +1022,8 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     removed_status = 'removed'
 
     def join(self):
-        registration = ScheduleRegistrationFactory.create(activity=self.adopted)
+        user = BlueBottleUserFactory.create()
+        registration = ScheduleRegistrationFactory.create(activity=self.adopted, user=user, as_user=user)
         self.participant = registration.participants.get()
 
     def re_accept(self, contributor):
@@ -1069,9 +1100,6 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         )
         self.submit()
 
-    def join(self):
-        super().join()
-
     def test_adopt(self):
         super().test_adopt()
 
@@ -1095,6 +1123,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_remove_supplier(self):
         self.test_join()
+        mail.outbox = []
 
         self.synced_participant.states.remove(save=True)
         self.assert_registration_propagated(self.synced_participant, self.removed_status)
@@ -1103,8 +1132,11 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.participant.refresh_from_db()
             self.assert_registration_propagated(self.participant, self.removed_status)
 
+        self.assert_activity_manager_not_notified()
+
     def test_remove_consumer(self):
         self.test_join()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.participant.states.remove(save=True)
@@ -1112,6 +1144,8 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.synced_participant.refresh_from_db()
         self.assert_registration_propagated(self.synced_participant, self.removed_status)
+
+        self.assert_activity_manager_not_notified()
 
     def test_reaccept_supplier(self):
         self.test_remove_supplier()
@@ -1170,6 +1204,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_leave(self):
         self.test_next_slot()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.participant.states.stop(save=True)
@@ -1181,8 +1216,11 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.synced_participant.status, 'stopped'
         )
 
+        self.assert_activity_manager_not_notified()
+
     def test_rejoin(self):
         self.test_leave()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.participant.states.start(save=True)
@@ -1197,6 +1235,8 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertEqual(
             self.synced_participant.status, 'accepted'
         )
+
+        self.assert_activity_manager_not_notified()
 
     def test_next_slot(self):
         self.test_join()
@@ -2030,14 +2070,18 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.submit()
 
     def join(self):
+        user = BlueBottleUserFactory.create()
         registration = DateRegistrationFactory.create(
             activity=self.adopted,
-            answer=self.motivation
+            answer=self.motivation,
+            user=user,
+            as_user=user
         )
         self.participant = DateParticipantFactory.create(
             activity=self.adopted,
             slot=self.adopted.slots.first(),
-            registration=registration
+            registration=registration,
+            as_user=user
         )
 
     def re_accept(self, contributor):
@@ -2346,8 +2390,11 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.test_adopt()
 
         with LocalTenant(self.consumer):
+            mail.outbox = []
             self.join()
             self.email = self.captain.email
+            self.assert_activity_manager_not_notified()
+
             self.adopted.origin.refresh_from_db()
             self.assertEqual(
                 self.adopted.origin.contributor_count,
@@ -2381,6 +2428,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_rejoin(self):
         self.test_team_withdraw()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.team.refresh_from_db()
@@ -2404,8 +2452,11 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.synced_team.team_members.filter(status='active').count(), 1
         )
 
+        self.assert_activity_manager_not_notified()
+
     def test_remove_supplier(self):
         self.test_member_join()
+        mail.outbox = []
 
         self.synced_team.states.remove(save=True)
         self.assertStatus(self.synced_team, self.removed_status)
@@ -2416,8 +2467,11 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.team.refresh_from_db()
             self.assertStatus(self.team, self.removed_status)
 
+        self.assert_activity_manager_not_notified()
+
     def test_remove_consumer(self):
         self.test_member_join()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.team.refresh_from_db()
@@ -2428,6 +2482,8 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_team.refresh_from_db()
         self.assertStatus(self.synced_team, self.removed_status)
         self.assertEqual(len(Remove.objects.all()), 1)
+
+        self.assert_activity_manager_not_notified()
 
     def test_join_with_review(self):
         self.test_adopt()
@@ -2556,6 +2612,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_team_withdraw(self):
         self.test_join()
+        mail.outbox = []
 
         with LocalTenant(self.consumer):
             self.team.states.withdraw(save=True)
@@ -2566,3 +2623,5 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_registration.refresh_from_db()
         self.assertEqual(self.synced_team.status, 'withdrawn')
         self.assertEqual(self.synced_registration.status, 'withdrawn')
+
+        self.assert_activity_manager_not_notified()

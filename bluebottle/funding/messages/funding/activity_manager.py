@@ -37,7 +37,10 @@ class DonationSuccessActivityManagerMessage(FundingActivityManagerMessage):
 
     def get_recipients(self):
         """the activity organizer"""
-        return [self.obj.activity.owner]
+        if not self.obj.activity.is_adopted:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
 
 class FundingPartiallyFundedMessage(FundingActivityManagerMessage):

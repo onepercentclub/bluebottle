@@ -40,7 +40,7 @@ class MessageAdminInline(GenericStackedInline):
 
 class ActivityMessageTemplateAdminInline(admin.StackedInline):
     model = ActivityMessageTemplate
-    fields = ['action', 'insert_method', 'subject', 'body_html']
+    fields = ['action', 'body_html']
     extra = 0
 
 

@@ -63,6 +63,7 @@ class PeriodicActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
     url_name = 'periodic-detail'
     serializer = PeriodicActivitySerializer
     factory = PeriodicActivityFactory
+    participant_factory = PeriodicParticipantFactory
 
     fields = TimeBasedActivityDetailAPITestCase.fields + ['capacity', 'periodic', 'duration', 'is_online']
     attributes = TimeBasedActivityDetailAPITestCase.attributes + [

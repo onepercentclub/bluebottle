@@ -175,6 +175,14 @@ class SlotRelatedParticipantListView(
             else:
                 queryset = queryset.none()
 
+        is_manager = (
+            self.request.user.is_staff
+            or self.request.user.is_superuser
+            or self.request.user in activity.owners
+        )
+        if not is_manager:
+            queryset = queryset.filter(remote_user__isnull=True)
+
         status_filter = self.request.query_params.get("filter[status]")
         if status_filter:
             statuses = status_filter.split(",")
@@ -183,11 +191,7 @@ class SlotRelatedParticipantListView(
                 "accepted",
                 "succeeded",
             )
-            if (
-                self.request.user.is_staff
-                or self.request.user.is_superuser
-                or self.request.user in activity.owners
-            ):
+            if is_manager:
                 statuses = (
                     "accepted",
                     "succeeded",

@@ -85,11 +85,15 @@ class FilterRelatedUserMixin:
                     Q(user=self.request.user) |
                     Q(activity__owner=self.request.user) |
                     Q(activity__initiative__activity_manager=self.request.user) |
-                    Q(status__in=('accepted', 'succeeded',))
+                    (
+                        Q(status__in=('accepted', 'succeeded',)) &
+                        Q(remote_user__isnull=True)
+                    )
                 ).order_by('-id')
         else:
             queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded',)
+                status__in=('accepted', 'succeeded',),
+                remote_user__isnull=True
             ).order_by('-id')
 
         return queryset

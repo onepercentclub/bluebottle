@@ -315,7 +315,7 @@ class BaseActivitySerializer(ModelSerializer):
                 if item['source'] != local_source
             )
         else:
-            return 0
+            return obj.active_contributors.filter(remote_user__isnull=False).count()
 
     def get_source(self, obj):
         if hasattr(obj, 'origin') and obj.origin.source:

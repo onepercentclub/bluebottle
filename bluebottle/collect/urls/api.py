@@ -1,6 +1,7 @@
 from django.urls import path
 from django.urls import re_path
 
+from bluebottle.notifications.views import RelatedActivityMessageTemplateList
 from bluebottle.collect.views import (
     CollectContributorExportView, CollectContributorTransitionList,
     CollectContributorDetail, CollectContributorList,
@@ -27,6 +28,12 @@ urlpatterns = [
         '/transitions',
         CollectActivityTransitionList.as_view(),
         name='collect-activity-transition-list'
+    ),
+
+    path(
+        '/<int:activity_id>/message-templates',
+        RelatedActivityMessageTemplateList.as_view(),
+        name='collect-message-templates'
     ),
 
     path(

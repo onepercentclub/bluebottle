@@ -193,7 +193,10 @@ def _assert_custom_message_replaces_default(test_case, obj, message_class, defau
     custom_message.compose_and_send()
     test_case.assertEqual(len(mail.outbox), 1)
     test_case.assertIn(CUSTOM_MESSAGE, mail.outbox[0].body)
-    test_case.assertNotIn(default_snippet, mail.outbox[0].body)
+    if message_class.append_custom_message:
+        test_case.assertIn(default_snippet, mail.outbox[0].body)
+    else:
+        test_case.assertNotIn(default_snippet, mail.outbox[0].body)
 
 
 class CustomMessageNotificationTestCase(BluebottleTestCase):

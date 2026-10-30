@@ -1,6 +1,7 @@
 from django.urls import path
 from django.urls import re_path
 
+from bluebottle.notifications.views import RelatedActivityMessageTemplateList
 from bluebottle.time_based.views import (
     DeadlineTransitionList,
     DeadlineActivityListView, DeadlineActivityDetailView,
@@ -57,6 +58,11 @@ urlpatterns = [
         '/<int:activity_id>/interests',
         DeadlineRelatedInterestList.as_view(),
         name='deadline-interests'
+    ),
+    path(
+        '/<int:activity_id>/message-templates',
+        RelatedActivityMessageTemplateList.as_view(),
+        name='deadline-message-templates'
     ),
     path(
         '/participants',

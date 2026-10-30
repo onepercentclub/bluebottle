@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 class PreviewMember:
     def __init__(self):
-        self.first_name = pgettext('platform-email', "[participant's first name]")
-        self.full_name = pgettext('platform-email', "[participant's name]")
+        self.first_name = pgettext('platform-email', "[name]")
+        self.full_name = pgettext('platform-email', "[name]")
         self.primary_language = get_current_language()
         self.email = ''
 
@@ -39,6 +39,11 @@ class PreviewContributor:
         self.participants = EmptyQuery()
         slots = getattr(activity, 'slots', None)
         self.slot = slots.order_by('start').first() if slots is not None else None
+
+    def __getattr__(self, name):
+        if name.startswith('__') or name == 'activity':
+            raise AttributeError(name)
+        return getattr(self.activity, name)
 
 
 class MessagePreview:

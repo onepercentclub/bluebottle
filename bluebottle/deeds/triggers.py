@@ -21,6 +21,7 @@ from bluebottle.activity_pub.effects import (
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
+    DeedThankYouNotification,
     ParticipantJoinedNotification
 )
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -209,8 +210,16 @@ class DeedTriggers(ActivityTriggers):
                     conditions=[is_not_started]
                 ),
                 NotificationEffect(ActivitySucceededNotification),
+                NotificationEffect(DeedThankYouNotification),
                 SetEndDateEffect,
                 FinishEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.succeed_manually,
+            effects=[
+                NotificationEffect(DeedThankYouNotification),
             ]
         ),
 

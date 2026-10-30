@@ -119,6 +119,7 @@ class ActivityMessageTemplate(models.Model):
         ('apply', _('Participant applied')),
         ('accept', _('Participant accepted')),
         ('reject', _('Participant rejected')),
+        ('succeed', _('Thank you')),
     )
 
     activity = models.ForeignKey(

@@ -145,6 +145,12 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         ),
     )
 
+    send_thank_you_message = models.BooleanField(
+        _("Send thank you email"),
+        default=False,
+        help_text=_("Send participants a thank you email when their contribution succeeds."),
+    )
+
     next_step_link = models.URLField(
         _("Redirect step link"),
         max_length=2048,

@@ -230,13 +230,17 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus("accepted", self.team)
 
     def test_change_start_finish(self):
+        self.activity.send_thank_you_message = True
+        self.activity.save()
         self.slot.start = now() - timedelta(days=2)
         self.slot.save()
 
         self.assertStatus("finished")
         self.assertStatus("succeeded", self.team)
 
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.team.user.email])
+        self.assertTrue(mail.outbox[0].subject.startswith('Thank you for participating'))
 
     def test_user_team_details_changed_after_schedule(self):
         self.slot.start = now() + timedelta(days=2)

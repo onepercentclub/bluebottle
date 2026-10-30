@@ -2,6 +2,7 @@
 from django.utils import formats
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.activities.messages.base import ThankYouMessageMixin
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -90,3 +91,25 @@ class ParticipantJoinedNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
+
+
+class DeedThankYouNotification(ThankYouMessageMixin, TransitionMessage):
+    """
+    The deed succeeded
+    """
+    subject = pgettext('platform-email', 'Thank you for participating in the activity "{title}"')
+    template = 'messages/activity_thank_you'
+    send_once = True
+    append_custom_message = True
+    context = {
+        'title': 'title',
+    }
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    def get_thank_you_recipients(self):
+        """participants with a succeeded contribution"""
+        return self.get_succeeded_contributors(self.obj)

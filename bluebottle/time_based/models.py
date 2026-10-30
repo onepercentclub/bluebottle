@@ -535,6 +535,15 @@ class DateActivitySlot(ActivitySlot):
         return self.activity.owners
 
     @property
+    def readonly_fields(self):
+        if self.activity_id and self.activity.is_adopted:
+            return [
+                'title', 'start', 'duration', 'capacity', 'is_online',
+                'online_meeting_url', 'location', 'location_hint',
+            ]
+        return []
+
+    @property
     def required_fields(self):
         fields = super().required_fields + [
             'start',

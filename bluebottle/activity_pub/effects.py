@@ -423,18 +423,20 @@ class SendJoinDateSlotEffect(Effect):
     template = 'admin/activity_pub/send_join_effect.html'
 
     def post_save(self, **kwargs):
-        if self.instance.slot and hasattr(self.instance.slot, 'origin'):
-            Join.objects.create(
-                actor=self.instance.user.activity_pub_model,
-                object=self.instance.slot.origin
-            )
+        actor = adapter.sync(self.instance.user)
+
+        Join.objects.create(
+            actor=actor,
+            object=self.instance.slot.origin
+        )
 
     @property
     def is_valid(self):
         return (
             not self.options.get('local') and
             self.instance.remote_user is None and
-            hasattr(self.instance.user, 'activity_pub_model')
+            self.instance.slot and
+            hasattr(self.instance.slot, 'origin')
         )
 
     def __str__(self):
@@ -474,9 +476,15 @@ class SendLeaveEffect(Effect):
     conditions = [can_send_leave]
 
     def post_save(self, **kwargs):
+        activity = (
+            self.instance.slot
+            if hasattr(self.instance, 'slot') and self.instance.slot else
+            self.instance.activity
+        )
+
         Leave.objects.create(
             actor=self.instance.user.activity_pub_model,
-            object=self.instance.activity.origin,
+            object=activity.origin,
         )
 
     def __str__(self):

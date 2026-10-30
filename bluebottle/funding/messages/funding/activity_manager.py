@@ -40,7 +40,7 @@ class DonationSuccessActivityManagerMessage(FundingActivityManagerMessage):
         if not self.obj.activity.is_adopted:
             return [self.obj.activity.owner]
         else:
-            return [self.obj.activity.owner]
+            return []
 
 
 class FundingPartiallyFundedMessage(FundingActivityManagerMessage):

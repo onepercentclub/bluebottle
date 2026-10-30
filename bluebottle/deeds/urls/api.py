@@ -1,6 +1,7 @@
 from django.urls import path
 from django.urls import re_path
 
+from bluebottle.notifications.views import RelatedActivityMessageTemplateList
 from bluebottle.deeds.views import (
     DeedListView, DeedDetailView, DeedTransitionList,
     DeedRelatedParticipantList, ParticipantList, ParticipantDetail,
@@ -25,6 +26,12 @@ urlpatterns = [
         '/transitions',
         DeedTransitionList.as_view(),
         name='deed-transition-list'
+    ),
+
+    path(
+        '/<int:activity_id>/message-templates',
+        RelatedActivityMessageTemplateList.as_view(),
+        name='deed-message-templates'
     ),
 
     path(

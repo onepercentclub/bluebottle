@@ -3,6 +3,9 @@
 {% load message_url %}
 
 {% block content %}
+    {% if body_html and insert_method == 'replace' %}
+        {{ body_html }}
+    {% else %}
     {% if not only_message %}
         {% blocktrans context 'platform-email' %}
             <p>Hi {{ recipient_name }},</p>
@@ -14,6 +17,11 @@
     {% if only_message or not custom_message %}
         {% block message %}{% endblock %}
     {% endif %}
+    {% if body_html and insert_method == 'append' %}
+        <p>
+        {{ body_html }}
+        </p>
+    {% endif %}
     {% if not only_message %}
         {% block additional %} {% endblock %}
 
@@ -24,6 +32,7 @@
                 {% endblocktrans %}
             </p>
         {% endif %}
+    {% endif %}
     {% endif %}
 {% endblock %}
 

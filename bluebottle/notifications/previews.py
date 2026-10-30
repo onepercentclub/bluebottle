@@ -40,6 +40,9 @@ class PreviewContributor:
         slots = getattr(activity, 'slots', None)
         self.slot = slots.order_by('start').first() if slots is not None else None
 
+    def __getattr__(self, name):
+        return getattr(self.activity, name)
+
 
 class MessagePreview:
     def __init__(self, activity, action, subject, body, action_title):

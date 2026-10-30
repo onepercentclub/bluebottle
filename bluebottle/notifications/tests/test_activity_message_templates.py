@@ -124,7 +124,7 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_create_invalid_action(self):
-        self.perform_create(user=self.owner, data=self.get_data(action='succeed'))
+        self.perform_create(user=self.owner, data=self.get_data(action='unknown'))
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_create_deed_join(self):
@@ -528,7 +528,10 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         previews = self.previews(response)
-        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
+        self.assertEqual(
+            previews['succeed']['subject'], 'Thank you for participating in the activity "Clean the park"'
+        )
         self.assertEqual(
             previews['accept']['subject'],
             'You have been selected for the activity "Clean the park"'
@@ -543,17 +546,17 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         activity = DeedFactory.create(owner=self.owner, title='Plant a tree')
         previews = self.previews(self.get(activity))
 
-        self.assertEqual(set(previews), {'join'})
+        self.assertEqual(set(previews), {'join', 'succeed'})
         self.assertEqual(previews['join']['subject'], 'You have joined the activity "Plant a tree"')
 
     def test_collect(self):
         previews = self.previews(self.get(CollectActivityFactory.create(owner=self.owner)))
-        self.assertEqual(set(previews), {'join'})
+        self.assertEqual(set(previews), {'join', 'succeed'})
 
     def test_date(self):
         activity = DateActivityFactory.create(owner=self.owner)
         previews = self.previews(self.get(activity))
-        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
 
     def test_schedule_teams(self):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
@@ -641,3 +644,30 @@ class RegistrationReviewMessageTestCase(BluebottleTestCase):
             message.subject,
             'You have been selected for the activity "{}"'.format(self.activity.title)
         )
+
+
+class SendThankYouMessageAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.activity = DeadlineActivityFactory.create(owner=self.owner)
+        self.url = reverse('deadline-detail', args=(self.activity.pk,))
+
+    def test_default_off(self):
+        response = self.client.get(self.url, user=self.owner)
+        self.assertFalse(response.json()['data']['attributes']['send-thank-you-message'])
+
+    def test_owner_enables(self):
+        data = {
+            'data': {
+                'type': 'activities/time-based/deadlines',
+                'id': self.activity.pk,
+                'attributes': {'send-thank-you-message': True},
+            }
+        }
+        response = self.client.patch(self.url, json.dumps(data), user=self.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.activity.refresh_from_db()
+        self.assertTrue(self.activity.send_thank_you_message)

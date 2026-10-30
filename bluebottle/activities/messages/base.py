@@ -30,3 +30,14 @@ class BaseParticipantNotification(TransitionMessage):
 
     class Meta:
         abstract = True
+
+
+class ThankYouMessageMixin:
+    def get_recipients(self):
+        activity = self.get_activity()
+        if not (activity and activity.send_thank_you_message):
+            return []
+        return self.get_thank_you_recipients()
+
+    def get_thank_you_recipients(self):
+        return [self.obj.user]

@@ -37,6 +37,10 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
 )
+from bluebottle.time_based.messages.thank_you import (
+    DateParticipantThankYouNotification,
+    ScheduleParticipantThankYouNotification,
+)
 from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
@@ -686,6 +690,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             ScheduleParticipantStateMachine.succeed,
             effects=[
+                NotificationEffect(ScheduleParticipantThankYouNotification),
                 RelatedTransitionEffect(
                     "activity",
                     ScheduleActivityStateMachine.lock,
@@ -1301,6 +1306,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.succeed,
             effects=[
+                NotificationEffect(DateParticipantThankYouNotification),
                 RelatedTransitionEffect(
                     'activity',
                     DateStateMachine.succeed,

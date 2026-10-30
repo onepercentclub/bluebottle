@@ -498,7 +498,7 @@ class CancelSerializer(BaseActivitySerializer):
     object = RelatedResourceField(
         type=(
             'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
+            'CollectCampaign', 'DoGoodEvent', 'SubEvent'
         )
     )
 

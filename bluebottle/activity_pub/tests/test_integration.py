@@ -2156,6 +2156,26 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         second_supplier_slot = self.model.slots.order_by('start', 'id')[1]
         self.assertEqual(second_supplier_slot.contributor_count, 1)
 
+    def test_cancel_slot_supplier(self):
+        self.test_adopt()
+
+        slot = self.model.slots.order_by('start', 'id').first()
+
+        with httmock.HTTMock(image_mock):
+            slot.states.cancel(save=True)
+
+        self.assertStatus(slot, 'cancelled')
+        self.assertStatus(self.model, 'open')
+
+        with LocalTenant(self.consumer):
+            consumer_slots = self.adopted.slots.order_by('start', 'id')
+            self.assertStatus(consumer_slots[0], 'cancelled')
+            self.assertStatus(consumer_slots[1], 'open')
+            self.assertStatus(consumer_slots[2], 'open')
+
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'open')
+
     def test_update_slot_title(self):
         self.test_adopt()
 

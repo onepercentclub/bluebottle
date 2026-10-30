@@ -14925,4 +14925,3 @@ msgstr "Nyisd meg újra a szavazást a szavazásra."
 #: bluebottle/voting/views.py:54
 msgid "You have already voted in this poll"
 msgstr "Már szavaztál ebben a szavazásban"
-

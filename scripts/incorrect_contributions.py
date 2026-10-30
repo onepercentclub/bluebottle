@@ -1,4 +1,6 @@
 from django.db.models import Q, Count
+from django.db.models.aggregates import Max
+from django.db.models.expressions import F
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant

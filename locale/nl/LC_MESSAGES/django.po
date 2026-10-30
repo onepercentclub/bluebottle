@@ -14907,4 +14907,3 @@ msgstr "Heropen de peiling voor stemmen."
 #: bluebottle/voting/views.py:54
 msgid "You have already voted in this poll"
 msgstr "Je hebt al gestemd in deze peiling"
-

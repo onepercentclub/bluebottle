@@ -12,6 +12,7 @@ from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
     InitiativePlatformSettingsFactory,
 )
+from bluebottle.notifications.activity_messages import get_message_action
 from bluebottle.notifications.models import ActivityMessageTemplate, MessageTemplate
 from bluebottle.notifications.serializers import ActivityMessageTemplateSerializer
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -66,9 +67,7 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
         activity = activity or self.activity
         data = {
             'action': 'accept',
-            'subject': 'You are in for {title}!',
-            'body': '<p>Hi {first_name}, great to have you.</p>',
-            'insert-method': 'replace',
+            'body': '<p>Hi, great to have you.</p>',
         }
         data.update(attributes)
         return {
@@ -83,20 +82,12 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
             }
         }
 
-    def test_create_without_subject(self):
-        data = self.get_data()
-        del data['data']['attributes']['subject']
-        self.perform_create(user=self.owner, data=data)
-        self.assertStatus(status.HTTP_201_CREATED)
-        self.assertEqual(self.model.subject, '')
-
     def test_create_owner(self):
         self.perform_create(user=self.owner, data=self.get_data())
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertEqual(self.model.activity, self.activity)
         self.assertEqual(self.model.action, 'accept')
-        self.assertEqual(self.model.subject, 'You are in for {title}!')
-        self.assertEqual(self.model.body_html.html, '<p>Hi {first_name}, great to have you.</p>')
+        self.assertEqual(self.model.body_html.html, '<p>Hi, great to have you.</p>')
         self.assertTrue(self.response.json()['data']['meta']['permissions']['PATCH'])
 
     def test_create_activity_manager(self):
@@ -143,21 +134,6 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
         self.perform_create(user=self.owner, data=self.get_data(activity=collect, action='join'))
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertEqual(self.model.activity, collect)
-
-    def test_create_unknown_placeholder(self):
-        self.perform_create(user=self.owner, data=self.get_data(subject='Hi {password}'))
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-    def test_create_attribute_placeholder(self):
-        self.perform_create(
-            user=self.owner,
-            data=self.get_data(body='<p>{title.__class__.__init__}</p>')
-        )
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-    def test_create_broken_braces(self):
-        self.perform_create(user=self.owner, data=self.get_data(subject='Hi {title'))
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_list(self):
         create_template(self.activity)
@@ -241,7 +217,6 @@ class ActivityMessageTemplateDetailAPITestCase(APITestCase):
     def test_get_owner(self):
         self.perform_get(user=self.owner)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertAttribute('subject', 'Welcome to {title}')
         self.assertAttribute('body', '<p>Hi {first_name}, see you soon!</p>')
 
     def test_get_activity_type(self):
@@ -256,13 +231,13 @@ class ActivityMessageTemplateDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_404_NOT_FOUND)
 
     def test_update_owner(self):
-        self.patch(self.owner, subject='Changed {title}')
+        self.patch(self.owner, body='<p>Changed</p>')
         self.assertStatus(status.HTTP_200_OK)
         self.model.refresh_from_db()
-        self.assertEqual(self.model.subject, 'Changed {title}')
+        self.assertEqual(self.model.body_html.html, '<p>Changed</p>')
 
     def test_update_other_user(self):
-        self.patch(BlueBottleUserFactory.create(), subject='Changed')
+        self.patch(BlueBottleUserFactory.create(), body='<p>Changed</p>')
         self.assertStatus(status.HTTP_404_NOT_FOUND)
 
     def test_delete_owner(self):

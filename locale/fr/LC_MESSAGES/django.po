@@ -14934,4 +14934,3 @@ msgstr "Rouvrez le sondage pour le vote."
 #: bluebottle/voting/views.py:54
 msgid "You have already voted in this poll"
 msgstr "Vous avez déjà voté dans ce sondage"
-

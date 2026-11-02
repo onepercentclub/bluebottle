@@ -984,6 +984,41 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertEqual(self.synced_participant.status, self.expected_participant_status)
         self.assertEqual(self.synced_participant.registration.status, 'accepted')
 
+    def test_cancel_supplier_with_participant(self):
+        self.test_join()
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.cancel(save=True)
+
+        self.assertStatus(self.model, 'cancelled')
+        self.synced_participant.refresh_from_db()
+        self.assertStatus(self.synced_participant, 'cancelled')
+
+        with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'cancelled')
+
+            self.participant.refresh_from_db()
+            self.assertStatus(self.participant, 'cancelled')
+
+    def test_restore_supplier_with_participant(self):
+        self.test_cancel_supplier_with_participant()
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.restore(save=True)
+            self.model.states.approve(save=True)
+
+        self.assertStatus(self.model, 'open')
+        self.synced_participant.refresh_from_db()
+        self.assertStatus(self.synced_participant, self.expected_participant_status)
+
+        with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'open')
+
+            self.participant.refresh_from_db()
+            self.assertStatus(self.participant, self.expected_participant_status)
+
 
 class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory

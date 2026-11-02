@@ -102,8 +102,8 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
             for slot in do_good_event.sub_event.all()
         }
         expected_locations = {
-            (first_location.position.x, first_location.position.y),
-            (second_location.position.x, second_location.position.y),
+            (first_location.position.y, first_location.position.x),
+            (second_location.position.y, second_location.position.x),
         }
         self.assertSetEqual(serialized_locations, expected_locations)
 
@@ -331,8 +331,8 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
         event = adapter.create_or_update_event(funding)
         self.assertEqual(event.location.name, place.place_name)
         self.assertEqual(event.location.place_type, 'city')
-        self.assertEqual(event.location.latitude, geolocation.position.x)
-        self.assertEqual(event.location.longitude, geolocation.position.y)
+        self.assertEqual(event.location.latitude, geolocation.position.y)
+        self.assertEqual(event.location.longitude, geolocation.position.x)
         self.assertEqual(event.location.address.locality, 'Amsterdam')
         self.assertEqual(
             event.location.identifier,

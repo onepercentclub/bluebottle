@@ -206,6 +206,26 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_list_anonymous(self):
+        open_initiative = InitiativeFactory.create(owner=self.owner, is_open=True)
+        InitiativeFactory.create(owner=self.owner, is_open=False)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [item['id'] for item in response.json()['data']]
+        self.assertEqual(ids, [str(open_initiative.pk)])
+
+    def test_list_owner(self):
+        InitiativeFactory.create(owner=self.owner, is_open=True)
+        InitiativeFactory.create(owner=self.owner, is_open=False)
+        InitiativeFactory.create(owner=self.visitor, is_open=False)
+
+        response = self.client.get(self.url, user=self.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 2)
+
 
 class InitiativeDetailAPITestCase(InitiativeAPITestCase):
     def setUp(self):

@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from builtins import object
 
+from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.test.factory_models import generate_rich_text
 
 import factory.fuzzy
@@ -35,7 +36,7 @@ class DeedFactory(factory.DjangoModelFactory):
     theme = factory.SubFactory(ThemeFactory)
 
 
-class DeedParticipantFactory(factory.DjangoModelFactory):
+class DeedParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = DeedParticipant
 

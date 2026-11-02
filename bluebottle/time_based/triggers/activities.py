@@ -641,7 +641,7 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
         ),
 
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'deadline', 'location', 'duration', 'image'],
+            ['title', 'description', 'start', 'deadline', 'location', 'duration', 'image', 'review'],
             effects=[
                 UpdateEventEffect,
             ]
@@ -711,7 +711,7 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
         ),
 
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'location', 'duration', 'image', 'is_online'],
+            ['title', 'description', 'start', 'location', 'duration', 'image', 'is_online', 'review'],
             effects=[
                 UpdateEventEffect,
             ]
@@ -930,7 +930,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             ]
         ),
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'location', 'duration', 'image'],
+            ['title', 'description', 'start', 'location', 'duration', 'image', 'review'],
             effects=[
                 UpdateEventEffect,
             ]

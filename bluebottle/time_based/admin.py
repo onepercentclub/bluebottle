@@ -203,7 +203,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'review',
         'preparation',
         'registration_deadline',
-        'review_info_box',
         'registration_flow',
         'registration_question',
         'review_title',
@@ -230,7 +229,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
                     'review_title', 'review_description', 'review_link', 'registration_flow',
                     'review_document_enabled', 'registration_link', 'registration_question'
                 ]
-            )
+            ) + ('review_info_box', )
 
         return fields
 
@@ -250,10 +249,9 @@ class TimeBasedAdmin(ActivityChildAdmin):
         )
 
     def review_info_box(self, obj):
-        if (hasattr(obj, 'activity_pub_model') and obj.activity_pub_model) or obj.is_adopted:
-            return admin_info_box(
-                _("Review actions are disabled for synced activities")
-            )
+        return admin_info_box(
+            _("Review actions are disabled for synced activities")
+        )
 
     def registration_question(self, obj):
         return admin_info_box(

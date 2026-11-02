@@ -23,6 +23,8 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 class FundingTestCase(BluebottleAdminTestCase):
+    csrf_checks = False
+
     def setUp(self):
         super(FundingTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
@@ -49,6 +51,16 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertContains(response, reviewed_url)
         response = self.client.get(reviewed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_funding_admin_save_without_currency(self):
+        url = reverse('admin:activities_activity_change', args=(self.funding.id,))
+        page = self.app.get(url, user=self.superuser)
+        form = page.forms['funding_form']
+        form['target_0'] = '1000.00'
+        form['target_1'].force_value('')
+        response = form.submit(user=self.superuser)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'Select a currency.')
 
     def test_funding_admin_future_deadline(self):
         self.client.force_login(self.superuser)

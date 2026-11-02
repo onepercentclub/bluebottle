@@ -1192,15 +1192,16 @@ class SlotAdmin(StateMachineAdmin):
     activity_link.short_description = _('Activity')
 
     activity_pub_readonly_fields = (
-        'activity', 'start', 'location', 'location_hint',
-        'online_meeting_url', 'title', 'capacity', 'start', 'duration',
-        'origin', 'host_organization'
+        'activity', 'origin', 'host_organization'
     )
 
     def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        if hasattr(obj, 'origin'):
-            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        if obj:
+            readonly_fields += obj.readonly_fields
+
+            if obj.is_adopted:
+                readonly_fields += self.activity_pub_readonly_fields
 
         return readonly_fields
 

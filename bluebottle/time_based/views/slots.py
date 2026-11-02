@@ -96,7 +96,6 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            IsNotAdoptedPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
             DeleteActivityPermission,
         ]

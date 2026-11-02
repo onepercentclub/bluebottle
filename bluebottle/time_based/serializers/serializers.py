@@ -1,6 +1,8 @@
+import inflection
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     HyperlinkedRelatedField,
+    RelatedField,
     ResourceRelatedField,
     SerializerMethodHyperlinkedRelatedField,
     SerializerMethodResourceRelatedField,
@@ -52,6 +54,7 @@ class ActivitySlotSerializer(ModelSerializer):
     location = ResourceRelatedField(queryset=Geolocation.objects, required=False, allow_null=True)
     current_status = CurrentStatusField(source='states.current_state')
     timezone = serializers.SerializerMethodField()
+    readonly_fields = serializers.SerializerMethodField()
 
     participants_export_url = PrivateFileSerializer(
         'slot-participant-export',
@@ -60,6 +63,24 @@ class ActivitySlotSerializer(ModelSerializer):
         permission=CanExportParticipantsPermission,
         read_only=True
     )
+
+    def __init__(self, instance=None, *args, **kwargs):
+        super().__init__(instance, *args, **kwargs)
+
+        if instance:
+            for field in getattr(instance, 'readonly_fields', []):
+                try:
+                    self.fields[field].read_only = True
+                except KeyError:
+                    pass
+
+    def get_readonly_fields(self, obj):
+        return [
+            f'relationships.{inflection.camelize(field, False)}' if
+            isinstance(self.fields[field], RelatedField) else
+            f'attributes.{inflection.camelize(field, False)}'
+            for field in getattr(obj, 'readonly_fields', []) if field in self.fields
+        ]
 
     def get_timezone(self, instance):
         is_online = getattr(instance, 'is_online', False)
@@ -90,7 +111,8 @@ class ActivitySlotSerializer(ModelSerializer):
             'errors',
             'created',
             'updated',
-            'translations'
+            'translations',
+            'readonly_fields',
         )
 
     class JSONAPIMeta(object):

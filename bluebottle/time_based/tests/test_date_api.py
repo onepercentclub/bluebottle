@@ -8,6 +8,7 @@ from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.activities.tests.factories import RemoteMemberFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -361,6 +362,57 @@ class DateSlotDetailAPITestCase(APITestCase):
         self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.user)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
+    def test_get_readonly_fields(self):
+        self.perform_get(user=self.manager)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('readonly-fields', [])
+
+    def test_get_adopted_readonly_fields(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        self.perform_get(user=self.manager)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta(
+            'readonly-fields',
+            [
+                'attributes.title',
+                'attributes.start',
+                'attributes.duration',
+                'attributes.capacity',
+                'attributes.isOnline',
+                'attributes.onlineMeetingUrl',
+                'relationships.location',
+                'attributes.locationHint',
+            ]
+        )
+
+    def test_update_adopted(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        old_start = self.model.start
+        old_duration = self.model.duration
+        old_title = self.model.title
+
+        start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
+        self.perform_update(
+            {'start': start, 'duration': '4:0:0', 'title': 'New title'},
+            user=self.manager
+        )
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.start, old_start)
+        self.assertEqual(self.model.duration, old_duration)
+        self.assertEqual(self.model.title, old_title)
+
     def test_ical_download(self):
         start = (date.today() + timedelta(days=10)).strftime("%Y-%m-%d %H:00:00")
         self.perform_update(
@@ -535,6 +587,10 @@ class DateSlotListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_adopted_activity(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier']
+        site_settings.save()
+
         DoGoodEventFactory.create(adopted=self.activity)
 
         self.perform_create(user=self.activity.owner)

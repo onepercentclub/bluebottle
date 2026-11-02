@@ -190,6 +190,8 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
                 'attributes.reviewTitle',
                 'attributes.reviewDescription',
                 'attributes.reviewLink',
+                'attributes.reviewDocumentEnabled',
+                'attributes.registrationFlow',
                 'attributes.isOnline',
                 'relationships.location',
                 'attributes.locationHint',

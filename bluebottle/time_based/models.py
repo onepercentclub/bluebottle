@@ -126,7 +126,12 @@ class TimeBasedActivity(Activity):
         if hasattr(self, 'origin') and self.origin:
             readonly_fields = readonly_fields + [
                 'capacity', 'registration_deadline', 'review', 'review_title', 'review_description',
-                'review_link', 'preparation',
+                'review_link', 'preparation', 'review_document_enabled', 'registration_flow'
+            ]
+
+        if hasattr(self, 'activity_pub_model') and self.activity_pub_model:
+            readonly_fields = readonly_fields + [
+                'review_title', 'review_description', 'review_link', 'registration_flow', 'review_document_enabled',
             ]
 
         return readonly_fields

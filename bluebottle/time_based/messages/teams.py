@@ -20,7 +20,10 @@ class ManagerTeamNotification(TransitionMessage):
 
     def get_recipients(self):
         """manager"""
-        return [self.obj.activity.owner]
+        if not self.obj.activity.is_adopted:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
     class Meta:
         abstract = True

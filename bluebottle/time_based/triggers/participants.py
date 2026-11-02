@@ -1204,9 +1204,13 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         return effect.instance.registration and effect.instance.registration.status == 'accepted'
 
     def is_participant(effect):
-        if 'user' not in effect.options:
-            return False
-        return effect.instance.user == effect.options['user']
+        return (
+            effect.instance.remote_user is not None or
+            (
+                'user' in effect.options and
+                effect.instance.user == effect.options['user']
+            )
+        )
 
     def participant_slot_will_be_full(effect):
         """

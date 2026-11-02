@@ -14,7 +14,6 @@ from bluebottle.time_based.utils import duration_to_hours
 class ManagerRegistrationNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
-        'applicant_name': 'user.full_name',
         'team_name': 'team.name',
         'question': 'activity.review_title',
         'answer': 'answer',
@@ -28,6 +27,8 @@ class ManagerRegistrationNotification(TransitionMessage):
         if team:
             captain = team.user or team.remote_user
             context['captain_email'] = captain.email if captain else None
+
+        context['applicant_name'] = self.obj.actual_user.full_name
         return context
 
     @property

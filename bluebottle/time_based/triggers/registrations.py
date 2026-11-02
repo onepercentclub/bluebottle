@@ -739,7 +739,7 @@ class DateRegistrationTriggers(RegistrationTriggers):
             effects=[
                 NotificationEffect(
                     ManagerRegistrationCreatedReviewNotification,
-                    conditions=[review_needed, is_user],
+                    conditions=[review_needed, is_user_or_remote],
                 ),
                 NotificationEffect(
                     DateUserAppliedNotification,

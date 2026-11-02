@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import httmock
 import mock
+from django.core import mail
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
@@ -2053,6 +2054,15 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
         self.assertIsInstance(self.synced_participant, DateParticipant)
+
+        owner_subject = (
+            f'A participant has registered for a time slot for your activity "{self.model.title}"'
+        )
+        owner_mails = [
+            message for message in mail.outbox
+            if message.to == [self.model.owner.email] and message.subject == owner_subject
+        ]
+        self.assertEqual(len(owner_mails), 1)
         self.assertEqual(
             self.synced_participant.slot,
             self.model.slots.order_by('start', 'id').first(),
@@ -2212,6 +2222,23 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertEqual(
             self.synced_participant.slot,
             self.model.slots.order_by('start', 'id').first(),
+        )
+
+        owner_subject = f'You have a new application for your activity "{self.model.title}" 🎉'
+        owner_mails = [
+            message for message in mail.outbox
+            if message.to == [self.model.owner.email] and message.subject == owner_subject
+        ]
+        self.assertEqual(len(owner_mails), 1)
+        self.assertIn(
+            self.synced_participant.remote_user.full_name, owner_mails[0].body
+        )
+
+        slot_subject = (
+            f'A participant has registered for a time slot for your activity "{self.model.title}"'
+        )
+        self.assertFalse(
+            [message for message in mail.outbox if message.subject == slot_subject]
         )
 
     def test_join_with_slot_location(self):

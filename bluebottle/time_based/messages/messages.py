@@ -779,6 +779,7 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         context['slot'] = get_slot_info(self.obj.slot)
+        context['participant_name'] = self.obj.actual_user.full_name
         settings = InitiativePlatformSettings.load()
         context['hour_registration'] = (
             settings.hour_registration != 'disabled'

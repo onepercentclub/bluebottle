@@ -165,13 +165,15 @@ class SyncedActivityAdminRegistrationFieldsTest(BluebottleTestCase):
         for field in SYNCED_HIDDEN_REGISTRATION_FIELDS:
             self.assertIn(field, fields)
 
-        self.assertIsNone(self.deadline_admin.review_info_box(self.activity))
+        self.assertNotIn('review_info_box', fields)
 
     def test_registration_fields_without_obj(self):
         fields = self.deadline_admin.get_registration_fields(self.request, None)
 
         for field in SYNCED_HIDDEN_REGISTRATION_FIELDS:
             self.assertIn(field, fields)
+
+        self.assertNotIn('review_info_box', fields)
 
     def test_registration_fields_adopted(self):
         DoGoodEventFactory.create(adopted=self.activity)

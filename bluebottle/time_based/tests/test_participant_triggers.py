@@ -715,6 +715,23 @@ class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.participant, "scheduled")
         self.assertStatus(self.participant.contributions.get(), "new")
 
+    def test_reject_team_member(self):
+        self.create()
+        self.schedule(now() + timedelta(days=1))
+
+        self.team_member.states.reject(save=True)
+
+        self.assertStatus(self.participant, "rejected")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+
+    def test_accept_rejected_team_member(self):
+        self.test_reject_team_member()
+
+        self.team_member.states.accept(save=True)
+
+        self.assertStatus(self.participant, "scheduled")
+        self.assertStatus(self.participant.contributions.get(), "new")
+
     def test_succeed(self):
         self.create()
         self.schedule(now())

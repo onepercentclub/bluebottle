@@ -976,6 +976,18 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
+            TeamScheduleParticipantStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+            ],
+        ),
+        TransitionTrigger(
             TeamScheduleParticipantStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(

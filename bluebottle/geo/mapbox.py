@@ -54,6 +54,7 @@ def geocode_request(path, params):
         params=params,
         timeout=30,
     )
+    print(response)
     response.raise_for_status()
     return response.json()
 

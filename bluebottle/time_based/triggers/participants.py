@@ -1205,6 +1205,15 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 DeleteInterestEffect,
                 CreateDateRegistrationEffect,
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.accept,
+                    conditions=[is_not_self],
+                ),
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.add,

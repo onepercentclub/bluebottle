@@ -474,6 +474,53 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.assertStatus(self.slot, "full")
 
+    def test_add_participant_accepts_withdrawn_registration(self):
+        admin = BlueBottleUserFactory.create(is_staff=True)
+        registration = DateRegistrationFactory.create(activity=self.activity, status='withdrawn')
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot, as_user=admin
+        )
+
+        self.assertStatus(registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+        self.assertStatus(participant.contributions.get(), 'new')
+
+    def test_add_participant_accepts_rejected_registration(self):
+        admin = BlueBottleUserFactory.create(is_staff=True)
+        registration = DateRegistrationFactory.create(activity=self.activity, status='rejected')
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot, as_user=admin
+        )
+
+        self.assertStatus(registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+
+    def test_join_slot_accepts_withdrawn_registration(self):
+        user = BlueBottleUserFactory.create()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, user=user, status='withdrawn'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot, as_user=user
+        )
+
+        self.assertStatus(registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+
+    def test_join_slot_review_restores_withdrawn_registration(self):
+        self.activity.review = True
+        self.activity.save()
+        user = BlueBottleUserFactory.create()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, user=user, status='withdrawn'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot, as_user=user
+        )
+
+        self.assertStatus(registration, 'new')
+        self.assertStatus(participant, 'new')
+
     def test_fill_slot_change_capacity(self):
 
         first = DateRegistrationFactory.create(activity=self.activity, status='accepted')

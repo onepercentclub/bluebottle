@@ -106,12 +106,12 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     restore = Transition(
-        withdrawn,
+        [withdrawn, rejected],
         new,
         name=_("Restore"),
         passed_label=_("restored"),
         description=_(
-            "Restore after being withdrawn."
+            "Restore after being withdrawn or rejected."
         ),
         automatic=True,
         hide_from_admin=True,

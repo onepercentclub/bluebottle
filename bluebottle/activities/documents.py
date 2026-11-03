@@ -20,7 +20,7 @@ from bluebottle.initiatives.documents import (
 )
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import Registration
+from bluebottle.time_based.models import Interest, Registration
 from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.search import Search
 
@@ -145,6 +145,7 @@ def geolocation_for_activity(instance):
 
 
 CONTRIBUTOR_STATUSES = ('accepted', 'scheduled', 'succeeded')
+CONTRIBUTOR_STATS_KEYS = CONTRIBUTOR_STATUSES + ('interested',)
 # Registration count keys and the status they count; a new registration is pending review.
 REGISTRATION_STATUSES = {
     'pending': 'new',
@@ -200,6 +201,7 @@ class ActivityDocument(Document):
             'initiative__activity_managers',
             'contributors',
             'registrations',
+            'interests',
         )
 
     def get_indexing_queryset(self):
@@ -377,7 +379,7 @@ class ActivityDocument(Document):
     contributors = fields.KeywordField()
     contributor_count = fields.IntegerField()
     contributor_stats = fields.ObjectField(
-        properties={status: fields.IntegerField() for status in CONTRIBUTOR_STATUSES}
+        properties={key: fields.IntegerField() for key in CONTRIBUTOR_STATS_KEYS}
     )
     registration_stats = fields.ObjectField(
         properties={key: fields.IntegerField() for key in REGISTRATION_STATUSES}
@@ -414,7 +416,7 @@ class ActivityDocument(Document):
             return activities_for_geolocation(model, related_instance)
         if isinstance(related_instance, Theme.translations.field.model):
             return model.objects.filter(initiative__theme=related_instance.master)
-        if isinstance(related_instance, (Contributor, Registration)):
+        if isinstance(related_instance, (Contributor, Registration, Interest)):
             return model.objects.filter(pk=related_instance.activity_id)
 
     class Django:
@@ -486,7 +488,21 @@ class ActivityDocument(Document):
 
     def prepare_contributor_stats(self, instance):
         counts = contributor_status_counts(instance)
-        return {status: counts[status] for status in CONTRIBUTOR_STATUSES}
+        stats = {status: counts[status] for status in CONTRIBUTOR_STATUSES}
+        stats['interested'] = self.interested_count(instance)
+        return stats
+
+    def interested_count(self, instance):
+        # People who applied or joined since registering interest are no longer waiting for a spot.
+        joined = {
+            contributor.user_id for contributor in instance.contributors.all()
+            if contributor.status in ('new',) + CONTRIBUTOR_STATUSES
+        }
+        interested = {
+            interest.user_id for interest in instance.interests.all()
+            if interest != self._related_instance_to_ignore
+        }
+        return len(interested - joined)
 
     def prepare_registration_stats(self, instance):
         counts = Counter(registration.status for registration in instance.registrations.all())

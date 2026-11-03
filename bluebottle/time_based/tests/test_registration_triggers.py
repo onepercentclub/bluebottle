@@ -1,16 +1,19 @@
 from datetime import timedelta
 
+from dateutil.relativedelta import relativedelta
 from django.core import mail
 from django.utils.timezone import now
 
+from bluebottle.activities.tasks import data_retention_contribution_task
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
     InitiativePlatformSettingsFactory,
 )
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import PeriodicParticipant
+from bluebottle.time_based.models import PeriodicParticipant, PeriodicRegistration
 from bluebottle.time_based.tests.factories import (
     TeamFactory,
     DeadlineActivityFactory,
@@ -405,15 +408,40 @@ class PeriodicRegistrationTriggerTestCase(
         first_slot = self.activity.slots.get()
         first_slot.states.start(save=True)
         first_slot.states.finish(save=True)
-        participant_ids = list(self.registration.participants.values_list('id', flat=True))
-        self.assertEqual(len(participant_ids), 2)
+        finished = first_slot.participants.get()
+        running = self.registration.participants.exclude(pk=finished.pk).get()
 
         self.registration.delete()
 
-        for participant in PeriodicParticipant.objects.filter(id__in=participant_ids):
-            self.assertIsNone(participant.registration)
-            self.assertEqual(participant.status, "removed")
-            self.assertEqual(participant.contributions.get().status, "failed")
+        finished = PeriodicParticipant.objects.get(pk=finished.pk)
+        running = PeriodicParticipant.objects.get(pk=running.pk)
+        self.assertIsNone(finished.registration)
+        self.assertEqual(finished.status, "succeeded")
+        self.assertEqual(finished.contributions.get().status, "succeeded")
+        self.assertIsNone(running.registration)
+        self.assertEqual(running.status, "removed")
+        self.assertEqual(running.contributions.get().status, "failed")
+
+    def test_data_retention_keeps_finished_contributions(self):
+        self.test_initial()
+        first_slot = self.activity.slots.get()
+        first_slot.states.start(save=True)
+        first_slot.states.finish(save=True)
+        finished = first_slot.participants.get()
+
+        member_settings = MemberPlatformSettings.load()
+        member_settings.retention_anonymize = 6
+        member_settings.save()
+        PeriodicRegistration.objects.filter(pk=self.registration.pk).update(
+            created=now() - relativedelta(months=8)
+        )
+
+        data_retention_contribution_task()
+
+        finished = PeriodicParticipant.objects.get(pk=finished.pk)
+        self.assertFalse(PeriodicRegistration.objects.filter(pk=self.registration.pk).exists())
+        self.assertEqual(finished.status, "succeeded")
+        self.assertEqual(finished.contributions.get().status, "succeeded")
 
     def test_unfill_stop(self):
         self.test_fill()

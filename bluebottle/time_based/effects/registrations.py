@@ -126,11 +126,11 @@ class DeleteRegistrationEffect(Effect):
 
 class RemovePeriodicParticipantsEffect(Effect):
 
-    title = _('Remove the participants of this registration')
+    title = _('Remove the participants of this registration on unfinished slots')
     template = 'admin/remove_periodic_participants.html'
 
     def pre_save(self, **kwargs):
-        self.participant_ids = list(self.instance.participants.values_list('id', flat=True))
+        self.participant_ids = list(self.instance.unfinished_participants.values_list('id', flat=True))
 
     def post_save(self, **kwargs):
         for participant in PeriodicParticipant.objects.filter(

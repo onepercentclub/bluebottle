@@ -1274,6 +1274,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     RegistrationStateMachine.restore,
                     conditions=[registration_is_withdrawn]
                 ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                    conditions=[slot_is_in_future]
+                ),
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'slot',

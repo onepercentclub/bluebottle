@@ -12,6 +12,7 @@ from bluebottle.time_based.messages import ReminderSlotNotification
 from bluebottle.time_based.models import (
     DateActivity,
     DeadlineActivity,
+    DeadlineParticipant,
     PeriodicActivity,
     PeriodicSlot,
     ScheduleActivity,
@@ -121,6 +122,24 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
 
     def __str__(self):
         return str(_("Finish an activity when end time has passed."))
+
+
+class DeadlineContributionStartedTask(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return self.model.objects.filter(
+            start__lte=timezone.now(),
+            end__isnull=True,
+            status='new',
+            contributor__in=DeadlineParticipant.objects.filter(status='succeeded'),
+        )
+
+    effects = [
+        TransitionEffect(TimeContributionStateMachine.succeed),
+    ]
+
+    def __str__(self):
+        return str(_("Succeed contributions of succeeded participants when the activity has started."))
 
 
 class DateActivitySlotReminderTask(ModelPeriodicTask):
@@ -249,7 +268,7 @@ DateActivitySlot.periodic_tasks = [
     SlotFinishedTask,
 ]
 
-TimeContribution.periodic_tasks = [TimeContributionFinishedTask]
+TimeContribution.periodic_tasks = [TimeContributionFinishedTask, DeadlineContributionStartedTask]
 
 DeadlineActivity.periodic_tasks = [
     ActivityFinishedTask,

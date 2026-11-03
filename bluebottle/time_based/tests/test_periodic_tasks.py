@@ -41,6 +41,7 @@ from bluebottle.time_based.tasks import (
     schedule_activity_tasks,
     schedule_slot_tasks,
     team_schedule_slot_tasks,
+    time_contribution_tasks,
 )
 from bluebottle.time_based.triggers import slots
 
@@ -690,6 +691,36 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
             self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'registration_closed')
+
+    def test_contribution_succeeds_after_start(self):
+        self.activity.start = date.today() + timedelta(days=2)
+        self.activity.deadline = date.today() + timedelta(days=20)
+        self.activity.save()
+
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user,
+        )
+        participant = registration.participants.get()
+        contribution = participant.contributions.get()
+        self.assertEqual(participant.status, 'succeeded')
+        self.assertEqual(contribution.status, 'new')
+
+        with mock.patch.object(timezone, 'now', return_value=now() + timedelta(days=1)):
+            time_contribution_tasks()
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            contribution.refresh_from_db()
+        self.assertEqual(contribution.status, 'new')
+
+        with mock.patch.object(timezone, 'now', return_value=now() + timedelta(days=3)):
+            time_contribution_tasks()
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            contribution.refresh_from_db()
+        self.assertEqual(contribution.status, 'succeeded')
 
 
 class SlotActivityPeriodicTasksTest(BluebottleTestCase):

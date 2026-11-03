@@ -87,7 +87,8 @@ class PeriodicActivityModelTestCase(BluebottleTestCase):
             [
                 'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
                 'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline',
-                'review', 'review_title', 'review_description', 'review_link', 'preparation', 'is_online',
+                'review', 'review_title', 'review_description', 'review_link',
+                'preparation', 'review_document_enabled', 'registration_flow', 'is_online',
                 'location', 'location_hint', 'start', 'deadline', 'online_meeting_url', 'period', 'duration'
             ]
         )
@@ -147,7 +148,8 @@ class DateActivityModelTestCase(BluebottleTestCase):
             [
                 'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
                 'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
-                'review_title', 'review_description', 'review_link', 'preparation', 'start', 'duration',
+                'review_title', 'review_description', 'review_link',
+                'preparation', 'review_document_enabled', 'registration_flow', 'start', 'duration',
             ]
         )
 
@@ -168,8 +170,27 @@ class DeadlineActivityTestCase(BluebottleTestCase):
             [
                 'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
                 'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
-                'review_title', 'review_description', 'review_link', 'preparation', 'is_online', 'location',
+                'review_title', 'review_description', 'review_link', 'preparation',
+                'review_document_enabled', 'registration_flow', 'is_online', 'location',
                 'location_hint', 'start', 'deadline', 'online_meeting_url', 'duration',
+            ]
+        )
+
+    def test_readonly_fields_local(self):
+        self.assertEqual(self.activity.readonly_fields, [])
+
+    def test_readonly_fields_supplier(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(origin=self.activity)
+
+        self.assertEqual(
+            self.activity.readonly_fields,
+            [
+                'review_title', 'review_description', 'review_link', 'registration_flow',
+                'review_document_enabled',
             ]
         )
 
@@ -190,7 +211,8 @@ class ScheduleActivityTestCase(BluebottleTestCase):
             [
                 'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
                 'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
-                'review_title', 'review_description', 'review_link', 'preparation', 'is_online', 'location',
+                'review_title', 'review_description', 'review_link', 'preparation',
+                'review_document_enabled', 'registration_flow', 'is_online', 'location',
                 'location_hint', 'start', 'deadline', 'online_meeting_url', 'start', 'duration', 'is_online',
                 'location', 'location_hint',
             ]
@@ -213,7 +235,8 @@ class RegisteredDataActivityTestCase(BluebottleTestCase):
             [
                 'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
                 'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
-                'review_title', 'review_description', 'review_link', 'preparation', 'start', 'duration', 'is_online',
+                'review_title', 'review_description', 'review_link', 'preparation',
+                'review_document_enabled', 'registration_flow', 'start', 'duration', 'is_online',
                 'location', 'location_hint', 'online_meeting_url'
             ]
         )

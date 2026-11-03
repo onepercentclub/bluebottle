@@ -8,17 +8,19 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.time_based.admin import (
     ActivityInterestAdminInline,
+    DeadlineActivityAdmin,
     ScheduleActivityAdmin,
     SkillAdmin,
     SlotInterestAdminInline,
 )
-from bluebottle.time_based.models import DateActivity, ScheduleActivity, Skill
+from bluebottle.time_based.models import DateActivity, DeadlineActivity, ScheduleActivity, Skill
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
     DateParticipantFactory, DateRegistrationFactory,
@@ -137,6 +139,146 @@ class ScheduleActivityAdminRegistrationFieldsTest(BluebottleTestCase):
 
         self.assertIsNotNone(participation_fields)
         self.assertEqual(participation_fields[0], 'team_registration_warning')
+
+
+SYNCED_HIDDEN_REGISTRATION_FIELDS = [
+    'review_title', 'review_description', 'review_link', 'registration_flow',
+    'review_document_enabled', 'registration_link', 'registration_question',
+]
+
+
+class SyncedActivityAdminRegistrationFieldsTest(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        self.request = RequestFactory().get('/')
+        self.request.user = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
+        self.deadline_admin = DeadlineActivityAdmin(DeadlineActivity, AdminSite())
+        self.activity = DeadlineActivityFactory.create()
+
+    def test_registration_fields_local(self):
+        fields = self.deadline_admin.get_registration_fields(self.request, self.activity)
+
+        for field in SYNCED_HIDDEN_REGISTRATION_FIELDS:
+            self.assertIn(field, fields)
+
+        self.assertNotIn('review_info_box', fields)
+
+    def test_registration_fields_without_obj(self):
+        fields = self.deadline_admin.get_registration_fields(self.request, None)
+
+        for field in SYNCED_HIDDEN_REGISTRATION_FIELDS:
+            self.assertIn(field, fields)
+
+        self.assertNotIn('review_info_box', fields)
+
+    def test_registration_fields_adopted(self):
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        fields = self.deadline_admin.get_registration_fields(self.request, self.activity)
+
+        for field in SYNCED_HIDDEN_REGISTRATION_FIELDS:
+            self.assertNotIn(field, fields)
+
+        self.assertIn('review_info_box', fields)
+        self.assertIn('review', fields)
+        self.assertIn(
+            'Review actions are disabled for synced activities',
+            self.deadline_admin.review_info_box(self.activity)
+        )
+
+    def test_registration_fields_supplier(self):
+        DoGoodEventFactory.create(origin=self.activity)
+
+        fields = self.deadline_admin.get_registration_fields(self.request, self.activity)
+
+        for field in SYNCED_HIDDEN_REGISTRATION_FIELDS:
+            self.assertNotIn(field, fields)
+
+        self.assertIn('review_info_box', fields)
+        self.assertIn('review', fields)
+        self.assertIn(
+            'Review actions are disabled for synced activities',
+            self.deadline_admin.review_info_box(self.activity)
+        )
+
+    def test_readonly_fields_adopted(self):
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        readonly_fields = self.deadline_admin.get_readonly_fields(self.request, self.activity)
+
+        for field in ['review_title', 'review_description', 'review_link',
+                      'registration_flow', 'review_document_enabled', 'review_info_box']:
+            self.assertIn(field, readonly_fields)
+
+    def test_readonly_fields_supplier(self):
+        DoGoodEventFactory.create(origin=self.activity)
+
+        readonly_fields = self.deadline_admin.get_readonly_fields(self.request, self.activity)
+
+        for field in ['review_title', 'review_description', 'review_link',
+                      'registration_flow', 'review_document_enabled', 'review_info_box']:
+            self.assertIn(field, readonly_fields)
+
+
+class SyncedActivityAdminChangeFormTest(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        self.app.set_user(self.staff_member)
+        self.activity = DeadlineActivityFactory.create()
+        self.url = reverse('admin:time_based_deadlineactivity_change', args=(self.activity.pk,))
+
+    def assertRegistrationFieldsHidden(self, page):
+        form = page.forms['deadlineactivity_form']
+        for field in ['review_title', 'review_description', 'review_link',
+                      'registration_flow', 'review_document_enabled']:
+            self.assertNotIn(field, form.fields)
+
+        self.assertIn('Review actions are disabled for synced activities', page.text)
+
+    def test_change_form_local(self):
+        page = self.app.get(self.url)
+        self.assertEqual(page.status_code, 200)
+
+        form = page.forms['deadlineactivity_form']
+        for field in ['review_title', 'review_description', 'review_link',
+                      'registration_flow', 'review_document_enabled']:
+            self.assertIn(field, form.fields)
+
+        self.assertNotIn('Review actions are disabled for synced activities', page.text)
+
+    def test_change_form_adopted(self):
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        page = self.app.get(self.url)
+        self.assertEqual(page.status_code, 200)
+        self.assertRegistrationFieldsHidden(page)
+
+    def test_change_form_supplier(self):
+        DoGoodEventFactory.create(origin=self.activity)
+
+        page = self.app.get(self.url)
+        self.assertEqual(page.status_code, 200)
+        self.assertRegistrationFieldsHidden(page)
+
+    def test_add_form(self):
+        page = self.app.get(reverse('admin:time_based_deadlineactivity_add'))
+        self.assertEqual(page.status_code, 200)
+
+        form = page.forms['deadlineactivity_form']
+        self.assertIn('registration_flow', form.fields)
+        self.assertNotIn('Review actions are disabled for synced activities', page.text)
 
 
 class ScheduleActivityAdminRegistrationWarningTest(BluebottleAdminTestCase):

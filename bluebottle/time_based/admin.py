@@ -212,13 +212,25 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'review_link',
     )
 
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['registration_link', 'registration_question']
+    readonly_fields = ActivityChildAdmin.readonly_fields + [
+        'registration_link', 'registration_question', 'review_info_box'
+    ]
 
     def get_registration_fields(self, request, obj):
         fields = super().get_registration_fields(request, obj)
         settings = InitiativePlatformSettings.load()
         if settings.hour_registration == 'per_activity':
             fields = ('hour_registration_data', ) + fields
+
+        if obj and (obj.is_adopted or getattr(obj, 'activity_pub_model', None)):
+            fields = tuple(
+                field for field in fields
+                if field not in [
+                    'review_title', 'review_description', 'review_link', 'registration_flow',
+                    'review_document_enabled', 'registration_link', 'registration_question'
+                ]
+            ) + ('review_info_box', )
+
         return fields
 
     def get_changeform_initial_data(self, request):
@@ -234,6 +246,11 @@ class TimeBasedAdmin(ActivityChildAdmin):
     def registration_link(self, obj):
         return admin_info_box(
             _("Answer this question if you selected 'Direct the participants to a questionnaire'")
+        )
+
+    def review_info_box(self, obj):
+        return admin_info_box(
+            _("Review actions are disabled for synced activities")
         )
 
     def registration_question(self, obj):

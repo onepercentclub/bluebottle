@@ -23,6 +23,9 @@ def should_succeed_instantly(effect):
     """
     contribution (slot) has finished
     """
+    if not effect.instance.contributor:
+        return False
+
     activity = effect.instance.contributor.activity
     if (
         effect.instance.contribution_type == 'preparation' and

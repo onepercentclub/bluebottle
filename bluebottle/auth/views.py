@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django import forms
@@ -14,8 +15,9 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from requests import RequestException
 from rest_framework.exceptions import AuthenticationFailed
-from social_core.exceptions import AuthCanceled
+from social_core.exceptions import AuthCanceled, AuthException
 from social_core.utils import get_strategy
 from social_django.utils import psa, STORAGE
 from two_factor.views import SetupView
@@ -23,20 +25,39 @@ from two_factor.views import SetupView
 from bluebottle.auth.serializers import SocialLoginSerializer
 from bluebottle.utils.views import CreateAPIView, JsonApiViewMixin
 
+logger = logging.getLogger(__name__)
+
 
 def load_drf_strategy(request=None):
     return get_strategy('bluebottle.social.strategy.DRFStrategy', STORAGE, request)
+
+
+def login_failed(backend, error):
+    logger.warning(
+        'Social login with %s failed: %s (status %s)',
+        backend,
+        type(error).__name__,
+        getattr(getattr(error, 'response', None), 'status_code', None),
+    )
+    return AuthenticationFailed(
+        _('Logging in failed, please try again'),
+        code="failed"
+    )
 
 
 @psa(load_strategy=load_drf_strategy)
 def complete(request, backend):
     try:
         user = request.backend.complete(request=request)
-    except AuthCanceled:
+    except AuthCanceled as e:
+        if e.response is not None:
+            raise login_failed(backend, e)
         raise AuthenticationFailed(
             _('Authentication was cancelled'),
             code="cancelled"
         )
+    except (AuthException, RequestException) as e:
+        raise login_failed(backend, e)
     if not user.email:
         if user.date_joined > now() - timedelta(hours=1):
             user.delete()

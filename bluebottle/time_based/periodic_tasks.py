@@ -129,7 +129,6 @@ class DeadlineContributionStartedTask(ModelPeriodicTask):
     def get_queryset(self):
         return self.model.objects.filter(
             start__lte=timezone.now(),
-            end__isnull=True,
             status='new',
             contributor__in=DeadlineParticipant.objects.filter(status='succeeded'),
         )

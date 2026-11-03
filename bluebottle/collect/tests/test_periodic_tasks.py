@@ -1,6 +1,7 @@
 from datetime import timedelta, date
 
 import mock
+from django.core import mail
 from django.db import connection
 
 from bluebottle.clients.utils import LocalTenant
@@ -98,7 +99,13 @@ class CollectPeriodicTasksTestCase(BluebottleTestCase):
         self.assertEqual(contributor.status, 'accepted')
 
         self.run_tasks(self.activity.start + timedelta(days=1))
+        mail.outbox = []
         self.run_tasks(self.activity.end + timedelta(days=1))
+
+        succeeded_mails = [
+            message for message in mail.outbox if 'has succeeded' in message.subject
+        ]
+        self.assertEqual(len(succeeded_mails), 1)
 
         with LocalTenant(self.tenant, clear_tenant=True):
             self.activity.refresh_from_db()

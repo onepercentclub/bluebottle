@@ -722,6 +722,31 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
             contribution.refresh_from_db()
         self.assertEqual(contribution.status, 'succeeded')
 
+    def test_contribution_succeeds_after_start_deadline_changed(self):
+        self.activity.start = date.today() + timedelta(days=2)
+        self.activity.deadline = date.today() + timedelta(days=20)
+        self.activity.save()
+
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user,
+        )
+        contribution = registration.participants.get().contributions.get()
+
+        self.activity.deadline = date.today() + timedelta(days=25)
+        self.activity.save()
+        contribution.refresh_from_db()
+        self.assertIsNotNone(contribution.end)
+
+        with mock.patch.object(timezone, 'now', return_value=now() + timedelta(days=3)):
+            time_contribution_tasks()
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            contribution.refresh_from_db()
+        self.assertEqual(contribution.status, 'succeeded')
+
 
 class SlotActivityPeriodicTasksTest(BluebottleTestCase):
 

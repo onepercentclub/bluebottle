@@ -598,6 +598,7 @@ class ActivitySearch(Search):
                         "dates.end": {
                             "order": "desc",
                             "mode": "max",
+                            "missing": "_last",
                             "nested": {
                                 "path": "dates",
                                 "filter": (

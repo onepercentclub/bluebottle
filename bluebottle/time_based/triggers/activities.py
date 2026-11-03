@@ -409,6 +409,10 @@ class DateActivityTriggers(TimeBasedTriggers):
                     'accepted_participants',
                     ParticipantStateMachine.cancel
                 ),
+                RelatedTransitionEffect(
+                    'pending_participants',
+                    ParticipantStateMachine.cancel
+                ),
                 CancelUpcomingSlotsEffect,
 
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),

@@ -233,6 +233,62 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.assertEqual(participant.status, 'cancelled')
         self.assertEqual(participant.contributions.get().status, 'failed')
 
+    def test_cancel_cancels_accepted_and_pending_participants_on_one_slot(self):
+        self.activity.review = True
+        self.activity.save()
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.get()
+        accepted_user = BlueBottleUserFactory.create()
+        accepted_registration = DateRegistrationFactory.create(
+            activity=self.activity, user=accepted_user, as_user=accepted_user
+        )
+        accepted = DateParticipantFactory.create(registration=accepted_registration, slot=slot)
+        accepted_registration.states.accept(save=True)
+        accepted.refresh_from_db()
+        user = BlueBottleUserFactory.create()
+        pending_registration = DateRegistrationFactory.create(
+            activity=self.activity, user=user, as_user=user
+        )
+        pending = DateParticipantFactory.create(registration=pending_registration, slot=slot)
+        self.assertEqual(accepted.status, 'accepted')
+        self.assertEqual(pending.status, 'new')
+
+        self.activity.states.cancel(save=True)
+
+        for participant in [accepted, pending]:
+            participant.refresh_from_db()
+            self.assertEqual(participant.status, 'cancelled')
+            self.assertEqual(participant.contributions.get().status, 'failed')
+
+    def test_cancel_cancels_pending_participants_on_running_slot(self):
+        self.activity.review = True
+        self.activity.save()
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.get()
+        user = BlueBottleUserFactory.create()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, user=user, as_user=user
+        )
+        participant = DateParticipantFactory.create(registration=registration, slot=slot)
+        slot.start = now() - timedelta(minutes=30)
+        slot.save()
+        slot.refresh_from_db()
+        self.assertEqual(slot.status, 'running')
+
+        self.activity.states.cancel(save=True)
+
+        slot.refresh_from_db()
+        participant.refresh_from_db()
+        self.assertEqual(slot.status, 'running')
+        self.assertEqual(participant.status, 'cancelled')
+        self.assertEqual(participant.contributions.get().status, 'failed')
+
     def test_registration_deadline_closes_slots(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)

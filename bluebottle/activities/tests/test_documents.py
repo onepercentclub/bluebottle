@@ -1,5 +1,6 @@
 from bluebottle.activities.documents import ActivityDocument
 from bluebottle.activities.models import Activity, Contributor, Organizer
+from bluebottle.deeds.documents import DeedDocument
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -90,6 +91,11 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.assertEqual(count, 3)
         self.assertEqual(contributors['succeeded'], 2)
         self.assertEqual(registrations['pending'], 0)
+
+    def test_deed_target_is_capacity(self):
+        activity = DeedFactory.create(target=10)
+
+        self.assertEqual(DeedDocument().prepare_capacity(activity), 10)
 
     def test_funding_counts_succeeded_donors(self):
         activity = FundingFactory.create()

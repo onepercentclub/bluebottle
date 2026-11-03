@@ -228,6 +228,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         interest.delete()
         self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 0)
 
+    def test_slot_interest_updates_index(self):
+        activity = DateActivityFactory.create(status='open')
+        interest = InterestFactory.create(activity=activity, slot=activity.slots.first())
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 1)
+
+        interest.delete()
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 0)
+
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')
         response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')

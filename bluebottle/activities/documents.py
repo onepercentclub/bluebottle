@@ -145,6 +145,7 @@ def geolocation_for_activity(instance):
 
 
 CONTRIBUTOR_STATUSES = ('accepted', 'scheduled', 'succeeded')
+CONTRIBUTOR_STATS_KEYS = CONTRIBUTOR_STATUSES + ('interested',)
 # Registration count keys and the status they count; a new registration is pending review.
 REGISTRATION_STATUSES = {
     'pending': 'new',
@@ -378,7 +379,7 @@ class ActivityDocument(Document):
     contributors = fields.KeywordField()
     contributor_count = fields.IntegerField()
     contributor_stats = fields.ObjectField(
-        properties={key: fields.IntegerField() for key in CONTRIBUTOR_STATUSES + ('interested',)}
+        properties={key: fields.IntegerField() for key in CONTRIBUTOR_STATS_KEYS}
     )
     registration_stats = fields.ObjectField(
         properties={key: fields.IntegerField() for key in REGISTRATION_STATUSES}
@@ -420,7 +421,7 @@ class ActivityDocument(Document):
 
     class Django:
         related_models = (
-            Initiative, Theme, Theme.translations.field.model, Segment, Location, Geolocation, Interest
+            Initiative, Theme, Theme.translations.field.model, Segment, Location, Geolocation
         )
         model = Activity
 
@@ -488,10 +489,20 @@ class ActivityDocument(Document):
     def prepare_contributor_stats(self, instance):
         counts = contributor_status_counts(instance)
         stats = {status: counts[status] for status in CONTRIBUTOR_STATUSES}
-        stats['interested'] = sum(
-            interest != self._related_instance_to_ignore for interest in instance.interests.all()
-        )
+        stats['interested'] = self.interested_count(instance)
         return stats
+
+    def interested_count(self, instance):
+        # People who applied or joined since registering interest are no longer waiting for a spot.
+        joined = {
+            contributor.user_id for contributor in instance.contributors.all()
+            if contributor.status in ('new',) + CONTRIBUTOR_STATUSES
+        }
+        interested = {
+            interest.user_id for interest in instance.interests.all()
+            if interest != self._related_instance_to_ignore
+        }
+        return len(interested - joined)
 
     def prepare_registration_stats(self, instance):
         counts = Counter(registration.status for registration in instance.registrations.all())

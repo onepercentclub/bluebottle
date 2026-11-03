@@ -26,6 +26,7 @@ from bluebottle.time_based.models import (
     ScheduleRegistration,
     TeamScheduleParticipant,
     TeamScheduleRegistration,
+    Interest,
 )
 from bluebottle.utils.documents import TextField
 
@@ -167,7 +168,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
     class Django:
         related_models = ActivityDocument.Django.related_models + (
-            DateParticipant, DateRegistration, DateActivitySlot
+            DateParticipant, DateRegistration, DateActivitySlot, Interest
         )
         model = DateActivity
 
@@ -336,7 +337,9 @@ class DeadlineActivityDocument(RegistrationActivityDocument):
             ]
 
     class Django:
-        related_models = ActivityDocument.Django.related_models + (DeadlineParticipant, DeadlineRegistration)
+        related_models = ActivityDocument.Django.related_models + (
+            DeadlineParticipant, DeadlineRegistration, Interest
+        )
         model = DeadlineActivity
 
 
@@ -355,7 +358,9 @@ class PeriodicActivityDocument(RegistrationActivityDocument):
 
     class Django:
 
-        related_models = ActivityDocument.Django.related_models + (PeriodicParticipant, PeriodicRegistration)
+        related_models = ActivityDocument.Django.related_models + (
+            PeriodicParticipant, PeriodicRegistration, Interest
+        )
         model = PeriodicActivity
 
 
@@ -382,7 +387,7 @@ class ScheduleActivityDocument(RegistrationActivityDocument):
     class Django:
 
         related_models = ActivityDocument.Django.related_models + (
-            ScheduleParticipant, ScheduleRegistration, TeamScheduleParticipant, TeamScheduleRegistration
+            ScheduleParticipant, ScheduleRegistration, TeamScheduleParticipant, TeamScheduleRegistration, Interest
         )
         model = ScheduleActivity
 

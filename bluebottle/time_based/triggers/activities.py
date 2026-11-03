@@ -552,6 +552,14 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
                 ),
             ]
         ),
+        TransitionTrigger(
+            TimeBasedStateMachine.auto_approve,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants", RegistrationParticipantStateMachine.restore
+                ),
+            ]
+        ),
 
         ModelChangedTrigger(
             'start',

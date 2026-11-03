@@ -464,6 +464,41 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         for registration in self.registrations:
             self.assertEqual(registration.participants.first().status, "cancelled")
 
+    def test_restore(self):
+        self.test_cancel()
+
+        self.activity.states.restore(save=True)
+        self.assertEqual(self.activity.status, "needs_work")
+
+        for registration in self.registrations:
+            self.assertEqual(registration.participants.first().status, "accepted")
+
+    def test_auto_approve_after_cancel(self):
+        self.test_cancel()
+
+        self.activity.states.auto_approve(save=True)
+        self.assertEqual(self.activity.status, "open")
+
+        for registration in self.registrations:
+            self.assertEqual(registration.participants.first().status, "accepted")
+
+    def test_auto_approve_after_cancel_keeps_withdrawn_participant(self):
+        self.publish()
+        self.create_participants()
+
+        withdrawn = self.registrations[0].participants.first()
+        withdrawn.states.withdraw(save=True)
+
+        self.activity.states.cancel(save=True)
+        self.activity.states.auto_approve(save=True)
+        self.assertEqual(self.activity.status, "open")
+
+        withdrawn.refresh_from_db()
+        self.assertEqual(withdrawn.status, "withdrawn")
+        self.assertEqual(
+            self.registrations[1].participants.first().status, "accepted"
+        )
+
 
 class PeriodicActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory

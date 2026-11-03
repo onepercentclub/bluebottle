@@ -7,6 +7,7 @@ from bluebottle.time_based.models import Registration
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
+    InterestFactory,
 )
 
 
@@ -35,6 +36,7 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.set_status(participants[3:4], 'new')
         self.set_status(participants[4:], 'withdrawn')
         Activity.objects.filter(pk=activity.pk).update(deleted_successful_contributors=2)
+        InterestFactory.create_batch(2, activity=activity)
 
         registration_ids = list(Registration.objects.filter(activity=activity).values_list('pk', flat=True))
         Registration.objects.filter(pk__in=registration_ids[:1]).update(status='new')
@@ -45,6 +47,7 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.assertEqual(count, 2 + 1 + 2)
         self.assertEqual(contributors['accepted'], 2)
         self.assertEqual(contributors['succeeded'], 3)
+        self.assertEqual(contributors['interested'], 2)
         self.assertEqual(registrations['pending'], 1)
         self.assertEqual(registrations['accepted'], len(registration_ids) - 1)
 
@@ -82,5 +85,5 @@ class ActivityDocumentContributorTestCase(BluebottleTestCase):
         self.assertEqual(count, 0)
         self.assertFalse(any(contributors.values()))
         self.assertFalse(any(registrations.values()))
-        self.assertEqual(set(contributors), {'accepted', 'scheduled', 'succeeded'})
+        self.assertEqual(set(contributors), {'accepted', 'scheduled', 'succeeded', 'interested'})
         self.assertEqual(set(registrations), {'pending', 'accepted'})

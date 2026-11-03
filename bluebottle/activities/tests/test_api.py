@@ -56,6 +56,7 @@ from bluebottle.time_based.tests.factories import (
     SkillFactory,
     DateRegistrationFactory,
     DeadlineRegistrationFactory,
+    InterestFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
@@ -176,7 +177,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(attributes['contributor-count'], 2)
         self.assertEqual(attributes['contributor-stats']['succeeded'], 2)
-        self.assertEqual(attributes['contributor-stats'], {'accepted': 0, 'scheduled': 0, 'succeeded': 2})
+        self.assertEqual(
+            attributes['contributor-stats'],
+            {'accepted': 0, 'scheduled': 0, 'succeeded': 2, 'interested': 0}
+        )
         self.assertEqual(attributes['registration-stats'], {'pending': 1, 'accepted': 0})
         self.assertEqual(attributes['review'], True)
 
@@ -215,6 +219,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         participant.states.withdraw(save=True)
         self.assertEqual(self.preview_attributes(activity)['contributor-stats']['accepted'], 0)
+
+    def test_interest_updates_index(self):
+        activity = DeadlineActivityFactory.create(status='full')
+        interest = InterestFactory.create(activity=activity)
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 1)
+
+        interest.delete()
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 0)
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')

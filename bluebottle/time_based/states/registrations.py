@@ -106,12 +106,12 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     restore = Transition(
-        [withdrawn, rejected],
+        withdrawn,
         new,
         name=_("Restore"),
         passed_label=_("restored"),
         description=_(
-            "Restore after being withdrawn or rejected."
+            "Restore after being withdrawn."
         ),
         automatic=True,
         hide_from_admin=True,
@@ -120,7 +120,19 @@ class RegistrationStateMachine(ModelStateMachine):
 
 @register(DateRegistration)
 class DateRegistrationStateMachine(RegistrationStateMachine):
-    pass
+    add_to_slot = Transition(
+        [
+            RegistrationStateMachine.new,
+            RegistrationStateMachine.withdrawn,
+            RegistrationStateMachine.rejected,
+        ],
+        RegistrationStateMachine.accepted,
+        name=_("Add to slot"),
+        passed_label=_("added"),
+        description=_("Accept this person because a manager added them to a slot."),
+        automatic=True,
+        hide_from_admin=True,
+    )
 
 
 @register(DeadlineRegistration)

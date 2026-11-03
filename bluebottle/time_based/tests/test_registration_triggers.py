@@ -10,6 +10,7 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import PeriodicParticipant
 from bluebottle.time_based.tests.factories import (
     TeamFactory,
     DeadlineActivityFactory,
@@ -366,7 +367,9 @@ class PeriodicRegistrationTriggerTestCase(
         self.test_initial()
         mail.outbox = []
         self.registration.states.stop(save=True)
-        self.assertEqual(self.registration.participants.get().status, "new")
+        participant = self.registration.participants.get()
+        self.assertEqual(participant.status, "removed")
+        self.assertEqual(participant.contributions.get().status, "failed")
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[0].subject,
@@ -376,6 +379,41 @@ class PeriodicRegistrationTriggerTestCase(
             mail.outbox[1].subject,
             f'A participant for your activity "{self.activity.title}" has stopped',
         )
+
+    def test_stop_keeps_finished_participants(self):
+        self.test_initial()
+        first_slot = self.activity.slots.get()
+        first_slot.states.start(save=True)
+        first_slot.states.finish(save=True)
+
+        finished = first_slot.participants.get()
+        running = self.registration.participants.exclude(pk=finished.pk).get()
+        self.assertEqual(finished.status, "succeeded")
+        self.assertEqual(running.status, "new")
+
+        self.registration.states.stop(save=True)
+
+        finished.refresh_from_db()
+        running.refresh_from_db()
+        self.assertEqual(finished.status, "succeeded")
+        self.assertEqual(finished.contributions.get().status, "succeeded")
+        self.assertEqual(running.status, "removed")
+        self.assertEqual(running.contributions.get().status, "failed")
+
+    def test_delete(self):
+        self.test_initial()
+        first_slot = self.activity.slots.get()
+        first_slot.states.start(save=True)
+        first_slot.states.finish(save=True)
+        participant_ids = list(self.registration.participants.values_list('id', flat=True))
+        self.assertEqual(len(participant_ids), 2)
+
+        self.registration.delete()
+
+        for participant in PeriodicParticipant.objects.filter(id__in=participant_ids):
+            self.assertIsNone(participant.registration)
+            self.assertEqual(participant.status, "removed")
+            self.assertEqual(participant.contributions.get().status, "failed")
 
     def test_unfill_stop(self):
         self.test_fill()

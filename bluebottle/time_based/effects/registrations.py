@@ -3,7 +3,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import PeriodicSlot, DateRegistration
+from bluebottle.time_based.models import PeriodicSlot, DateRegistration, PeriodicParticipant
 
 
 class CreateParticipantEffect(Effect):
@@ -122,3 +122,21 @@ class DeleteRegistrationEffect(Effect):
             return False
         registration = self.instance.registration
         return not registration.participants.exists()
+
+
+class RemovePeriodicParticipantsEffect(Effect):
+
+    title = _('Remove the participants of this registration')
+    template = 'admin/remove_periodic_participants.html'
+
+    def pre_save(self, **kwargs):
+        self.participant_ids = list(self.instance.participants.values_list('id', flat=True))
+
+    def post_save(self, **kwargs):
+        for participant in PeriodicParticipant.objects.filter(
+            id__in=self.participant_ids,
+            status__in=['new', 'accepted', 'succeeded'],
+        ):
+            participant.states.auto_remove()
+            participant.execute_triggers(**self.options)
+            participant.save()

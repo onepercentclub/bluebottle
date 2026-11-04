@@ -13,11 +13,13 @@ from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
+from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
 
 from bluebottle.activities.models import Activity, ActivityMessage
+from bluebottle.activities.models import Contributor
 from bluebottle.activity_links.tests.factories import (
     LinkedDateActivityFactory, LinkedDateSlotFactory, LinkedDeadlineActivityFactory,
     LinkedDeedFactory, LinkedFundingFactory,
@@ -49,6 +51,7 @@ from bluebottle.test.factory_models.geo import (
 )
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
+from bluebottle.time_based.models import Registration
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -57,6 +60,13 @@ from bluebottle.time_based.tests.factories import (
     DeadlineParticipantFactory,
     SkillFactory,
     DateRegistrationFactory,
+    DeadlineRegistrationFactory,
+    InterestFactory,
+    PeriodicActivityFactory,
+    PeriodicRegistrationFactory,
+    ScheduleActivityFactory,
+    ScheduleRegistrationFactory,
+    TeamFactory,
 )
 
 
@@ -151,10 +161,93 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
+        self.assertEqual(attributes['review'], None)
+        self.assertEqual(attributes['slots'], None)
         self.assertEqual(
             attributes['theme'],
             activity.theme.name
         )
+
+    def test_preview_contributor_and_registration_stats(self):
+        activity = DeadlineActivityFactory.create(status='open', review=True)
+        participants = DeadlineParticipantFactory.create_batch(3, activity=activity)
+        Contributor.objects.filter(pk__in=[p.pk for p in participants[:2]]).update(status='succeeded')
+        Contributor.objects.filter(pk=participants[2].pk).update(status='withdrawn')
+        registrations = Registration.objects.filter(activity=activity)
+        registrations.update(status='rejected')
+        Registration.objects.filter(pk=registrations.first().pk).update(status='new')
+        registry.update(Activity.objects.get(pk=activity.pk))
+
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['contributor-count'], 2)
+        self.assertEqual(
+            attributes['contributor-stats'],
+            {'accepted': 0, 'scheduled': 0, 'succeeded': 2, 'interested': 0}
+        )
+        self.assertEqual(attributes['registration-stats'], {'pending': 1, 'accepted': 0})
+        self.assertEqual(attributes['review'], True)
+
+    def preview_attributes(self, activity):
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
+        for data in response.json()['data']:
+            if data['id'] == str(activity.pk):
+                return data['attributes']
+
+    def assert_registration_updates_index(self, activity, registration_factory):
+        registration = registration_factory.create(activity=activity)
+        attributes = self.preview_attributes(activity)
+        self.assertEqual(attributes['registration-stats'], {'pending': 1, 'accepted': 0})
+
+        registration.states.accept(save=True)
+        attributes = self.preview_attributes(activity)
+        self.assertEqual(attributes['registration-stats'], {'pending': 0, 'accepted': 1})
+        self.assertEqual(attributes['contributor-count'], 1)
+
+    def test_deadline_registration_updates_index(self):
+        activity = DeadlineActivityFactory.create(status='open', review=True)
+        self.assert_registration_updates_index(activity, DeadlineRegistrationFactory)
+
+    def test_periodic_registration_updates_index(self):
+        activity = PeriodicActivityFactory.create(status='open', review=True)
+        self.assert_registration_updates_index(activity, PeriodicRegistrationFactory)
+
+    def test_schedule_registration_updates_index(self):
+        activity = ScheduleActivityFactory.create(status='open', review=True)
+        self.assert_registration_updates_index(activity, ScheduleRegistrationFactory)
+
+    def test_participant_status_change_updates_index(self):
+        activity = DeedFactory.create(status='open')
+        participant = DeedParticipantFactory.create(activity=activity)
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['accepted'], 1)
+
+        participant.states.withdraw(save=True)
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['accepted'], 0)
+
+    def test_interest_updates_index(self):
+        activity = DeadlineActivityFactory.create(status='full')
+        interest = InterestFactory.create(activity=activity)
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 1)
+
+        interest.delete()
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 0)
+
+    def test_team_updates_index(self):
+        activity = ScheduleActivityFactory.create(status='open', team_activity='teams')
+        TeamFactory.create(activity=activity)
+        self.assertEqual(
+            self.preview_attributes(activity)['team-stats'],
+            {'accepted': 1, 'scheduled': 0, 'succeeded': 0}
+        )
+
+    def test_slot_interest_updates_index(self):
+        activity = DateActivityFactory.create(status='open')
+        interest = InterestFactory.create(activity=activity, slot=activity.slots.first())
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 1)
+
+        interest.delete()
+        self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 0)
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')
@@ -177,6 +270,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             activity.expertise.name
         )
         self.assertEqual(attributes['slot-count'], 1)
+        self.assertEqual(
+            attributes['slots'], {'upcoming': 1, 'succeeded': 0}
+        )
         self.assertEqual(dateutil.parser.parse(attributes['start']), activity.slots.first().start)
         self.assertEqual(dateutil.parser.parse(attributes['end']), activity.slots.first().end)
         self.assertEqual(attributes['has-multiple-locations'], False)

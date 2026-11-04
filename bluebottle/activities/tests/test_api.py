@@ -66,6 +66,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
+    TeamFactory,
 )
 
 
@@ -181,7 +182,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['contributor-count'], 2)
-        self.assertEqual(attributes['contributor-stats']['succeeded'], 2)
         self.assertEqual(
             attributes['contributor-stats'],
             {'accepted': 0, 'scheduled': 0, 'succeeded': 2, 'interested': 0}
@@ -233,6 +233,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         interest.delete()
         self.assertEqual(self.preview_attributes(activity)['contributor-stats']['interested'], 0)
 
+    def test_team_updates_index(self):
+        activity = ScheduleActivityFactory.create(status='open', team_activity='teams')
+        TeamFactory.create(activity=activity)
+        self.assertEqual(
+            self.preview_attributes(activity)['team-stats'],
+            {'accepted': 1, 'scheduled': 0, 'succeeded': 0}
+        )
+
     def test_slot_interest_updates_index(self):
         activity = DateActivityFactory.create(status='open')
         interest = InterestFactory.create(activity=activity, slot=activity.slots.first())
@@ -263,7 +271,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertEqual(attributes['slot-count'], 1)
         self.assertEqual(
-            attributes['slots'], {'upcoming': 1 if activity.slots.first().status == 'open' else 0, 'succeeded': 0}
+            attributes['slots'], {'upcoming': 1, 'succeeded': 0}
         )
         self.assertEqual(dateutil.parser.parse(attributes['start']), activity.slots.first().start)
         self.assertEqual(dateutil.parser.parse(attributes['end']), activity.slots.first().end)

@@ -12,15 +12,18 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.documents import (
     DateActivityDocument,
     DeadlineActivityDocument,
+    ScheduleActivityDocument,
     deduplicate_locations,
     deduplicate_positions,
     unique_slot_geolocations,
 )
-from bluebottle.time_based.models import DateActivity, DateActivitySlot
+from bluebottle.time_based.models import DateActivity, DateActivitySlot, Team
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
     DeadlineActivityFactory,
+    ScheduleActivityFactory,
+    TeamFactory,
 )
 
 
@@ -41,6 +44,22 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
             DateActivityDocument().prepare_slot_stats(activity),
             {'upcoming': 2, 'succeeded': 2},
         )
+
+    def test_prepare_team_stats(self):
+        activity = ScheduleActivityFactory.create(team_activity='teams')
+        teams = TeamFactory.create_batch(4, activity=activity)
+        for team, status in zip(teams, ['accepted', 'accepted', 'scheduled', 'withdrawn']):
+            Team.objects.filter(pk=team.pk).update(status=status)
+
+        self.assertEqual(
+            ScheduleActivityDocument().prepare_team_stats(activity),
+            {'accepted': 2, 'scheduled': 1, 'succeeded': 0},
+        )
+
+    def test_prepare_team_stats_individuals(self):
+        activity = ScheduleActivityFactory.create(team_activity='individuals')
+
+        self.assertIsNone(ScheduleActivityDocument().prepare_team_stats(activity))
 
     def test_unique_slot_geolocations_deduplicates_by_location(self):
         location = self.create_geolocation(locality='Leiden')

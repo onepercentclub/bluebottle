@@ -2,11 +2,13 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import (
+    CONTRIBUTOR_STATUSES,
     ActivityDocument,
     activity,
     geofeatures_for_geolocation,
     get_translated_country_list,
     locality_from_geolocation,
+    status_counts,
 )
 from bluebottle.time_based.models import (
     DateActivity,
@@ -27,6 +29,7 @@ from bluebottle.time_based.models import (
     TeamScheduleParticipant,
     TeamScheduleRegistration,
     Interest,
+    Team,
 )
 from bluebottle.utils.documents import TextField
 
@@ -367,6 +370,15 @@ class PeriodicActivityDocument(RegistrationActivityDocument):
 @registry.register_document
 @activity.doc_type
 class ScheduleActivityDocument(RegistrationActivityDocument):
+    team_stats = fields.ObjectField(
+        properties={key: fields.IntegerField() for key in CONTRIBUTOR_STATUSES}
+    )
+
+    def prepare_team_stats(self, instance):
+        if instance.team_activity != 'teams':
+            return None
+        counts = status_counts(instance.teams.all())
+        return {status: counts[status] for status in CONTRIBUTOR_STATUSES}
 
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
@@ -387,7 +399,7 @@ class ScheduleActivityDocument(RegistrationActivityDocument):
     class Django:
 
         related_models = ActivityDocument.Django.related_models + (
-            ScheduleParticipant, ScheduleRegistration, TeamScheduleParticipant, TeamScheduleRegistration, Interest
+            ScheduleParticipant, ScheduleRegistration, TeamScheduleParticipant, TeamScheduleRegistration, Team, Interest
         )
         model = ScheduleActivity
 

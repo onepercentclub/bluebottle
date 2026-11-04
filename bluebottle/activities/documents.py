@@ -1,9 +1,8 @@
 from builtins import str
 from collections import Counter
 
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
-from django.db.models import Q
+from django.db.models import Count, Q
 from django_elasticsearch_dsl import Document, fields
 from elasticsearch_dsl.field import DateRange
 
@@ -20,7 +19,7 @@ from bluebottle.initiatives.documents import (
 )
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import Interest, Registration
+from bluebottle.time_based.models import Interest, Registration, Team
 from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.search import Search
 
@@ -153,16 +152,13 @@ REGISTRATION_STATUSES = {
 }
 
 
+def status_counts(queryset):
+    return Counter(dict(queryset.order_by().values_list('status').annotate(count=Count('pk'))))
+
+
 def contributor_status_counts(instance):
     # Organizers (activity owners) and granted amounts are contributors, but not participants.
-    excluded = {
-        ContentType.objects.get_for_model(Organizer).pk,
-        ContentType.objects.get_for_model(GrantDonor).pk,
-    }
-    counts = Counter(
-        contributor.status for contributor in instance.contributors.all()
-        if contributor.polymorphic_ctype_id not in excluded
-    )
+    counts = status_counts(instance.contributors.not_instance_of(Organizer, GrantDonor))
     counts['succeeded'] += instance.deleted_successful_contributors or 0
     return counts
 
@@ -200,8 +196,6 @@ class ActivityDocument(Document):
             'initiative__categories',
             'initiative__activity_managers',
             'contributors',
-            'registrations',
-            'interests',
         )
 
     def get_indexing_queryset(self):
@@ -416,7 +410,7 @@ class ActivityDocument(Document):
             return activities_for_geolocation(model, related_instance)
         if isinstance(related_instance, Theme.translations.field.model):
             return model.objects.filter(initiative__theme=related_instance.master)
-        if isinstance(related_instance, (Contributor, Registration, Interest)):
+        if isinstance(related_instance, (Contributor, Registration, Interest, Team)):
             return model.objects.filter(pk=related_instance.activity_id)
 
     class Django:
@@ -494,18 +488,16 @@ class ActivityDocument(Document):
 
     def interested_count(self, instance):
         # People who applied or joined since registering interest are no longer waiting for a spot.
-        joined = {
-            contributor.user_id for contributor in instance.contributors.all()
-            if contributor.status in ('new',) + CONTRIBUTOR_STATUSES
-        }
-        interested = {
-            interest.user_id for interest in instance.interests.all()
-            if interest != self._related_instance_to_ignore
-        }
-        return len(interested - joined)
+        joined = instance.contributors.filter(
+            status__in=('new',) + CONTRIBUTOR_STATUSES, user__isnull=False
+        ).values('user_id')
+        interests = instance.interests.exclude(user_id__in=joined)
+        if isinstance(self._related_instance_to_ignore, Interest):
+            interests = interests.exclude(pk=self._related_instance_to_ignore.pk)
+        return interests.values('user_id').distinct().count()
 
     def prepare_registration_stats(self, instance):
-        counts = Counter(registration.status for registration in instance.registrations.all())
+        counts = status_counts(instance.registrations.all())
         return {key: counts[status] for key, status in REGISTRATION_STATUSES.items()}
 
     def prepare_donation_count(self, instance):

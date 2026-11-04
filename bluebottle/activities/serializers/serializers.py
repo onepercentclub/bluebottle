@@ -226,6 +226,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     contributor_count = serializers.SerializerMethodField()
     contributor_stats = serializers.SerializerMethodField()
     registration_stats = serializers.SerializerMethodField()
+    team_stats = serializers.SerializerMethodField()
     review = serializers.SerializerMethodField()
     slots = serializers.SerializerMethodField()
 
@@ -505,6 +506,10 @@ class ActivityPreviewSerializer(ModelSerializer):
         stats = getattr(obj, 'registration_stats', None)
         return stats.to_dict() if stats else None
 
+    def get_team_stats(self, obj):
+        stats = getattr(obj, 'team_stats', None)
+        return stats.to_dict() if stats else None
+
     def get_review(self, obj):
         return getattr(obj, 'review', None)
 
@@ -557,6 +562,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             "contributor_count",
             "contributor_stats",
             "registration_stats",
+            "team_stats",
             "review",
             "slots",
             "translations"

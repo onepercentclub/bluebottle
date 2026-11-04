@@ -162,6 +162,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
     class Meta(object):
         model = Activity
         meta_fields = (
+            "roles",
             "permissions",
             "transitions",
             "created",

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 17:03+0100\n"
-"PO-Revision-Date: 2026-11-04 08:35\n"
+"POT-Creation-Date: 2026-11-04 09:44+0100\n"
+"PO-Revision-Date: 2026-11-04 08:50\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -2674,27 +2674,31 @@ msgctxt "email"
 msgid "The %(site_name)s team"
 msgstr "Das %(site_name)s -Team"
 
-#: bluebottle/auth/views.py:37
+#: bluebottle/auth/views.py:43
+msgid "Logging in failed, please try again"
+msgstr "Die Anmeldung ist fehlgeschlagen, bitte versuche es erneut"
+
+#: bluebottle/auth/views.py:56
 msgid "Authentication was cancelled"
 msgstr "Die Authentifizierung wurde abgebrochen"
 
-#: bluebottle/auth/views.py:44
+#: bluebottle/auth/views.py:65
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
 msgstr "Bitte erlauben Sie Facebook Zugriff auf Ihre E-Mail-Adresse, wenn Sie sich über Facebook anmelden/anmelden möchten."
 
-#: bluebottle/auth/views.py:48
+#: bluebottle/auth/views.py:69
 msgid "User account is disabled"
 msgstr "Benutzerkonto ist deaktiviert"
 
-#: bluebottle/auth/views.py:140
+#: bluebottle/auth/views.py:161
 msgid "Authentication method"
 msgstr "Authentifizierungsmethode"
 
-#: bluebottle/auth/views.py:154
+#: bluebottle/auth/views.py:175
 msgid "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
 msgstr "<b>Authentifizierungs-App</b><p style=\"padding-top: 0px; padding-left: 24px;\">Sichere Codes mit einer App wie Google Authenticator oder Authy generieren.</p>"
 
-#: bluebottle/auth/views.py:165
+#: bluebottle/auth/views.py:186
 msgid "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">enter your phone number and receive verification codes via SMS.</p>"
 msgstr "<b>Textnachricht (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">Geben Sie Ihre Telefonnummer ein und erhalten Sie Bestätigungscodes per SMS.</p>"
 

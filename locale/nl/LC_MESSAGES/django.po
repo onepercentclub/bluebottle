@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 17:03+0100\n"
-"PO-Revision-Date: 2026-11-04 08:35\n"
+"POT-Creation-Date: 2026-11-04 09:44+0100\n"
+"PO-Revision-Date: 2026-11-04 08:50\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -2669,27 +2669,31 @@ msgctxt "email"
 msgid "The %(site_name)s team"
 msgstr "Het %(site_name)s team"
 
-#: bluebottle/auth/views.py:37
+#: bluebottle/auth/views.py:43
+msgid "Logging in failed, please try again"
+msgstr "Inloggen is mislukt, probeer het opnieuw"
+
+#: bluebottle/auth/views.py:56
 msgid "Authentication was cancelled"
 msgstr "Authenticatie is geannuleerd"
 
-#: bluebottle/auth/views.py:44
+#: bluebottle/auth/views.py:65
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
 msgstr "Geef Facebook toegang tot je e-mailadres als je wilt aanmelden/inloggen via Facebook."
 
-#: bluebottle/auth/views.py:48
+#: bluebottle/auth/views.py:69
 msgid "User account is disabled"
 msgstr "Gebruikersaccount is uitgeschakeld"
 
-#: bluebottle/auth/views.py:140
+#: bluebottle/auth/views.py:161
 msgid "Authentication method"
 msgstr "Authenticatiemethode"
 
-#: bluebottle/auth/views.py:154
+#: bluebottle/auth/views.py:175
 msgid "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
 msgstr "<b>Authenticatie app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Genereer veilige codes met behulp van een app zoals Google Authenticator of Authy.</p>"
 
-#: bluebottle/auth/views.py:165
+#: bluebottle/auth/views.py:186
 msgid "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">enter your phone number and receive verification codes via SMS.</p>"
 msgstr "<b>Tekstbericht (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">Voer je telefoonnummer in en ontvang verificatiecodes via SMS.</p>"
 

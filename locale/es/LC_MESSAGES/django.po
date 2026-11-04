@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 17:03+0100\n"
-"PO-Revision-Date: 2026-11-04 08:35\n"
+"POT-Creation-Date: 2026-11-04 09:44+0100\n"
+"PO-Revision-Date: 2026-11-04 08:50\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -2674,27 +2674,31 @@ msgctxt "email"
 msgid "The %(site_name)s team"
 msgstr "El equipo %(site_name)s"
 
-#: bluebottle/auth/views.py:37
+#: bluebottle/auth/views.py:43
+msgid "Logging in failed, please try again"
+msgstr "No se pudo iniciar sesión, inténtalo de nuevo"
+
+#: bluebottle/auth/views.py:56
 msgid "Authentication was cancelled"
 msgstr "La autenticación fue cancelada"
 
-#: bluebottle/auth/views.py:44
+#: bluebottle/auth/views.py:65
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
 msgstr "Por favor, permite el acceso de Facebook a tu dirección de correo electrónico si deseas registrarte/iniciar sesión a través de Facebook."
 
-#: bluebottle/auth/views.py:48
+#: bluebottle/auth/views.py:69
 msgid "User account is disabled"
 msgstr "Cuenta de usuario deshabilitada"
 
-#: bluebottle/auth/views.py:140
+#: bluebottle/auth/views.py:161
 msgid "Authentication method"
 msgstr "Método de autenticación"
 
-#: bluebottle/auth/views.py:154
+#: bluebottle/auth/views.py:175
 msgid "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
 msgstr "<b>Aplicación de autenticación</b><p style=\"padding-top: 0px; padding-left: 24px;\">Genera códigos seguros usando una aplicación como Google Authenticator o Authy.</p>"
 
-#: bluebottle/auth/views.py:165
+#: bluebottle/auth/views.py:186
 msgid "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">enter your phone number and receive verification codes via SMS.</p>"
 msgstr "<b>Mensaje de texto (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">introduzca su número de teléfono y reciba códigos de verificación por SMS.</p>"
 

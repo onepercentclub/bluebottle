@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 16:35+0100\n"
+"POT-Creation-Date: 2026-11-04 09:44+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -893,7 +893,7 @@ msgstr ""
 msgid "Send a reminder whe activities are unpublished for more then 3 days"
 msgstr ""
 
-#: bluebottle/activities/serializers/serializers.py:1051
+#: bluebottle/activities/serializers/serializers.py:1074
 msgid "You cannot send a message to yourself as the activity manager."
 msgstr ""
 

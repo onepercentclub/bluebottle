@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-02 13:00+0100\n"
-"PO-Revision-Date: 2026-11-02 12:00\n"
+"POT-Creation-Date: 2026-11-04 09:44+0100\n"
+"PO-Revision-Date: 2026-11-04 08:50\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -875,7 +875,7 @@ msgstr "Activiteit berichten"
 msgid "Send a reminder whe activities are unpublished for more then 3 days"
 msgstr "Stuur een herinnering wanneer activiteiten meer dan 3 dagen gedepubliceerd zijn"
 
-#: bluebottle/activities/serializers/serializers.py:1051
+#: bluebottle/activities/serializers/serializers.py:1074
 msgid "You cannot send a message to yourself as the activity manager."
 msgstr "Je kunt geen bericht naar jezelf sturen als de activiteitbeheerder."
 
@@ -2671,7 +2671,7 @@ msgstr "Het %(site_name)s team"
 
 #: bluebottle/auth/views.py:43
 msgid "Logging in failed, please try again"
-msgstr "Inloggen mislukt, probeer het nogmaals"
+msgstr "Inloggen is mislukt, probeer het opnieuw"
 
 #: bluebottle/auth/views.py:56
 msgid "Authentication was cancelled"

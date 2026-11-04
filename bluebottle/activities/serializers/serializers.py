@@ -197,6 +197,11 @@ class PreviewRelatedActivityField(PolymorphicResourceRelatedField):
         return {"id": obj.meta.id, "type": obj.resource_name}
 
 
+class DocumentObjectField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return value.to_dict()
+
+
 class ActivityPreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
@@ -222,8 +227,13 @@ class ActivityPreviewSerializer(ModelSerializer):
     amount_raised = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
 
-    capacity = serializers.SerializerMethodField()
-    contributor_count = serializers.SerializerMethodField()
+    capacity = serializers.ReadOnlyField()
+    contributor_count = serializers.ReadOnlyField()
+    contributor_stats = DocumentObjectField(default=None)
+    registration_stats = DocumentObjectField(default=None)
+    team_stats = DocumentObjectField(default=None)
+    review = serializers.ReadOnlyField(default=None)
+    slots = DocumentObjectField(source='slot_stats', default=None)
 
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
@@ -490,12 +500,6 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_owner(self, obj):
         return obj.owner.full_name if obj.owner else None
 
-    def get_contributor_count(self, obj):
-        return obj.contributor_count
-
-    def get_capacity(self, obj):
-        return obj.capacity
-
     def get_collect(self, obj):
         return obj.capacity
 
@@ -536,6 +540,11 @@ class ActivityPreviewSerializer(ModelSerializer):
             "activity",
             "capacity",
             "contributor_count",
+            "contributor_stats",
+            "registration_stats",
+            "team_stats",
+            "review",
+            "slots",
             "translations"
         )
         meta_fields = (

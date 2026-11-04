@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-02 13:00+0100\n"
-"PO-Revision-Date: 2026-11-02 12:00\n"
+"POT-Creation-Date: 2026-11-04 09:44+0100\n"
+"PO-Revision-Date: 2026-11-04 08:50\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -875,7 +875,7 @@ msgstr "Tevékenységi üzenetek"
 msgid "Send a reminder whe activities are unpublished for more then 3 days"
 msgstr "Emlékeztető küldése, ha a tevékenységek több mint 3 napig nem jelentek meg"
 
-#: bluebottle/activities/serializers/serializers.py:1051
+#: bluebottle/activities/serializers/serializers.py:1074
 msgid "You cannot send a message to yourself as the activity manager."
 msgstr "Nem küldhetsz üzenetet saját magadnak, mint tevékenységmenedzser."
 
@@ -2676,7 +2676,7 @@ msgstr "A(z) %(site_name)s csapata"
 
 #: bluebottle/auth/views.py:43
 msgid "Logging in failed, please try again"
-msgstr "A bejelentkezés nem sikerült, kérlek, próbáld újra"
+msgstr "A bejelentkezés sikertelen volt, próbáld újra"
 
 #: bluebottle/auth/views.py:56
 msgid "Authentication was cancelled"

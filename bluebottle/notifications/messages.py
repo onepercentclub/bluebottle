@@ -46,6 +46,7 @@ class TransitionMessage(object):
     context = {}
     send_once = False
     delay = None
+    append_custom_message = False
 
     def __reduce__(self):
         return (partial(self.__class__, self.obj, **self.options), ())
@@ -163,6 +164,7 @@ class TransitionMessage(object):
             "action_link": self.get_action_link(recipient),
             "action_title": getattr(self, "action_title", None),
             "utm_campaign": self.__class__.__name__,
+            "append_custom_message": self.append_custom_message,
         }
         for key, item in list(self.context.items()):
             try:

@@ -30,3 +30,21 @@ class BaseParticipantNotification(TransitionMessage):
 
     class Meta:
         abstract = True
+
+
+class ThankYouMessageMixin:
+    def get_recipients(self):
+        activity = self.get_activity()
+        if not (activity and activity.send_thank_you_message):
+            return []
+        return self.get_thank_you_recipients()
+
+    def get_thank_you_recipients(self):
+        raise NotImplementedError
+
+    def get_succeeded_contributors(self, activity):
+        from bluebottle.members.models import Member
+        return list(Member.objects.filter(
+            contributor__activity=activity,
+            contributor__contributions__status='succeeded',
+        ).distinct())

@@ -124,7 +124,7 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_create_invalid_action(self):
-        self.perform_create(user=self.owner, data=self.get_data(action='succeed'))
+        self.perform_create(user=self.owner, data=self.get_data(action='unknown'))
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_create_deed_join(self):
@@ -528,13 +528,16 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         previews = self.previews(response)
-        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
+        self.assertEqual(
+            previews['succeed']['subject'], 'Thank you for participating in the activity "Clean the park"'
+        )
         self.assertEqual(
             previews['accept']['subject'],
             'You have been selected for the activity "Clean the park"'
         )
         self.assertIn('Clean the park', previews['accept']['body'])
-        self.assertIn("[participant&#x27;s first name]", previews['accept']['body'])
+        self.assertIn('Hi [name],', previews['accept']['body'])
         self.assertNotIn('<html', previews['accept']['body'])
         self.assertEqual(previews['accept']['action-title'], 'View activity')
         self.assertEqual(previews['reject']['action-title'], 'View all activities')
@@ -543,17 +546,17 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         activity = DeedFactory.create(owner=self.owner, title='Plant a tree')
         previews = self.previews(self.get(activity))
 
-        self.assertEqual(set(previews), {'join'})
+        self.assertEqual(set(previews), {'join', 'succeed'})
         self.assertEqual(previews['join']['subject'], 'You have joined the activity "Plant a tree"')
 
     def test_collect(self):
         previews = self.previews(self.get(CollectActivityFactory.create(owner=self.owner)))
-        self.assertEqual(set(previews), {'join'})
+        self.assertEqual(set(previews), {'join', 'succeed'})
 
     def test_date(self):
         activity = DateActivityFactory.create(owner=self.owner)
         previews = self.previews(self.get(activity))
-        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
 
     def test_schedule_teams(self):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
@@ -573,3 +576,98 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         activity = DeadlineActivityFactory.create(owner=self.owner)
         response = self.client.get(self.url, {'filter[activity]': activity.pk})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class RegistrationReviewMessageTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        InitiativePlatformSettingsFactory.create(activity_types=['deadlineactivity'])
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        initiative = InitiativeFactory.create(owner=self.owner)
+        initiative.states.submit()
+        initiative.states.approve(save=True)
+        self.activity = DeadlineActivityFactory.create(
+            initiative=initiative, owner=self.owner, review=True, capacity=4,
+            registration_deadline=None,
+        )
+        self.activity.states.publish(save=True)
+        self.user = BlueBottleUserFactory.create(first_name='Henk')
+        self.registration = DeadlineRegistrationFactory.create(
+            activity=self.activity, user=self.user, as_user=self.user
+        )
+        mail.outbox = []
+
+    def transition(self, name, message):
+        data = {
+            'data': {
+                'type': 'contributors/time-based/deadline-registration-transitions',
+                'attributes': {'transition': name, 'message': message, 'send-email': True},
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'contributors/time-based/deadline-registrations',
+                            'id': self.registration.pk,
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            reverse('deadline-registration-transitions'), json.dumps(data), user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        return [m for m in mail.outbox if m.to == [self.user.email]][0]
+
+    def test_accept_appends_message(self):
+        message = self.transition('accept', '<p>Bring gloves</p>')
+
+        self.assertIn('Good news, you have been accepted', message.body)
+        self.assertIn('Bring gloves', message.body)
+        self.assertLess(
+            message.body.index('Good news'), message.body.index('Bring gloves')
+        )
+
+    def test_reject_appends_message(self):
+        message = self.transition('reject', '<p>Maybe next time</p>')
+
+        self.assertIn('Unfortunately, you have not been selected', message.body)
+        self.assertIn('Maybe next time', message.body)
+
+    def test_message_replaces_activity_template(self):
+        create_template(self.activity, action='accept', subject='')
+        message = self.transition('accept', '<p>Bring gloves</p>')
+
+        self.assertIn('Bring gloves', message.body)
+        self.assertNotIn('see you soon', message.body)
+        self.assertEqual(
+            message.subject,
+            'You have been selected for the activity "{}"'.format(self.activity.title)
+        )
+
+
+class SendThankYouMessageAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.activity = DeadlineActivityFactory.create(owner=self.owner)
+        self.url = reverse('deadline-detail', args=(self.activity.pk,))
+
+    def test_default_off(self):
+        response = self.client.get(self.url, user=self.owner)
+        self.assertFalse(response.json()['data']['attributes']['send-thank-you-message'])
+
+    def test_owner_enables(self):
+        data = {
+            'data': {
+                'type': 'activities/time-based/deadlines',
+                'id': self.activity.pk,
+                'attributes': {'send-thank-you-message': True},
+            }
+        }
+        response = self.client.patch(self.url, json.dumps(data), user=self.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.activity.refresh_from_db()
+        self.assertTrue(self.activity.send_thank_you_message)

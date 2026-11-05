@@ -160,12 +160,6 @@ class LockScheduleActivityIfFullEffect(Effect):
             activity.states.lock(save=True)
 
 
-def added_by_manager(participant, user):
-    return bool(user) and user != participant.user and (
-        user.is_staff or user.is_superuser or user in participant.activity.owners
-    )
-
-
 class CreateDateRegistrationEffect(Effect):
     title = _('Create or assign registration for this participant')
     template = 'admin/create_date_registration.html'
@@ -179,16 +173,13 @@ class CreateDateRegistrationEffect(Effect):
 
     def post_save(self, **kwargs):
         if not self.instance.registration:
-            self.instance.registration = DateRegistration.objects.create(
+            registration = DateRegistration(
                 activity=self.instance.activity,
                 user=self.instance.user,
             )
-            if (
-                added_by_manager(self.instance, self.options.get('user')) and
-                self.instance.registration.status != 'accepted'
-            ):
-                self.instance.registration.states.add_to_slot(save=True)
-
+            registration.execute_triggers(**self.options)
+            registration.save()
+            self.instance.registration = registration
             self.instance.save()
 
 

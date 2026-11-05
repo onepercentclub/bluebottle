@@ -534,9 +534,9 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(registration, 'accepted')
         self.assertStatus(participant, 'accepted')
         self.assertStatus(rejected, 'rejected')
-        self.assertFalse(
-            [message for message in mail.outbox if 'You have been selected' in message.subject]
-        )
+        subjects = [message.subject for message in mail.outbox if user.email in message.to]
+        self.assertFalse([subject for subject in subjects if 'You have been selected' in subject])
+        self.assertTrue([subject for subject in subjects if 'You have been added' in subject])
 
     def test_manager_add_participant_accepts_new_registration(self):
         self.activity.review = True

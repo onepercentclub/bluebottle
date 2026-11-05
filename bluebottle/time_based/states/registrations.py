@@ -62,7 +62,7 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     add = Transition(
-        new,
+        [new, withdrawn, rejected],
         accepted,
         name=_('Add'),
         description=_("Automatically add this person as a participant to the activity."),
@@ -120,19 +120,7 @@ class RegistrationStateMachine(ModelStateMachine):
 
 @register(DateRegistration)
 class DateRegistrationStateMachine(RegistrationStateMachine):
-    add_to_slot = Transition(
-        [
-            RegistrationStateMachine.new,
-            RegistrationStateMachine.withdrawn,
-            RegistrationStateMachine.rejected,
-        ],
-        RegistrationStateMachine.accepted,
-        name=_("Add to slot"),
-        passed_label=_("added"),
-        description=_("Accept this person because a manager added them to a slot."),
-        automatic=True,
-        hide_from_admin=True,
-    )
+    pass
 
 
 @register(DeadlineRegistration)

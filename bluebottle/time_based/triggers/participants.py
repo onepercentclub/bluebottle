@@ -25,7 +25,7 @@ from bluebottle.time_based.effects.participants import (
     CreateRegistrationEffect,
     LockScheduleActivityIfFullEffect,
     CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, CreateDateRegistrationEffect,
-    CreateRegisteredTimeContributionEffect, added_by_manager,
+    CreateRegisteredTimeContributionEffect,
 )
 from bluebottle.time_based.effects.registrations import DeleteRegistrationEffect
 from bluebottle.time_based.messages import (
@@ -58,7 +58,7 @@ from bluebottle.time_based.states import (
     RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
     RegistrationStateMachine
 )
-from bluebottle.time_based.states.registrations import DateRegistrationStateMachine
+from bluebottle.time_based.triggers.registrations import is_manager
 
 
 def activity_is_expired(effect):
@@ -1156,10 +1156,6 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             return True
         return False
 
-    def is_added_by_manager(effect):
-        """Added by an activity manager or staff member"""
-        return added_by_manager(effect.instance, effect.options.get('user'))
-
     def is_not_self(self):
         "Participant is created by other user"
         user = self.options.get('user')
@@ -1217,8 +1213,8 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 ),
                 RelatedTransitionEffect(
                     'registration',
-                    DateRegistrationStateMachine.add_to_slot,
-                    conditions=[is_added_by_manager],
+                    RegistrationStateMachine.add,
+                    conditions=[is_manager],
                 ),
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(

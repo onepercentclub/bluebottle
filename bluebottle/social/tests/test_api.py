@@ -4,6 +4,7 @@ from bluebottle.members.models import MemberPlatformSettings, SocialLoginSetting
 
 standard_library.install_aliases()
 import json
+import logging
 
 import httmock
 import mock
@@ -193,3 +194,105 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         with httmock.HTTMock(facebook_me_mock):
             response = self.client.post(self.token_url)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def enable_logging(self):
+        logging.disable(logging.NOTSET)
+        self.addCleanup(logging.disable, logging.CRITICAL)
+
+    def post_google_token(self):
+        return self.client.post(
+            self.token_url,
+            {
+                "data": {
+                    "type": "social/tokens",
+                    "attributes": {
+                        "backend": "google",
+                        "code": "test-code",
+                    },
+                }
+            },
+        )
+
+    def assert_login_failed(self, response, logs, secret):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json()["errors"][0]["code"], "failed")
+        self.assertFalse(any(secret in line for line in logs.output))
+
+    @mock.patch(
+        "social_core.backends.facebook.FacebookAppOAuth2.load_signed_request",
+        return_value=None,
+    )
+    def test_token_unparseable_signed_request(self, _mock):
+        self.enable_logging()
+        with self.assertLogs("bluebottle.auth.views", level="WARNING") as logs:
+            response = self.client.post(
+                self.token_url,
+                {
+                    "data": {
+                        "type": "social/tokens",
+                        "attributes": {
+                            "backend": "facebook",
+                            "access-token": "test_token",
+                            "signed-request": "garbage",
+                        },
+                    }
+                },
+            )
+        self.assert_login_failed(response, logs, "test_token")
+
+    @mock.patch(
+        "bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request",
+        load_signed_request_mock,
+    )
+    def test_token_facebook_graph_error(self):
+        self.enable_logging()
+
+        @httmock.urlmatch(netloc="graph.facebook.com")
+        def facebook_error_mock(url, request):
+            return httmock.response(500, "error", request=request)
+
+        with httmock.HTTMock(facebook_error_mock):
+            with self.assertLogs("bluebottle.auth.views", level="WARNING") as logs:
+                response = self.client.post(
+                    self.token_url,
+                    {
+                        "data": {
+                            "type": "social/tokens",
+                            "attributes": {
+                                "backend": "facebook",
+                                "access-token": "test_token",
+                                "signed-request": "test-signed-request",
+                            },
+                        }
+                    },
+                )
+        self.assert_login_failed(response, logs, "test_token")
+
+    def test_token_google_token_endpoint_error(self):
+        self.enable_logging()
+
+        @httmock.all_requests
+        def google_error_mock(url, request):
+            return httmock.response(500, "error", request=request)
+
+        with httmock.HTTMock(google_error_mock):
+            with self.assertLogs("bluebottle.auth.views", level="WARNING") as logs:
+                response = self.post_google_token()
+        self.assert_login_failed(response, logs, "test-code")
+
+    def test_token_google_invalid_grant(self):
+        self.enable_logging()
+
+        @httmock.all_requests
+        def google_invalid_grant_mock(url, request):
+            return httmock.response(
+                400,
+                json.dumps({"error": "invalid_grant"}),
+                {"content-type": "application/json"},
+                request=request,
+            )
+
+        with httmock.HTTMock(google_invalid_grant_mock):
+            with self.assertLogs("bluebottle.auth.views", level="WARNING") as logs:
+                response = self.post_google_token()
+        self.assert_login_failed(response, logs, "test-code")

@@ -16,7 +16,7 @@ from bluebottle.notifications.activity_messages import get_message_action
 from bluebottle.notifications.models import ActivityMessageTemplate, MessageTemplate
 from bluebottle.notifications.serializers import ActivityMessageTemplateSerializer
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import APITestCase, BluebottleTestCase
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.messages import ParticipantSlotParticipantRegisteredNotification
 from bluebottle.time_based.messages.registrations import (
     DateUserAppliedNotification,

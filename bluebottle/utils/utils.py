@@ -14,6 +14,7 @@ from importlib import import_module
 import html2text
 
 from html_sanitizer import Sanitizer
+from pytz import timezone
 
 import pygeoip
 from django.conf import settings
@@ -22,6 +23,7 @@ from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import TimestampSigner
 from django.urls import reverse
+from django.utils.timezone import get_current_timezone
 from django.db import connection
 from django_tools.middlewares import ThreadLocal
 
@@ -314,3 +316,9 @@ def _json_object_hook(d):
 
 def json2obj(data):
     return json.loads(data, object_hook=_json_object_hook)
+
+
+def get_current_timezone_for_location(location, is_online=False):
+    if location and location.timezone and not is_online:
+        return timezone(location.timezone)
+    return get_current_timezone()

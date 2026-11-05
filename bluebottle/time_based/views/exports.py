@@ -1,5 +1,6 @@
 import re
 
+from django.db.models import Case, Value, When
 from django.utils.timezone import now
 
 from bluebottle.segments.models import SegmentType
@@ -11,16 +12,10 @@ from bluebottle.time_based.models import (
     DateActivity,
     ScheduleParticipant,
     PeriodicRegistration,
-    DateRegistration, RegisteredDateActivity, RegisteredDateParticipant
+    DateParticipant, RegisteredDateActivity, RegisteredDateParticipant
 )
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
-
-INTEREST_EXPORT_FIELDS = (
-    ('user__email', 'Email'),
-    ('user__full_name', 'Name'),
-    ('created', 'Registration Date'),
-)
 
 
 def format_slot_worksheet_title(slot, prefix=''):
@@ -51,6 +46,12 @@ def add_unique_worksheet(workbook, title):
 class InterestExportMixin:
     interest_sheet_title = 'Interested'
 
+    interest_export_fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+    )
+
     def get_interest_queryset(self):
         return (
             self.get_object()
@@ -61,7 +62,7 @@ class InterestExportMixin:
 
     def get_interest_row(self, interest):
         row = []
-        for field, _name in INTEREST_EXPORT_FIELDS:
+        for field, _name in self.interest_export_fields:
             row.append(prep_field(self.request, interest, field))
         return row
 
@@ -75,9 +76,9 @@ class InterestExportMixin:
 
         bold = workbook.add_format({'bold': True})
         worksheet = add_unique_worksheet(workbook, title)
-        worksheet.set_column(0, len(INTEREST_EXPORT_FIELDS) - 1, 30)
+        worksheet.set_column(0, len(self.interest_export_fields) - 1, 30)
 
-        for column, (_field, name) in enumerate(INTEREST_EXPORT_FIELDS):
+        for column, (_field, name) in enumerate(self.interest_export_fields):
             worksheet.write(0, column, name, bold)
 
         for index, interest in enumerate(interests):
@@ -240,50 +241,50 @@ class PeriodicParticipantExportView(TimeBasedExportView):
 
 class DateParticipantExportView(TimeBasedExportView):
     model = DateActivity
-    participant_model = DateRegistration
+    participant_model = DateParticipant
 
     fields = (
         ("user__email", "Email"),
         ("user__full_name", "Name"),
         ("created", "Registration Date"),
-        ("status", "Status"),
+        ("slot__title", "Slot id"),
+        ("slot__start", "Slot start"),
+        ("slot__duration", "Slot duration"),
+        ("slot__status", "Slot status"),
+        ("status", "Participant status"),
         ("answer", "Registration answer"),
     )
 
+    interest_export_fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ("slot__title", "Slot id"),
+        ("slot__start", "Slot start"),
+        ("slot__duration", "Slot duration"),
+        ("slot__status", "Slot status"),
+    )
+
+    slot_status_order = Case(
+        When(slot__status='open', then=Value(1)),
+        When(slot__status='finished', then=Value(2)),
+        default=3
+    )
+
     def get_instances(self):
-        return (
-            self.participant_model.objects.filter(activity=self.get_object())
-            .prefetch_related("user__segments")
-            .select_related("user")
-        )
+        return self.participant_model.objects.alias(
+            status_order=self.slot_status_order
+        ).filter(
+            activity=self.get_object()
+        ).prefetch_related(
+            "user__segments"
+        ).select_related(
+            "user", "slot"
+        ).order_by('status_order', 'slot__start', 'created')
 
-    def write_data(self, workbook):
-        activity = self.get_object()
-        bold = workbook.add_format({'bold': True})
-
-        for slot in get_export_slots(activity):
-            title = format_slot_worksheet_title(slot)
-            worksheet = workbook.add_worksheet(title)
-            worksheet.set_column(0, 4, 30)
-            c = 0
-            for field in self.get_fields():
-                worksheet.write(0, c, field[1], bold)
-                c += 1
-            r = 0
-
-            for participant in slot.participants.all():
-                row = self.get_row(participant)
-                r += 1
-                worksheet.write_row(r, 0, row)
-
-        self.write_interest_sheet(workbook)
-
-    def write_interest_sheet(self, workbook):
-        activity = self.get_object()
-
-        for slot in get_export_slots(activity):
-            interests = list(
-                slot.interests.select_related('user').order_by('created', 'pk')
-            )
-            title = format_slot_worksheet_title(slot, prefix='Interested ')
-            self.write_interest_worksheet(workbook, title, interests)
+    def get_interest_queryset(self):
+        return self.get_object().interests.alias(
+            status_order=self.slot_status_order
+        ).select_related(
+            'user', 'slot'
+        ).order_by('status_order', 'created', 'pk')

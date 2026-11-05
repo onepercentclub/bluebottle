@@ -26,10 +26,13 @@ class PollOptionSerializer(ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
         poll = getattr(self.instance, 'poll', None)
-        if poll is not None and poll.status != 'closed':
-            del fields['votes']
-            del fields['percentage']
-            del fields['winner']
+        if poll is not None:
+            if poll.status != 'closed' or not poll.highlight_winning_option:
+                del fields['winner']
+
+            if not poll.show_vote_count:
+                del fields['votes']
+                del fields['percentage']
         return fields
 
     class Meta:
@@ -113,7 +116,8 @@ class PollSerializer(ModelSerializer):
         model = Poll
         fields = (
             'id', 'title', 'subtitle', 'end_date', 'status', 'options',
-            'votes_cast', 'my_vote', 'results_export_url',
+            'votes_cast', 'my_vote', 'results_export_url', 'show_vote_count',
+            'highlight_winning_option',
         )
 
     class JSONAPIMeta:

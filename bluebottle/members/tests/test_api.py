@@ -2,7 +2,7 @@ import json
 import time
 from builtins import range
 from calendar import timegm
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
 import jwt
 import mock
@@ -10,26 +10,20 @@ from django.core import mail
 from django.core.signing import TimestampSigner
 from django.test.utils import override_settings
 from django.urls import reverse
-from django.utils.timezone import now
 from django_recaptcha import client
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
-from bluebottle.deeds.tests.factories import DeedFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.members.models import (
+    MemberPlatformSettings, UserActivity, Member,
+    PasswordAuthentication, FacebookAuthentication, GoogleAuthentication, SAMLAuthentication
+)
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
-from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
-from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
-    DateRegistrationFactory
-)
 from bluebottle.voting.tests.factories import PollVoteFactory
 
 
@@ -59,7 +53,7 @@ class LoginTestCase(BluebottleTestCase):
         self.assertEqual(decoded['username'], self.user.pk)
 
         current_user_response = self.client.get(
-            reverse('user-current'), token='JWT {}'.format(token)
+            reverse('current-member-detail'), token='JWT {}'.format(token)
         )
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
@@ -79,7 +73,7 @@ class LoginTestCase(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         current_user_response = self.client.get(
-            reverse('user-current'), token='JWT {}'.format(response.json()['token'])
+            reverse('current-member-detail'), token='JWT {}'.format(response.json()['token'])
         )
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
@@ -98,7 +92,7 @@ class LoginTestCase(BluebottleTestCase):
             )
 
             current_user_response = self.client.get(
-                reverse('user-current'), token='JWT {}'.format(token)
+                reverse('current-member-detail'), token='JWT {}'.format(token)
             )
 
             self.assertEqual(current_user_response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -114,7 +108,7 @@ class LoginTestCase(BluebottleTestCase):
         token = response.json()['token']
 
         current_user_response = self.client.get(
-            reverse('user-current'), token='JWT {}'.format(token)
+            reverse('current-member-detail'), token='JWT {}'.format(token)
         )
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
@@ -125,7 +119,7 @@ class LoginTestCase(BluebottleTestCase):
             )
 
             current_user_response = self.client.get(
-                reverse('user-current'), token='JWT {}'.format(token)
+                reverse('current-member-detail'), token='JWT {}'.format(token)
             )
 
             self.assertEqual(current_user_response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -139,7 +133,7 @@ class LoginTestCase(BluebottleTestCase):
         token = response.json()['token']
 
         current_user_response = self.client.get(
-            reverse('user-current'), token='JWT {}'.format(token)
+            reverse('current-member-detail'), token='JWT {}'.format(token)
         )
 
         self.assertFalse('Refresh-Token' in current_user_response)
@@ -150,12 +144,12 @@ class LoginTestCase(BluebottleTestCase):
             )
 
             current_user_response = self.client.get(
-                reverse('user-current'), token='JWT {}'.format(token)
+                reverse('current-member-detail'), token='JWT {}'.format(token)
             )
             self.assertTrue('Refresh-Token' in current_user_response)
 
             current_user_response = self.client.get(
-                reverse('user-current'), token=current_user_response['Refresh-Token']
+                reverse('current-member-detail'), token=current_user_response['Refresh-Token']
             )
             self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
 
@@ -370,139 +364,6 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
 
 @override_settings(SEND_WELCOME_MAIL=True)
-class CreateUserTestCase(BluebottleTestCase):
-    def setUp(self):
-        self.settings = MemberPlatformSettings.load()
-
-        super(CreateUserTestCase, self).setUp()
-
-    def test_create(self):
-        email = 'test@example.com'
-        password = 'test@example.com'
-
-        response = self.client.post(
-            reverse('user-user-create'),
-            {'email': email, 'password': password, 'email_confirmation': email}
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        member = Member.objects.get(email=email)
-
-        self.assertEqual(member.is_active, True)
-        self.assertTrue(member.check_password(password))
-
-    def test_create_invalid(self):
-        email = 'test@example%2ecom'
-        password = 'test@example.com'
-
-        response = self.client.post(
-            reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json()['email'][0],
-            'Enter a valid email address.'
-        )
-
-    def test_create_twice(self):
-        email = 'test@example.com'
-        password = 'test@example.com'
-
-        response = self.client.post(
-            reverse('user-user-create'),
-            {'email': email, 'password': password, 'email_confirmation': email}
-        )
-        user_id = str(response.json()['id'])
-
-        response = self.client.post(
-            reverse('user-user-create'),
-            {'email': email, 'password': password, 'email_confirmation': email}
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        self.assertEqual(
-            response.json()['non_field_errors'][0]['email'],
-            email
-        )
-
-        self.assertEqual(
-            response.json()['non_field_errors'][0]['type'],
-            'email'
-        )
-
-        self.assertEqual(
-            response.json()['non_field_errors'][0]['id'],
-            user_id
-        )
-
-    def test_create_twice_different_case(self):
-        email = 'test@example.com'
-        password = 'test@example.com'
-
-        response = self.client.post(
-            reverse('user-user-create'),
-            {'email': email, 'password': password, 'email_confirmation': email}
-        )
-        user_id = str(response.json()['id'])
-
-        response = self.client.post(
-            reverse('user-user-create'),
-            {
-                'email': email.replace('test', 'Test'),
-                'password': password,
-                'email_confirmation': email.replace('test', 'Test')
-            }
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        self.assertEqual(
-            response.json()['non_field_errors'][0]['email'],
-            email
-        )
-
-        self.assertEqual(
-            response.json()['non_field_errors'][0]['type'],
-            'email'
-        )
-
-        self.assertEqual(
-            response.json()['non_field_errors'][0]['id'],
-            user_id
-        )
-
-    def test_failed_multiple(self):
-        email = 'test@example.com'
-        password = 'secret1234'
-        Member.objects.create(email=email)
-
-        for i in range(0, 11):
-            response = self.client.post(
-                reverse('user-user-create'),
-                {'email': email, 'password': password, 'email_confirmation': email}
-            )
-
-        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-
-    def test_require_confirmation(self):
-        self.settings.confirm_signup = True
-        self.settings.save()
-
-        email = 'test@example.com'
-        password = 'test@example.com'
-
-        response = self.client.post(
-            reverse('user-user-create'),
-            {'email': email, 'password': password, 'email_confirmation': email}
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['token'][0], 'Signup requires a confirmation token')
-
-
-@override_settings(SEND_WELCOME_MAIL=True)
 class ConfirmSignUpTestCase(BluebottleTestCase):
     def setUp(self):
         self.settings = MemberPlatformSettings.load()
@@ -541,7 +402,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         self.assertEqual(self.member.last_name, 'de Test')
 
         profile_response = self.client.get(
-            reverse('user-current'),
+            reverse('current-member-detail'),
             HTTP_AUTHORIZATION='JWT {}'.format(response.json()['data']['attributes']['jwt-token'])
         )
         self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
@@ -655,7 +516,7 @@ class EmailSetTest(BluebottleTestCase):
             email='user@example.com'
         )
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.current_user_url = reverse('user-current')
+        self.current_user_url = reverse('current-member-detail')
 
         self.set_email_url = reverse('user-set-email')
 
@@ -815,7 +676,7 @@ class PasswordSetTest(BluebottleTestCase):
             email='user@example.com'
         )
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.current_user_url = reverse('user-current')
+        self.current_user_url = reverse('current-member-detail')
         self.set_password_url = reverse('user-set-password')
 
     def test_update_paswword(self):
@@ -936,14 +797,8 @@ class UserLogoutTest(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        self.current_user_url = reverse('user-current')
+        self.current_user_url = reverse('current-member-detail')
         self.logout_url = reverse('user-logout')
-
-    def test_get_profile(self):
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(response.data['email'], self.user.email)
 
     def test_logout(self):
         response = self.client.post(self.logout_url, token=self.user_token)
@@ -959,44 +814,6 @@ class UserLogoutTest(BluebottleTestCase):
     def test_logout_wrong_token(self):
         response = self.client.post(self.logout_url, token=self.user_token + '1234')
         self.assertEqual(response.status_code, 401)
-
-
-class OldUserActivityTest(BluebottleTestCase):
-    def setUp(self):
-        super(OldUserActivityTest, self).setUp()
-
-        self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.user_activity_url = reverse('old-user-activity')
-
-    def test_log_activity(self):
-        data = {'path': '/'}
-        response = self.client.post(self.user_activity_url, data, token=self.user_token)
-        self.assertEqual(response.status_code, 201)
-        data = {'path': '/pages/about'}
-        response = self.client.post(self.user_activity_url, data, token=self.user_token)
-        self.assertEqual(response.status_code, 201)
-        data = {'path': '/initiatives/activities/list'}
-        response = self.client.post(self.user_activity_url, data, token=self.user_token)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(UserActivity.objects.count(), 3)
-
-    def test_log_activity_anonymous(self):
-        data = {'path': '/'}
-        response = self.client.post(self.user_activity_url, data)
-        self.assertEqual(response.status_code, 401)
-
-    def test_log_activity_long_path(self):
-        data = {'path': '/' + ('a' * 300)}
-        response = self.client.post(self.user_activity_url, data, token=self.user_token)
-        self.assertEqual(response.status_code, 201)
-
-        activity = UserActivity.objects.get()
-
-        self.assertEqual(
-            len(activity.path), 200
-        )
-        self.assertTrue(activity.path.startswith('/aaaaaaa'))
 
 
 class UserActivityTest(BluebottleTestCase):
@@ -1132,178 +949,12 @@ class RefreshTokenTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         new_token = response['Refresh-Token']
 
-        response = self.client.get(reverse('user-current'), token=new_token)
+        response = self.client.get(reverse('current-member-detail'), token=new_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()['id'], self.user.pk)
-
-
-class UserAPITestCase(BluebottleTestCase):
-
-    def setUp(self):
-        super().setUp()
-        self.user = BlueBottleUserFactory.create()
-        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
-        self.current_user_url = reverse('user-current')
-        self.segment_type = SegmentTypeFactory.create(required=False)
-        self.segments = SegmentFactory.create_batch(3, segment_type=self.segment_type)
-
-        self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-
-        self.current_user_url = reverse('user-current')
-        self.logout_url = reverse('user-logout')
-
-    def test_get_current_user_no_required_segments(self):
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['required'], [])
-
-    def test_get_current_user_required_location(self):
-        settings = MemberPlatformSettings.load()
-        settings.require_office = True
-        settings.save()
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['required'], ['location'])
-
-    def test_get_current_user_required_fields(self):
-        settings = MemberPlatformSettings.load()
-        settings.require_address = True
-        settings.require_phone_number = True
-        settings.require_birthdate = True
-        settings.save()
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertTrue('birthdate' in response.json()['required'])
-        self.assertTrue('phone_number' in response.json()['required'])
-        self.assertTrue('address' in response.json()['required'])
-
-        self.user.birthdate = date(1980, 1, 14)
-        self.user.phone_number = '+310612345678'
-        self.user.place = PlaceFactory.create(
-            street="test straat",
-            street_number=12,
-            postal_code='1024 BZ',
-            locality="Amsterdam",
-        )
-        self.user.save()
-
-        response = self.client.get(self.current_user_url, token=self.user_token)
-
-        self.assertEqual(response.json()['required'], [])
-
-    def test_get_current_user_required_location_set(self):
-        settings = MemberPlatformSettings.load()
-        settings.require_office = True
-        settings.save()
-        self.user.location = LocationFactory.create()
-        self.user.save()
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['required'], [])
-
-    def test_get_current_user_with_required_segments(self):
-        self.segment_type.required = True
-        self.segment_type.save()
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
-
-    def test_get_current_user_with_required_segments_defined(self):
-        self.segment_type.required = True
-        self.segment_type.save()
-        self.user.segments.add(self.segments[0], through_defaults={'verified': True})
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['required'], [])
-
-    def test_get_current_user_with_unverified_required_segments(self):
-        self.segment_type.required = True
-        self.segment_type.needs_verification = True
-        self.segment_type.save()
-        self.user.segments.add(self.segments[0], through_defaults={'verified': False})
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
-
-    def test_get_current_user_with_unverified_required_location(self):
-        MemberPlatformSettings.objects.update_or_create(
-            require_office=True,
-            verify_office=True,
-        )
-        self.user.location = LocationFactory.create()
-        self.user.location_verified = False
-        self.user.save()
-
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['required'], ['location'])
-
-        self.user.location_verified = True
-        self.user.save()
-
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['required'], [])
-
-    def test_get_current_user_with_initiatives(self):
-        InitiativeFactory.create(
-            owner=self.user
-        )
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['has_initiatives'], True)
-
-    def test_get_current_user_is_manager(self):
-        initiative = InitiativeFactory.create()
-        initiative.activity_managers.add(self.user)
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['has_initiatives'], True)
-
-    def test_get_current_user_with_activity(self):
-        DeedFactory.create(
-            owner=self.user
-        )
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['has_initiatives'], True)
-
-    def test_get_current_user_without_initiatives(self):
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['has_initiatives'], False)
-
-    def test_get_current_user_no_hours_spent(self):
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['hours_spent'], 0)
-        self.assertEqual(response.json()['hours_planned'], 0)
-
-    def test_get_current_user_hours_spent(self):
-        activity = DateActivityFactory.create(
-            initiative=InitiativeFactory.create(status="approved")
-        )
-        activity.states.publish(save=True)
-        slot1 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=now() - timedelta(days=1),
-            duration=timedelta(hours=3)
-        )
-        slot2 = DateActivitySlotFactory.create(
-            activity=activity,
-            start=now() + timedelta(days=1),
-            duration=timedelta(hours=2)
-        )
-
-        registration = DateRegistrationFactory.create(
-            activity=activity,
-            user=self.user
-        )
-
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot1
-        )
-
-        DateParticipantFactory.create(
-            registration=registration,
-            slot=slot2
-        )
-
-        response = self.client.get(self.current_user_url, token=self.user_token)
-        self.assertEqual(response.json()['hours_spent'], 3)
-        self.assertEqual(response.json()['hours_planned'], 2)
+        self.assertEqual(response.json()['data']['id'], str(self.user.pk))
 
 
 class MemberSettingsAPITestCase(BluebottleTestCase):
-
     def setUp(self):
         super().setUp()
         self.user = BlueBottleUserFactory.create()
@@ -1356,7 +1007,6 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
 
 
 class CurrentMemberAPITestCase(APITestCase):
-
     def setUp(self):
         super().setUp()
         self.user = BlueBottleUserFactory.create()
@@ -1984,3 +1634,66 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
         )
         # Behavior depends on implementation - should probably fail
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class AuthenticationMethodListAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.url = reverse('authentication-method-list')
+
+        self.password = PasswordAuthentication.objects.create(
+            account_creation_rules='whitelist', email_domains=['example.com']
+        )
+        self.facebook = FacebookAuthentication.objects.create(secret='fb-secret', client_id='fb-client')
+        self.google = GoogleAuthentication.objects.create(
+            secret='google-secret', client_id='google-client', enabled=False
+        )
+        self.saml = SAMLAuthentication.objects.create(
+            entity_id='https://idp.example.com',
+            single_sign_on_url='https://idp.example.com/sso',
+            certificate='cert',
+        )
+
+    def test_list(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = {item['type']: item for item in response.json()['data']}
+        self.assertEqual(
+            set(data.keys()),
+            {
+                'authentication-methods/password',
+                'authentication-methods/facebook',
+                'authentication-methods/saml',
+            }
+        )
+
+        password = data['authentication-methods/password']
+        self.assertEqual(password['id'], str(self.password.pk))
+        self.assertEqual(password['attributes']['account-creation-rules'], 'whitelist')
+        self.assertEqual(password['attributes']['email-domains'], ['example.com'])
+
+        self.assertEqual(data['authentication-methods/facebook']['attributes']['client-id'], 'fb-client')
+        self.assertEqual(
+            data['authentication-methods/saml']['attributes']['single-sign-on-url'],
+            'https://idp.example.com/sso'
+        )
+
+    def test_disabled_methods_excluded(self):
+        self.facebook.enabled = False
+        self.facebook.save()
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ids = {item['id'] for item in response.json()['data']}
+        self.assertEqual(ids, {str(self.password.pk), str(self.saml.pk)})
+
+    def test_secrets_not_exposed(self):
+        response = self.client.get(self.url)
+        content = response.content.decode()
+        self.assertNotIn('fb-secret', content)
+        self.assertNotIn('google-secret', content)
+        self.assertNotIn('secret', content)
+        self.assertNotIn('certificate', content)

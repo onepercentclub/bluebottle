@@ -2,15 +2,15 @@ import uuid
 from builtins import object
 
 import passwordmeter
-from axes.handlers.proxy import AxesProxyHandler
 from django import forms
-from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
-from rest_framework_json_api.serializers import Serializer, ModelSerializer, ResourceRelatedField
+from rest_framework_json_api.serializers import (
+    Serializer, ModelSerializer, ResourceRelatedField, PolymorphicModelSerializer
+)
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
@@ -20,8 +20,11 @@ from bluebottle.files.serializers import ImageField
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import OldPlaceSerializer
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment, Member
-from bluebottle.organizations.serializers import OrganizationSerializer
+from bluebottle.members.models import (
+    MemberPlatformSettings, UserActivity, UserSegment, Member,
+    AuthenticationMethod, PasswordAuthentication, FacebookAuthentication,
+    GoogleAuthentication, SAMLAuthentication
+)
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.time_based.models import Skill
@@ -266,43 +269,6 @@ class UserPermissionsSerializer(serializers.Serializer):
         ]
 
 
-class CurrentUserSerializer(BaseUserPreviewSerializer):
-    """
-    Serializer for the current authenticated user. This is the same as the
-    serializer for the member preview with the
-    addition of id_for_ember.
-    """
-    # This is a hack to work around an issue with Ember-Data keeping the id as
-    # 'current'.
-    id_for_ember = serializers.IntegerField(source='id', read_only=True)
-    full_name = serializers.CharField(source='get_full_name', read_only=True)
-    can_pledge = serializers.BooleanField(read_only=True)
-    can_do_bank_transfer = serializers.BooleanField(read_only=True)
-    permissions = UserPermissionsSerializer(read_only=True)
-    organization = OrganizationSerializer(
-        read_only=True, source='partner_organization'
-    )
-    segments = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Segment.objects
-    )
-    has_initiatives = serializers.SerializerMethodField()
-
-    def get_has_initiatives(self, obj):
-        return obj.is_initiator
-
-    class Meta(object):
-        model = BB_USER_MODEL
-        fields = UserPreviewSerializer.Meta.fields + (
-            'id_for_ember', 'primary_language',
-            'email', 'full_name', 'phone_number',
-            'last_login', 'date_joined', 'location',
-            'verified', 'permissions', 'matching_options_set',
-            'organization', 'segments', 'required', 'has_initiatives',
-            'hours_spent', 'hours_planned',
-            'can_pledge', 'can_do_bank_transfer'
-        )
-
-
 class OldSegmentSerializer(serializers.ModelSerializer):
     type = SegmentTypeSerializer()
 
@@ -318,8 +284,6 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     Serializer for a member's public profile.
     """
     email = serializers.CharField(read_only=True)
-    url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail',
-                                               lookup_field='pk')
     date_joined = serializers.DateTimeField(read_only=True)
 
     full_name = serializers.CharField(source='get_full_name', read_only=True)
@@ -365,26 +329,12 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = (
-            'id', 'email', 'url', 'full_name', 'short_name', 'initials',
+            'id', 'email', 'full_name', 'short_name', 'initials',
             'primary_language', 'about_me', 'location', 'avatar', 'date_joined',
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
             'subscribed', 'segments', 'can_pledge', 'can_do_bank_transfer',
             'translate_user_content',
-        )
-
-
-class OldUserActivitySerializer(serializers.ModelSerializer):
-    """
-    Serializer for user activity (log paths)
-    """
-    path = TruncatedCharField(length=200, required=False)
-
-    class Meta(object):
-        model = UserActivity
-        fields = (
-            'id',
-            'path',
         )
 
 
@@ -455,7 +405,7 @@ class UserDataExportSerializer(UserProfileSerializer):
         model = BB_USER_MODEL
         fields = (
             'id', 'email', 'location', 'birthdate',
-            'url', 'full_name', 'short_name', 'initials',
+            'full_name', 'short_name', 'initials',
             'gender', 'first_name', 'last_name', 'phone_number',
             'primary_language', 'about_me', 'location', 'avatar',
             'date_joined', 'website', 'twitter', 'facebook',
@@ -653,82 +603,6 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
         resource_name = 'auth/signup'
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating users. This can only be used for creating
-    users (POST) and should not be used for listing,
-    editing or viewing users.
-    """
-    email = serializers.EmailField(
-        max_length=254,
-        validators=[
-            validators.UniqueValidator(
-                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
-            )
-        ]
-    )
-    email_confirmation = serializers.EmailField(
-        label=_('email_confirmation'), max_length=254, required=False)
-    password = PasswordField(required=True, max_length=128)
-    token = serializers.CharField(required=False, max_length=128)
-    jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
-    primary_language = serializers.CharField(required=False)
-
-    @property
-    def errors(self):
-        errors = super(UserCreateSerializer, self).errors
-
-        if 'email' in errors and 'email' in self.data and errors['email'][0].code == 'unique':
-            user = self.Meta.model.objects.get(email__iexact=self.data['email'])
-
-            conflict = {
-                'email': user.email,
-                'id': user.id
-            }
-
-            # We assume if they have a social auth associated then they use it
-            if user.social_auth.count() > 0:
-                social_auth = user.social_auth.all()[0]
-                conflict['provider'] = social_auth.provider
-                conflict['type'] = 'social'
-            else:
-                conflict['type'] = 'email'
-
-            errors[
-                settings.REST_FRAMEWORK.get(
-                    'NON_FIELD_ERRORS_KEY', 'non_field_errors')
-            ] = [conflict]
-
-            request = self.context['request']
-            AxesProxyHandler.user_login_failed(self, {}, request)
-            if getattr(request, 'axes_locked_out', False):
-                raise exceptions.Throttled(
-                    600, 'Too many failed registration attempts.'
-                )
-            del errors['email']
-
-        return errors
-
-    def validate(self, data):
-        if 'email_confirmation' in data:
-            if data['email'] != data['email_confirmation']:
-                raise serializers.ValidationError(_('Email confirmation mismatch'))
-            del data['email_confirmation']
-
-        settings = MemberPlatformSettings.load()
-
-        if settings.confirm_signup:
-            raise serializers.ValidationError(
-                {'token': _('Signup requires a confirmation token')})
-        data['password'] = make_password(data['password'])
-        return data
-
-    class Meta(object):
-        model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'email_confirmation',
-                  'email', 'password', 'token', 'jwt_token', 'primary_language')
-
-
 class PasswordResetSerializer(serializers.Serializer):
     """
     Password reset request serializer that uses the email validation from the
@@ -905,14 +779,6 @@ class PasswordSetSerializer(serializers.Serializer):
         fields = ('new_password1', 'new_password2')
 
 
-class UserVerificationSerializer(serializers.Serializer):
-    token = serializers.CharField()
-    id = serializers.SerializerMethodField()
-
-    def get_id(self, obj):
-        return self.context['request'].user.id
-
-
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
     read_only_fields = serializers.SerializerMethodField()
@@ -975,11 +841,6 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
         )
 
 
-class TokenLoginSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField(required=True)
-    token = serializers.CharField(required=True)
-
-
 class CaptchaSerializer(serializers.Serializer):
     token = CaptchaField(required=True)
     id = serializers.SerializerMethodField()
@@ -992,3 +853,87 @@ class CaptchaSerializer(serializers.Serializer):
 
     class JSONAPIMeta:
         resource_name = 'captcha-tokens'
+
+
+class BaseAuthenticationMethodSerializer(ModelSerializer):
+    """
+    Base serializer for authentication methods.
+
+    Only expose fields that are safe for anonymous users (the login page needs them).
+    Secrets (OAuth client secrets, SAML attribute mappings, etc.) are never exposed.
+    """
+    class Meta:
+        model = AuthenticationMethod
+        fields = ('id', )
+
+
+class PasswordAuthenticationSerializer(BaseAuthenticationMethodSerializer):
+    class Meta(BaseAuthenticationMethodSerializer.Meta):
+        model = PasswordAuthentication
+        fields = BaseAuthenticationMethodSerializer.Meta.fields + (
+            'confirm_signup',
+            'account_creation_rules',
+            'email_domains',
+            'request_access_method',
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods/password'
+
+
+class FacebookAuthenticationSerializer(BaseAuthenticationMethodSerializer):
+    class Meta(BaseAuthenticationMethodSerializer.Meta):
+        model = FacebookAuthentication
+        fields = BaseAuthenticationMethodSerializer.Meta.fields + ('client_id', )
+
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods/facebook'
+
+
+class GoogleAuthenticationSerializer(BaseAuthenticationMethodSerializer):
+    class Meta(BaseAuthenticationMethodSerializer.Meta):
+        model = GoogleAuthentication
+        fields = BaseAuthenticationMethodSerializer.Meta.fields + ('client_id', )
+
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods/google'
+
+
+class SAMLAuthenticationSerializer(BaseAuthenticationMethodSerializer):
+    class Meta(BaseAuthenticationMethodSerializer.Meta):
+        model = SAMLAuthentication
+        fields = BaseAuthenticationMethodSerializer.Meta.fields + (
+            'entity_id',
+            'single_sign_on_url',
+            'admin_login_enabled',
+            'organization'
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods/saml'
+        included_resources = ['organization']
+
+    included_serializers = {
+        'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+    }
+
+
+class AuthenticationMethodSerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [
+        PasswordAuthenticationSerializer,
+        FacebookAuthenticationSerializer,
+        GoogleAuthenticationSerializer,
+        SAMLAuthenticationSerializer,
+    ]
+
+    class Meta:
+        model = AuthenticationMethod
+        fields = ('id', 'enabled')
+
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods'
+        included_resources = ['organization']
+
+    included_serializers = {
+        'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+    }

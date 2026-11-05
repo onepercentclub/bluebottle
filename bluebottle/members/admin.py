@@ -140,12 +140,15 @@ class AuthenticationMethodAdmin(PolymorphicParentModelAdmin):
         GoogleAuthentication,
         SAMLAuthentication
     )
-    list_display = ['polymorphic_ctype', 'enabled']
+    list_display = ['authentication_method', 'enabled']
+
+    def authentication_method(self, obj):
+        return obj.get_real_instance().method
 
 
 class AuthenticationMethodChildAdmin(PolymorphicChildModelAdmin):
     base_model = AuthenticationMethod
-    list_display = ['polymorphic_ctype', 'enabled']
+    list_display = ['method', 'enabled']
 
 
 @admin.register(PasswordAuthentication)
@@ -156,7 +159,7 @@ class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
 
 
 @admin.register(FacebookAuthentication)
-class FacwbookAuthenticationAdmin(AuthenticationMethodChildAdmin):
+class FacebookAuthenticationAdmin(AuthenticationMethodChildAdmin):
     model = FacebookAuthentication
     fields = ['enabled', 'secret', 'client_id']
 
@@ -178,7 +181,7 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
     inlines = [SAMLSegmentMappingInline]
 
     fieldsets = (
-        ('Settings', {'fields': ['enabled', 'admin_login_enabled', 'provision', 'debug', 'strict']}),
+        ('Settings', {'fields': ['enabled', 'organization', 'admin_login_enabled', 'provision', 'debug', 'strict']}),
         ('SAML conffiguration', {
             'fields': [
                 'metadata_file', 'entity_id', 'local_entity_id', 'certificate', 'single_sign_on_url', 'name_id_format'

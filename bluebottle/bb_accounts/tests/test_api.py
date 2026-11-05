@@ -3,12 +3,9 @@ from future import standard_library
 standard_library.install_aliases()
 
 from builtins import str
-import json
 import re
-import urllib.parse
 from unittest.mock import patch
 
-import httmock
 
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
@@ -63,7 +60,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.user_with_partner_organization.partner_organization = self.organization
         self.user_with_partner_organization.save()
 
-        self.current_user_api_url = reverse('user-current')
         self.profile_url = reverse('member-profile-detail', args=(self.user_1.pk,))
         self.profile_url_with_partner_organization = reverse(
             'member-profile-detail', args=(self.user_with_partner_organization.pk,)
@@ -102,21 +98,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
     def test_user_profile_unauthenticated(self):
         response = self.client.get(self.profile_url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_profile_detail_unauthenticated(self):
-        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
-
-        response = self.client.get(user_profile_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_profile_detail_unauthenticated_closed(self):
-        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
-        MemberPlatformSettings.objects.update_or_create(
-            closed=True,
-        )
-
-        response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_private_user_profile_returned_fields(self):
@@ -380,36 +361,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(self.user_1.location, new_location)
         self.assertTrue(self.user_1.location_verified)
 
-    def test_unauthenticated_user(self):
-        """
-        Test retrieving the currently logged in user while not logged in.
-        """
-        # Test unauthenticated user doesn't return 500 error.
-        response = self.client.get(self.current_user_api_url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
-                         response.data)
-
-    def test_current_user(self):
-        """
-        Test retrieving the currently logged in user after login.
-        """
-        response = self.client.get(self.current_user_api_url, HTTP_AUTHORIZATION=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['first_name'], self.user_1.first_name)
-        self.assertEqual(response.data['last_name'], self.user_1.first_name)
-
-        self.assertEqual(response.data['permissions']['project_list'],
-                         {u'GET': True, u'OPTIONS': True, u'POST': True})
-        self.assertEqual(response.data['permissions']['homepage'],
-                         {u'GET': True, u'OPTIONS': True})
-        self.client.logout()
-
-    def test_current_user_url_variations(self):
-        response = self.client.get('/api/users/current', HTTP_AUTHORIZATION=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        response = self.client.get('/api/users/current/', HTTP_AUTHORIZATION=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-
     def test_logout_authenticated(self):
         """
         Test logout of authenticated user
@@ -425,17 +376,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         response = self.client.post(reverse('user-logout'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
-
-    def test_current_user_organization(self):
-        """
-        Test retrieving the currently logged in user with partner organization
-        """
-        organization = OrganizationFactory.create(name='GoodUp')
-        self.user_1.partner_organization = organization
-        self.user_1.save()
-        response = self.client.get(self.current_user_api_url, HTTP_AUTHORIZATION=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['organization']['name'], 'GoodUp')
 
     @override_settings(SEND_WELCOME_MAIL=True)
     def test_user_create(self):
@@ -749,69 +689,6 @@ class AuthLocaleMiddlewareTest(BluebottleTestCase):
         self.assertTrue(response.status_code, 200)
 
 
-@httmock.urlmatch(netloc='www.google.com', path='/recaptcha/api/siteverify')
-def captcha_mock(url, request):
-    data = urllib.parse.parse_qs(request.body)
-    if data.get('response')[0] == 'test-token':
-        return json.dumps({'success': True})
-    else:
-        return {'content': json.dumps({'success': False}), 'status_code': 401}
-
-
-@override_settings(RECAPTCHA_SECRET='test-secret')
-class UserVerificationTest(BluebottleTestCase):
-    """
-    Test user verification view
-    """
-
-    def setUp(self):
-        super(UserVerificationTest, self).setUp()
-        self.user = BlueBottleUserFactory.create()
-
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.verify_user_url = reverse('user-verification')
-
-    def test_verify(self):
-        with httmock.HTTMock(captcha_mock):
-            response = self.client.post(
-                self.verify_user_url,
-                {'token': 'test-token'},
-                HTTP_AUTHORIZATION=self.user_token
-            )
-            self.assertEqual(response.status_code, 201)
-            self.user.refresh_from_db()
-            self.assertTrue(self.user.verified)
-            self.assertEqual(response.data, {'token': u'test-token', 'id': self.user.id})
-
-    def test_verify_unauthenticated(self):
-        with httmock.HTTMock(captcha_mock):
-            response = self.client.post(
-                self.verify_user_url,
-                {'token': 'test-token'},
-            )
-
-            self.assertEqual(response.status_code, 401)
-
-    def test_verify_no_token(self):
-        with httmock.HTTMock(captcha_mock):
-            response = self.client.post(
-                self.verify_user_url,
-                HTTP_AUTHORIZATION=self.user_token
-            )
-
-            self.assertEqual(response.status_code, 400)
-
-    def test_verify_incorrect_token(self):
-        with httmock.HTTMock(captcha_mock):
-            response = self.client.post(
-                self.verify_user_url,
-                {'token': 'incorrect-token'},
-                HTTP_AUTHORIZATION=self.user_token
-            )
-
-            self.assertEqual(response.status_code, 403)
-
-
 class MemberDetailViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
@@ -832,7 +709,6 @@ class MemberDetailViewAPITestCase(APITestCase):
 
 
 class LoginJsonApiTestCase(BluebottleTestCase):
-
     def setUp(self):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory(password='psssssst')
@@ -919,7 +795,6 @@ class LoginJsonApiTestCase(BluebottleTestCase):
 
 
 class UserSignupTokenApiTestCase(BluebottleTestCase):
-
     def setUp(self):
         self.client = JSONAPITestClient()
         self.url = reverse('user-signup-token')

@@ -1,14 +1,13 @@
 
 from django.urls import path
 from django.urls import re_path
-from bluebottle.bb_accounts.views import UserActivityDetail, OldUserActivityDetail
 from bluebottle.bb_accounts.views import (
-    UserProfileDetail, CurrentUser, CurrentMemberDetail, UserCreate,
-    PasswordReset, PasswordResetConfirm, UserVerification, UserDataExport, EmailSetView,
-    PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
+    UserActivityDetail, CurrentMemberDetail,
+    PasswordReset, PasswordResetConfirm, UserDataExport, EmailSetView,
+    PasswordSetView, Logout, MemberDetail, SignUpToken,
     SignUpTokenConfirmation, CaptchaVerification,
     PasswordStrengthDetail, MemberSignUp,
-    MemberProfileDetail, AvatarImage
+    MemberProfileDetail, AvatarImage, AuthenticationMethodList
 )
 
 # Public User API:
@@ -28,10 +27,7 @@ from bluebottle.bb_accounts.views import (
 urlpatterns = [
     path('signup-token', SignUpToken.as_view(), name='user-signup-token'),
     path('signup-token/confirm', SignUpTokenConfirmation.as_view(), name='user-signup-token-confirm'),
-    path('', UserCreate.as_view(), name='user-user-create'),
-    re_path(r'^current/?$', CurrentUser.as_view(), name='user-current'),
     path('captcha', CaptchaVerification.as_view(), name='captcha-verification'),
-    path('activities/', OldUserActivityDetail.as_view(), name='old-user-activity'),
     path('user-activities/', UserActivityDetail.as_view(), name='user-activity'),
     path('email', EmailSetView.as_view(), name='user-set-email'),
     path('password', PasswordSetView.as_view(), name='user-set-password'),
@@ -43,13 +39,8 @@ urlpatterns = [
     path('member/profile/<int:pk>', MemberProfileDetail.as_view(), name='member-profile-detail'),
     path('member/<int:pk>', MemberDetail.as_view(), name='member-detail'),
     path(
-        'profiles/<int:pk>', UserProfileDetail.as_view(),
-        name='user-profile-detail'
-    ),
-    path('tokenlogin', TokenLogin.as_view(), name='token-login'),
-    path(
-        'verification/', UserVerification.as_view(),
-        name='user-verification'
+        'authentication-methods', AuthenticationMethodList.as_view(),
+        name='authentication-method-list'
     ),
     path(
         'export/', UserDataExport.as_view(),

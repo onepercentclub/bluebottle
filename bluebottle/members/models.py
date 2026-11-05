@@ -601,6 +601,14 @@ class UserActivity(models.Model):
 class AuthenticationMethod(PolymorphicModel):
     enabled = models.BooleanField(_('Enabled'), default=True)
 
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods'
+
+    method = None
+
+    def __str__(self):
+        return _("{method} authentication").format(method=self.method)
+
 
 class PasswordAuthentication(AuthenticationMethod):
     ACCOUNT_CREATION_RULES = (
@@ -644,20 +652,36 @@ class PasswordAuthentication(AuthenticationMethod):
         default='email',
     )
 
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods/password'
+
+    method = _('Email/Password')
+
 
 class FacebookAuthentication(AuthenticationMethod):
     secret = models.CharField(_('Secret'))
     client_id = models.CharField(_('Client id'))
+
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods/facebook'
+
+    method = 'Facebook'
 
 
 class GoogleAuthentication(AuthenticationMethod):
     secret = models.CharField(_('Secret'))
     client_id = models.CharField(_('Client id'))
 
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods/google'
+
+    method = 'Google'
+
 
 class SAMLAuthentication(AuthenticationMethod):
     entity_id = models.CharField(_('Entity id'))
     local_entity_id = models.CharField(_('Local entity id'))
+    organization = models.ForeignKey('organizations.Organization', on_delete=models.CASCADE)
 
     certificate = models.CharField(_('x509 certificate'))
     single_sign_on_url = models.CharField(_('Single sign on url'))
@@ -677,6 +701,10 @@ class SAMLAuthentication(AuthenticationMethod):
     debug = models.BooleanField(_('Debug'), default=True)
     strict = models.BooleanField(_('Strict'), default=True)
 
+
+    class JSONAPIMeta:
+        resource_name = 'authentication-methods/saml'
+
     def save(self, *args, **kwargs):
         if not self.metadata_file._committed:
             __import__('ipdb').set_trace()
@@ -692,8 +720,9 @@ class SAMLAuthentication(AuthenticationMethod):
         super().save(*args, **kwargs)
 
 
-    def from_metadata(self, metadata):
-        __import__('ipdb').set_trace()
+    @property
+    def method(self):
+        return _('SAML for {organization}'.format(organization=self.organization.name))
 
 
 class SAMLSegmentMapping(models.Model):

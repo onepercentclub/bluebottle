@@ -18,7 +18,7 @@ class UserTokenTestCase(BluebottleTestCase):
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
     def user_last_seen(self):
-        self.client.get(reverse('user-current'), token=self.user_token)
+        self.client.get(reverse('current-member-detail'), token=self.user_token)
         self.user.refresh_from_db()
         return self.user.last_seen
 

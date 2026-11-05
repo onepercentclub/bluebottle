@@ -51,6 +51,7 @@ from bluebottle.time_based.states import (
     DateActivitySlotStateMachine
 )
 from bluebottle.time_based.states.participants import (
+    DeadlineParticipantStateMachine,
     RegistrationParticipantStateMachine,
 )
 from bluebottle.time_based.states.slots import (
@@ -604,6 +605,18 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
     ]
 
 
+succeed_deadline_participants_effects = [
+    RelatedTransitionEffect(
+        'accepted_participants',
+        DeadlineParticipantStateMachine.succeed,
+    ),
+    RelatedTransitionEffect(
+        'pending_durations',
+        TimeContributionStateMachine.succeed,
+    ),
+]
+
+
 @register(DeadlineActivity)
 class DeadlineActivityTriggers(RegistrationActivityTriggers):
     triggers = RegistrationActivityTriggers.triggers + [
@@ -619,6 +632,14 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
                     conditions=[is_full, registration_deadline_is_not_passed],
                 ),
             ],
+        ),
+        TransitionTrigger(
+            RegistrationActivityStateMachine.succeed,
+            effects=succeed_deadline_participants_effects,
+        ),
+        TransitionTrigger(
+            RegistrationActivityStateMachine.succeed_manually,
+            effects=succeed_deadline_participants_effects,
         ),
         TransitionTrigger(
             RegistrationActivityStateMachine.approve,

@@ -644,6 +644,10 @@ class DeadlineActivity(RegistrationActivity):
     def required_fields(self):
         return super().required_fields + ["duration"]
 
+    @property
+    def pending_durations(self):
+        return self.durations.filter(status="new", contributor__status="succeeded")
+
     class Meta:
         verbose_name = _("Flexible activity")
         verbose_name_plural = _("Flexible activities")

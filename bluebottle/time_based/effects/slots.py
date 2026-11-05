@@ -111,8 +111,11 @@ class CancelUpcomingSlotsEffect(
     RelatedTransitionEffect('upcoming_slots', DateActivitySlotStateMachine.auto_cancel)
 ):
     def pre_save(self, effects):
-        self.instances = [
-            slot for slot in self.instances
-            if not any(effect.instance == slot for effect in effects)
+        # Cancelling the last slot cancels the activity before that slot is saved,
+        # so its database copy here is still open. Skip it.
+        cancelled = [
+            effect.instance for effect in effects
+            if getattr(effect.instance, 'status', None) == 'cancelled'
         ]
+        self.instances = [slot for slot in self.instances if slot not in cancelled]
         super().pre_save(effects)

@@ -1117,6 +1117,8 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         )
 
         self.assertTrue("Session 1" in mail.outbox[1].body)
+        self.slot.refresh_from_db()
+        self.assertEqual(self.slot.title, "Session 1")
 
     def test_cancel_multiple_slots(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity)

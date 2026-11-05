@@ -43,8 +43,9 @@ class ThankYouMessageMixin:
         raise NotImplementedError
 
     def get_succeeded_contributors(self, activity):
+        from bluebottle.activities.models import Contributor, Organizer
         from bluebottle.members.models import Member
-        return list(Member.objects.filter(
-            contributor__activity=activity,
-            contributor__contributions__status='succeeded',
-        ).distinct())
+        contributors = Contributor.objects.filter(
+            activity=activity, contributions__status='succeeded'
+        ).not_instance_of(Organizer)
+        return list(Member.objects.filter(contributor__in=contributors).distinct())

@@ -1,10 +1,13 @@
 import json
 from datetime import date, timedelta
 
+from django.contrib.admin import site
 from django.core import mail
 from django.utils.timezone import now
 
+from bluebottle.collect.models import CollectActivity
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.deeds.models import Deed
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -13,6 +16,13 @@ from bluebottle.initiatives.tests.factories import (
 from bluebottle.notifications.models import ActivityMessageTemplate
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import (
+    DateActivity,
+    DeadlineActivity,
+    PeriodicActivity,
+    RegisteredDateActivity,
+    ScheduleActivity,
+)
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -81,6 +91,11 @@ class SharedThankYouTests:
         self.succeed()
 
         self.assertEqual(len(self.thank_you_mails()), 0)
+
+    def test_owner_not_thanked(self):
+        self.succeed()
+
+        self.assertEqual(len(self.thank_you_mails(self.owner)), 0)
 
 
 class DeadlineThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
@@ -387,3 +402,17 @@ class CollectThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'succeeded')
         self.assertEqual(len(self.thank_you_mails()), 1)
+
+
+class ThankYouAdminTestCase(BluebottleTestCase):
+    def registration_fields(self, model):
+        return site._registry[model].get_registration_fields(None, None)
+
+    def test_field_shown_for_activities_with_thank_you(self):
+        for model in (
+            CollectActivity, Deed, DateActivity, DeadlineActivity, PeriodicActivity, ScheduleActivity
+        ):
+            self.assertIn('send_thank_you_message', self.registration_fields(model))
+
+    def test_field_not_shown_for_other_activities(self):
+        self.assertNotIn('send_thank_you_message', self.registration_fields(RegisteredDateActivity) or [])

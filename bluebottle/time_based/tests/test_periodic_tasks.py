@@ -29,6 +29,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleParticipantFactory,
+    ScheduleRegistrationFactory,
     ScheduleSlotFactory,
     TeamFactory,
     TeamMemberFactory,
@@ -41,6 +42,7 @@ from bluebottle.time_based.tasks import (
     schedule_activity_tasks,
     schedule_slot_tasks,
     team_schedule_slot_tasks,
+    time_contribution_tasks,
 )
 from bluebottle.time_based.triggers import slots
 
@@ -1068,3 +1070,93 @@ class ScheduleActivityTestCase(BluebottleTestCase):
         self.assertEqual(self.activity.status, "succeeded")
         self.assertEqual(self.participant.status, "scheduled")
         self.assertEqual(self.participant.contributions.get().status, "succeeded")
+
+
+class UnscheduledContributionsTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.initiative = InitiativeFactory.create(status="approved")
+
+    def run_tasks(self, when, *tasks):
+        with mock.patch.object(timezone, "now", return_value=when):
+            for task in tasks:
+                task()
+
+    def create_activity(self, team_activity):
+        activity = ScheduleActivityFactory.create(
+            initiative=self.initiative,
+            team_activity=team_activity,
+            review=False,
+            registration_deadline=None,
+            duration=timedelta(hours=4),
+            deadline=(now() + timedelta(days=30)).date(),
+        )
+        activity.states.publish(save=True)
+        return activity
+
+    def create_team_participant(self):
+        team = TeamFactory.create(activity=self.create_activity("teams"))
+        return TeamMemberFactory.create(team=team).participants.get()
+
+    def contribution(self, participant):
+        return participant.contributions.get(timecontribution__contribution_type="period")
+
+    def schedule(self, slot, start):
+        slot.start = start
+        slot.duration = timedelta(hours=4)
+        slot.save()
+
+    def test_unscheduled_team_member_stays_new(self):
+        participant = self.create_team_participant()
+        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(self.contribution(participant).status, "new")
+
+        self.run_tasks(now() + timedelta(days=1), time_contribution_tasks)
+
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(self.contribution(participant).status, "new")
+
+    def test_unscheduled_individual_stays_new(self):
+        user = BlueBottleUserFactory.create()
+        participant = ScheduleRegistrationFactory.create(
+            activity=self.create_activity("individuals"), user=user, as_user=user
+        ).participants.get()
+        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(self.contribution(participant).status, "new")
+
+        self.run_tasks(now() + timedelta(days=1), time_contribution_tasks)
+
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(self.contribution(participant).status, "new")
+
+    def test_scheduling_team_in_future_resets_succeeded_contribution(self):
+        participant = self.create_team_participant()
+        contribution = self.contribution(participant)
+        contribution.status = "succeeded"
+        contribution.save()
+
+        self.schedule(participant.slot, now() + timedelta(days=10))
+
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, "scheduled")
+        self.assertEqual(self.contribution(participant).status, "new")
+
+        self.run_tasks(now() + timedelta(days=1), time_contribution_tasks)
+
+        self.assertEqual(self.contribution(participant).status, "new")
+
+    def test_scheduled_team_member_succeeds_when_slot_finishes(self):
+        participant = self.create_team_participant()
+        self.schedule(participant.slot, now() + timedelta(days=1))
+
+        self.run_tasks(
+            now() + timedelta(days=2),
+            team_schedule_slot_tasks,
+            time_contribution_tasks,
+        )
+
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, "succeeded")
+        self.assertEqual(self.contribution(participant).status, "succeeded")

@@ -104,7 +104,7 @@ class CreateScheduleContributionEffect(Effect):
                     contribution_type=ContributionTypeChoices.period,
                     value=self.instance.activity.duration,
                     start=now(),
-                    end=now() + self.instance.activity.duration,
+                    end=None,
                     status="new",
                 )
 

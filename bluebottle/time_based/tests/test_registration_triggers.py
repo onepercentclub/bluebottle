@@ -211,6 +211,31 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.participant, "succeeded")
         self.assertStatus(self.contribution, "succeeded")
 
+    def test_accept_multiple_slots(self):
+        other_slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=5),
+            title='Second slot',
+        )
+        self.test_initial_review()
+        DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=other_slot,
+            activity=self.activity,
+            as_user=self.user,
+        )
+        mail.outbox = []
+
+        self.registration.states.accept(save=True)
+
+        self.assertEqual(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertIn('You can participate at the place and time indicated below', body)
+        self.assertIn(self.slot.title, body)
+        self.assertIn(other_slot.title, body)
+        self.assertNotIn('will be in contact', body)
+
     def test_accept_past(self):
         super().test_accept()
         self.slot.start = now() - timedelta(days=3)

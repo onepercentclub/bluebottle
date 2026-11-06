@@ -1129,6 +1129,12 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         if effect.instance.slot:
             return effect.instance.slot.status == 'finished'
 
+    def participant_slot_is_not_finished(effect):
+        """
+        Slot has not ended yet
+        """
+        return effect.instance.slot and effect.instance.slot.status != 'finished'
+
     def applicant_is_accepted(effect):
         return effect.instance.registration and effect.instance.registration.status == 'accepted'
 
@@ -1292,6 +1298,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     'registration',
                     RegistrationStateMachine.restore,
                     conditions=[registration_is_withdrawn]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                    conditions=[participant_slot_is_not_finished]
                 ),
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(

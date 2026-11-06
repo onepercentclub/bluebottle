@@ -9,7 +9,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivitySerializer
-from bluebottle.notifications.activity_messages import get_activity_actions
+from bluebottle.notifications.activity_messages import get_customisable_actions
 from bluebottle.notifications.models import NotificationPlatformSettings, ActivityMessageTemplate
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -45,7 +45,7 @@ class ActivityMessageTemplateSerializer(ModelSerializer):
         if self.instance and activity != self.instance.activity:
             raise ValidationError({'activity': _('The activity can not be changed.')})
 
-        if action not in get_activity_actions(activity):
+        if action not in get_customisable_actions(activity):
             raise ValidationError({'action': _('This message can not be customised for this activity.')})
 
         return data

@@ -171,6 +171,10 @@ class CollectActivityTriggers(ActivityTriggers):
             CollectActivityStateMachine.succeed,
             effects=[
                 NotificationEffect(ActivitySucceededNotification),
+                RelatedTransitionEffect(
+                    'active_contributors',
+                    CollectContributorStateMachine.succeed,
+                ),
                 FinishEffect
             ]
         ),

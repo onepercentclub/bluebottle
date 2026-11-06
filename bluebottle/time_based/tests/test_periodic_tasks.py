@@ -24,6 +24,7 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, DateActivitySlotFactory,
     DateRegistrationFactory,
     DeadlineActivityFactory,
+    DeadlineParticipantFactory,
     DeadlineRegistrationFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
@@ -690,6 +691,98 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
             self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'registration_closed')
+
+    def start_in_future(self):
+        self.activity.capacity = 10
+        self.activity.registration_deadline = None
+        self.activity.start = date.today() + timedelta(days=2)
+        self.activity.deadline = date.today() + timedelta(days=20)
+        self.activity.save()
+
+    def join(self):
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user,
+        )
+        return registration.participants.get()
+
+    def add(self):
+        return DeadlineParticipantFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_user=BlueBottleUserFactory.create(is_staff=True),
+        )
+
+    def assert_status(self, participant, participant_status, contribution_status):
+        with LocalTenant(self.tenant, clear_tenant=True):
+            participant.refresh_from_db()
+            contribution = participant.contributions.get()
+        self.assertEqual(participant.status, participant_status)
+        self.assertEqual(contribution.status, contribution_status)
+
+    def test_contribution_succeeds_after_start(self):
+        self.start_in_future()
+        participant = self.join()
+        self.assert_status(participant, 'succeeded', 'new')
+
+        self.run_task(now() + timedelta(days=1))
+        self.assert_status(participant, 'succeeded', 'new')
+
+        self.run_task(now() + timedelta(days=3))
+        self.assert_status(participant, 'succeeded', 'succeeded')
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_contribution_succeeds_after_start_deadline_changed(self):
+        self.start_in_future()
+        participant = self.join()
+
+        self.activity.deadline = date.today() + timedelta(days=25)
+        self.activity.save()
+        self.assertIsNotNone(participant.contributions.get().end)
+
+        self.run_task(now() + timedelta(days=3))
+        self.assert_status(participant, 'succeeded', 'succeeded')
+
+    def test_added_participant_succeeds_after_start(self):
+        self.start_in_future()
+        participant = self.add()
+        self.assert_status(participant, 'accepted', 'new')
+
+        self.run_task(now() + timedelta(days=3))
+        self.assert_status(participant, 'succeeded', 'succeeded')
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_succeed_manually_before_start(self):
+        self.start_in_future()
+        joined = self.join()
+        added = self.add()
+
+        self.activity.states.succeed_manually(save=True)
+
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assert_status(joined, 'succeeded', 'succeeded')
+        self.assert_status(added, 'succeeded', 'succeeded')
+
+    def test_succeed_after_deadline(self):
+        self.start_in_future()
+        joined = self.join()
+        added = self.add()
+
+        self.run_task(now() + timedelta(days=21))
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assert_status(joined, 'succeeded', 'succeeded')
+        self.assert_status(added, 'succeeded', 'succeeded')
 
 
 class SlotActivityPeriodicTasksTest(BluebottleTestCase):

@@ -28,6 +28,7 @@ from bluebottle.time_based.states import (
     ScheduleSlotStateMachine,
 )
 from bluebottle.time_based.states.slots import PeriodicSlotStateMachine
+from bluebottle.time_based.triggers.activities import succeed_deadline_participants_effects
 from bluebottle.time_based.triggers.triggers import has_participants, has_no_participants
 
 
@@ -121,6 +122,22 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
 
     def __str__(self):
         return str(_("Finish an activity when end time has passed."))
+
+
+class DeadlineActivityStartedTask(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return self.model.objects.filter(
+            start__lte=date.today(),
+            status__in=['open', 'full', 'registration_closed', 'succeeded'],
+            contributors__status__in=['accepted', 'succeeded'],
+            contributors__contributions__status='new',
+        ).distinct()
+
+    effects = succeed_deadline_participants_effects
+
+    def __str__(self):
+        return str(_("Succeed participants and their contributions when the activity has started."))
 
 
 class DateActivitySlotReminderTask(ModelPeriodicTask):
@@ -252,6 +269,7 @@ DateActivitySlot.periodic_tasks = [
 TimeContribution.periodic_tasks = [TimeContributionFinishedTask]
 
 DeadlineActivity.periodic_tasks = [
+    DeadlineActivityStartedTask,
     ActivityFinishedTask,
     TimeBasedActivityRegistrationDeadlinePassedTask,
 ]

@@ -234,7 +234,8 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         """ Activity has spots available after this effect """
         if not effect.instance.activity.capacity:
             return False
-        return effect.instance.activity.capacity <= effect.instance.activity.accepted_participants.count() + 1
+        others = effect.instance.activity.accepted_participants.exclude(pk=effect.instance.pk)
+        return effect.instance.activity.capacity <= others.count() + 1
 
     def activity_spots_left(effect):
         """ Activity has spots available after this effect """

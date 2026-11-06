@@ -65,7 +65,7 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.owner = BlueBottleUserFactory.create()
-        self.activity = DeadlineActivityFactory.create(owner=self.owner)
+        self.activity = DeadlineActivityFactory.create(owner=self.owner, review=True)
         self.url = reverse('activity-message-template-list')
 
     def get_data(self, activity=None, **attributes):
@@ -130,6 +130,24 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
 
     def test_create_invalid_action(self):
         self.perform_create(user=self.owner, data=self.get_data(action='unknown'))
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_apply(self):
+        self.perform_create(user=self.owner, data=self.get_data(action='apply'))
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_join_with_review(self):
+        self.perform_create(user=self.owner, data=self.get_data(action='join'))
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_join_without_review(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, review=False)
+        self.perform_create(user=self.owner, data=self.get_data(activity=activity, action='join'))
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_accept_without_review(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, review=False)
+        self.perform_create(user=self.owner, data=self.get_data(activity=activity, action='accept'))
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_create_deed_join(self):
@@ -210,7 +228,7 @@ class ActivityMessageTemplateDetailAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.owner = BlueBottleUserFactory.create()
-        self.activity = DeadlineActivityFactory.create(owner=self.owner)
+        self.activity = DeadlineActivityFactory.create(owner=self.owner, review=True)
         self.model = create_template(self.activity)
         self.url = reverse('activity-message-template-detail', args=(self.model.pk,))
 

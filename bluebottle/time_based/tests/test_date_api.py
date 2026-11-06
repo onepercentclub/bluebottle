@@ -146,6 +146,21 @@ class DateActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestC
 
         self.assertEqual(self.response.json()['data']['attributes']['date-info']['capacity'], 30)
 
+    def test_get_slot_count_single_slot(self):
+        self.perform_get(user=self.model.owner)
+
+        self.assertMeta('slot-count', 1)
+
+    def test_get_slot_count_multiple_slots(self):
+        self.model.slots.get().delete()
+
+        DateActivitySlotFactory.create_batch(3, activity=self.model, status='open')
+        DateActivitySlotFactory.create_batch(2, activity=self.model, status='cancelled')
+
+        self.perform_get(user=self.model.owner)
+
+        self.assertMeta('slot-count', 3)
+
 
 class DateActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):
     url_name = 'date-transition-list'

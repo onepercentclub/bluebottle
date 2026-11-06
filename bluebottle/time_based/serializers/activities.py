@@ -553,6 +553,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
     date_info = serializers.SerializerMethodField()
     location_info = serializers.SerializerMethodField()
+    slot_count = serializers.SerializerMethodField()
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
@@ -606,6 +607,9 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             .filter(status__in=["accepted", "participating"])
             .count()
         )
+
+    def get_slot_count(self, obj):
+        return obj.slots.exclude(status__in=['draft', 'cancelled']).count()
 
     def get_filtered_slots(self, obj, only_upcoming=False):
 
@@ -783,6 +787,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             'preparation',
             'interests',
         )
+        meta_fields = TimeBasedBaseSerializer.Meta.meta_fields + ('slot_count',)
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'

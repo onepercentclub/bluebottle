@@ -213,9 +213,11 @@ class TransitionMessage(object):
         activity = self.get_activity()
         action = get_message_action(activity, self) if activity and activity.pk else None
         if action:
-            activity_template = ActivityMessageTemplate.objects.filter(
-                activity=activity, action=action
-            ).first()
+            templates = ActivityMessageTemplate.objects.filter(activity=activity)
+            activity_template = templates.filter(action=action).first()
+            if not activity_template and action == 'join' and getattr(activity, 'review', False):
+                # Review activities only expose the accept ("Welcome") template
+                activity_template = templates.filter(action='accept').first()
             if activity_template:
                 return activity_template
         return MessageTemplate.objects.filter(message=path).first()

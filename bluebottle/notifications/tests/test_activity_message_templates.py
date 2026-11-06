@@ -478,6 +478,74 @@ class TimeBasedMessageTemplateSendTestCase(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].subject, 'Date {}'.format(activity.title))
 
 
+class DateReviewJoinMessageTemplateTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        InitiativePlatformSettingsFactory.create(activity_types=['dateactivity'])
+        self.owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            owner=self.owner,
+            review=True,
+            slots=[],
+        )
+        self.slots = DateActivitySlotFactory.create_batch(2, activity=self.activity)
+        self.activity.states.publish(save=True)
+        self.user = BlueBottleUserFactory.create(first_name='Henk')
+
+    def join(self, slot):
+        return DateParticipantFactory.create(
+            activity=self.activity, slot=slot, user=self.user, registration=None, as_user=self.user
+        )
+
+    def user_mails(self):
+        return [m for m in mail.outbox if m.to == [self.user.email]]
+
+    def join_after_accept(self):
+        participant = self.join(self.slots[0])
+        participant.registration.states.accept(save=True)
+        mail.outbox = []
+        return self.join(self.slots[1])
+
+    def test_join_uses_accept_template(self):
+        create_template(self.activity, subject='', insert_method='append')
+        participant = self.join_after_accept()
+
+        self.assertEqual(participant.status, 'accepted')
+        messages = self.user_mails()
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            messages[0].subject,
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title)
+        )
+        self.assertIn('You are registered for a time slot', messages[0].body)
+        self.assertIn('Hi Henk, see you soon!', messages[0].body)
+
+    def test_join_template_beats_accept_template(self):
+        create_template(self.activity)
+        create_template(self.activity, action='join', subject='Joined {title}')
+        self.join_after_accept()
+
+        self.assertEqual(
+            self.user_mails()[0].subject, 'Joined {}'.format(self.activity.title)
+        )
+
+    def test_review_disabled_ignores_accept_template(self):
+        self.activity.review = False
+        self.activity.save()
+        create_template(self.activity)
+        mail.outbox = []
+        self.join(self.slots[0])
+
+        self.assertEqual(
+            self.user_mails()[0].subject,
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title)
+        )
+
+
 class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()

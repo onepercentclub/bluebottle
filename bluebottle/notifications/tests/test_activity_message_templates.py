@@ -628,20 +628,20 @@ class SendThankYouMessageAPITestCase(BluebottleTestCase):
         self.activity = DeadlineActivityFactory.create(owner=self.owner)
         self.url = reverse('deadline-detail', args=(self.activity.pk,))
 
-    def test_default_off(self):
+    def test_default_on(self):
         response = self.client.get(self.url, user=self.owner)
-        self.assertFalse(response.json()['data']['attributes']['send-thank-you-message'])
+        self.assertTrue(response.json()['data']['attributes']['send-thank-you-message'])
 
-    def test_owner_enables(self):
+    def test_owner_disables(self):
         data = {
             'data': {
                 'type': 'activities/time-based/deadlines',
                 'id': self.activity.pk,
-                'attributes': {'send-thank-you-message': True},
+                'attributes': {'send-thank-you-message': False},
             }
         }
         response = self.client.patch(self.url, json.dumps(data), user=self.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.activity.refresh_from_db()
-        self.assertTrue(self.activity.send_thank_you_message)
+        self.assertFalse(self.activity.send_thank_you_message)

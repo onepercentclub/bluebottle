@@ -7,20 +7,28 @@ from operator import attrgetter
 
 from django.contrib.admin.options import get_content_type_for_model
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 from django.template import loader
 from django.utils import translation as django_translation
-from django.utils.html import format_html
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.celery import app
 from bluebottle.clients import properties
 from bluebottle.mails.models import MailPlatformSettings
-from bluebottle.notifications.models import Message, MessageTemplate
+from bluebottle.notifications.activity_messages import get_message_action
+from bluebottle.notifications.models import Message, MessageTemplate, ActivityMessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language, to_text, get_tenant_name
 
 logger = logging.getLogger(__name__)
+
+
+class EmptyMissingDict(dict):
+    def __missing__(self, key):
+        return ''
 
 
 @python_2_unicode_compatible
@@ -38,6 +46,7 @@ class TransitionMessage(object):
     context = {}
     send_once = False
     delay = None
+    append_custom_message = False
 
     def __reduce__(self):
         return (partial(self.__class__, self.obj, **self.options), ())
@@ -117,11 +126,11 @@ class TransitionMessage(object):
                 context = self.get_context(recipient)
                 custom_template = self.get_message_template()
                 if custom_template:
-                    custom_template.set_current_language(recipient.primary_language)
-                    try:
-                        return str(format_html(custom_template.body_html.html, **context))
-                    except custom_template.DoesNotExist:
-                        pass
+                    rendered = self.render_custom_template(
+                        custom_template, recipient.primary_language, context
+                    )
+                    if rendered:
+                        return str(rendered[1])
                 return self._render_message_block_html(context)
 
         return self._render_message_block_html(self.get_generic_context())
@@ -155,6 +164,7 @@ class TransitionMessage(object):
             "action_link": self.get_action_link(recipient),
             "action_title": getattr(self, "action_title", None),
             "utm_campaign": self.__class__.__name__,
+            "append_custom_message": self.append_custom_message,
         }
         for key, item in list(self.context.items()):
             try:
@@ -190,9 +200,43 @@ class TransitionMessage(object):
     def get_template(self):
         return self.template
 
+    def get_activity(self):
+        from bluebottle.activities.models import Activity
+
+        if isinstance(self.obj, Activity):
+            return self.obj
+        activity = getattr(self.obj, 'activity', None)
+        return activity if isinstance(activity, Activity) else None
+
     def get_message_template(self):
         path = "{}.{}".format(self.__module__, self.__class__.__name__)
+        activity = self.get_activity()
+        action = get_message_action(activity, self) if activity and activity.pk else None
+        if action:
+            activity_template = ActivityMessageTemplate.objects.filter(
+                activity=activity, action=action
+            ).first()
+            if activity_template:
+                return activity_template
         return MessageTemplate.objects.filter(message=path).first()
+
+    def render_custom_template(self, custom_template, language, context):
+        if isinstance(custom_template, MessageTemplate):
+            custom_template.set_current_language(language)
+        try:
+            escaped = {key: conditional_escape(value) for key, value in context.items()}
+            subject = custom_template.subject or str(self.subject)
+            return (
+                subject.format_map(EmptyMissingDict(context)),
+                mark_safe(custom_template.body_html.html.format_map(EmptyMissingDict(escaped))),
+                custom_template.insert_method,
+            )
+        except ObjectDoesNotExist:
+            # Translation for current language not set, use default.
+            return None
+        except (KeyError, IndexError, ValueError, AttributeError):
+            logger.exception('Could not render custom template %s', custom_template.pk)
+            return None
 
     def already_send(self, recipient):
         return Message.objects.filter(
@@ -221,16 +265,11 @@ class TransitionMessage(object):
                 insert_method = 'append'
 
                 if not custom_message and custom_template:
-                    custom_template.set_current_language(recipient.primary_language)
-                    try:
-                        # Force language activation for custom template formatting
-                        django_translation.activate(recipient.primary_language)
-                        subject = custom_template.subject.format(**context)
-                        body_html = format_html(custom_template.body_html.html, **context)
-                        insert_method = custom_template.insert_method
-                    except custom_template.DoesNotExist:
-                        # Translation for current language not set, use default.
-                        pass
+                    rendered = self.render_custom_template(
+                        custom_template, recipient.primary_language, context
+                    )
+                    if rendered:
+                        subject, body_html, insert_method = rendered
 
                 yield Message(
                     insert_method=insert_method,

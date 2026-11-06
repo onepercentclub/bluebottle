@@ -143,6 +143,7 @@ class GrantApplicationTriggers(ActivityTriggers):
             GrantApplicationStateMachine.approve,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
+                SetDateEffect('started'),
                 NotificationEffect(
                     GrantApplicationApprovedMessage
                 ),

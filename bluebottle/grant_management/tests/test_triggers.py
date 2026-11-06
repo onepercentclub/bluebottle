@@ -101,6 +101,17 @@ class GrantApplicationTriggersTestCase(TriggerTestCase):
             self.assertNoNotificationEffect(ActivityApprovedNotification)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
 
+    def test_approve_sets_started(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.assertIsNone(self.model.started)
+
+        self.model.states.approve(save=True)
+        self.model.refresh_from_db()
+
+        self.assertIsNotNone(self.model.started)
+
     def test_approve_terms(self):
         settings = InitiativePlatformSettings.load()
         settings.mail_terms_of_service = True

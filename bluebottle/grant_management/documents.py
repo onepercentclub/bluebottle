@@ -2,7 +2,7 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
-from bluebottle.grant_management.models import GrantApplication
+from bluebottle.grant_management.models import GrantApplication, GrantDonor
 
 
 @registry.register_document
@@ -16,11 +16,32 @@ class GrantApplicationDocument(ActivityDocument):
     class Django:
         model = GrantApplication
 
+    def get_sort_date(self, instance):
+        if instance.started:
+            return instance.started
+
+        grant = (
+            instance.contributors.instance_of(GrantDonor)
+            .order_by('created')
+            .first()
+        )
+        if grant:
+            return grant.created
+
+        return instance.created
+
     def prepare_dates(self, instance):
+        sort_date = self.get_sort_date(instance)
         return [{
-            'start': instance.created,
-            'end': instance.created
+            'start': sort_date,
+            'end': sort_date,
         }]
+
+    def prepare_start(self, instance):
+        return [self.get_sort_date(instance)]
+
+    def prepare_end(self, instance):
+        return [self.get_sort_date(instance)]
 
     def prepare_target(self, instance):
         if instance.target:

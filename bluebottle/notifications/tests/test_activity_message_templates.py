@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
@@ -41,6 +42,12 @@ from bluebottle.time_based.tests.factories import (
 )
 
 ACCEPTED = 'bluebottle.time_based.messages.registrations.UserRegistrationAcceptedNotification'
+
+
+def create_staff_user():
+    user = BlueBottleUserFactory.create(is_staff=True)
+    user.groups.add(Group.objects.get(name='Staff'))
+    return user
 
 
 def create_template(activity, action='accept', **kwargs):
@@ -93,6 +100,15 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
         manager = BlueBottleUserFactory.create()
         self.activity.initiative.activity_managers.add(manager)
         self.perform_create(user=manager, data=self.get_data())
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_staff(self):
+        self.perform_create(user=create_staff_user(), data=self.get_data())
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.activity, self.activity)
+
+    def test_create_superuser(self):
+        self.perform_create(user=BlueBottleUserFactory.create(is_superuser=True), data=self.get_data())
         self.assertStatus(status.HTTP_201_CREATED)
 
     def test_create_other_user(self):
@@ -235,9 +251,27 @@ class ActivityMessageTemplateDetailAPITestCase(APITestCase):
         self.model.refresh_from_db()
         self.assertEqual(self.model.body_html.html, '<p>Changed</p>')
 
+    def test_update_staff(self):
+        self.patch(create_staff_user(), body='<p>Changed</p>')
+        self.assertStatus(status.HTTP_200_OK)
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.body_html.html, '<p>Changed</p>')
+
+    def test_update_superuser(self):
+        self.patch(BlueBottleUserFactory.create(is_superuser=True), body='<p>Changed</p>')
+        self.assertStatus(status.HTTP_200_OK)
+
     def test_update_other_user(self):
         self.patch(BlueBottleUserFactory.create(), body='<p>Changed</p>')
         self.assertStatus(status.HTTP_404_NOT_FOUND)
+
+    def test_update_anonymous(self):
+        self.response = self.client.patch(self.url, json.dumps({}))
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_staff(self):
+        self.perform_delete(user=create_staff_user())
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
 
     def test_delete_owner(self):
         self.perform_delete(user=self.owner)
@@ -632,7 +666,7 @@ class SendThankYouMessageAPITestCase(BluebottleTestCase):
         response = self.client.get(self.url, user=self.owner)
         self.assertFalse(response.json()['data']['attributes']['send-thank-you-message'])
 
-    def test_owner_enables(self):
+    def enable(self, user):
         data = {
             'data': {
                 'type': 'activities/time-based/deadlines',
@@ -640,8 +674,17 @@ class SendThankYouMessageAPITestCase(BluebottleTestCase):
                 'attributes': {'send-thank-you-message': True},
             }
         }
-        response = self.client.patch(self.url, json.dumps(data), user=self.owner)
+        response = self.client.patch(self.url, json.dumps(data), user=user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.activity.refresh_from_db()
         self.assertTrue(self.activity.send_thank_you_message)
+
+    def test_owner_enables(self):
+        self.enable(self.owner)
+
+    def test_staff_enables(self):
+        self.enable(create_staff_user())
+
+    def test_superuser_enables(self):
+        self.enable(BlueBottleUserFactory.create(is_superuser=True))

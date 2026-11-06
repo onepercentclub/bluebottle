@@ -26,6 +26,7 @@ from bluebottle.time_based.messages.teams import (
     CaptainTeamMemberRemovedNotification,
     UserTeamMemberRemovedNotification,
 )
+from bluebottle.time_based.messages.registrations import TeamJoinedNotification
 from bluebottle.time_based.messages.thank_you import TeamThankYouNotification
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.states.participants import (
@@ -55,6 +56,22 @@ class TeamTriggers(TriggerManager):
             is_admin
         )
 
+    def no_review_needed(effect):
+        """No review needed"""
+        return not effect.instance.activity.review
+
+    def is_captain(effect):
+        """Is captain"""
+        user = effect.options.get('user')
+        return user and effect.instance.user_id == user.id
+
+    def captain_has_other_team(effect):
+        """Captain already started another team"""
+        return Team.objects.filter(
+            activity=effect.instance.activity,
+            user=effect.instance.user
+        ).exclude(pk=effect.instance.pk).exists()
+
     triggers = [
         TransitionTrigger(
             TeamStateMachine.succeed,
@@ -70,6 +87,10 @@ class TeamTriggers(TriggerManager):
                 CreateTeamRegistrationEffect,
                 TransitionEffect(
                     TeamStateMachine.accept, conditions=[should_auto_accept]
+                ),
+                NotificationEffect(
+                    TeamJoinedNotification,
+                    conditions=[no_review_needed, is_captain, captain_has_other_team]
                 ),
             ],
         ),

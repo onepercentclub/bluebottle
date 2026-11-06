@@ -1,10 +1,12 @@
 import json
+from datetime import date, timedelta
 
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
 
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.collect.messages import ParticipantJoinedNotification as CollectJoinedNotification
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.deeds.messages import ParticipantJoinedNotification as DeedJoinedNotification
@@ -13,12 +15,22 @@ from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
     InitiativePlatformSettingsFactory,
 )
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.activity_messages import get_message_action
 from bluebottle.notifications.models import ActivityMessageTemplate, MessageTemplate
 from bluebottle.notifications.serializers import ActivityMessageTemplateSerializer
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
-from bluebottle.time_based.messages import ParticipantSlotParticipantRegisteredNotification
+from bluebottle.test.utils import (
+    APITestCase,
+    BluebottleAdminTestCase,
+    BluebottleTestCase,
+    JSONAPITestClient,
+)
+from bluebottle.time_based.messages import (
+    ParticipantAddedNotification,
+    ParticipantSlotParticipantRegisteredNotification,
+    TeamAddedNotification,
+)
 from bluebottle.time_based.messages.registrations import (
     DateUserAppliedNotification,
     PeriodicUserJoinedNotification,
@@ -39,6 +51,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     RegisteredDateActivityFactory,
     ScheduleActivityFactory,
+    TeamScheduleRegistrationFactory,
 )
 
 ACCEPTED = 'bluebottle.time_based.messages.registrations.UserRegistrationAcceptedNotification'
@@ -503,6 +516,8 @@ class ActivityMessageActionTestCase(BluebottleTestCase):
     def test_date(self):
         activity = DateActivityFactory.create()
         self.assertAction(activity, ParticipantSlotParticipantRegisteredNotification, 'join')
+        self.assertAction(activity, ParticipantAddedNotification, 'join')
+        self.assertAction(activity, InactiveParticipantAddedNotification, 'join')
         self.assertAction(activity, DateUserAppliedNotification, 'apply')
         self.assertAction(activity, UserRegistrationAcceptedNotification, 'accept')
         self.assertAction(activity, UserRegistrationRejectedNotification, 'reject')
@@ -516,17 +531,22 @@ class ActivityMessageActionTestCase(BluebottleTestCase):
         activity = ScheduleActivityFactory.create()
         self.assertAction(activity, ScheduleUserJoinedNotification, 'join')
         self.assertAction(activity, TeamJoinedNotification, 'join')
+        self.assertAction(activity, TeamAddedNotification, 'join')
+        self.assertAction(activity, ParticipantAddedNotification, 'join')
         self.assertAction(activity, UserTeamRegistrationAcceptedNotification, 'accept')
 
     def test_deed(self):
         activity = DeedFactory.create()
         self.assertAction(activity, DeedJoinedNotification, 'join')
+        self.assertAction(activity, ParticipantAddedNotification, 'join')
+        self.assertAction(activity, InactiveParticipantAddedNotification, 'join')
         self.assertAction(activity, CollectJoinedNotification, None)
         self.assertAction(activity, UserRegistrationAcceptedNotification, None)
 
     def test_registered_date(self):
         activity = RegisteredDateActivityFactory.create()
         self.assertAction(activity, UserRegistrationAcceptedNotification, None)
+        self.assertAction(activity, ParticipantAddedNotification, None)
 
 
 class TimeBasedMessageTemplateSendTestCase(BluebottleTestCase):
@@ -624,6 +644,230 @@ class DateReviewJoinMessageTemplateTestCase(BluebottleTestCase):
         )
 
 
+class AddedParticipantMessageTemplateTestCase(BluebottleTestCase):
+    custom = 'see you soon!'
+
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory.create(first_name='Henk')
+        self.deed = DeedFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            start=date.today() + timedelta(days=10),
+            end=date.today() + timedelta(days=20),
+        )
+
+    def add_to_deed(self, email, send_messages=True):
+        data = {
+            'data': {
+                'type': 'contributors/deeds/participants',
+                'attributes': {'email': email, 'send-messages': send_messages},
+                'relationships': {
+                    'activity': {'data': {'type': 'activities/deeds', 'id': self.deed.pk}}
+                }
+            }
+        }
+        mail.outbox = []
+        response = self.client.post(
+            reverse('deed-participant-list'), json.dumps(data), user=self.deed.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def add_to_schedule(self, activity, email):
+        data = {
+            'data': {
+                'type': 'contributors/time-based/schedule-participants',
+                'attributes': {'email': email, 'send-messages': True},
+                'relationships': {
+                    'activity': {'data': {'type': 'activities/time-based/schedules', 'id': activity.pk}}
+                }
+            }
+        }
+        mail.outbox = []
+        response = self.client.post(
+            reverse('schedule-participant-create'), json.dumps(data), user=activity.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def mails_to(self, email):
+        return [m for m in mail.outbox if m.to == [email]]
+
+    def mail_to(self, email):
+        messages = self.mails_to(email)
+        self.assertEqual(len(messages), 1)
+        return messages[0]
+
+    def assertCustomMessageAppended(self, message, default_text):
+        self.assertIn(default_text, message.body)
+        self.assertIn(self.custom, message.body)
+        self.assertLess(message.body.index(default_text), message.body.index(self.custom))
+
+    def test_deed_added_by_manager(self):
+        create_template(self.deed, action='join', subject='', insert_method='append')
+        self.add_to_deed(self.user.email)
+
+        message = self.mail_to(self.user.email)
+        self.assertEqual(
+            message.subject, 'You have been added to the activity "{}" 🎉'.format(self.deed.title)
+        )
+        self.assertCustomMessageAppended(message, 'You have been added to the activity')
+        self.assertIn('Hi Henk, see you soon!', message.body)
+
+    def test_deed_added_inactive_user(self):
+        MemberPlatformSettings.objects.update_or_create(confirm_signup=True)
+        create_template(self.deed, action='join', subject='', insert_method='append')
+        self.add_to_deed('new@example.com')
+
+        message = self.mail_to('new@example.com')
+        self.assertCustomMessageAppended(message, 'activate your account')
+
+    def test_deed_added_without_custom_message(self):
+        self.add_to_deed(self.user.email)
+
+        message = self.mail_to(self.user.email)
+        self.assertIn('You have been added to the activity', message.body)
+        self.assertNotIn(self.custom, message.body)
+
+    def test_deed_added_without_sending_messages(self):
+        create_template(self.deed, action='join', subject='', insert_method='append')
+        self.add_to_deed(self.user.email, send_messages=False)
+
+        self.assertEqual(self.mails_to(self.user.email), [])
+
+    def test_deed_custom_message_not_used_for_other_activity(self):
+        create_template(DeedFactory.create(), action='join', subject='', insert_method='append')
+        self.add_to_deed(self.user.email)
+
+        self.assertNotIn(self.custom, self.mail_to(self.user.email).body)
+
+    def test_deed_added_replace(self):
+        create_template(self.deed, action='join')
+        self.add_to_deed(self.user.email)
+
+        message = self.mail_to(self.user.email)
+        self.assertEqual(message.subject, 'Welcome to {}'.format(self.deed.title))
+        self.assertIn('Hi Henk, see you soon!', message.body)
+        self.assertNotIn('You have been added to the activity', message.body)
+
+    def test_deed_added_inactive_user_replace(self):
+        MemberPlatformSettings.objects.update_or_create(confirm_signup=True)
+        create_template(self.deed, action='join')
+        self.add_to_deed('new@example.com')
+
+        message = self.mail_to('new@example.com')
+        self.assertEqual(message.subject, 'Welcome to {}'.format(self.deed.title))
+        self.assertIn(self.custom, message.body)
+        self.assertNotIn('activate your account', message.body)
+        self.assertIn('/auth/confirm/?token=', message.body)
+
+    def test_schedule_added_by_manager(self):
+        activity = ScheduleActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        create_template(activity, action='join', subject='', insert_method='append')
+        self.add_to_schedule(activity, self.user.email)
+
+        self.assertCustomMessageAppended(
+            self.mail_to(self.user.email), 'You have been added to the activity'
+        )
+
+    def test_schedule_team_added(self):
+        activity = ScheduleActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+            team_activity='teams',
+        )
+        create_template(activity, action='join', subject='', insert_method='append')
+        mail.outbox = []
+        TeamScheduleRegistrationFactory.create(
+            activity=activity, user=self.user, as_user=BlueBottleUserFactory.create(is_staff=True)
+        )
+
+        message = self.mail_to(self.user.email)
+        self.assertEqual(
+            message.subject, 'Your team was added to the activity "{}" 🎉'.format(activity.title)
+        )
+        self.assertCustomMessageAppended(message, 'Your team was added to the activity')
+
+
+class BulkAddedParticipantMessageTemplateTestCase(BluebottleAdminTestCase):
+    csrf_checks = False
+    custom = 'see you soon!'
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create(first_name='Henk')
+
+    def bulk_add(self, obj, send_messages=True):
+        url = reverse(
+            'admin:{}_{}_bulk_add'.format(obj._meta.app_label, obj._meta.model_name),
+            args=(obj.pk,)
+        )
+        page = self.app.get(url, user=self.superuser)
+        form = [form for form in page.forms.values() if 'emails' in form.fields][0]
+        form['emails'] = self.user.email
+        form['send_messages'] = send_messages
+        mail.outbox = []
+        form.submit(user=self.superuser)
+        return [m for m in mail.outbox if m.to == [self.user.email]]
+
+    def assertCustomMessageAppended(self, messages):
+        self.assertEqual(len(messages), 1)
+        message = messages[0]
+        default_text = 'You have been added to the activity'
+        self.assertIn(default_text, message.body)
+        self.assertIn('Hi Henk, see you soon!', message.body)
+        self.assertLess(message.body.index(default_text), message.body.index(self.custom))
+
+    def create_slot(self):
+        activity = DateActivityFactory.create(slots=[], status='open')
+        return DateActivitySlotFactory.create(activity=activity)
+
+    def test_date_slot(self):
+        slot = self.create_slot()
+        create_template(slot.activity, action='join', subject='', insert_method='append')
+
+        self.assertCustomMessageAppended(self.bulk_add(slot))
+
+    def test_date_slot_without_custom_message(self):
+        messages = self.bulk_add(self.create_slot())
+        self.assertEqual(len(messages), 1)
+        message = messages[0]
+
+        self.assertIn('You have been added to the activity', message.body)
+        self.assertNotIn(self.custom, message.body)
+
+    def test_deed(self):
+        activity = DeedFactory.create(status='open')
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        self.assertCustomMessageAppended(self.bulk_add(activity))
+
+    def test_deed_without_sending_messages(self):
+        activity = DeedFactory.create(status='open')
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        self.assertEqual(self.bulk_add(activity, send_messages=False), [])
+
+    def test_collect(self):
+        activity = CollectActivityFactory.create(status='open')
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        self.assertCustomMessageAppended(self.bulk_add(activity))
+
+    def test_deadline(self):
+        activity = DeadlineActivityFactory.create(status='open')
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        self.assertCustomMessageAppended(self.bulk_add(activity))
+
+
 class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
@@ -667,6 +911,12 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         previews = self.previews(self.get(activity))
 
         self.assertEqual(set(previews), {'join', 'succeed'})
+        self.assertEqual(previews['join']['subject'], 'You have joined the activity "Plant a tree"')
+
+    def test_deed_teams(self):
+        activity = DeedFactory.create(owner=self.owner, title='Plant a tree', team_activity='teams')
+        previews = self.previews(self.get(activity))
+
         self.assertEqual(previews['join']['subject'], 'You have joined the activity "Plant a tree"')
 
     def test_collect(self):

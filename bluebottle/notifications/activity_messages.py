@@ -3,6 +3,7 @@ from functools import lru_cache
 
 @lru_cache()
 def get_activity_messages():
+    from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
     from bluebottle.collect.messages import (
         CollectThankYouNotification,
         ParticipantJoinedNotification as CollectParticipantJoinedNotification,
@@ -13,7 +14,11 @@ def get_activity_messages():
         ParticipantJoinedNotification as DeedParticipantJoinedNotification,
     )
     from bluebottle.deeds.models import Deed
-    from bluebottle.time_based.messages import ParticipantSlotParticipantRegisteredNotification
+    from bluebottle.time_based.messages import (
+        ParticipantAddedNotification,
+        ParticipantSlotParticipantRegisteredNotification,
+        TeamAddedNotification,
+    )
     from bluebottle.time_based.messages.registrations import (
         DateUserAppliedNotification,
         DeadlineUserAppliedNotification,
@@ -40,41 +45,43 @@ def get_activity_messages():
         DateActivity, DeadlineActivity, PeriodicActivity, ScheduleActivity
     )
 
+    added = (ParticipantAddedNotification, InactiveParticipantAddedNotification)
+
     return {
         DateActivity: {
-            'join': (ParticipantSlotParticipantRegisteredNotification, ),
+            'join': (ParticipantSlotParticipantRegisteredNotification, ) + added,
             'apply': (DateUserAppliedNotification, ),
             'accept': (UserRegistrationAcceptedNotification, ),
             'reject': (UserRegistrationRejectedNotification, ),
             'succeed': (DateParticipantThankYouNotification, ),
         },
         DeadlineActivity: {
-            'join': (DeadlineUserJoinedNotification, ),
+            'join': (DeadlineUserJoinedNotification, ) + added,
             'apply': (DeadlineUserAppliedNotification, ),
             'accept': (UserRegistrationAcceptedNotification, ),
             'reject': (UserRegistrationRejectedNotification, ),
             'succeed': (RegistrationActivityThankYouNotification, ),
         },
         PeriodicActivity: {
-            'join': (PeriodicUserJoinedNotification, ),
+            'join': (PeriodicUserJoinedNotification, ) + added,
             'apply': (PeriodicUserAppliedNotification, ),
             'accept': (UserRegistrationAcceptedNotification, ),
             'reject': (UserRegistrationRejectedNotification, ),
             'succeed': (PeriodicActivityThankYouNotification, ),
         },
         ScheduleActivity: {
-            'join': (ScheduleUserJoinedNotification, TeamJoinedNotification),
+            'join': (ScheduleUserJoinedNotification, TeamJoinedNotification, TeamAddedNotification) + added,
             'apply': (ScheduleUserAppliedNotification, TeamAppliedNotification),
             'accept': (UserRegistrationAcceptedNotification, UserTeamRegistrationAcceptedNotification),
             'reject': (UserRegistrationRejectedNotification, UserTeamRegistrationRejectedNotification),
             'succeed': (ScheduleParticipantThankYouNotification, TeamThankYouNotification),
         },
         Deed: {
-            'join': (DeedParticipantJoinedNotification, ),
+            'join': (DeedParticipantJoinedNotification, ) + added,
             'succeed': (DeedThankYouNotification, ),
         },
         CollectActivity: {
-            'join': (CollectParticipantJoinedNotification, ),
+            'join': (CollectParticipantJoinedNotification, ) + added,
             'succeed': (CollectThankYouNotification, ),
         },
     }

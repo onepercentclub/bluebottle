@@ -77,7 +77,9 @@ def render_block(template_name, block_name, context):
 
 
 def get_message_class(activity, message_classes):
-    if len(message_classes) > 1 and getattr(activity, 'team_activity', None) == 'teams':
+    from bluebottle.time_based.models import ScheduleActivity
+
+    if isinstance(activity, ScheduleActivity) and activity.team_activity == 'teams':
         return message_classes[1]
     return message_classes[0]
 

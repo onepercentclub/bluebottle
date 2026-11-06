@@ -314,6 +314,7 @@ class ParticipantAddedNotification(TransitionMessage):
     """
     subject = pgettext('platform-email', 'You have been added to the activity "{title}" 🎉')
     template = 'messages/participant_added'
+    append_custom_message = True
     context = {
         'title': 'activity.title',
     }
@@ -339,6 +340,7 @@ class TeamAddedNotification(TransitionMessage):
 
     subject = pgettext("platform-email", 'Your team was added to the activity "{title}" 🎉')
     template = "messages/teams/user_team_added"
+    append_custom_message = True
     context = {
         "title": "activity.title",
     }

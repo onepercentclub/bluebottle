@@ -9,7 +9,6 @@ from bluebottle.notifications.messages import TransitionMessage
 class InactiveParticipantAddedNotification(TransitionMessage):
     subject = pgettext('platform-email', "You have been added to the activity {title}")
     template = 'messages/participant/inactive_participant_added'
-    append_custom_message = True
 
     context = {
         'title': 'activity.title',

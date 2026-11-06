@@ -224,6 +224,13 @@ class TransitionMessage(object):
         if isinstance(custom_template, MessageTemplate):
             custom_template.set_current_language(language)
         try:
+            if isinstance(custom_template, ActivityMessageTemplate):
+                return (
+                    str(self.subject).format(**context),
+                    mark_safe(custom_template.body_html.html),
+                    custom_template.insert_method,
+                )
+
             escaped = {key: conditional_escape(value) for key, value in context.items()}
             subject = custom_template.subject or str(self.subject)
             return (

@@ -10,11 +10,14 @@ def migrate_login_methods(apps, schema_editor):
     PasswordAuthentication = apps.get_model('members', 'PasswordAuthentication')
     FacebookAuthentication = apps.get_model('members', 'FacebookAuthentication')
     GoogleAuthentication = apps.get_model('members', 'GoogleAuthentication')
+    ContentType = apps.get_model('contenttypes', 'ContentType')
 
     settings = MemberPlatformSettings.objects.get()
 
     if 'password' in settings.login_methods:
+        polymorphic_ctype = ContentType.objects.get_for_model(PasswordAuthentication)
         PasswordAuthentication.objects.create(
+            polymorphic_ctype=polymorphic_ctype,
             enabled=True,
             confirm_signup=settings.confirm_signup,
             account_creation_rules=settings.account_creation_rules,
@@ -26,14 +29,18 @@ def migrate_login_methods(apps, schema_editor):
 
     for social_login_method in settings.social_login_methods.all():
         if social_login_method.backend == 'facebook':
+            polymorphic_ctype = ContentType.objects.get_for_model(FacebookAuthentication)
             FacebookAuthentication.objects.create(
+                polymorphic_ctype=polymorphic_ctype,
                 enabled=True,
                 secret=social_login_method.secret,
                 client_id=social_login_method.client_id,
             )
 
         if social_login_method.backend == 'google':
+            polymorphic_ctype = ContentType.objects.get_for_model(GoogleAuthentication)
             GoogleAuthentication.objects.create(
+                polymorphic_ctype=polymorphic_ctype,
                 enabled=True,
                 secret=social_login_method.secret,
                 client_id=social_login_method.client_id,

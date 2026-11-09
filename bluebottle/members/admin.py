@@ -155,7 +155,69 @@ class AuthenticationMethodChildAdmin(PolymorphicChildModelAdmin):
 class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
     model = PasswordAuthentication
 
-    fields = ['enabled', 'confirm_signup', 'account_creation_rules', 'email_domains', 'request_access_method', 'request_access_link', 'request_access_code']
+    readonly_fields = (
+        'request_access_code_display', 'request_access_info',
+    )
+
+    fieldsets = (
+        (_('Basic'), {'fields': ['enabled', 'confirm_signup']}),
+        (_('Request Access'), {
+            'fields': [
+                'account_creation_rules', 'email_domains',  'request_access_method',
+                'request_access_info', 'request_access_code', 'request_access_code_display',
+            ]
+        }),
+    )
+
+    def request_access_info(self, obj):
+        return admin_info_box(
+            _(
+                'If you allow people to request access, use the fields below to explain how they can do this.'
+            )
+        )
+
+    def request_access_code_display(self, obj):
+        template = loader.get_template('admin/members/request_access_code_display.html')
+        renew_url = reverse('admin:members_passwordauthentication_renew_code')
+
+        context = {
+            'code': obj.request_access_code if obj else None,
+            'renew_url': renew_url,
+        }
+
+        if obj and obj.request_access_code:
+            context['signup_url'] = tenant_url(f'/auth/signup-with-code?code={obj.request_access_code}')
+
+        return template.render(context)
+
+    request_access_code_display.short_description = _('Access link')
+
+    def get_urls(self):
+        urls = super().get_urls()
+
+        extra_urls = [
+            path(
+                'renew-access-code/',
+                self.admin_site.admin_view(self.renew_access_code),
+                name='members_passwordauthentication_renew_code'
+            ),
+        ]
+        return extra_urls + urls
+
+    def renew_access_code(self, request):
+        import secrets
+        import string
+
+        obj = MemberPlatformSettings.load()
+
+        alphabet = string.ascii_letters + string.digits
+        new_code = ''.join(secrets.choice(alphabet) for _ in range(12))
+
+        obj.request_access_code = new_code
+        obj.save()
+
+        self.message_user(request, _('Access code has been renewed successfully.'))
+        return HttpResponseRedirect(reverse('admin:members_memberplatformsettings_change', args=(obj.id,)))
 
 
 @admin.register(FacebookAuthentication)

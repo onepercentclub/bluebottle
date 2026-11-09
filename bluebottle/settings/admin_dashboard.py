@@ -315,6 +315,10 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["members.change_memberplatformsettings"],
             },
             {
+                "name": "members.change_authenticationmethod",
+                "permissions": ["members.change_authenticationmethod"],
+            },
+            {
                 "name": "notifications.notificationplatformsettings",
                 "permissions": ["notifications.notificationplatformsettings"],
             },

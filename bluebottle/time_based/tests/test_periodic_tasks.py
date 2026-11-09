@@ -1131,6 +1131,25 @@ class UnscheduledContributionsTestCase(BluebottleTestCase):
         self.assertEqual(participant.status, "accepted")
         self.assertEqual(self.contribution(participant).status, "new")
 
+    def test_scheduling_individual_in_future_resets_succeeded_contribution(self):
+        user = BlueBottleUserFactory.create()
+        participant = ScheduleRegistrationFactory.create(
+            activity=self.create_activity("individuals"), user=user, as_user=user
+        ).participants.get()
+        contribution = self.contribution(participant)
+        contribution.status = "succeeded"
+        contribution.save()
+
+        self.schedule(participant.slot, now() + timedelta(days=10))
+
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, "scheduled")
+        self.assertEqual(self.contribution(participant).status, "new")
+
+        self.run_tasks(now() + timedelta(days=1), time_contribution_tasks)
+
+        self.assertEqual(self.contribution(participant).status, "new")
+
     def test_scheduling_team_in_future_resets_succeeded_contribution(self):
         participant = self.create_team_participant()
         contribution = self.contribution(participant)

@@ -82,6 +82,10 @@ urlpatterns = [
         include('bluebottle.deeds.urls.api')
     ),
     path(
+        'api/notifications',
+        include('bluebottle.notifications.urls.api')
+    ),
+    path(
         'api/collect',
         include('bluebottle.collect.urls.api')
     ),

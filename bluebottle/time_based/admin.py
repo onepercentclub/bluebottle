@@ -41,7 +41,7 @@ from bluebottle.fsm.admin import (
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.notifications.admin import MessageAdminInline, ActivityMessageTemplateAdminInline
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.time_based.models import (
     ActivitySlot,
@@ -685,6 +685,7 @@ class DateActivityAdmin(TimeBasedAdmin):
         DateActivitySlotInline,
         DateRegistrationAdminInline,
         DateActivityInterestAdminInline,
+        ActivityMessageTemplateAdminInline,
     ) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
     save_as = True
@@ -721,6 +722,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
     inlines = (
         DeadlineParticipantAdminInline,
         ActivityInterestAdminInline,
+        ActivityMessageTemplateAdminInline,
     ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
@@ -813,7 +815,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
-        interest_inline = (ActivityInterestAdminInline,)
+        interest_inline = (ActivityInterestAdminInline, ActivityMessageTemplateAdminInline)
         if obj and obj.id:
             # get the stored object, so you can switch between teams/individuals
             # without getting a form error, because of switching inlines
@@ -1052,6 +1054,7 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         PeriodicRegistrationAdminInline,
         PeriodicSlotAdminInline,
         ActivityInterestAdminInline,
+        ActivityMessageTemplateAdminInline,
     ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields

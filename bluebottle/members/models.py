@@ -55,11 +55,6 @@ class SocialLoginSettings(models.Model):
 
 
 class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
-    LOGIN_METHODS = (
-        ('SSO', _('Company SSO')),
-        ('password', _('Email + password')),
-    )
-
     DISPLAY_MEMBER_OPTIONS = (
         ('full_name', _('Full name')),
         ('first_name', _('First name (members)')),
@@ -69,20 +64,6 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     REQUIRED_QUESTIONS_OPTIONS = (
         ('login', _('After log in')),
         ('contribution', _('When making a contribution')),
-    )
-
-    ACCOUNT_CREATION_RULES = (
-        ('anyone', _('Anyone can create an account')),
-        ('whitelist', _('Only people with a whitelisted domain can create an account')),
-        (
-            'whitelist_and_request',
-            _('People with a whitelisted domain can create an account; all others can request access')
-        ),
-    )
-
-    REQUEST_ACCESS_METHODS = (
-        ('email', _('People request access by entering their email address')),
-        ('instructions', _('People request access by following your instructions')),
     )
 
     closed = CheckboxField(
@@ -124,37 +105,6 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         default=False,
     )
 
-    login_methods = MultiSelectField(
-        _('login methods'),
-        help_text=_(
-            'People can use any selected method to sign up or log in. '
-            'For social log in options, see the ‘Social log in’ tab.'
-        ),
-        max_length=100,
-        choices=LOGIN_METHODS,
-        default=['password']
-    )
-    confirm_signup = CheckboxField(
-        _('verify email on sign up'),
-        default=False,
-        inline_label=_('Require users to verify their email on sign-up'),
-        help_text=_('This rule only applies to the email + password method.'),
-    )
-
-    account_creation_rules = CharField(
-        _('account creation rules'),
-        help_text=_('This rule only applies to the email + password method.'),
-        choices=ACCOUNT_CREATION_RULES,
-        default='anyone',
-    )
-
-    email_domains = ArrayField(
-        models.CharField(),
-        verbose_name=_('Whitelisted email domains'),
-        blank=True, null=True,
-        default=list,
-    )
-
     support_groups = ArrayField(
         models.CharField(),
         verbose_name=_('Support login groups'),
@@ -174,13 +124,6 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         help_text=_('Users have to explicitly accept terms when logging in')
     )
 
-    request_access_method = models.CharField(
-        _('request access method'),
-        help_text=_('This rule only applies when requesting access is allowed.'),
-        choices=REQUEST_ACCESS_METHODS,
-        default='email',
-    )
-
     translations = TranslatedFields(
         request_access_instructions=models.CharField(
             _('request access instructions'),
@@ -189,21 +132,6 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
             null=True,
             blank=True
         ),
-    )
-
-    request_access_email = models.EmailField(
-        _('Request access mail to address'),
-        help_text=_('Enter the email address where people should send their access request.'),
-        null=True,
-        blank=True
-    )
-
-    request_access_code = models.CharField(
-        _('Request access code'),
-        help_text=_('With this code people can sign-up without a white-listed email address.'),
-        max_length=255,
-        null=True,
-        blank=True
     )
 
     required_questions_location = models.CharField(
@@ -650,6 +578,21 @@ class PasswordAuthentication(AuthenticationMethod):
         help_text=_('This rule only applies when requesting access is allowed.'),
         choices=REQUEST_ACCESS_METHODS,
         default='email',
+    )
+
+    request_access_email = models.EmailField(
+        _('Request access mail to address'),
+        help_text=_('Enter the email address where people should send their access request.'),
+        null=True,
+        blank=True
+    )
+
+    request_access_code = models.CharField(
+        _('Request access code'),
+        help_text=_('With this code people can sign-up without a white-listed email address.'),
+        max_length=255,
+        null=True,
+        blank=True
     )
 
     class JSONAPIMeta:

@@ -155,7 +155,7 @@ class AuthenticationMethodChildAdmin(PolymorphicChildModelAdmin):
 class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
     model = PasswordAuthentication
 
-    fields = ['enabled', 'confirm_signup', 'account_creation_rules', 'email_domains', 'request_access_method']
+    fields = ['enabled', 'confirm_signup', 'account_creation_rules', 'email_domains', 'request_access_method', 'request_access_link', 'request_access_code']
 
 
 @admin.register(FacebookAuthentication)
@@ -216,12 +216,6 @@ class MemberPlatformSettingsAdmin(
               'users are encouraged to spend making an impact each year.')
         )
 
-    def request_access_info(self, obj):
-        return admin_info_box(
-            _(
-                'If you allow people to request access, use the fields below to explain how they can do this.'
-            )
-        )
     fieldsets = (
         (
             _('Login'),
@@ -230,16 +224,8 @@ class MemberPlatformSettingsAdmin(
                     'background',
                     'translatable_info',
                     'closed',
-                    'login_methods',
-                    'confirm_signup',
                     'explicit_terms',
-                    'account_creation_rules',
-                    'email_domains',
                     'support_groups',
-                    'request_access_info',
-                    'request_access_instructions',
-                    'request_access_email',
-                    'request_access_code_display'
                 )
             }
         ),
@@ -312,8 +298,6 @@ class MemberPlatformSettingsAdmin(
     )
 
     radio_fields = {
-        'account_creation_rules': admin.HORIZONTAL,
-        'request_access_method': admin.HORIZONTAL,
         'display_member_names': admin.HORIZONTAL,
     }
 
@@ -355,8 +339,7 @@ class MemberPlatformSettingsAdmin(
         return fieldsets
 
     readonly_fields = (
-        'segment_types', 'reminder_info', 'impact_hours_info', 'request_access_info',
-        'request_access_code', 'request_access_code_display',
+        'segment_types', 'reminder_info', 'impact_hours_info',
     )
 
     def get_readonly_fields(self, request, obj=None):
@@ -369,22 +352,6 @@ class MemberPlatformSettingsAdmin(
 
         return read_only_fields
 
-    def request_access_code_display(self, obj):
-        template = loader.get_template('admin/members/request_access_code_display.html')
-        renew_url = reverse('admin:members_memberplatformsettings_renew_code')
-
-        context = {
-            'code': obj.request_access_code if obj else None,
-            'renew_url': renew_url,
-        }
-
-        if obj and obj.request_access_code:
-            context['signup_url'] = tenant_url(f'/auth/signup-with-code?code={obj.request_access_code}')
-
-        return template.render(context)
-
-    request_access_code_display.short_description = _('Access link')
-
     def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')
         context = {
@@ -392,33 +359,6 @@ class MemberPlatformSettingsAdmin(
             'link': reverse('admin:segments_segmenttype_changelist')
         }
         return template.render(context)
-
-    def get_urls(self):
-        urls = super(MemberPlatformSettingsAdmin, self).get_urls()
-
-        extra_urls = [
-            path(
-                'renew-access-code/',
-                self.admin_site.admin_view(self.renew_access_code),
-                name='members_memberplatformsettings_renew_code'
-            ),
-        ]
-        return extra_urls + urls
-
-    def renew_access_code(self, request):
-        import secrets
-        import string
-
-        obj = MemberPlatformSettings.load()
-
-        alphabet = string.ascii_letters + string.digits
-        new_code = ''.join(secrets.choice(alphabet) for _ in range(12))
-
-        obj.request_access_code = new_code
-        obj.save()
-
-        self.message_user(request, _('Access code has been renewed successfully.'))
-        return HttpResponseRedirect(reverse('admin:members_memberplatformsettings_change', args=(obj.id,)))
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         """
@@ -595,8 +535,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
     def get_list_filter(self, request):
         filters = super().get_list_filter(request)
-        settings = MemberPlatformSettings.load()
-        if settings.account_creation_rules == 'whitelist_and_request':
+        if PasswordAuthentication.objects.filter(enabled=True, account_creation_rules='whitelist_and_request').exists():
             filters += ('accepted',)
         return filters
 
@@ -622,8 +561,8 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
     def get_permission_fields(self, request, obj=None):
         fields = self.permission_fields.copy()
-        settings = MemberPlatformSettings.load()
-        if settings.account_creation_rules == 'whitelist_and_request':
+
+        if PasswordAuthentication.objects.filter(enabled=True, account_creation_rules='whitelist_and_request').exists():
             fields.insert(2, 'accepted')
         if OfficeSubRegion.objects.count():
             fields.insert(4, 'office_manager_info')

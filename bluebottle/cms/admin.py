@@ -65,7 +65,7 @@ class LinkGroupAdmin(NonSortableParentAdmin):
 
 class LinkGroupInline(SortableTabularInline):
     model = LinkGroup
-    readonly_fields = ('title', 'edit_url',)
+    readonly_fields = ('edit_url',)
     fields = ('name', 'title', 'edit_url',)
     extra = 0
 

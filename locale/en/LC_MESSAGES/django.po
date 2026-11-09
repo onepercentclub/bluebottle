@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 12:08+0100\n"
+"POT-Creation-Date: 2026-11-09 09:54+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3614,24 +3614,24 @@ msgstr ""
 msgid "Site links"
 msgstr ""
 
-#: bluebottle/cms/models.py:122 bluebottle/members/admin.py:584
-msgid "Main"
+#: bluebottle/cms/models.py:122 bluebottle/cms/models.py:540
+msgid "Header"
 msgstr ""
 
 #: bluebottle/cms/models.py:123
-msgid "About"
+msgid "Footer - Column 1"
 msgstr ""
 
-#: bluebottle/cms/models.py:124 bluebottle/geo/admin.py:137
-msgid "Info"
+#: bluebottle/cms/models.py:124
+msgid "Footer - Column 2"
 msgstr ""
 
 #: bluebottle/cms/models.py:125
-msgid "Discover"
+msgid "Footer - Column 3"
 msgstr ""
 
 #: bluebottle/cms/models.py:126
-msgid "Social"
+msgid "Footer - Column 4"
 msgstr ""
 
 #: bluebottle/cms/models.py:144
@@ -3885,10 +3885,6 @@ msgstr ""
 msgid ""
 "You can upload an image with a 16:9 aspect ratio for best results or an "
 "illustration/icon as a square."
-msgstr ""
-
-#: bluebottle/cms/models.py:540
-msgid "Header"
 msgstr ""
 
 #: bluebottle/cms/models.py:541 bluebottle/translations/admin.py:75
@@ -7042,6 +7038,10 @@ msgstr ""
 msgid "Work location region"
 msgstr ""
 
+#: bluebottle/geo/admin.py:137
+msgid "Info"
+msgstr ""
+
 #: bluebottle/geo/admin.py:150 bluebottle/segments/admin.py:166
 msgid "SSO"
 msgstr ""
@@ -9025,6 +9025,10 @@ msgstr ""
 msgid ""
 "You cannot select both work location groups managed and work locations "
 "managed."
+msgstr ""
+
+#: bluebottle/members/admin.py:584
+msgid "Main"
 msgstr ""
 
 #: bluebottle/members/admin.py:618

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 12:08+0100\n"
-"PO-Revision-Date: 2026-11-06 11:09\n"
+"POT-Creation-Date: 2026-11-09 09:54+0100\n"
+"PO-Revision-Date: 2026-11-09 08:55\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -3504,25 +3504,25 @@ msgstr "Moet de toestemming aanwezig zijn of niet om toegang te krijgen tot de l
 msgid "Site links"
 msgstr "Website links"
 
-#: bluebottle/cms/models.py:122 bluebottle/members/admin.py:584
-msgid "Main"
-msgstr "Hoofd"
+#: bluebottle/cms/models.py:122 bluebottle/cms/models.py:540
+msgid "Header"
+msgstr "Header"
 
 #: bluebottle/cms/models.py:123
-msgid "About"
-msgstr "Over"
+msgid "Footer - Column 1"
+msgstr "Voettekst - Kolom 1"
 
-#: bluebottle/cms/models.py:124 bluebottle/geo/admin.py:137
-msgid "Info"
-msgstr "Info"
+#: bluebottle/cms/models.py:124
+msgid "Footer - Column 2"
+msgstr "Voettekst - Kolom 2"
 
 #: bluebottle/cms/models.py:125
-msgid "Discover"
-msgstr "Ontdek"
+msgid "Footer - Column 3"
+msgstr "Voettekst - Kolom 3"
 
 #: bluebottle/cms/models.py:126
-msgid "Social"
-msgstr "Sociaal"
+msgid "Footer - Column 4"
+msgstr "Voettekst - Kolom 4"
 
 #: bluebottle/cms/models.py:144
 msgid "Groups that can see this link. Leave empty if it should be visible to everyone."
@@ -3768,10 +3768,6 @@ msgstr "Slides"
 #: bluebottle/cms/models.py:537
 msgid "You can upload an image with a 16:9 aspect ratio for best results or an illustration/icon as a square."
 msgstr "Je kunt een afbeelding uploaden met een beeldverhouding van 16:9 voor de beste resultaten of een vierkante illustratie/icoon."
-
-#: bluebottle/cms/models.py:540
-msgid "Header"
-msgstr "Header"
 
 #: bluebottle/cms/models.py:541 bluebottle/translations/admin.py:75
 msgid "Text"
@@ -6876,6 +6872,10 @@ msgstr "Werk locatie groep"
 msgid "Work location region"
 msgstr "Werk locatie regio"
 
+#: bluebottle/geo/admin.py:137
+msgid "Info"
+msgstr "Info"
+
 #: bluebottle/geo/admin.py:150 bluebottle/segments/admin.py:166
 msgid "SSO"
 msgstr "SSO"
@@ -8816,6 +8816,10 @@ msgstr "Toegangscode is met succes vernieuwd."
 #: bluebottle/members/admin.py:447
 msgid "You cannot select both work location groups managed and work locations managed."
 msgstr "Je kunt niet zowel beheerde werklocatiegroepen als beheerde werklocaties selecteren."
+
+#: bluebottle/members/admin.py:584
+msgid "Main"
+msgstr "Hoofd"
 
 #: bluebottle/members/admin.py:618
 msgid "Permissions"

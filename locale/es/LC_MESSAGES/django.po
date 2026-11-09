@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 12:08+0100\n"
-"PO-Revision-Date: 2026-11-06 11:09\n"
+"POT-Creation-Date: 2026-11-09 09:54+0100\n"
+"PO-Revision-Date: 2026-11-09 08:55\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -3509,25 +3509,25 @@ msgstr "¿Debería el permiso estar presente o no para acceder al enlace?"
 msgid "Site links"
 msgstr "Enlaces del sitio"
 
-#: bluebottle/cms/models.py:122 bluebottle/members/admin.py:584
-msgid "Main"
-msgstr "Principal"
+#: bluebottle/cms/models.py:122 bluebottle/cms/models.py:540
+msgid "Header"
+msgstr "Cabecera"
 
 #: bluebottle/cms/models.py:123
-msgid "About"
-msgstr "Acerca de"
+msgid "Footer - Column 1"
+msgstr "Pie de página - Columna 1"
 
-#: bluebottle/cms/models.py:124 bluebottle/geo/admin.py:137
-msgid "Info"
-msgstr "Información"
+#: bluebottle/cms/models.py:124
+msgid "Footer - Column 2"
+msgstr "Pie de página - Columna 2"
 
 #: bluebottle/cms/models.py:125
-msgid "Discover"
-msgstr "Descubre"
+msgid "Footer - Column 3"
+msgstr "Pie de página - Columna 3"
 
 #: bluebottle/cms/models.py:126
-msgid "Social"
-msgstr "Social"
+msgid "Footer - Column 4"
+msgstr "Pie de página - Columna 4"
 
 #: bluebottle/cms/models.py:144
 msgid "Groups that can see this link. Leave empty if it should be visible to everyone."
@@ -3773,10 +3773,6 @@ msgstr "Diapositivas"
 #: bluebottle/cms/models.py:537
 msgid "You can upload an image with a 16:9 aspect ratio for best results or an illustration/icon as a square."
 msgstr "Puede subir una imagen con una relación de aspecto 16:9 para mejores resultados o una ilustración/icono como cuadrado."
-
-#: bluebottle/cms/models.py:540
-msgid "Header"
-msgstr "Cabecera"
 
 #: bluebottle/cms/models.py:541 bluebottle/translations/admin.py:75
 msgid "Text"
@@ -6888,6 +6884,10 @@ msgstr "Grupo de ubicación de trabajo"
 msgid "Work location region"
 msgstr "Región de ubicación de trabajo"
 
+#: bluebottle/geo/admin.py:137
+msgid "Info"
+msgstr "Información"
+
 #: bluebottle/geo/admin.py:150 bluebottle/segments/admin.py:166
 msgid "SSO"
 msgstr "SO"
@@ -8833,6 +8833,10 @@ msgstr "El código de acceso ha sido renovado con éxito."
 #: bluebottle/members/admin.py:447
 msgid "You cannot select both work location groups managed and work locations managed."
 msgstr "No puedes seleccionar tanto grupos de ubicación de trabajo gestionados como ubicaciones de trabajo gestionadas."
+
+#: bluebottle/members/admin.py:584
+msgid "Main"
+msgstr "Principal"
 
 #: bluebottle/members/admin.py:618
 msgid "Permissions"

@@ -6,13 +6,16 @@ from django.contrib.admin.options import csrf_protect_m
 from django.contrib.contenttypes.admin import GenericStackedInline
 from django.db import router, transaction
 from django.forms import TextInput
+from django.forms.models import BaseInlineFormSet
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+from django_quill.widgets import QuillWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm, TranslatedField
 
+from bluebottle.notifications.activity_messages import get_customisable_actions
 from bluebottle.notifications.models import (
     Message, NotificationPlatformSettings, MessageTemplate, ActivityMessageTemplate
 )
@@ -38,8 +41,35 @@ class MessageAdminInline(GenericStackedInline):
     can_delete = False
 
 
+class ActivityMessageTemplateAdminForm(forms.ModelForm):
+    def __init__(self, *args, activity=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        actions = get_customisable_actions(activity) if activity and activity.pk else []
+        if self.instance.action and self.instance.action not in actions:
+            actions.append(self.instance.action)
+
+        labels = dict(ActivityMessageTemplate.ACTIONS)
+        self.fields['action'].choices = [('', '---------')] + [
+            (action, labels[action]) for action in actions
+        ]
+        self.fields['body_html'].widget = QuillWidget(config_name='activity_message')
+
+    class Meta:
+        model = ActivityMessageTemplate
+        fields = ['action', 'body_html']
+
+
+class ActivityMessageTemplateFormSet(BaseInlineFormSet):
+    def get_form_kwargs(self, index):
+        kwargs = super().get_form_kwargs(index)
+        kwargs['activity'] = self.instance
+        return kwargs
+
+
 class ActivityMessageTemplateAdminInline(admin.StackedInline):
     model = ActivityMessageTemplate
+    form = ActivityMessageTemplateAdminForm
+    formset = ActivityMessageTemplateFormSet
     fields = ['action', 'body_html']
     extra = 0
 

@@ -425,6 +425,7 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_title',
             'next_step_description',
             'next_step_button_label',
+            'send_thank_you_message',
             'admin_url',
             'partner_organization',
             'host_organization',

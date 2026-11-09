@@ -213,9 +213,11 @@ class TransitionMessage(object):
         activity = self.get_activity()
         action = get_message_action(activity, self) if activity and activity.pk else None
         if action:
-            activity_template = ActivityMessageTemplate.objects.filter(
-                activity=activity, action=action
-            ).first()
+            templates = ActivityMessageTemplate.objects.filter(activity=activity)
+            activity_template = templates.filter(action=action).first()
+            if not activity_template and action == 'join' and getattr(activity, 'review', False):
+                # Review activities only expose the accept ("Welcome") template
+                activity_template = templates.filter(action='accept').first()
             if activity_template:
                 return activity_template
         return MessageTemplate.objects.filter(message=path).first()
@@ -224,6 +226,13 @@ class TransitionMessage(object):
         if isinstance(custom_template, MessageTemplate):
             custom_template.set_current_language(language)
         try:
+            if isinstance(custom_template, ActivityMessageTemplate):
+                return (
+                    str(self.subject).format(**context),
+                    mark_safe(custom_template.body_html.html),
+                    custom_template.insert_method,
+                )
+
             escaped = {key: conditional_escape(value) for key, value in context.items()}
             subject = custom_template.subject or str(self.subject)
             return (

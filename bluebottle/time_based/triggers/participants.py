@@ -37,6 +37,10 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
 )
+from bluebottle.time_based.messages.thank_you import (
+    DateParticipantThankYouNotification,
+    ScheduleParticipantThankYouNotification,
+)
 from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
@@ -686,6 +690,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             ScheduleParticipantStateMachine.succeed,
             effects=[
+                NotificationEffect(ScheduleParticipantThankYouNotification),
                 RelatedTransitionEffect(
                     "activity",
                     ScheduleActivityStateMachine.lock,
@@ -1198,6 +1203,16 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         """Review not needed"""
         return not effect.instance.activity.review
 
+    def joins_without_review(effect):
+        """Review not needed or registration already accepted"""
+        return (
+            not effect.instance.activity.review
+            or (
+                effect.instance.registration is not None
+                and effect.instance.registration.status == "accepted"
+            )
+        )
+
     def slot_is_in_future(effect):
         """Check if the slot is in the future."""
         return effect.instance.slot.start > now()
@@ -1255,7 +1270,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 NotificationEffect(
                     ParticipantSlotParticipantRegisteredNotification,
                     conditions=[
-                        review_disabled,
+                        joins_without_review,
                         is_participant
                     ]
                 ),
@@ -1320,6 +1335,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.succeed,
             effects=[
+                NotificationEffect(DateParticipantThankYouNotification),
                 RelatedTransitionEffect(
                     'activity',
                     DateStateMachine.succeed,

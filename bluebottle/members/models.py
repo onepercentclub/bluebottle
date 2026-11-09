@@ -13,7 +13,6 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
-from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
 
@@ -644,7 +643,6 @@ class SAMLAuthentication(AuthenticationMethod):
     debug = models.BooleanField(_('Debug'), default=True)
     strict = models.BooleanField(_('Strict'), default=True)
 
-
     class JSONAPIMeta:
         resource_name = 'authentication-methods/saml'
 
@@ -657,11 +655,9 @@ class SAMLAuthentication(AuthenticationMethod):
             self.single_logout_url = parsed['idp']['singleLogoutService']['url']
             self.certificate = parsed['idp']['x509cert']
 
-
             self.metadata_file.seek(0)
 
         super().save(*args, **kwargs)
-
 
     @property
     def method(self):

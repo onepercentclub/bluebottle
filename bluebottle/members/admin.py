@@ -28,10 +28,7 @@ from rest_framework.authtoken.models import Token
 
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
-    PolymorphicChildModelFilter,
-    PolymorphicInlineSupportMixin,
     PolymorphicParentModelAdmin,
-    StackedPolymorphicInline,
 )
 
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -70,7 +67,10 @@ from bluebottle.utils.admin import (
 )
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from .models import AuthenticationMethod, FacebookAuthentication, GoogleAuthentication, Member, PasswordAuthentication, SAMLAuthentication, SAMLSegmentMapping, SocialLoginSettings, UserSegment
+from .models import (
+    AuthenticationMethod, FacebookAuthentication, GoogleAuthentication, Member, PasswordAuthentication,
+    SAMLAuthentication, SAMLSegmentMapping, UserSegment
+)
 from ..grant_management.models import GrantApplication
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
@@ -163,7 +163,7 @@ class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
         (_('Basic'), {'fields': ['enabled', 'confirm_signup']}),
         (_('Request Access'), {
             'fields': [
-                'account_creation_rules', 'email_domains',  'request_access_method',
+                'account_creation_rules', 'email_domains', 'request_access_method',
                 'request_access_info', 'request_access_code', 'request_access_code_display',
             ]
         }),
@@ -256,7 +256,6 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
             ]
         })
     )
-
 
 
 @admin.register(MemberPlatformSettings)

@@ -600,16 +600,20 @@ class DateReviewJoinMessageTemplateTestCase(BluebottleTestCase):
             'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title)
         )
         self.assertIn('You are registered for a time slot', messages[0].body)
-        self.assertIn('Hi Henk, see you soon!', messages[0].body)
+        self.assertIn('Hi there, see you soon!', messages[0].body)
 
     def test_join_template_beats_accept_template(self):
         create_template(self.activity)
-        create_template(self.activity, action='join', subject='Joined {title}')
+        create_template(
+            self.activity,
+            action='join',
+            body_html=json.dumps({'html': '<p>Joined body</p>', 'delta': ''}),
+        )
         self.join_after_accept()
 
-        self.assertEqual(
-            self.user_mails()[0].subject, 'Joined {}'.format(self.activity.title)
-        )
+        body = self.user_mails()[0].body
+        self.assertIn('Joined body', body)
+        self.assertNotIn('see you soon', body)
 
     def test_review_disabled_ignores_accept_template(self):
         self.activity.review = False

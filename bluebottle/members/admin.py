@@ -1,6 +1,9 @@
 import functools
 from builtins import object
 
+import secrets
+import string
+
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
 from django import forms
@@ -169,6 +172,11 @@ class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
         }),
     )
 
+     radio_fields = {
+        'account_creation_rules': admin.HORIZONTAL,
+        'request_access_method': admin.HORIZONTAL,
+     }
+
     def request_access_info(self, obj):
         return admin_info_box(
             _(
@@ -197,18 +205,15 @@ class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
 
         extra_urls = [
             path(
-                'renew-access-code/',
+                'renew-access-code/<int:pk>/',
                 self.admin_site.admin_view(self.renew_access_code),
                 name='members_passwordauthentication_renew_code'
             ),
         ]
         return extra_urls + urls
 
-    def renew_access_code(self, request):
-        import secrets
-        import string
-
-        obj = MemberPlatformSettings.load()
+    def renew_access_code(self, request, pk):
+        obj = self.model.get(pk=pk)
 
         alphabet = string.ascii_letters + string.digits
         new_code = ''.join(secrets.choice(alphabet) for _ in range(12))

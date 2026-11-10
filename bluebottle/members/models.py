@@ -556,7 +556,6 @@ class PasswordAuthentication(AuthenticationMethod):
         _('verify email on sign up'),
         default=False,
         inline_label=_('Require users to verify their email on sign-up'),
-        help_text=_('This rule only applies to the email + password method.'),
     )
 
     account_creation_rules = CharField(
@@ -645,19 +644,6 @@ class SAMLAuthentication(AuthenticationMethod):
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/saml'
-
-    def save(self, *args, **kwargs):
-        if not self.metadata_file._committed:
-            __import__('ipdb').set_trace()
-            parsed = MetadataParser.parse(self.metadata_file.read())
-            self.entity_id = parsed['idp']['entityId']
-            self.single_sign_on_url = parsed['idp']['singleSignOnService']['url']
-            self.single_logout_url = parsed['idp']['singleLogoutService']['url']
-            self.certificate = parsed['idp']['x509cert']
-
-            self.metadata_file.seek(0)
-
-        super().save(*args, **kwargs)
 
     @property
     def method(self):

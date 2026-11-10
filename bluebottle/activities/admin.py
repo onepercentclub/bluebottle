@@ -2,8 +2,9 @@ import re
 
 from django import forms
 from django.contrib import admin, messages
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
 from django.db import connection
+from django.http import Http404
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.loader import render_to_string
@@ -273,8 +274,17 @@ class OrganizerAdmin(ContributorChildAdmin):
     )
 
 
+class InvalidObjectIdMixin:
+    def _get_real_admin(self, object_id, super_if_self=True):
+        try:
+            return super()._get_real_admin(object_id, super_if_self=super_if_self)
+        except (ValidationError, ValueError):
+            raise Http404
+
+
 @admin.register(Contribution)
 class ContributionAdmin(
+    InvalidObjectIdMixin,
     PolymorphicParentModelAdmin,
     RegionManagerAdminMixin,
     ActivitySegmentAdminMixin,
@@ -338,6 +348,12 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin
     superadmin_fields = [
         'force_status',
     ]
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if obj is None and 'contributor' in form.base_fields:
+            form.base_fields['contributor'].required = True
+        return form
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -1014,6 +1030,7 @@ class ActivityChildAdmin(
 
 @admin.register(Activity)
 class ActivityAdmin(
+    InvalidObjectIdMixin,
     PolymorphicParentModelAdmin,
     RegionManagerAdminMixin,
     ActivitySegmentAdminMixin,

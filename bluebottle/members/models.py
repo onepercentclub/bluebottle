@@ -16,9 +16,6 @@ from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
 
-
-from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser as MetadataParser
-
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import Place, Location
@@ -178,8 +175,11 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     translate_user_content = models.BooleanField(
-        _('translate user content'),
-        help_text=_('Give users the option to translate user generated content.'),
+        _("Translate user content into each visitor's chosen language."),
+        help_text=_(
+            'Visitors see translated content by default and can switch back to the original. '
+            'Content is translated by DeepL.'
+        ),
         default=False
     )
 

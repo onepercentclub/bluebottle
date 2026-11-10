@@ -1,8 +1,14 @@
 import json
+from unittest import mock
 
+from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 from django_quill.widgets import QuillWidget
+from djmoney.money import Money
 
+from bluebottle.funding.models import PaymentProvider
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.fields import MoneyFormField
 from bluebottle.utils.forms import CustomMessageFormField
 
 
@@ -30,3 +36,21 @@ class CustomMessageFormFieldTestCase(SimpleTestCase):
         cleaned = field.clean('Line one\n\nLine two')
         self.assertIn('<p>Line one</p>', cleaned)
         self.assertIn('Line two', cleaned)
+
+
+class MoneyFormFieldTestCase(BluebottleTestCase):
+
+    def test_clean_without_currency(self):
+        field = MoneyFormField(required=False)
+        with self.assertRaises(ValidationError) as error:
+            field.clean(['1000.00', ''])
+        self.assertEqual(error.exception.code, 'invalid_currency')
+
+    def test_clean_without_amount(self):
+        field = MoneyFormField(required=False)
+        self.assertIsNone(field.clean(['', '']))
+
+    @mock.patch.object(PaymentProvider, 'get_currency_choices', return_value=[('EUR', 'Euro')])
+    def test_clean(self, _):
+        field = MoneyFormField(required=False)
+        self.assertEqual(field.clean(['1000.00', 'EUR']), Money('1000.00', 'EUR'))

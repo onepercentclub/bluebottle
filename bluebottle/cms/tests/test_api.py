@@ -297,6 +297,7 @@ class HomeTestCase(APITestCase):
         poll.title = 'Favourite colour'
         poll.subtitle = 'Pick one'
         poll.status = 'closed'
+        poll.show_vote_count = True
         poll.save()
         winner = PollOptionFactory.create(poll=poll, title='Blue')
         other = PollOptionFactory.create(poll=poll, title='Green')

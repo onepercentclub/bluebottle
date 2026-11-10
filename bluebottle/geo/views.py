@@ -96,13 +96,11 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
     ]
 
     def perform_create(self, serializer):
-        try:
-            if 'mapbox_id' in serializer.validated_data:
-                serializer.instance = Place.objects.get(
-                    mapbox_id=serializer.validated_data['mapbox_id'],
-                )
-        except Place.DoesNotExist:
-            pass
+        mapbox_id = serializer.validated_data.get('mapbox_id')
+        if mapbox_id:
+            serializer.instance = Place.objects.filter(
+                mapbox_id=mapbox_id
+            ).order_by('pk').first()
 
         return super().perform_create(serializer)
 

@@ -173,8 +173,8 @@ class OrganizationSerializer(FederatedObjectSerializer):
 
 class LocationSerializer(FederatedObjectSerializer):
     id = FederatedIdField('json-ld:place')
-    latitude = serializers.FloatField(source='position.x', allow_null=True)
-    longitude = serializers.FloatField(source='position.y', allow_null=True)
+    latitude = serializers.FloatField(source='position.y', allow_null=True)
+    longitude = serializers.FloatField(source='position.x', allow_null=True)
     name = serializers.SerializerMethodField()
     place_type = serializers.SerializerMethodField()
     identifier = IdentifierField(required=False, allow_null=True)

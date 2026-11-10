@@ -3,6 +3,8 @@ from typing import List, Optional, Sequence
 
 import wcag_contrast_ratio as contrast
 from PIL import ImageColor
+from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 PAGE_BACKGROUND = '#FFFFFF'
@@ -323,3 +325,15 @@ def evaluate_platform_colors(settings) -> List[PairResult]:
         pairs.append(link)
 
     return pairs
+
+
+def render_solid_preview(field_id, intro, caption, accessible):
+    return mark_safe(render_to_string(
+        'admin/cms/solid_color_contrast_panel.html',
+        {
+            'field_id': field_id,
+            'intro': intro,
+            'caption': caption,
+            'accessible': accessible,
+        },
+    ))

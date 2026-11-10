@@ -3,16 +3,15 @@ from builtins import str
 from django import forms
 from django.contrib import admin
 from django.db import models
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from bluebottle.activities.models import Activity
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.cms.utils.color_contrast import render_solid_preview
 from bluebottle.initiatives.models import Initiative
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
@@ -97,7 +96,7 @@ class OrganizationAdmin(
         css = {
             'all': ('admin/css/platform_color_contrast.css',)
         }
-        js = ('admin/js/organization_color_contrast.js',)
+        js = ('admin/js/color_contrast_base.js', 'admin/js/solid_color_contrast.js')
 
     list_display = ('name', 'website', 'verified', 'created')
     list_filter = (
@@ -120,11 +119,12 @@ class OrganizationAdmin(
     }
 
     def color_contrast_panel(self, obj):
-        platform = SitePlatformSettings.load()
-        return mark_safe(render_to_string(
-            'admin/organizations/color_contrast_panel.html',
-            {'accessible': platform.accessible_colours},
-        ))
+        return render_solid_preview(
+            'id_color',
+            _('How this colour will look on the organisation page'),
+            _('Header background'),
+            SitePlatformSettings.load().accessible_colours,
+        )
 
     color_contrast_panel.short_description = _('Colour preview')
 

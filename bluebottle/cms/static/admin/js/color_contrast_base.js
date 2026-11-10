@@ -1,10 +1,9 @@
-(function () {
+(function (global) {
     'use strict';
 
     var WHITE = '#FFFFFF';
     var DARK_NEUTRAL = '#2A2A2A';
     var DARK_TEXT_RATIO = 7;
-    var COLOR_FIELD_ID = 'id_color';
 
     function normalizeHex(value) {
         if (!value) {
@@ -72,6 +71,16 @@
         return ratio >= 4.5;
     }
 
+    function mixWithWhite(hex, amount) {
+        var rgb = parseRgb(hex);
+        var weight = amount / 100;
+        return hexFromRgb(
+            (255 - rgb.r) * weight + rgb.r,
+            (255 - rgb.g) * weight + rgb.g,
+            (255 - rgb.b) * weight + rgb.b
+        );
+    }
+
     function mixWithBlack(hex, amount) {
         var rgb = parseRgb(hex);
         var keep = 1 - amount / 100;
@@ -94,6 +103,42 @@
             return DARK_NEUTRAL;
         }
         return whiteRatio >= darkRatio ? WHITE : DARK_NEUTRAL;
+    }
+
+    function ensureContrast(foreground, background) {
+        foreground = normalizeHex(foreground);
+        background = normalizeHex(background);
+        if (!foreground || !background) {
+            return null;
+        }
+        if (passesAa(contrastRatio(foreground, background))) {
+            return foreground;
+        }
+        var low = 1;
+        var high = 100;
+        var best = null;
+        while (low <= high) {
+            var mid = Math.floor((low + high) / 2);
+            var candidate = mixWithBlack(foreground, mid);
+            if (passesAa(contrastRatio(candidate, background))) {
+                best = candidate;
+                high = mid - 1;
+            } else {
+                low = mid + 1;
+            }
+        }
+        return best || DARK_NEUTRAL;
+    }
+
+    function ensureContrastOnSurfaces(foreground, backgrounds) {
+        var result = normalizeHex(foreground);
+        if (!result) {
+            return null;
+        }
+        backgrounds.forEach(function (background) {
+            result = ensureContrast(result, background);
+        });
+        return result;
     }
 
     function ensureReadableFill(fill) {
@@ -120,8 +165,8 @@
         return best || '#000000';
     }
 
-    function applySwatch(background, color, altered) {
-        var root = document.querySelector('[data-preview="organization-solid"]');
+    function applySwatch(name, background, color, altered) {
+        var root = document.querySelector('[data-preview="' + name + '"]');
         if (!root) {
             return;
         }
@@ -137,72 +182,32 @@
         }
     }
 
-    function accessibleEnabled() {
-        var panel = document.getElementById('organization-color-contrast-panel');
-        return Boolean(panel && panel.getAttribute('data-accessible') === 'true');
+    function failsContrast(foreground, background) {
+        if (!foreground || !background) {
+            return false;
+        }
+        return !passesAa(contrastRatio(foreground, background));
     }
 
     function showDisclaimer(kind, visible) {
-        var note = document.querySelector(
-            '#organization-color-contrast-panel [data-disclaimer="' + kind + '"]'
-        );
+        var note = document.querySelector('[data-disclaimer="' + kind + '"]');
         if (note) {
             note.hidden = !visible;
         }
     }
 
-    function fieldValue() {
-        var input = document.getElementById(COLOR_FIELD_ID);
-        if (!input) {
-            return null;
-        }
-        return normalizeHex(input.value);
-    }
-
-    function update() {
-        var brand = fieldValue();
-        var accessible = accessibleEnabled();
-        if (!brand) {
-            applySwatch(null, null, false);
-            showDisclaimer('adjusted', false);
-            showDisclaimer('contrast', false);
-            return;
-        }
-        if (accessible) {
-            var fill = ensureReadableFill(brand);
-            var onSolid = chooseOnColor(fill);
-            var fillAdjusted = fill !== brand;
-            applySwatch(fill, onSolid, fillAdjusted);
-            showDisclaimer('adjusted', fillAdjusted);
-            showDisclaimer('contrast', false);
-            return;
-        }
-        var textColor = chooseOnColor(brand);
-        var solidLow = !passesAa(contrastRatio(textColor, brand));
-        applySwatch(brand, textColor, solidLow);
-        showDisclaimer('adjusted', false);
-        showDisclaimer('contrast', solidLow);
-    }
-
-    function bind() {
-        var panel = document.getElementById('organization-color-contrast-panel');
-        if (!panel) {
-            return;
-        }
-
-        var input = document.getElementById(COLOR_FIELD_ID);
-        if (input) {
-            input.addEventListener('input', update);
-            input.addEventListener('change', update);
-        }
-
-        update();
-        window.setInterval(update, 500);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bind);
-    } else {
-        bind();
-    }
-})();
+    global.ColorContrast = {
+        WHITE: WHITE,
+        normalizeHex: normalizeHex,
+        contrastRatio: contrastRatio,
+        passesAa: passesAa,
+        mixWithWhite: mixWithWhite,
+        chooseOnColor: chooseOnColor,
+        ensureContrast: ensureContrast,
+        ensureContrastOnSurfaces: ensureContrastOnSurfaces,
+        ensureReadableFill: ensureReadableFill,
+        applySwatch: applySwatch,
+        failsContrast: failsContrast,
+        showDisclaimer: showDisclaimer
+    };
+})(window);

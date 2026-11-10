@@ -67,6 +67,6 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
             args=(organization.pk,),
         )
         page = self.app.get(url)
-        self.assertTrue(page.html.find(id='organization-color-contrast-panel'))
+        self.assertTrue(page.html.find(attrs={'data-field-id': 'id_color'}))
         self.assertTrue(page.html.find(id='id_color'))
-        self.assertIn('organization_color_contrast.js', page.text)
+        self.assertIn('solid_color_contrast.js', page.text)

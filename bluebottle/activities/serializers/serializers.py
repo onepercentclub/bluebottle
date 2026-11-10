@@ -88,7 +88,7 @@ from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedFi
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
 
-ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
+ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity", ])
 
 
 class ActivityLocationRelationSerializer(Serializer):
@@ -103,9 +103,19 @@ class ActivityLocationSerializer(Serializer):
         read_only=True,
         model=ActivityLocation,
     )
+    link = PolymorphicSerializerMethodResourceRelatedField(
+        ActivityLocationRelationSerializer,
+        read_only=True,
+        model=ActivityLocation,
+    )
 
     def get_activity(self, obj):
-        return obj.activity
+        if isinstance(obj.activity, Activity):
+            return obj.activity
+
+    def get_link(self, obj):
+        if not isinstance(obj.activity, Activity):
+            return obj.activity
 
     class JSONAPIMeta:
         resource_name = "activity-locations"
@@ -152,6 +162,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
     class Meta(object):
         model = Activity
         meta_fields = (
+            "roles",
             "permissions",
             "transitions",
             "created",
@@ -187,6 +198,11 @@ class PreviewRelatedActivityField(PolymorphicResourceRelatedField):
         return {"id": obj.meta.id, "type": obj.resource_name}
 
 
+class DocumentObjectField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return value.to_dict()
+
+
 class ActivityPreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
@@ -212,8 +228,13 @@ class ActivityPreviewSerializer(ModelSerializer):
     amount_raised = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
 
-    capacity = serializers.SerializerMethodField()
-    contributor_count = serializers.SerializerMethodField()
+    capacity = serializers.ReadOnlyField()
+    contributor_count = serializers.ReadOnlyField()
+    contributor_stats = DocumentObjectField(default=None)
+    registration_stats = DocumentObjectField(default=None)
+    team_stats = DocumentObjectField(default=None)
+    review = serializers.ReadOnlyField(default=None)
+    slots = DocumentObjectField(source='slot_stats', default=None)
 
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
@@ -480,12 +501,6 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_owner(self, obj):
         return obj.owner.full_name if obj.owner else None
 
-    def get_contributor_count(self, obj):
-        return obj.contributor_count
-
-    def get_capacity(self, obj):
-        return obj.capacity
-
     def get_collect(self, obj):
         return obj.capacity
 
@@ -526,6 +541,11 @@ class ActivityPreviewSerializer(ModelSerializer):
             "activity",
             "capacity",
             "contributor_count",
+            "contributor_stats",
+            "registration_stats",
+            "team_stats",
+            "review",
+            "slots",
             "translations"
         )
         meta_fields = (

@@ -121,6 +121,16 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         for resource in response.json()['data']:
             self.assertIn('value', resource['attributes'])
 
+    def test_get_office_subregion_unknown_query(self):
+        DatabaseStatisticFactory(query='manual')
+
+        response = self.client.get(
+            self.url + '?filter[type]=office_subregion', user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 3)
+
     def test_get_anonymous_office_region(self):
         response = self.client.get(self.url + '?filter[type]=office_region')
 

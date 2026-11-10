@@ -1,9 +1,13 @@
+from datetime import datetime
 from io import BytesIO
 
 import requests
 from django.core.files import File
 from django.db import models
+from django.utils.timezone import localtime, now
 from rest_framework import serializers
+from rest_framework_json_api import serializers as json_api_serializers
+from rest_framework_json_api.relations import ResourceRelatedField
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_links.models import (
@@ -14,9 +18,12 @@ from bluebottle.activity_links.models import (
 from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.activity_pub.serializers.fields import MapboxIdField
 from bluebottle.files.models import Image
+from bluebottle.files.serializers import IMAGE_SIZES, ImageField, ImageSerializer
+from bluebottle.fsm.serializers import CurrentStatusField
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer
 from bluebottle.utils.fields import RichTextField
+from bluebottle.utils.serializers import MoneySerializer
 
 
 class LinkedActivityImageSerializer(serializers.ModelSerializer):
@@ -390,3 +397,234 @@ class LinkedActivitySerializer(PolymorphicSerializer):
 
     class Meta:
         model = LinkedActivity
+
+
+class LocalDateField(serializers.DateField):
+    def to_representation(self, value):
+        if isinstance(value, datetime):
+            value = localtime(value).date()
+        return super().to_representation(value)
+
+
+class LinkedActivityImageJSONAPISerializer(ImageSerializer):
+    sizes = IMAGE_SIZES
+    content_view_name = 'activity-links:image'
+    relationship = 'linkedactivity_set'
+
+
+class BaseLinkedActivityJSONAPISerializer(json_api_serializers.ModelSerializer):
+    description = RichTextField()
+    image = ImageField(required=False, allow_null=True)
+    host_organization = ResourceRelatedField(read_only=True)
+    current_status = CurrentStatusField(source='states.current_state')
+
+    class Meta:
+        model = LinkedActivity
+        fields = (
+            'id', 'title', 'description', 'link', 'current_status', 'archived',
+            'image', 'host_organization',
+        )
+        meta_fields = ('current_status', )
+        read_only_fields = fields
+
+    class JSONAPIMeta:
+        included_resources = ['image', 'host_organization']
+
+    included_serializers = {
+        'image': 'bluebottle.activity_links.serializers.LinkedActivityImageJSONAPISerializer',
+        'host_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+    }
+
+
+class LinkedActivityWithLocationJSONAPISerializer(BaseLinkedActivityJSONAPISerializer):
+    location = ResourceRelatedField(read_only=True)
+
+    class Meta(BaseLinkedActivityJSONAPISerializer.Meta):
+        fields = BaseLinkedActivityJSONAPISerializer.Meta.fields + ('location', )
+        read_only_fields = fields
+
+    class JSONAPIMeta(BaseLinkedActivityJSONAPISerializer.JSONAPIMeta):
+        included_resources = BaseLinkedActivityJSONAPISerializer.JSONAPIMeta.included_resources + [
+            'location'
+        ]
+
+    included_serializers = dict(
+        BaseLinkedActivityJSONAPISerializer.included_serializers,
+        location='bluebottle.geo.serializers.GeolocationSerializer',
+    )
+
+
+class LinkedDeedJSONAPISerializer(BaseLinkedActivityJSONAPISerializer):
+    class Meta(BaseLinkedActivityJSONAPISerializer.Meta):
+        model = LinkedDeed
+        fields = BaseLinkedActivityJSONAPISerializer.Meta.fields + ('start', 'end')
+        read_only_fields = fields
+
+    class JSONAPIMeta(BaseLinkedActivityJSONAPISerializer.JSONAPIMeta):
+        resource_name = 'activities/deed-links'
+
+
+class LinkedCollectCampaignJSONAPISerializer(LinkedActivityWithLocationJSONAPISerializer):
+    class Meta(LinkedActivityWithLocationJSONAPISerializer.Meta):
+        model = LinkedCollectCampaign
+        fields = LinkedActivityWithLocationJSONAPISerializer.Meta.fields + (
+            'location_hint', 'collect_type', 'start', 'end'
+        )
+        read_only_fields = fields
+
+    class JSONAPIMeta(LinkedActivityWithLocationJSONAPISerializer.JSONAPIMeta):
+        resource_name = 'activities/collect-links'
+
+
+class LinkedFundingJSONAPISerializer(LinkedActivityWithLocationJSONAPISerializer):
+    target = MoneySerializer(read_only=True)
+    amount_raised = MoneySerializer(read_only=True, source='donated')
+
+    class Meta(LinkedActivityWithLocationJSONAPISerializer.Meta):
+        model = LinkedFunding
+        fields = LinkedActivityWithLocationJSONAPISerializer.Meta.fields + ('target', 'amount_raised')
+        read_only_fields = fields
+
+    class JSONAPIMeta(LinkedActivityWithLocationJSONAPISerializer.JSONAPIMeta):
+        resource_name = 'activities/funding-links'
+
+
+class LinkedGrantApplicationJSONAPISerializer(LinkedActivityWithLocationJSONAPISerializer):
+    target = MoneySerializer(read_only=True)
+
+    class Meta(LinkedActivityWithLocationJSONAPISerializer.Meta):
+        model = LinkedGrantApplication
+        fields = LinkedActivityWithLocationJSONAPISerializer.Meta.fields + ('target',)
+        read_only_fields = fields
+
+    class JSONAPIMeta(LinkedActivityWithLocationJSONAPISerializer.JSONAPIMeta):
+        resource_name = 'activities/grant-application-links'
+
+
+class LinkedDeadlineActivityJSONAPISerializer(LinkedActivityWithLocationJSONAPISerializer):
+    deadline = LocalDateField(source='end', allow_null=True)
+
+    class Meta(LinkedActivityWithLocationJSONAPISerializer.Meta):
+        model = LinkedDeadlineActivity
+        fields = LinkedActivityWithLocationJSONAPISerializer.Meta.fields + ('duration', 'start', 'deadline')
+        read_only_fields = fields
+
+    class JSONAPIMeta(LinkedActivityWithLocationJSONAPISerializer.JSONAPIMeta):
+        resource_name = 'activities/deadline-links'
+
+
+class LinkedPeriodicActivityJSONAPISerializer(LinkedActivityWithLocationJSONAPISerializer):
+    deadline = LocalDateField(source='end', allow_null=True)
+
+    class Meta(LinkedActivityWithLocationJSONAPISerializer.Meta):
+        model = LinkedPeriodicActivity
+        fields = LinkedActivityWithLocationJSONAPISerializer.Meta.fields + ('duration', 'period', 'start', 'deadline')
+        read_only_fields = fields
+
+    class JSONAPIMeta(LinkedActivityWithLocationJSONAPISerializer.JSONAPIMeta):
+        resource_name = 'activities/periodic-links'
+
+
+class LinkedScheduleActivityJSONAPISerializer(LinkedActivityWithLocationJSONAPISerializer):
+    deadline = LocalDateField(source='end', allow_null=True)
+
+    class Meta(LinkedActivityWithLocationJSONAPISerializer.Meta):
+        model = LinkedScheduleActivity
+        fields = LinkedActivityWithLocationJSONAPISerializer.Meta.fields + ('duration', 'start', 'deadline')
+        read_only_fields = fields
+
+    class JSONAPIMeta(LinkedActivityWithLocationJSONAPISerializer.JSONAPIMeta):
+        resource_name = 'activities/schedule-links'
+
+
+class LinkedDateSlotJSONAPISerializer(json_api_serializers.ModelSerializer):
+    location = ResourceRelatedField(read_only=True)
+    duration = serializers.DurationField(read_only=True)
+
+    class Meta:
+        model = LinkedDateSlot
+        fields = ('id', 'start', 'end', 'duration', 'location')
+        read_only_fields = fields
+
+    class JSONAPIMeta:
+        resource_name = 'activities/date-link-slots'
+        included_resources = ['location']
+
+    included_serializers = {
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+    }
+
+
+class LinkedDateActivityJSONAPISerializer(BaseLinkedActivityJSONAPISerializer):
+    slots = ResourceRelatedField(many=True, read_only=True)
+    slot_count = serializers.SerializerMethodField()
+    date_info = serializers.SerializerMethodField()
+
+    def get_sorted_slots(self, obj, only_upcoming=False):
+        slots = sorted(
+            (slot for slot in obj.slots.all() if slot.start),
+            key=lambda slot: slot.start
+        )
+        if only_upcoming:
+            slots = [slot for slot in slots if slot.start >= now()]
+
+        return slots
+
+    def get_slot_count(self, obj):
+        upcoming = self.get_sorted_slots(obj, only_upcoming=True)
+        if upcoming:
+            return len(upcoming)
+        # Past activities: fall back to all slots.
+        return len(self.get_sorted_slots(obj))
+
+    def get_date_info(self, obj):
+        all_slots = self.get_sorted_slots(obj)
+        slots = self.get_sorted_slots(obj, only_upcoming=True)
+        total = len(all_slots)
+        end = max((slot.end for slot in all_slots if slot.end), default=None)
+        duration = None
+
+        if total > 1:
+            count = len(slots)
+            first = slots[0].start.date() if slots else None
+            end = end.date() if end else None
+        elif total == 1:
+            slot = all_slots[0]
+            first = slot.start
+            duration = slot.duration
+            count = 1
+        else:
+            first = None
+            count = 0
+
+        # Linked slots have no capacity, so capacity and spots left are unknown
+        return {
+            'total': total,
+            'has_multiple': total > 1,
+            'is_full': False,
+            'count': count,
+            'first': first,
+            'end': end,
+            'duration': duration,
+            'capacity': None,
+            'spots_left': None,
+        }
+
+    class Meta(BaseLinkedActivityJSONAPISerializer.Meta):
+        model = LinkedDateActivity
+        fields = BaseLinkedActivityJSONAPISerializer.Meta.fields + ('slots', 'slot_count', 'date_info')
+        read_only_fields = fields
+
+    class JSONAPIMeta(BaseLinkedActivityJSONAPISerializer.JSONAPIMeta):
+        resource_name = 'activities/date-links'
+        included_resources = BaseLinkedActivityJSONAPISerializer.JSONAPIMeta.included_resources + [
+            'slots', 'slots.location'
+        ]
+
+    included_serializers = dict(
+        BaseLinkedActivityJSONAPISerializer.included_serializers,
+        **{
+            'slots': 'bluebottle.activity_links.serializers.LinkedDateSlotJSONAPISerializer',
+            'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )

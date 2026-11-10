@@ -234,20 +234,81 @@ class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase
 
     activity_defaults = {}
 
+    def setUp(self):
+        super().setUp()
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+
+        self.activity = self.factory.create(
+            **self.activity_defaults,
+            review_title='document',
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+        )
+        self.first_slot = DateActivitySlotFactory.create(
+            activity=self.activity, status='open', start=now() + timedelta(days=5)
+        )
+        self.second_slot = DateActivitySlotFactory.create(
+            activity=self.activity, status='open', start=now() + timedelta(days=7)
+        )
+        self.third_slot = DateActivitySlotFactory.create(
+            activity=self.activity, status='cancelled'
+        )
+
+        self.participants = self.participant_factory.create_batch(
+            3,
+            activity=self.activity,
+            slot=self.first_slot,
+            status='accepted'
+        )
+        self.participants += self.participant_factory.create_batch(
+            3,
+            activity=self.activity,
+            slot=self.second_slot,
+            status='accepted'
+        )
+        self.participants += self.participant_factory.create_batch(
+            3,
+            activity=self.activity,
+            slot=self.third_slot,
+            status='cancelled'
+        )
+
+        response = self.client.get(
+            reverse(self.url_name, args=(self.activity.pk, )),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.activity.owner.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        self.url = data['attributes']['participants-export-url']['url']
+
     def test_get(self):
         self.perform_get(user=self.activity.owner)
 
         self.assertStatus(status.HTTP_200_OK)
 
         workbook = load_workbook(filename=BytesIO(self.response.content))
-        self.assertEqual(len(workbook.worksheets), 5)
+        self.assertEqual(len(workbook.worksheets), 1)
 
         sheet = workbook.get_active_sheet()
-
+        values = tuple(sheet.values)
         self.assertEqual(
-            tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer',)
+            values[0],
+            (
+                'Email', 'Name', 'Registration Date', 'Slot id', 'Slot start', 'Slot duration',
+                'Slot status', 'Participant status', 'Registration answer'
+            )
         )
+
+        for row in values[1:4]:
+            self.assertEqual(row[3], self.first_slot.title)
+
+        for row in values[4:7]:
+            self.assertEqual(row[3], self.second_slot.title)
+
+        for row in values[7:]:
+            self.assertEqual(row[3], self.third_slot.title)
 
 
 class DateSlotDetailAPITestCase(APITestCase):

@@ -578,6 +578,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'team_activities',
             'contact_method',
             'enable_impact',
+            'enable_reviewing',
             'enable_office_regions',
             'enable_office_restrictions',
             'available_office_restrictions',

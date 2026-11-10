@@ -16,6 +16,7 @@ from django.db import connection
 from django.test import TestCase, RequestFactory
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
+from django.utils.timezone import get_current_timezone
 from moneyed import Money
 from parler import appsettings
 
@@ -36,7 +37,9 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.storage import TenantFileSystemStorage
-from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
+from bluebottle.utils.utils import (
+    clean_for_hashtag, get_client_ip, get_current_timezone_for_location
+)
 from ..email_backend import send_mail, create_message
 
 
@@ -766,3 +769,22 @@ class GetCurrentLanguageTestCase(BluebottleTestCase):
     )
     def test_get_current_language_with_subcode(self, get_language):
         self.assertEqual(get_current_language().language_name, 'Plat Leids')
+
+
+class GetCurrentTimezoneForLocationTestCase(unittest.TestCase):
+    def test_location_timezone(self):
+        location = mock.Mock(timezone='America/New_York')
+        self.assertEqual(str(get_current_timezone_for_location(location)), 'America/New_York')
+
+    def test_online(self):
+        location = mock.Mock(timezone='America/New_York')
+        self.assertEqual(
+            get_current_timezone_for_location(location, is_online=True), get_current_timezone()
+        )
+
+    def test_location_without_timezone(self):
+        location = mock.Mock(timezone=None)
+        self.assertEqual(get_current_timezone_for_location(location), get_current_timezone())
+
+    def test_no_location(self):
+        self.assertEqual(get_current_timezone_for_location(None), get_current_timezone())

@@ -7,7 +7,6 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group
-from django.contrib.auth.tokens import default_token_generator
 from django.db import connection, models
 from django.db.models import Count, Q
 from django.forms import BaseInlineFormSet
@@ -19,7 +18,6 @@ from django.template.response import TemplateResponse
 from django.urls import NoReverseMatch, reverse
 from django.urls import path
 from django.utils.html import format_html
-from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
@@ -60,7 +58,7 @@ from bluebottle.utils.admin import (
     admin_info_box,
     export_as_csv_action,
 )
-from bluebottle.utils.email_backend import send_mail
+from bluebottle.members.messages import PasswordResetMessage
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, SocialLoginSettings, UserSegment
 from ..grant_management.models import GrantApplication
@@ -186,7 +184,7 @@ class MemberPlatformSettingsAdmin(
             }
         ),
         (
-            _('Translations'),
+            _('Automatic translations'),
             {
                 'fields': (
                     'translate_user_content',
@@ -916,7 +914,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     def grant_applications(self, obj):
         grants_url = reverse('admin:grant_management_grantapplication_changelist')
         grant_lines = []
-        grants = GrantApplication.objects.filter(owner=obj, status__in=['granted', 'succeeded'])
+        grants = GrantApplication.objects.filter(owner=obj, status__in=['granted', 'processing_payout', 'succeeded'])
         if grants.count():
             link = grants_url + '?owner_id={}'.format(obj.id)
             grant_lines.append(format_html(
@@ -1011,22 +1009,8 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         if not request.user.has_perm('members.change_member'):
             return HttpResponseForbidden('Not allowed to change user')
 
-        context = {
-            'email': user.email,
-            'site': tenant_url(),
-            'site_name': tenant_url(),
-            'uid': int_to_base36(user.pk),
-            'user': user,
-            'token': default_token_generator.make_token(user),
-        }
-        subject = loader.render_to_string('bb_accounts/password_reset_subject.txt', context)
-        subject = ''.join(subject.splitlines())
-        send_mail(
-            template_name='bb_accounts/password_reset_email',
-            to=user,
-            subject=subject,
-            **context
-        )
+        PasswordResetMessage(user).compose_and_send()
+
         message = _('User {name} will receive an email to reset password.').format(name=user.full_name)
         self.message_user(request, message)
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)))

@@ -150,13 +150,15 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
     def get_value(self, start=None, end=None, subregion=None, region=None, user=None):
         return getattr(
             Statistics(start, end, subregion=subregion, region=region, user=user),
-            self.query
+            self.query,
+            0
         )
 
     def get_live_value(self, start=None, end=None, subregion=None, region=None, user=None):
         return getattr(
             Statistics(start, end, subregion=subregion, region=region, user=user),
-            self.query
+            self.query,
+            0
         )
 
     def __str__(self):

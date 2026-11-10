@@ -13,21 +13,29 @@
   <header>
     <h1>FSM Documentation</h1>
     <p>states, transitions, triggers and effects</p>
-    <p class="jump-to">Jump to: {% for link in jump_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% if not forloop.last %} | {% endif %}{% endfor %}</p>
+    <p class="jump-to">Jump to: {% for group in groups %}<a href="#{{ group.id }}">{{ group.label }}</a>{% if not forloop.last %} | {% endif %}{% endfor %}</p>
   </header>
 
   <nav>
     <ul>
-      {% for group in nav_groups %}
-        <li class="nav-app-group"><strong>{{ group.app_label|escape }}</strong></li>
-        {% for m in group.models %}
-          <li><a href="#{{ m.id|escape }}">{{ m.label|escape }}</a></li>
+      {% for group in groups %}
+        <li class="nav-app-group"><a href="#{{ group.id }}"><strong>{{ group.label|escape }}</strong></a></li>
+        {% for section in group.sections %}
+          <li><a href="#{{ section.base_id|escape }}">{{ section.label|escape }}</a></li>
         {% endfor %}
       {% endfor %}
     </ul>
   </nav>
 
-  {% for section in sections %}
+  {% for group in groups %}
+  <section class="fsm-family" id="{{ group.id }}">
+    <h1 class="fsm-family-title">{{ group.label }}</h1>
+    {% if group.map_dot %}
+      <p class="help">Which models can change the status of which others. The number is how many transition effects link them; click a model to jump to it.</p>
+      <div class="fsm-graph" data-dot-src="{{ group.id }}-map"></div>
+      <script type="application/json" id="{{ group.id }}-map">{{ group.map_dot|safe }}</script>
+    {% endif %}
+  {% for section in group.sections %}
     <div class="fsm-block" id="{{ section.base_id|escape }}">
       <div class="fsm-block-sticky-header">
         <div class="fsm-block-header">
@@ -38,6 +46,28 @@
       {% if section.model_doc %}
         <p class="model-description">{{ section.model_doc|escape }}</p>
       {% endif %}
+
+      {# Lifecycle graph #}
+      <section class="fsm-section lifecycle-section" id="{{ section.base_id }}-lifecycle">
+        <h2>Lifecycle</h2>
+        <div class="fsm-graph-toolbar" data-target="{{ section.base_id }}-lifecycle-graph">
+          <label><input type="checkbox" data-option="a" checked> Automatic transitions</label>
+          <label><input type="checkbox" data-option="g"> Expand transitions from most states</label>
+          <span class="fsm-legend">
+            <span class="legend-manual">manual</span>
+            <span class="legend-automatic">automatic</span>
+            <span class="legend-terminal">final state</span>
+          </span>
+        </div>
+        <div class="fsm-graph" id="{{ section.base_id }}-lifecycle-graph" data-dot-src="{{ section.base_id }}-lifecycle-dots" data-variant="a1g0"></div>
+        <script type="application/json" id="{{ section.base_id }}-lifecycle-dots">{{ section.lifecycle_dots|safe }}</script>
+        {% if section.globals %}
+          <p class="fsm-globals"><strong>From most states</strong> (shown as a note on the target state):
+            {% for g in section.globals %}<a href="{{ g.url }}">{{ g.name }}</a> → {{ g.to }}{% if g.automatic %} <em>(automatic)</em>{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}
+          </p>
+        {% endif %}
+        <p class="help">Hover a state to highlight its transitions; click a transition to see its effects. {{ section.edges_before }} transition arrows are reduced to {{ section.edges_after }}.</p>
+      </section>
 
       {# States #}
       <section class="fsm-section states-section" id="{{ section.base_id }}-states">
@@ -81,6 +111,18 @@
               </a>
               <div class="transition-detail" id="{{ section.base_id }}-trans-{{ t.id }}-detail">
                 <p class="trans-description">{{ t.description }}</p>
+                {% if t.effects_dot %}
+                  <div class="fsm-graph fsm-graph-small" data-dot-src="{{ section.base_id }}-trans-{{ t.id }}-effects"></div>
+                  <script type="application/json" id="{{ section.base_id }}-trans-{{ t.id }}-effects">{{ t.effects_dot|safe }}</script>
+                {% endif %}
+                {% if t.cascade_dot %}
+                  <button type="button" class="fsm-cascade-toggle" data-target="{{ section.base_id }}-trans-{{ t.id }}-cascade-graph">Show cascade</button>
+                  <div class="fsm-cascade" id="{{ section.base_id }}-trans-{{ t.id }}-cascade-graph" hidden>
+                    <p class="help">Transitions on other objects this <em>may</em> trigger, up to three steps deep. Dashed arrows (*) only run when their conditions hold; ✉ counts notifications.{% if t.cascade_truncated %} {{ t.cascade_truncated }} deeper step(s) not shown.{% endif %}</p>
+                    <div class="fsm-graph" data-dot-src="{{ section.base_id }}-trans-{{ t.id }}-cascade"></div>
+                    <script type="application/json" id="{{ section.base_id }}-trans-{{ t.id }}-cascade">{{ t.cascade_dot|safe }}</script>
+                  </div>
+                {% endif %}
                 {% if t.conditions %}
                   <p><strong>Conditions:</strong></p>
                   <ul>
@@ -138,14 +180,14 @@
                     </li>
                   {% endfor %}
                 </ul>
-                {% if t.caused_by %}
+                {% if t.incoming %}
                   <p><strong>Also triggered by:</strong></p>
                   <ul>
-                    {% for cb in t.caused_by %}
+                    {% for cb in t.incoming %}
                       <li>
-                        {{ cb.trigger }}
+                        {% if cb.url %}<a href="{{ cb.url }}">{{ cb.label }}</a>{% else %}{{ cb.label }}{% endif %}
                         {% if cb.conditions %}
-                          <em>if {{ cb.conditions|join:' and ' }}</em>
+                          <em>if {{ cb.conditions }}</em>
                         {% endif %}
                       </li>
                     {% endfor %}
@@ -208,9 +250,99 @@
       {% endif %}
     </div>
   {% endfor %}
+  </section>
+  {% endfor %}
 </div>
 
 <a href="#top" class="back-to-top-fixed" aria-label="Back to top">Back to top</a>
+{% if viz_script %}<script>{{ viz_script|safe }}</script>{% else %}<script src="{{ viz_url }}"></script>{% endif %}
+<script>
+(function(){
+  var vizPromise = window.Viz ? Viz.instance() : Promise.reject(new Error('viz.js did not load'));
+
+  function dotFor(el) {
+    var data = JSON.parse(document.getElementById(el.dataset.dotSrc).textContent);
+    return el.dataset.variant ? data[el.dataset.variant] : data;
+  }
+
+  function bindHighlight(svg) {
+    svg.querySelectorAll('g.node').forEach(function(node) {
+      var match = (node.getAttribute('class') || '').match(/\bn-(\S+)/);
+      if (!match) return;
+      var id = match[1];
+      node.addEventListener('mouseenter', function() {
+        svg.classList.add('fsm-dim');
+        node.classList.add('fsm-hl');
+        svg.querySelectorAll('g.e-from-' + CSS.escape(id) + ', g.e-to-' + CSS.escape(id)).forEach(function(edge) {
+          edge.classList.add('fsm-hl');
+          (edge.getAttribute('class').match(/\be-(?:from|to)-(\S+)/g) || []).forEach(function(cls) {
+            var other = svg.querySelector('g.n-' + CSS.escape(cls.replace(/^e-(?:from|to)-/, '')));
+            if (other) other.classList.add('fsm-hl');
+          });
+        });
+      });
+      node.addEventListener('mouseleave', function() {
+        svg.classList.remove('fsm-dim');
+        svg.querySelectorAll('.fsm-hl').forEach(function(el) { el.classList.remove('fsm-hl'); });
+      });
+    });
+  }
+
+  function render(el) {
+    el.dataset.rendered = '1';
+    el.classList.add('is-loading');
+    vizPromise.then(function(viz) {
+      var svg = viz.renderSVGElement(dotFor(el));
+      el.replaceChildren(svg);
+      bindHighlight(svg);
+    }).catch(function(error) {
+      el.textContent = 'Could not render graph: ' + error.message;
+    }).finally(function() {
+      el.classList.remove('is-loading');
+    });
+  }
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting && !entry.target.dataset.rendered) {
+        observer.unobserve(entry.target);
+        render(entry.target);
+      }
+    });
+  }, { rootMargin: '300px' });
+  document.querySelectorAll('.fsm-graph').forEach(function(el) { observer.observe(el); });
+
+  document.querySelectorAll('.fsm-graph-toolbar').forEach(function(toolbar) {
+    var target = document.getElementById(toolbar.dataset.target);
+    toolbar.addEventListener('change', function() {
+      var a = toolbar.querySelector('[data-option=a]').checked ? 1 : 0;
+      var g = toolbar.querySelector('[data-option=g]').checked ? 1 : 0;
+      target.dataset.variant = 'a' + a + 'g' + g;
+      render(target);
+    });
+  });
+
+  document.querySelectorAll('.fsm-cascade-toggle').forEach(function(button) {
+    button.addEventListener('click', function() {
+      var target = document.getElementById(button.dataset.target);
+      target.hidden = !target.hidden;
+      button.textContent = target.hidden ? 'Show cascade' : 'Hide cascade';
+    });
+  });
+
+  document.addEventListener('click', function(event) {
+    var link = event.target.closest('.fsm-graph a');
+    if (!link) return;
+    var href = link.getAttribute('href') || link.getAttribute('xlink:href');
+    if (href && href.charAt(0) === '#') {
+      event.preventDefault();
+      window.location.hash = href.slice(1);
+      var el = document.getElementById(href.slice(1));
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+})();
+</script>
 <script>
 (function(){
   function openDetail(id) {

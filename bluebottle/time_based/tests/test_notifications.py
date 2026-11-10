@@ -7,6 +7,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import NotificationTestCase
+from django.contrib.gis.geos import Point
 from django.template import defaultfilters
 from datetime import date, timedelta
 from bluebottle.time_based.messages import (
@@ -191,6 +192,23 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('has registered for a time slot for your activity')
         self.assertBodyContains('What is your favorite color?')
         self.assertBodyContains('Par-bleu yellow')
+
+    def test_participant_registered_manager_location_without_timezone(self):
+        slot = self.activity.slots.first()
+        slot.location = GeolocationFactory.create(position=Point(51.4, 5.4))
+        slot.is_online = False
+        slot.save()
+        self.assertIsNone(slot.location.timezone)
+
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=slot,
+            user=self.supporter,
+        )
+        self.message_class = ManagerSlotParticipantRegisteredNotification
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertBodyContains('has registered for a time slot for your activity')
 
     def test_new_participant_notification(self):
         self.activity.review_title = 'What is your favorite color?'

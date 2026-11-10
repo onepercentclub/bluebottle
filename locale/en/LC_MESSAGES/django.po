@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10 12:52+0100\n"
+"POT-Creation-Date: 2026-11-10 13:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -695,7 +695,7 @@ msgstr ""
 #: bluebottle/activities/models.py:121 bluebottle/activity_links/models.py:57
 #: bluebottle/activity_pub/admin.py:833 bluebottle/cms/models.py:53
 #: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:26
-#: bluebottle/cms/utils/color_contrast.py:299 bluebottle/funding/models.py:351
+#: bluebottle/cms/utils/color_contrast.py:301 bluebottle/funding/models.py:351
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
 #: bluebottle/grant_management/models.py:498
 msgid "Description"
@@ -766,7 +766,7 @@ msgstr ""
 
 #: bluebottle/activities/models.py:284
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:87
-#: bluebottle/cms/models.py:380 bluebottle/segments/admin.py:189
+#: bluebottle/cms/models.py:380 bluebottle/segments/admin.py:200
 msgid "Activities"
 msgstr ""
 
@@ -2319,7 +2319,7 @@ msgid "Template"
 msgstr ""
 
 #: bluebottle/activity_pub/models.py:434 bluebottle/cms/models.py:149
-#: bluebottle/cms/models.py:542 bluebottle/cms/utils/color_contrast.py:318
+#: bluebottle/cms/models.py:542 bluebottle/cms/utils/color_contrast.py:320
 msgid "Link"
 msgstr ""
 
@@ -3175,7 +3175,7 @@ msgstr ""
 #: bluebottle/geo/admin.py:79
 #: bluebottle/geo/templates/admin/geo/location/change_form.html:6
 #: bluebottle/organizations/templates/admin/merge_preview.html:36
-#: bluebottle/segments/admin.py:97
+#: bluebottle/segments/admin.py:99
 #: bluebottle/segments/templates/admin/segments/segment/change_form.html:6
 msgid "Merge"
 msgstr ""
@@ -3431,7 +3431,7 @@ msgstr ""
 #: bluebottle/categories/models.py:18 bluebottle/geo/models.py:137
 #: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:98
 #: bluebottle/initiatives/models.py:643 bluebottle/organizations/models.py:29
-#: bluebottle/segments/models.py:27 bluebottle/segments/models.py:126
+#: bluebottle/segments/models.py:26 bluebottle/segments/models.py:125
 msgid "slug"
 msgstr ""
 
@@ -3444,7 +3444,7 @@ msgstr ""
 msgid "Category image"
 msgstr ""
 
-#: bluebottle/categories/models.py:34 bluebottle/segments/models.py:149
+#: bluebottle/categories/models.py:34 bluebottle/segments/models.py:148
 msgid "logo"
 msgstr ""
 
@@ -3459,8 +3459,8 @@ msgstr ""
 #: bluebottle/impact/models.py:49 bluebottle/initiatives/models.py:647
 #: bluebottle/looker/models.py:13 bluebottle/offices/models.py:9
 #: bluebottle/offices/models.py:25 bluebottle/organizations/models.py:28
-#: bluebottle/organizations/models.py:154 bluebottle/segments/models.py:24
-#: bluebottle/segments/models.py:112 bluebottle/time_based/models.py:1150
+#: bluebottle/organizations/models.py:154 bluebottle/segments/models.py:23
+#: bluebottle/segments/models.py:111 bluebottle/time_based/models.py:1150
 msgid "name"
 msgstr ""
 
@@ -3561,6 +3561,7 @@ msgid "Styling"
 msgstr ""
 
 #: bluebottle/cms/admin.py:452 bluebottle/organizations/admin.py:129
+#: bluebottle/segments/admin.py:228
 msgid "Colour preview"
 msgstr ""
 
@@ -4152,7 +4153,7 @@ msgid "How these colours will look on the platform"
 msgstr ""
 
 #: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:6
-#: bluebottle/cms/utils/color_contrast.py:290
+#: bluebottle/cms/utils/color_contrast.py:292
 msgid "Action"
 msgstr ""
 
@@ -4188,6 +4189,16 @@ msgstr ""
 msgid "Toggle 'highlight' on activities to show them in this block."
 msgstr ""
 
+#: bluebottle/cms/templates/admin/cms/solid_color_contrast_panel.html:16
+msgid "* This colour was adjusted so it stays readable for everyone."
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/solid_color_contrast_panel.html:19
+msgid ""
+"* For some people this colour is not very well readable due to the lack of "
+"contrast. Please toggle Accessible colours in Site platform settings."
+msgstr ""
+
 #: bluebottle/cms/templates/admin/edit_inline/stacked-nested.html:85
 #, python-format
 msgid "Add another %(verbose_name)s"
@@ -4205,7 +4216,7 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: bluebottle/cms/utils/color_contrast.py:308
+#: bluebottle/cms/utils/color_contrast.py:310
 msgid "Footer"
 msgstr ""
 
@@ -7017,11 +7028,11 @@ msgstr ""
 msgid "My location ({})"
 msgstr ""
 
-#: bluebottle/geo/admin.py:74 bluebottle/segments/admin.py:92
+#: bluebottle/geo/admin.py:74 bluebottle/segments/admin.py:94
 msgid "Merge with"
 msgstr ""
 
-#: bluebottle/geo/admin.py:75 bluebottle/segments/admin.py:93
+#: bluebottle/geo/admin.py:75 bluebottle/segments/admin.py:95
 msgid "Choose location to merge with"
 msgstr ""
 
@@ -7039,7 +7050,7 @@ msgstr ""
 msgid "Info"
 msgstr ""
 
-#: bluebottle/geo/admin.py:150 bluebottle/segments/admin.py:166
+#: bluebottle/geo/admin.py:150 bluebottle/segments/admin.py:171
 msgid "SSO"
 msgstr ""
 
@@ -8057,7 +8068,7 @@ msgid "impact types"
 msgstr ""
 
 #: bluebottle/impact/models.py:104 bluebottle/looker/models.py:14
-#: bluebottle/segments/models.py:135
+#: bluebottle/segments/models.py:134
 msgid "type"
 msgstr ""
 
@@ -8939,7 +8950,7 @@ msgstr ""
 msgid "A valid, unique email address."
 msgstr ""
 
-#: bluebottle/members/admin.py:105 bluebottle/segments/models.py:63
+#: bluebottle/members/admin.py:105 bluebottle/segments/models.py:62
 msgid "Is active"
 msgstr ""
 
@@ -10201,7 +10212,15 @@ msgstr ""
 msgid "Open to people from any work location"
 msgstr ""
 
-#: bluebottle/organizations/models.py:32 bluebottle/segments/models.py:114
+#: bluebottle/organizations/admin.py:124
+msgid "How this colour will look on the organisation page"
+msgstr ""
+
+#: bluebottle/organizations/admin.py:125 bluebottle/segments/admin.py:224
+msgid "Header background"
+msgstr ""
+
+#: bluebottle/organizations/models.py:32 bluebottle/segments/models.py:113
 msgid "Slogan"
 msgstr ""
 
@@ -10211,7 +10230,7 @@ msgid ""
 "visible on the page."
 msgstr ""
 
-#: bluebottle/organizations/models.py:37 bluebottle/segments/models.py:119
+#: bluebottle/organizations/models.py:37 bluebottle/segments/models.py:118
 msgid "Story"
 msgstr ""
 
@@ -10287,24 +10306,6 @@ msgstr ""
 
 #: bluebottle/organizations/templates/admin/merge_preview.html:14
 msgid "Phone Number"
-msgstr ""
-
-#: bluebottle/organizations/templates/admin/organizations/color_contrast_panel.html:3
-msgid "How this colour will look on the organisation page"
-msgstr ""
-
-#: bluebottle/organizations/templates/admin/organizations/color_contrast_panel.html:9
-msgid "Header background"
-msgstr ""
-
-#: bluebottle/organizations/templates/admin/organizations/color_contrast_panel.html:16
-msgid "* This colour was adjusted so it stays readable for everyone."
-msgstr ""
-
-#: bluebottle/organizations/templates/admin/organizations/color_contrast_panel.html:19
-msgid ""
-"* For some people this colour is not very well readable due to the lack of "
-"contrast. Please toggle Accessible colours in Site platform settings."
 msgstr ""
 
 #: bluebottle/pages/admin.py:39
@@ -10604,149 +10605,153 @@ msgstr ""
 msgid "Reset token"
 msgstr ""
 
-#: bluebottle/segments/admin.py:113
+#: bluebottle/segments/admin.py:115
 msgid "Enter one domain per line or separate by commas."
 msgstr ""
 
-#: bluebottle/segments/admin.py:114 bluebottle/segments/models.py:142
+#: bluebottle/segments/admin.py:116 bluebottle/segments/models.py:141
 msgid "Email domains"
 msgstr ""
 
-#: bluebottle/segments/admin.py:158 bluebottle/settings/admin_dashboard.py:250
+#: bluebottle/segments/admin.py:163 bluebottle/settings/admin_dashboard.py:250
 msgid "Content"
 msgstr ""
 
-#: bluebottle/segments/admin.py:195 bluebottle/time_based/admin.py:526
+#: bluebottle/segments/admin.py:206 bluebottle/time_based/admin.py:526
 msgid "Members"
 msgstr ""
 
-#: bluebottle/segments/admin.py:202
+#: bluebottle/segments/admin.py:213
 msgid "Segment type"
 msgstr ""
 
-#: bluebottle/segments/admin.py:207
+#: bluebottle/segments/admin.py:218
 msgid "Text colour"
 msgstr ""
 
-#: bluebottle/segments/admin.py:231
+#: bluebottle/segments/admin.py:223
+msgid "How this colour will look on the segment page"
+msgstr ""
+
+#: bluebottle/segments/admin.py:252
 msgid "Number of segments"
 msgstr ""
 
-#: bluebottle/segments/models.py:30
+#: bluebottle/segments/models.py:29
 msgid "Inherit"
 msgstr ""
 
-#: bluebottle/segments/models.py:32
+#: bluebottle/segments/models.py:31
 msgid "Newly created activities inherit the segments of the activity creator."
 msgstr ""
 
-#: bluebottle/segments/models.py:38
+#: bluebottle/segments/models.py:37
 msgid "Visible"
 msgstr ""
 
-#: bluebottle/segments/models.py:40
+#: bluebottle/segments/models.py:39
 msgid "Show segment on the activity detail page"
 msgstr ""
 
-#: bluebottle/segments/models.py:46
+#: bluebottle/segments/models.py:45
 msgid "Required for members"
 msgstr ""
 
-#: bluebottle/segments/models.py:48
+#: bluebottle/segments/models.py:47
 msgid "Require members to enter their segment type once after logging in."
 msgstr ""
 
-#: bluebottle/segments/models.py:54
+#: bluebottle/segments/models.py:53
 msgid "Verify SSO data"
 msgstr ""
 
-#: bluebottle/segments/models.py:67
+#: bluebottle/segments/models.py:66
 msgid "Editable in user profile"
 msgstr ""
 
-#: bluebottle/segments/models.py:71
+#: bluebottle/segments/models.py:70
 msgid "Enable search filters"
 msgstr ""
 
-#: bluebottle/segments/models.py:76
+#: bluebottle/segments/models.py:75
 msgid "Segment manager filter - Members"
 msgstr ""
 
-#: bluebottle/segments/models.py:77
+#: bluebottle/segments/models.py:76
 msgid ""
 "When enabled, members managing this segment will only see members linked to "
 "this segment."
 msgstr ""
 
-#: bluebottle/segments/models.py:82
+#: bluebottle/segments/models.py:81
 msgid "Segment manager filter - Activities"
 msgstr ""
 
-#: bluebottle/segments/models.py:83
+#: bluebottle/segments/models.py:82
 msgid ""
 "When enabled, members managing this segment will only see activities linked "
 "to this segment."
 msgstr ""
 
-#: bluebottle/segments/models.py:116
+#: bluebottle/segments/models.py:115
 msgid ""
 "A short sentence to explain your segment. This sentence is directly visible "
 "on the page."
 msgstr ""
 
-#: bluebottle/segments/models.py:121
+#: bluebottle/segments/models.py:120
 msgid ""
 "A more detailed story for your segment. This story can be accessed via a "
 "link on the page."
 msgstr ""
 
-#: bluebottle/segments/models.py:145
+#: bluebottle/segments/models.py:144
 msgid ""
 "Users with email addresses for this domain are automatically added to this "
 "segment."
 msgstr ""
 
-#: bluebottle/segments/models.py:151
+#: bluebottle/segments/models.py:150
 msgid "The uploaded image will be scaled so that it is fully visible."
 msgstr ""
 
-#: bluebottle/segments/models.py:162
+#: bluebottle/segments/models.py:161
 msgid "Background color"
 msgstr ""
 
-#: bluebottle/segments/models.py:164
+#: bluebottle/segments/models.py:163
 msgid "Add a background colour to your segment page."
 msgstr ""
 
-#: bluebottle/segments/models.py:169
+#: bluebottle/segments/models.py:168
 msgid "Button color"
 msgstr ""
 
-#: bluebottle/segments/models.py:171
+#: bluebottle/segments/models.py:170
 msgid "Add a button colour to your segment page."
 msgstr ""
 
-#: bluebottle/segments/models.py:176
+#: bluebottle/segments/models.py:175
 msgid "Button text color"
 msgstr ""
 
-#: bluebottle/segments/models.py:179
+#: bluebottle/segments/models.py:178
 msgid "Add a button text colour to your segment page."
 msgstr ""
 
-#: bluebottle/segments/models.py:184
+#: bluebottle/segments/models.py:183
 msgid "cover image"
 msgstr ""
 
-#: bluebottle/segments/models.py:186
+#: bluebottle/segments/models.py:185
 msgid "The uploaded image will be cropped to fit a 16:9 rectangle."
 msgstr ""
 
-#: bluebottle/segments/models.py:197
+#: bluebottle/segments/models.py:196
 msgid "Restricted"
 msgstr ""
 
-#: bluebottle/segments/models.py:200
+#: bluebottle/segments/models.py:199
 msgid ""
 "Closed segments will only be accessible to members that belong to this "
 "segment."

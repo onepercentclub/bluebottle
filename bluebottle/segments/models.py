@@ -1,5 +1,3 @@
-import wcag_contrast_ratio as contrast
-from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -13,6 +11,7 @@ from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
+from bluebottle.cms.utils.color_contrast import WHITE, choose_on_color, ensure_readable_fill
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
@@ -233,18 +232,20 @@ class Segment(TranslatableModel, models.Model):
         self.save()
 
     @property
+    def accessible_background_color(self):
+        from bluebottle.cms.models import SitePlatformSettings
+
+        if not self.background_color:
+            return None
+
+        if SitePlatformSettings.load().accessible_colours:
+            return ensure_readable_fill(self.background_color) or self.background_color
+        return self.background_color
+
+    @property
     def text_color(self):
-        rgb_background_color = [
-            c / 256.0 for c in ImageColor.getcolor(self.background_color or '#ffffff', 'RGB')
-        ]
-        white = (1, 1, 1)
-
-        contrast_with_white = contrast.rgb(rgb_background_color, white)
-
-        if contrast.passes_AA(contrast_with_white, large=True):
-            return 'white'
-        else:
-            return "text"
+        on_color = choose_on_color(self.accessible_background_color or WHITE)
+        return 'white' if on_color == WHITE else 'text'
 
     def __str__(self):
         try:

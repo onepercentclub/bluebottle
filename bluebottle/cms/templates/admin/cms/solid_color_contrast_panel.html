@@ -1,9 +1,9 @@
 {% load i18n %}
-<div id="organization-color-contrast-panel" class="platform-color-contrast" data-accessible="{{ accessible|yesno:'true,false' }}">
-    <p class="platform-color-contrast__intro">{% trans "How this colour will look on the organisation page" %}</p>
+<div class="platform-color-contrast" data-accessible="{{ accessible|yesno:'true,false' }}" data-field-id="{{ field_id }}" data-preview-name="solid">
+    <p class="platform-color-contrast__intro">{{ intro }}</p>
     <div class="platform-color-contrast__group">
         <div class="platform-color-contrast__swatches">
-            <div class="platform-color-contrast__swatch" data-preview="organization-solid">
+            <div class="platform-color-contrast__swatch" data-preview="solid">
                 <span class="platform-color-contrast__sample">Aa</span>
                 <span class="platform-color-contrast__caption">
                     {% trans "Header background" %}

@@ -44,6 +44,7 @@ class SegmentListSerializer(ModelSerializer):
     }
 
     tag_line = serializers.CharField(source='slogan', required=False, allow_blank=True, allow_null=True)
+    background_color = serializers.ReadOnlyField(source='accessible_background_color')
 
     class Meta(object):
         model = Segment
@@ -88,6 +89,7 @@ class SegmentPublicDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
     logo = SorlImageField('180x180', crop='center')
     cover_image = SorlImageField('1280x720', crop='center')
+    background_color = serializers.ReadOnlyField(source='accessible_background_color')
 
     class Meta(object):
         model = Segment

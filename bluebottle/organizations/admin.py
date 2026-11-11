@@ -122,8 +122,6 @@ class OrganizationAdmin(
         return render_solid_preview(
             'id_color',
             _('How this colour will look on the organisation page'),
-            _('Header background'),
-            SitePlatformSettings.load().accessible_colours,
         )
 
     color_contrast_panel.short_description = _('Colour preview')

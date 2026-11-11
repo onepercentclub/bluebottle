@@ -10,7 +10,6 @@ from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from parler.admin import TranslatableAdmin, TranslatableModelForm, TranslatableTabularInline
 
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
-from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.cms.utils.color_contrast import render_solid_preview
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
 from bluebottle.segments.models import SegmentType, Segment
@@ -221,8 +220,6 @@ class SegmentAdmin(
         return render_solid_preview(
             'id_background_color',
             _('How this colour will look on the segment page'),
-            _('Header background'),
-            SitePlatformSettings.load().accessible_colours,
         )
 
     color_contrast_panel.short_description = _('Colour preview')

@@ -58,6 +58,7 @@ from bluebottle.time_based.states import (
     RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
     RegistrationStateMachine
 )
+from bluebottle.time_based.triggers.registrations import is_manager
 
 
 def activity_is_expired(effect):
@@ -933,6 +934,10 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
         """Team is accepted"""
         return effect.instance.team_member and effect.instance.team_member.team.status != "new"
 
+    def slot_is_finished(effect):
+        """Slot is finished"""
+        return effect.instance.slot and effect.instance.slot.status == "finished"
+
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.initiate,
@@ -972,6 +977,21 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                 TransitionEffect(
                     TeamScheduleParticipantStateMachine.accept,
                     conditions=[team_is_accepted],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.succeed, conditions=[slot_is_finished]
                 ),
             ],
         ),
@@ -1205,6 +1225,16 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 DeleteInterestEffect,
                 CreateDateRegistrationEffect,
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.restore,
+                    conditions=[is_participant],
+                ),
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.add,
+                    conditions=[is_manager],
+                ),
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.add,

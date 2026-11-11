@@ -2,11 +2,13 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import (
+    CONTRIBUTOR_STATUSES,
     ActivityDocument,
     activity,
     geofeatures_for_geolocation,
     get_translated_country_list,
     locality_from_geolocation,
+    status_counts,
 )
 from bluebottle.time_based.models import (
     DateActivity,
@@ -19,7 +21,15 @@ from bluebottle.time_based.models import (
     DateParticipant,
     DateActivitySlot,
     RegisteredDateActivity,
-    RegisteredDateParticipant
+    RegisteredDateParticipant,
+    DateRegistration,
+    DeadlineRegistration,
+    PeriodicRegistration,
+    ScheduleRegistration,
+    TeamScheduleParticipant,
+    TeamScheduleRegistration,
+    Interest,
+    Team,
 )
 from bluebottle.utils.documents import TextField
 
@@ -35,6 +45,7 @@ INDEXABLE_SLOT_STATUSES = ('open', 'full', 'registration_closed', 'finished')
 
 
 class TimeBasedActivityDocument(ActivityDocument):
+    review = fields.BooleanField()
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
@@ -98,6 +109,9 @@ def slot_location_entry(geolocation, location_hint=None):
     }
 
 
+UPCOMING_SLOT_STATUSES = ('open', 'full', 'registration_closed', 'running')
+
+
 @registry.register_document
 @activity.document
 class DateActivityDocument(TimeBasedActivityDocument):
@@ -119,6 +133,18 @@ class DateActivityDocument(TimeBasedActivityDocument):
         'is_online': fields.BooleanField(),
         'location_id': fields.LongField(),
     })
+
+    slot_stats = fields.ObjectField(properties={
+        'upcoming': fields.IntegerField(),
+        'succeeded': fields.IntegerField(),
+    })
+
+    def prepare_slot_stats(self, instance):
+        statuses = [slot.status for slot in instance.slots.all()]
+        return {
+            'upcoming': sum(status in UPCOMING_SLOT_STATUSES for status in statuses),
+            'succeeded': statuses.count('finished'),
+        }
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -144,7 +170,9 @@ class DateActivityDocument(TimeBasedActivityDocument):
             return related_instance.activity
 
     class Django:
-        related_models = ActivityDocument.Django.related_models + (DateParticipant, DateActivitySlot)
+        related_models = ActivityDocument.Django.related_models + (
+            DateParticipant, DateRegistration, DateActivitySlot, Interest
+        )
         model = DateActivity
 
     def prepare_location(self, instance):
@@ -254,15 +282,6 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
         'value': fields.FloatField()
     })
 
-    def get_instances_from_related(self, related_instance):
-        result = super().get_instances_from_related(related_instance)
-
-        if result is not None:
-            return result
-
-        if isinstance(related_instance, self.participant_class):
-            return DeadlineActivity.objects.filter(contributors=related_instance)
-
     def prepare_contribution_duration(self, instance):
 
         if instance.duration:
@@ -310,7 +329,6 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
 @registry.register_document
 @activity.doc_type
 class DeadlineActivityDocument(RegistrationActivityDocument):
-    participant_class = DeadlineParticipant
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
@@ -322,14 +340,15 @@ class DeadlineActivityDocument(RegistrationActivityDocument):
             ]
 
     class Django:
-        related_models = ActivityDocument.Django.related_models + (DeadlineParticipant,)
+        related_models = ActivityDocument.Django.related_models + (
+            DeadlineParticipant, DeadlineRegistration, Interest
+        )
         model = DeadlineActivity
 
 
 @registry.register_document
 @activity.doc_type
 class PeriodicActivityDocument(RegistrationActivityDocument):
-    participant_class = PeriodicParticipant
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
@@ -342,14 +361,24 @@ class PeriodicActivityDocument(RegistrationActivityDocument):
 
     class Django:
 
-        related_models = ActivityDocument.Django.related_models + (PeriodicParticipant,)
+        related_models = ActivityDocument.Django.related_models + (
+            PeriodicParticipant, PeriodicRegistration, Interest
+        )
         model = PeriodicActivity
 
 
 @registry.register_document
 @activity.doc_type
 class ScheduleActivityDocument(RegistrationActivityDocument):
-    participant_class = ScheduleParticipant
+    team_stats = fields.ObjectField(
+        properties={key: fields.IntegerField() for key in CONTRIBUTOR_STATUSES}
+    )
+
+    def prepare_team_stats(self, instance):
+        if instance.team_activity != 'teams':
+            return None
+        counts = status_counts(instance.teams.all())
+        return {status: counts[status] for status in CONTRIBUTOR_STATUSES}
 
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
@@ -369,14 +398,15 @@ class ScheduleActivityDocument(RegistrationActivityDocument):
 
     class Django:
 
-        related_models = ActivityDocument.Django.related_models + (ScheduleParticipant,)
+        related_models = ActivityDocument.Django.related_models + (
+            ScheduleParticipant, ScheduleRegistration, TeamScheduleParticipant, TeamScheduleRegistration, Team, Interest
+        )
         model = ScheduleActivity
 
 
 @registry.register_document
 @activity.doc_type
 class RegisteredActivityDocument(RegistrationActivityDocument):
-    participant_class = RegisteredDateParticipant
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:

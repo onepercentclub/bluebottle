@@ -148,7 +148,6 @@ class BaseRelatedTransitionEffect(Effect):
     def __init__(self, *args, **kwargs):
         super(BaseRelatedTransitionEffect, self).__init__(*args, **kwargs)
         self.executed = False
-
         try:
             relation = getattr(self.instance, self.relation, [])
             self.instances = list(relation.all())
@@ -169,15 +168,15 @@ class BaseRelatedTransitionEffect(Effect):
 
                 if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
                     self.executed = True
+                    self.transitioned_instances.append(instance)
                     effect.pre_save(effects=effects)
                     effects.append(effect)
 
                 instance.execute_triggers(effects=effects)
 
     def post_save(self):
-        if self.executed:
-            for instance in self.instances:
-                instance.save()
+        for instance in self.transitioned_instances:
+            instance.save()
 
     def __str__(self):
         if self.description:

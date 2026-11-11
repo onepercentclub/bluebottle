@@ -574,6 +574,126 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.assertStatus(self.slot, "full")
 
+    def add_participant(self, user, as_user, slot=None):
+        return DateParticipantFactory.create(
+            activity=self.activity,
+            user=user,
+            slot=slot or self.slot,
+            registration=self.activity.registrations.filter(user=user).first(),
+            as_user=as_user,
+        )
+
+    def test_add_participant_accepts_withdrawn_registration(self):
+        self.activity.review = True
+        self.activity.save()
+        admin = BlueBottleUserFactory.create(is_staff=True)
+        registration = DateRegistrationFactory.create(activity=self.activity, status='withdrawn')
+
+        participant = self.add_participant(registration.user, admin)
+
+        self.assertStatus(registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+        self.assertStatus(participant.contributions.get(), 'new')
+
+    def test_add_participant_accepts_rejected_registration(self):
+        self.activity.review = True
+        self.activity.save()
+        admin = BlueBottleUserFactory.create(is_staff=True)
+        registration = DateRegistrationFactory.create(activity=self.activity, status='rejected')
+
+        participant = self.add_participant(registration.user, admin)
+
+        self.assertStatus(registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+
+    def test_add_participant_accepts_pending_registration(self):
+        self.activity.review = True
+        self.activity.save()
+        admin = BlueBottleUserFactory.create(is_staff=True)
+        registration = DateRegistrationFactory.create(activity=self.activity, status='new')
+
+        participant = self.add_participant(registration.user, admin)
+
+        self.assertStatus(registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+
+    def test_add_participant_leaves_other_slots(self):
+        self.activity.review = True
+        self.activity.save()
+        user = BlueBottleUserFactory.create()
+        registration = DateRegistrationFactory.create(activity=self.activity, user=user, as_user=user)
+        rejected = self.add_participant(user, user)
+        registration.states.reject(save=True)
+        self.assertStatus(rejected, 'rejected')
+        mail.outbox = []
+
+        other_slot = DateActivitySlotFactory.create(activity=self.activity)
+        admin = BlueBottleUserFactory.create(is_staff=True)
+        participant = self.add_participant(user, admin, slot=other_slot)
+
+        self.assertStatus(registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+        self.assertStatus(rejected, 'rejected')
+        subjects = [message.subject for message in mail.outbox if user.email in message.to]
+        self.assertFalse([subject for subject in subjects if 'You have been selected' in subject])
+        self.assertTrue([subject for subject in subjects if 'You have been added' in subject])
+
+    def test_manager_add_participant_accepts_new_registration(self):
+        self.activity.review = True
+        self.activity.save()
+        user = BlueBottleUserFactory.create()
+
+        participant = self.add_participant(user, self.user)
+
+        participant.refresh_from_db()
+        self.assertStatus(participant.registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+
+    def test_other_user_add_participant_keeps_registration(self):
+        self.activity.review = True
+        self.activity.save()
+        registration = DateRegistrationFactory.create(activity=self.activity, status='withdrawn')
+
+        self.add_participant(registration.user, BlueBottleUserFactory.create())
+
+        self.assertStatus(registration, 'withdrawn')
+
+    def test_join_slot_accepts_withdrawn_registration(self):
+        user = BlueBottleUserFactory.create()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, user=user, status='withdrawn'
+        )
+
+        participant = self.add_participant(user, user)
+
+        self.assertStatus(registration, 'accepted')
+        self.assertStatus(participant, 'accepted')
+
+    def test_join_slot_keeps_rejected_registration(self):
+        self.activity.review = True
+        self.activity.save()
+        user = BlueBottleUserFactory.create()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, user=user, status='rejected'
+        )
+
+        self.add_participant(user, user)
+
+        self.assertStatus(registration, 'rejected')
+
+    def test_join_slot_review_restores_withdrawn_registration(self):
+        self.activity.review = True
+        self.activity.save()
+        user = BlueBottleUserFactory.create()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, user=user, status='withdrawn'
+        )
+
+        participant = self.add_participant(user, user)
+
+        self.assertStatus(registration, 'new')
+        self.assertStatus(participant, 'new')
+
     def test_fill_slot_change_capacity(self):
 
         first = DateRegistrationFactory.create(activity=self.activity, status='accepted')

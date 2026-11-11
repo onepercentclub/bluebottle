@@ -299,16 +299,8 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         members = {
             'closed': True,
             'background': '',
-            'login_methods': ['password'],
             'session_only': False,
             'consent_link': 'example.com',
-            'email_domains': [],
-            'confirm_signup': False,
-            'request_access_email': None,
-            'request_access_instructions': None,
-            'request_access_method': 'email',
-            'account_creation_rules': 'anyone'
-
         }
 
         self.assertEqual(response.data['platform']['members'], members)

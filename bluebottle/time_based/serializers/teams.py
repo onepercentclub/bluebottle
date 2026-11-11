@@ -15,7 +15,7 @@ from bluebottle.fsm.serializers import (
     TransitionSerializer,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.members.models import Member, MemberPlatformSettings, PasswordAuthentication
 from bluebottle.time_based.models import Team, TeamMember, ScheduleActivity
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.utils.permissions import IsOwner
@@ -195,8 +195,9 @@ class TeamMemberSerializer(ModelSerializer):
                 member_settings = MemberPlatformSettings.load()
                 scim_settings = SCIMPlatformSettings.load()
 
+                confirm_signup = PasswordAuthentication.confirm_signup_enabled()
                 if (
-                    (member_settings.closed or member_settings.confirm_signup) and
+                    (member_settings.closed or confirm_signup) and
                     not scim_settings.enabled
                 ):
                     try:

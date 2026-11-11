@@ -14,7 +14,7 @@ from django.test.utils import override_settings
 from django.utils.http import int_to_base36
 from rest_framework import status
 
-from bluebottle.members.models import MemberPlatformSettings, UserSegment
+from bluebottle.members.models import MemberPlatformSettings, PasswordAuthentication, UserSegment
 
 from bluebottle.segments.tests.factories import SegmentFactory
 
@@ -40,8 +40,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(UserApiIntegrationTest, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
+        PasswordAuthentication.objects.create()
 
         self.user_1 = BlueBottleUserFactory.create()
         self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
@@ -678,7 +679,7 @@ class AuthLocaleMiddlewareTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(AuthLocaleMiddlewareTest, self).setUp()
+        super().setUp()
 
         self.user_en = BlueBottleUserFactory.create()
         self.user_en.primary_language = 'en'
@@ -816,7 +817,9 @@ class LoginJsonApiTestCase(BluebottleTestCase):
 
 class UserSignupTokenApiTestCase(BluebottleTestCase):
     def setUp(self):
+        super().setUp()
         self.client = JSONAPITestClient()
+        PasswordAuthentication.objects.create()
         self.url = reverse('user-signup-token')
         self.data = {
             'data': {

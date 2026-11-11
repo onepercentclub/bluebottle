@@ -35,7 +35,7 @@ from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusF
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.members.models import Member, MemberPlatformSettings, PasswordAuthentication
 from bluebottle.organizations.models import Organization
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.models import Segment
@@ -661,6 +661,7 @@ class BaseContributorSerializer(ModelSerializer):
     def validate(self, data):
         email = data.pop('email', None)
         send_messages = data.pop('send_messages', True)
+        confirm_signup = PasswordAuthentication.confirm_signup_enabled()
 
         if email:
             data['user'] = Member.objects.filter(email__iexact=email).first()
@@ -673,7 +674,7 @@ class BaseContributorSerializer(ModelSerializer):
                 scim_settings = SCIMPlatformSettings.load()
 
                 if (
-                    (member_settings.closed or member_settings.confirm_signup) and
+                    (member_settings.closed or confirm_signup) and
                     not scim_settings.enabled
                 ):
                     try:
@@ -896,6 +897,9 @@ def bulk_add_participants(activity, emails, send_messages):
         Participant = TeamScheduleParticipant
 
     settings = MemberPlatformSettings.load()
+
+    confirm_signup = PasswordAuthentication.confirm_signup_enabled()
+
     scim_settings = SCIMPlatformSettings.load()
 
     if not Participant:
@@ -907,7 +911,7 @@ def bulk_add_participants(activity, emails, send_messages):
             if not user:
                 new = True
                 if (
-                    (settings.closed or settings.confirm_signup) and
+                    (settings.closed or confirm_signup) and
                     not scim_settings.enabled
                 ):
                     email = email.strip()

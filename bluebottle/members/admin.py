@@ -153,7 +153,7 @@ class AuthenticationMethodChildAdmin(PolymorphicChildModelAdmin):
 
 
 @admin.register(PasswordAuthentication)
-class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
+class PasswordAuthenticationAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, AuthenticationMethodChildAdmin):
     model = PasswordAuthentication
 
     readonly_fields = (
@@ -161,11 +161,12 @@ class PasswordAuthenticationAdmin(AuthenticationMethodChildAdmin):
     )
 
     fieldsets = (
-        (_('Basic'), {'fields': ['enabled', 'confirm_signup']}),
+        (_('Basic'), {'fields': ['translatable_info', 'enabled', 'confirm_signup']}),
         (_('Request Access'), {
             'fields': [
                 'account_creation_rules', 'email_domains', 'request_access_method',
-                'request_access_info', 'request_access_code', 'request_access_code_display',
+                'request_access_info', 'request_access_instructions',
+                'request_access_code', 'request_access_code_display',
             ]
         }),
     )
@@ -263,7 +264,7 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
 
 @admin.register(MemberPlatformSettings)
 class MemberPlatformSettingsAdmin(
-    DynamicArrayMixin, TranslatableLabelAdminMixin, TranslatableAdmin,
+    DynamicArrayMixin,
     BasePlatformSettingsAdmin,
     NonSortableParentAdmin,
 ):
@@ -286,7 +287,6 @@ class MemberPlatformSettingsAdmin(
             {
                 'fields': (
                     'background',
-                    'translatable_info',
                     'closed',
                     'explicit_terms',
                     'support_groups',
@@ -599,7 +599,8 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
     def get_list_filter(self, request):
         filters = super().get_list_filter(request)
-        if PasswordAuthentication.objects.filter(enabled=True, account_creation_rules='whitelist_and_request').exists():
+        password_authentication = PasswordAuthentication.load()
+        if password_authentication and password_authentication.account_creation_rules == 'whitelist_and_request':
             filters += ('accepted',)
         return filters
 
@@ -626,7 +627,8 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     def get_permission_fields(self, request, obj=None):
         fields = self.permission_fields.copy()
 
-        if PasswordAuthentication.objects.filter(enabled=True, account_creation_rules='whitelist_and_request').exists():
+        password_authentication = PasswordAuthentication.load()
+        if password_authentication.account_creation_rules == 'whitelist_and_request':
             fields.insert(2, 'accepted')
         if OfficeSubRegion.objects.count():
             fields.insert(4, 'office_manager_info')

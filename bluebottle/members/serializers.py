@@ -426,13 +426,13 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     access_code = serializers.CharField(required=False)
 
     def create(self, validated_data):
-        member_settings = MemberPlatformSettings.load()
+        password_authentication = PasswordAuthentication.load()
         email = validated_data.get('email', '')
         email_domain = email.split('@')[-1]
         accepted = True
         if (
-            member_settings.account_creation_rules == 'whitelist'
-            and email_domain not in member_settings.email_domains
+            password_authentication.account_creation_rules == 'whitelist'
+            and email_domain not in (password_authentication.email_domains or [])
         ):
             accepted = False
         (instance, _) = BB_USER_MODEL.objects.get_or_create(
@@ -462,18 +462,24 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         email = attrs.get('email', '')
         access_code = attrs.get('access_code', '')
-        settings = MemberPlatformSettings.load()
+        password_authentication = PasswordAuthentication.load()
+        if not password_authentication:
+            raise serializers.ValidationError(
+                _('Signing up with email and password is not enabled.'),
+                code='password_authentication_disabled'
+            )
+
         email_domain = email.split('@')[1]
-        email_domains = settings.email_domains
+        email_domains = password_authentication.email_domains or []
 
         if (
-            settings.account_creation_rules in ['whitelist', 'whitelist_and_request']
+            password_authentication.account_creation_rules in ['whitelist', 'whitelist_and_request']
             and len(email_domains)
             and email_domain not in email_domains
         ):
-            if settings.account_creation_rules == 'whitelist_and_request':
+            if password_authentication.account_creation_rules == 'whitelist_and_request':
                 if access_code:
-                    if settings.request_access_code != access_code:
+                    if password_authentication.request_access_code != access_code:
                         raise serializers.ValidationError(
                             _('The access link you supplied is invalid. '
                               'Please contact us to request a new access link.'),
@@ -581,7 +587,12 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         settings = MemberPlatformSettings.load()
-        if settings.confirm_signup:
+        if not PasswordAuthentication.is_enabled():
+            raise serializers.ValidationError(
+                {'email': _('Signing up with email and password is not enabled.')}
+            )
+
+        if PasswordAuthentication.confirm_signup_enabled():
             raise serializers.ValidationError(
                 {'email': _('Signup requires a confirmation token.')}
             )
@@ -807,14 +818,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'disable_cookie_consent',
             'gtm_code',
             'closed',
-            'email_domains',
             'session_only',
-            'confirm_signup',
-            'account_creation_rules',
-            'request_access_method',
-            'request_access_instructions',
-            'request_access_email',
-            'login_methods',
             'background',
             'enable_gender',
             'enable_address',
@@ -868,6 +872,8 @@ class BaseAuthenticationMethodSerializer(ModelSerializer):
 
 
 class PasswordAuthenticationSerializer(BaseAuthenticationMethodSerializer):
+    request_access_instructions = serializers.CharField(read_only=True)
+
     class Meta(BaseAuthenticationMethodSerializer.Meta):
         model = PasswordAuthentication
         fields = BaseAuthenticationMethodSerializer.Meta.fields + (
@@ -875,6 +881,7 @@ class PasswordAuthenticationSerializer(BaseAuthenticationMethodSerializer):
             'account_creation_rules',
             'email_domains',
             'request_access_method',
+            'request_access_instructions',
         )
 
     class JSONAPIMeta:

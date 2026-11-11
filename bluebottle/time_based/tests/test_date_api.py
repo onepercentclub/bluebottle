@@ -156,10 +156,57 @@ class DateActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestC
 
         DateActivitySlotFactory.create_batch(3, activity=self.model, status='open')
         DateActivitySlotFactory.create_batch(2, activity=self.model, status='cancelled')
+        DateActivitySlotFactory.create_batch(2, activity=self.model, status='draft')
 
         self.perform_get(user=self.model.owner)
 
         self.assertMeta('slot-count', 3)
+
+    def test_get_slot_count_no_slots(self):
+        self.model.slots.get().delete()
+
+        self.perform_get(user=self.model.owner)
+
+        self.assertEqual(self.response.json()['data']['meta']['slot-count'], 0)
+
+    def test_get_slot_count_upcoming_only(self):
+        self.model.slots.get().delete()
+
+        DateActivitySlotFactory.create_batch(
+            2, activity=self.model, status='open', start=now() + timedelta(days=2)
+        )
+        DateActivitySlotFactory.create_batch(
+            3, activity=self.model, status='finished', start=now() - timedelta(days=5)
+        )
+
+        self.perform_get(user=self.model.owner)
+
+        self.assertMeta('slot-count', 2)
+
+    def test_get_slot_count_all_past(self):
+        self.model.slots.get().delete()
+
+        DateActivitySlotFactory.create_batch(
+            3, activity=self.model, status='finished', start=now() - timedelta(days=5)
+        )
+
+        self.perform_get(user=self.model.owner)
+
+        self.assertMeta('slot-count', 3)
+
+    def test_get_slot_count_ignores_date_filter(self):
+        self.model.slots.get().delete()
+
+        DateActivitySlotFactory.create_batch(
+            3, activity=self.model, status='open', start=now() + timedelta(days=2)
+        )
+
+        self.perform_get(
+            user=self.model.owner,
+            query={'filter[start]': (now() + timedelta(days=30)).isoformat()},
+        )
+
+        self.assertEqual(self.response.json()['data']['meta']['slot-count'], 3)
 
 
 class DateActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):

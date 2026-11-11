@@ -609,7 +609,10 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         )
 
     def get_slot_count(self, obj):
-        return obj.slots.exclude(status__in=['draft', 'cancelled']).count()
+        slots = obj.slots.exclude(status__in=['draft', 'cancelled'])
+        # Date filters are ignored on purpose, unlike date_info.total.
+        # Past activities fall back to all slots, like the preview serializer.
+        return slots.filter(start__gte=now()).count() or slots.count()
 
     def get_filtered_slots(self, obj, only_upcoming=False):
 

@@ -4,7 +4,7 @@ from django.core import mail
 from django.urls import reverse
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.notifications.models import ActivityMessageTemplate
+from bluebottle.notifications.models import ActivityMessageTemplate, Message
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.models import Team
@@ -106,10 +106,15 @@ class TeamListAPIViewTestCase(APITestCase):
         self.assertStatus(201)
 
     def welcome_mails(self):
-        return [
+        count = Message.objects.filter(
+            template='messages/registrations/schedule/team_joined'
+        ).count()
+        mails = [
             message for message in mail.outbox
             if message.subject == 'You have registered your team on "Test"'
         ]
+        self.assertEqual(count, len(mails))
+        return mails
 
     def test_create_first_team(self):
         mail.outbox = []
@@ -150,6 +155,30 @@ class TeamListAPIViewTestCase(APITestCase):
         self.create_team('Second team')
 
         self.assertEqual(len(self.welcome_mails()), 0)
+
+    def test_create_second_team_by_staff(self):
+        self.register()
+        self.create_team('First team')
+        mail.outbox = []
+        Message.objects.all().delete()
+
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        team = TeamFactory.build(user=self.captain, activity=self.activity)
+        team.execute_triggers(user=staff, send_messages=True)
+        team.save()
+
+        self.assertEqual(len(self.welcome_mails()), 0)
+
+    def test_create_second_team_first_added_by_admin(self):
+        TeamFactory.create(user=self.captain, activity=self.activity)
+        mail.outbox = []
+        Message.objects.all().delete()
+
+        self.create_team('Second team')
+
+        welcome_mails = self.welcome_mails()
+        self.assertEqual(len(welcome_mails), 1)
+        self.assertEqual(welcome_mails[0].to, [self.captain.email])
 
 
 class TeamMemberListAPIViewTestCase(APITestCase):

@@ -576,6 +576,11 @@ class PasswordAuthentication(AuthenticationMethod):
     class JSONAPIMeta:
         resource_name = 'authentication-methods/password'
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(models.Value(True), name='unique_password_authentication'),
+        ]
+
     method = _('Email/Password')
 
 
@@ -586,6 +591,11 @@ class FacebookAuthentication(AuthenticationMethod):
     class JSONAPIMeta:
         resource_name = 'authentication-methods/facebook'
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(models.Value(True), name='unique_facebook_authentication'),
+        ]
+
     method = 'Facebook'
 
 
@@ -595,6 +605,11 @@ class GoogleAuthentication(AuthenticationMethod):
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/google'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(models.Value(True), name='unique_google_authentication'),
+        ]
 
     method = 'Google'
 

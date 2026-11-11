@@ -85,6 +85,14 @@ def is_admin(effect):
     )
 
 
+def is_manager(effect):
+    """Is an activity manager or staff member, not the user"""
+    user = effect.options.get("user")
+    return bool(user) and effect.instance.user != user and (
+        user.is_staff or user.is_superuser or user in effect.instance.activity.owners
+    )
+
+
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
     settings = MemberPlatformSettings.load()
@@ -694,6 +702,10 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
+                TransitionEffect(
+                    RegistrationStateMachine.add,
+                    conditions=[is_manager]
+                ),
                 NotificationEffect(
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],

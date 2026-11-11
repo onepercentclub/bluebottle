@@ -104,7 +104,7 @@ class CreateScheduleContributionEffect(Effect):
                     contribution_type=ContributionTypeChoices.period,
                     value=self.instance.activity.duration,
                     start=now(),
-                    end=now() + self.instance.activity.duration,
+                    end=None,
                     status="new",
                 )
 
@@ -173,11 +173,13 @@ class CreateDateRegistrationEffect(Effect):
 
     def post_save(self, **kwargs):
         if not self.instance.registration:
-            self.instance.registration = DateRegistration.objects.create(
+            registration = DateRegistration(
                 activity=self.instance.activity,
                 user=self.instance.user,
             )
-
+            registration.execute_triggers(**self.options)
+            registration.save()
+            self.instance.registration = registration
             self.instance.save()
 
 

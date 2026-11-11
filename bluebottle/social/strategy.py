@@ -1,10 +1,16 @@
 import re
 from social_django.strategy import DjangoStrategy
-from bluebottle.clients import properties
-from bluebottle.members.models import SocialLoginSettings
+from bluebottle.members.models import (
+    AuthenticationMethod, FacebookAuthentication, GoogleAuthentication
+)
 
 
 class DRFStrategy(DjangoStrategy):
+    authentication_methods = {
+        'facebook': FacebookAuthentication,
+        'google': GoogleAuthentication,
+    }
+
     name_mapping = {
         'KEY': 'client_id',
         'SECRET': 'secret'
@@ -18,13 +24,10 @@ class DRFStrategy(DjangoStrategy):
             match = re.match(r'^SOCIAL_AUTH_(FACEBOOK|GOOGLE)_(\w+)$', name)
 
             (backend, matched_name) = match.groups()
-            settings = SocialLoginSettings.objects.get(backend=backend.lower())
+            authentication_method = self.authentication_methods[backend.lower()].objects.get()
 
             matched_name = self.name_mapping.get(matched_name, 'invalid')
 
-            return getattr(settings, matched_name)
-        except (SocialLoginSettings.DoesNotExist, AttributeError):
-            try:
-                return getattr(properties, name)
-            except AttributeError:
-                return super(DRFStrategy, self).get_setting(name)
+            return getattr(authentication_method, matched_name)
+        except (AuthenticationMethod.DoesNotExist, AttributeError):
+            return super(DRFStrategy, self).get_setting(name)

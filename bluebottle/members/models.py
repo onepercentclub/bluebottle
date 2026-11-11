@@ -30,26 +30,6 @@ def default_support_groups():
     return ['Engineering Team', 'Support']
 
 
-class SocialLoginSettings(models.Model):
-    LOGIN_BACKENDS = (
-        ('facebook', _('Facebook')),
-        ('google', _('Google')),
-    )
-    settings = models.ForeignKey(
-        'members.MemberPlatformSettings',
-        on_delete=models.CASCADE,
-        related_name='social_login_methods'
-    )
-
-    backend = models.CharField(_('Platform'), choices=LOGIN_BACKENDS)
-    secret = models.CharField(_('Secret'))
-    client_id = models.CharField(_('Client id'))
-
-    class Meta(object):
-        verbose_name_plural = _('Social login settings')
-        verbose_name = _('Social login settings')
-
-
 class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     DISPLAY_MEMBER_OPTIONS = (
         ('full_name', _('Full name')),

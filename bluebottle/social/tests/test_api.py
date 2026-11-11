@@ -1,6 +1,6 @@
 from future import standard_library
 
-from bluebottle.members.models import MemberPlatformSettings, SocialLoginSettings
+from bluebottle.members.models import FacebookAuthentication
 
 standard_library.install_aliases()
 import json
@@ -45,14 +45,10 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         self.token_url = reverse("social-login")
         self.client = JSONAPITestClient()
 
-        settings = MemberPlatformSettings.load()
-
-        self.settings, _create = SocialLoginSettings.objects.update_or_create(
-            backend="facebook",
+        self.authentication_method, _created = FacebookAuthentication.objects.update_or_create(
             defaults={
                 'secret': "test-secret",
                 'client_id': "test-client-id",
-                'settings': settings,
             }
         )
 
@@ -149,8 +145,8 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         load_signed_request_mock,
     )
     def test_token_invalid_secret(self):
-        self.settings.secret = "invalid-secret"
-        self.settings.save()
+        self.authentication_method.secret = "invalid-secret"
+        self.authentication_method.save()
 
         with httmock.HTTMock(facebook_me_mock):
             response = self.client.post(

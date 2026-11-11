@@ -17,13 +17,15 @@ from rest_framework_jwt.settings import api_settings
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
 from bluebottle.members.models import (
-    MemberPlatformSettings, UserActivity, Member,
-    PasswordAuthentication, FacebookAuthentication, GoogleAuthentication, SAMLAuthentication
+    MemberPlatformSettings, UserActivity, Member
 )
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
+from bluebottle.members.tests.factories import (
+    PasswordAuthenticationFactory, FacebookAuthenticationFactory,
+    GoogleAuthenticationFactory, SAMLAuthenticationFactory
+)
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.voting.tests.factories import PollVoteFactory
 
@@ -1643,18 +1645,13 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.url = reverse('authentication-method-list')
 
-        self.password = PasswordAuthentication.objects.create(
+        self.password = PasswordAuthenticationFactory.create(
             account_creation_rules='whitelist', email_domains=['example.com']
         )
-        self.facebook = FacebookAuthentication.objects.create(secret='fb-secret', client_id='fb-client')
-        self.google = GoogleAuthentication.objects.create(
-            secret='google-secret', client_id='google-client', enabled=False
-        )
-        self.saml = SAMLAuthentication.objects.create(
-            organization=OrganizationFactory.create(),
-            entity_id='https://idp.example.com',
+        self.facebook = FacebookAuthenticationFactory.create()
+        self.google = GoogleAuthenticationFactory.create(enabled=False)
+        self.saml = SAMLAuthenticationFactory.create(
             single_sign_on_url='https://idp.example.com/sso',
-            certificate='cert',
         )
 
     def test_list(self):
@@ -1676,7 +1673,7 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
         self.assertEqual(password['attributes']['account-creation-rules'], 'whitelist')
         self.assertEqual(password['attributes']['email-domains'], ['example.com'])
 
-        self.assertEqual(data['authentication-methods/facebook']['attributes']['client-id'], 'fb-client')
+        self.assertEqual(data['authentication-methods/facebook']['attributes']['client-id'], self.facebook.client_id)
         self.assertEqual(
             data['authentication-methods/saml']['attributes']['single-sign-on-url'],
             'https://idp.example.com/sso'
@@ -1695,7 +1692,7 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
     def test_secrets_not_exposed(self):
         response = self.client.get(self.url)
         content = response.content.decode()
-        self.assertNotIn('fb-secret', content)
-        self.assertNotIn('google-secret', content)
+        self.assertNotIn(self.facebook.secret, content)
+        self.assertNotIn(self.google.secret, content)
         self.assertNotIn('secret', content)
         self.assertNotIn('certificate', content)

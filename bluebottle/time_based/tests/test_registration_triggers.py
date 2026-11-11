@@ -16,6 +16,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.models import PeriodicParticipant, PeriodicRegistration
 from bluebottle.time_based.tests.factories import (
     TeamFactory,
+    TeamMemberFactory,
     DeadlineActivityFactory,
     DeadlineRegistrationFactory,
     PeriodicActivityFactory,
@@ -573,6 +574,21 @@ class TeamScheduleRegistrationTriggerTestCase(
         self.assertEqual(
             self.team.team_members.get().participants.get().status, "new"
         )
+
+    def test_reject_and_accept_with_removed_team_member(self):
+        self.test_initial_review()
+        removed = TeamMemberFactory.create(team=self.team)
+        other = TeamMemberFactory.create(team=self.team)
+        removed.states.remove(save=True)
+
+        self.registration.states.reject(save=True)
+        self.registration.states.accept(save=True)
+
+        captain = self.team.team_members.get(user=self.user)
+        for member in [captain, other]:
+            participant = member.participants.get()
+            self.assertEqual(participant.status, "accepted")
+            self.assertEqual(participant.contributions.get().status, "new")
 
     def test_reject(self):
         self.activity.review = True

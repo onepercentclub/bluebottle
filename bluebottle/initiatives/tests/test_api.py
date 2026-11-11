@@ -206,6 +206,26 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_list_anonymous(self):
+        open_initiative = InitiativeFactory.create(owner=self.owner, is_open=True)
+        InitiativeFactory.create(owner=self.owner, is_open=False)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [item['id'] for item in response.json()['data']]
+        self.assertEqual(ids, [str(open_initiative.pk)])
+
+    def test_list_owner(self):
+        InitiativeFactory.create(owner=self.owner, is_open=True)
+        InitiativeFactory.create(owner=self.owner, is_open=False)
+        InitiativeFactory.create(owner=self.visitor, is_open=False)
+
+        response = self.client.get(self.url, user=self.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 2)
+
 
 class InitiativeDetailAPITestCase(InitiativeAPITestCase):
     def setUp(self):
@@ -804,8 +824,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_country(self):
         matching_country = CountryFactory.create(alpha2_code='NL')
         other_country = CountryFactory.create(alpha2_code='DE')
-
-        matching = InitiativeFactory.create_batch(2, status='approved')
+        matching_location = GeolocationFactory.create(country=matching_country)
+        other_location = GeolocationFactory.create(country=other_country)
+        matching = InitiativeFactory.create_batch(2, status='approved', place=matching_location)
         for initiative in matching:
             DeadlineActivityFactory.create(
                 status='open',
@@ -813,7 +834,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 office_location=LocationFactory.create(country=matching_country)
             )
 
-        other = InitiativeFactory.create_batch(3, status='approved')
+        other = InitiativeFactory.create_batch(3, status='approved', place=other_location)
         for initiative in other:
             DeadlineActivityFactory.create(
                 status='open',

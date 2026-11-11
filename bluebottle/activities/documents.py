@@ -1,12 +1,16 @@
 from builtins import str
+from collections import Counter
 
+from django.core.exceptions import FieldDoesNotExist
+from django.db.models import Count, Q
 from django_elasticsearch_dsl import Document, fields
 from elasticsearch_dsl.field import DateRange
 
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, Contributor, Organizer
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
-from bluebottle.geo.models import Location
+from bluebottle.geo.models import Geolocation, Location
+from bluebottle.grant_management.models import GrantDonor
 from bluebottle.initiatives.documents import (
     deduplicate,
     get_translated_country_list,
@@ -15,6 +19,7 @@ from bluebottle.initiatives.documents import (
 )
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.segments.models import Segment
+from bluebottle.time_based.models import Interest, Registration, Team
 from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.search import Search
 
@@ -102,6 +107,29 @@ def geofeatures_for_geolocation(geolocation):
     return geofeatures
 
 
+GEOLOCATION_LOOKUPS = ('location', 'impact_location', 'slots__location', 'initiative__place')
+
+
+def _has_lookup(model, lookup):
+    for name in lookup.split('__'):
+        try:
+            model = model._meta.get_field(name).related_model
+        except FieldDoesNotExist:
+            return False
+    return True
+
+
+def activities_for_geolocation(model, geolocation):
+    lookups = [lookup for lookup in GEOLOCATION_LOOKUPS if _has_lookup(model, lookup)]
+    if not lookups:
+        return model.objects.none()
+
+    query = Q()
+    for lookup in lookups:
+        query |= Q(**{lookup: geolocation})
+    return model.objects.filter(query).distinct()
+
+
 def geolocation_for_activity(instance):
     """Primary geolocation used when indexing an activity."""
     location = getattr(instance, 'location', None)
@@ -113,6 +141,26 @@ def geolocation_for_activity(instance):
     if initiative and initiative.place_id:
         return initiative.place
     return None
+
+
+CONTRIBUTOR_STATUSES = ('accepted', 'scheduled', 'succeeded')
+CONTRIBUTOR_STATS_KEYS = CONTRIBUTOR_STATUSES + ('interested',)
+# Registration count keys and the status they count; a new registration is pending review.
+REGISTRATION_STATUSES = {
+    'pending': 'new',
+    'accepted': 'accepted',
+}
+
+
+def status_counts(queryset):
+    return Counter(dict(queryset.order_by().values_list('status').annotate(count=Count('pk'))))
+
+
+def contributor_status_counts(instance):
+    # Organizers (activity owners) and granted amounts are contributors, but not participants.
+    counts = status_counts(instance.contributors.not_instance_of(Organizer, GrantDonor))
+    counts['succeeded'] += instance.deleted_successful_contributors or 0
+    return counts
 
 
 class ActivityDocument(Document):
@@ -323,7 +371,13 @@ class ActivityDocument(Document):
     )
 
     contributors = fields.KeywordField()
-    contributor_count = fields.IntegerField(attr='succeeded_contributor_count')
+    contributor_count = fields.IntegerField()
+    contributor_stats = fields.ObjectField(
+        properties={key: fields.IntegerField() for key in CONTRIBUTOR_STATS_KEYS}
+    )
+    registration_stats = fields.ObjectField(
+        properties={key: fields.IntegerField() for key in REGISTRATION_STATUSES}
+    )
     capacity = fields.IntegerField()
     donation_count = fields.IntegerField()
     activity_type = fields.KeywordField()
@@ -352,12 +406,16 @@ class ActivityDocument(Document):
             return model.objects.filter(segments=related_instance)
         if isinstance(related_instance, Location):
             return model.objects.filter(office_location=related_instance)
+        if isinstance(related_instance, Geolocation):
+            return activities_for_geolocation(model, related_instance)
         if isinstance(related_instance, Theme.translations.field.model):
             return model.objects.filter(initiative__theme=related_instance.master)
+        if isinstance(related_instance, (Contributor, Registration, Interest, Team)):
+            return model.objects.filter(pk=related_instance.activity_id)
 
     class Django:
         related_models = (
-            Initiative, Theme, Theme.translations.field.model, Segment, Location
+            Initiative, Theme, Theme.translations.field.model, Segment, Location, Geolocation
         )
         model = Activity
 
@@ -419,7 +477,28 @@ class ActivityDocument(Document):
         ]
 
     def prepare_contributor_count(self, instance):
-        return instance.contributors.filter(status__in=('succeeded', 'accepted')).count()
+        counts = contributor_status_counts(instance)
+        return counts['accepted'] + counts['succeeded']
+
+    def prepare_contributor_stats(self, instance):
+        counts = contributor_status_counts(instance)
+        stats = {status: counts[status] for status in CONTRIBUTOR_STATUSES}
+        stats['interested'] = self.interested_count(instance)
+        return stats
+
+    def interested_count(self, instance):
+        # People who applied or joined since registering interest are no longer waiting for a spot.
+        joined = instance.contributors.filter(
+            status__in=('new',) + CONTRIBUTOR_STATUSES, user__isnull=False
+        ).values('user_id')
+        interests = instance.interests.exclude(user_id__in=joined)
+        if isinstance(self._related_instance_to_ignore, Interest):
+            interests = interests.exclude(pk=self._related_instance_to_ignore.pk)
+        return interests.values('user_id').distinct().count()
+
+    def prepare_registration_stats(self, instance):
+        counts = status_counts(instance.registrations.all())
+        return {key: counts[status] for key, status in REGISTRATION_STATUSES.items()}
 
     def prepare_donation_count(self, instance):
         return instance.contributors.instance_of(Donor).filter(status='succeeded').count()

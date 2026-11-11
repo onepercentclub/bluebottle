@@ -209,6 +209,18 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.refresh_from_db()
         self.assertEqual(self.initiative.reviewer, reviewer)
 
+    def test_invalid_form_shows_errors(self):
+        self.app.set_user(self.staff_member)
+        admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        page = self.app.get(admin_url)
+        form = page.forms['initiative_form']
+        form['owner'].force_value('999999')
+
+        page = form.submit()
+
+        self.assertEqual(page.status, '200 OK')
+        self.assertTrue('Select a valid choice' in page.text)
+
     def test_add_reviewer_cancel(self):
         self.app.set_user(self.staff_member)
         reviewer = BlueBottleUserFactory.create()

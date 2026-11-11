@@ -38,7 +38,7 @@ def preview_slot_filters_from_request(request):
     if request is None:
         return False, None, None
 
-    upcoming = request.GET.get('filter[upcoming]', '0') == '1'
+    upcoming = request.GET.get('filter[upcoming]', '0') == '1' or request.GET.get('filter[hightlight]', '0') == '1'
     start = end = None
     tz = get_current_timezone()
     try:

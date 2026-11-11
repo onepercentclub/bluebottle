@@ -10,9 +10,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
 from django.http import Http404
-from django.template import loader
 from django.utils import timezone
-from django.utils.http import base36_to_int, int_to_base36
+from django.utils.http import base36_to_int
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, response, generics, parsers
@@ -21,7 +20,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import UserRateThrottle
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.views import ObtainJSONWebTokenView
-from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_accounts.permissions import (
     CurrentUserPermission, IsAuthenticatedOrOpenPermission,
@@ -29,12 +27,11 @@ from bluebottle.bb_accounts.permissions import (
 )
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.clients import properties
-from bluebottle.clients.utils import tenant_url
 from bluebottle.files.views import ImageContentView
 from bluebottle.initiatives.serializers import (
     MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
 )
-from bluebottle.members.messages import SignUpTokenMessage
+from bluebottle.members.messages import SignUpTokenMessage, PasswordResetMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.models import UserActivity
 from bluebottle.members.serializers import (
@@ -48,7 +45,6 @@ from bluebottle.members.serializers import (
     OldUserActivitySerializer, MemberProfileSerializer
 )
 from bluebottle.members.tokens import login_token_generator
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.permissions import IsCurrentUser
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
@@ -320,7 +316,10 @@ class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
         except ValueError:
             raise ValidationError('Invalid token')
 
-        user = USER_MODEL.objects.get(pk=base36_to_int(uidb36))
+        try:
+            user = USER_MODEL.objects.get(pk=base36_to_int(uidb36))
+        except (ValueError, OverflowError, USER_MODEL.DoesNotExist):
+            raise ValidationError('Token expired')
 
         if default_token_generator.check_token(user, token):
 
@@ -362,27 +361,8 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         try:
-            user = USER_MODEL.objects.get_by_email(serializer.validated_data['email'], is_active=True)
-            context = {
-                'email': user.email,
-                'site': tenant_url(),
-                'site_name': tenant_url(),
-                'uid': int_to_base36(user.pk),
-                'user': user,
-                'token': default_token_generator.make_token(user),
-            }
-
-            with TenantLanguage(user.primary_language):
-                subject = loader.render_to_string('bb_accounts/password_reset_subject.txt', context)
-                # Email subject *must not* contain newlines
-                subject = ''.join(subject.splitlines())
-
-            send_mail(
-                template_name='bb_accounts/password_reset_email',
-                to=user,
-                subject=subject,
-                **context
-            )
+            user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'], is_active=True)
+            PasswordResetMessage(user).compose_and_send()
         except USER_MODEL.DoesNotExist:
             pass
 

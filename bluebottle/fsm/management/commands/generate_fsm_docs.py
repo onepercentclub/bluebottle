@@ -9,17 +9,23 @@ Responsibilities are split as follows:
   Django template (HTML lives in ``templates/fsm/fsm_documentation.html``).
 - Styling is served from a static CSS file
   (``static/fsm/fsm_documentation.css``).
+- Graphs are built by ``bluebottle.fsm.docs_graphs`` as DOT and rendered in
+  the browser by viz.js, so no graphviz binary is needed.
 
 This command does not require database queries for state-machine inspection;
 it uses class introspection only.
 """
+import json
 import re
 from collections import OrderedDict
 from pathlib import Path
 
+import requests
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 
+from bluebottle.fsm import docs_graphs
+from bluebottle.fsm.effects import BaseTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger
 from bluebottle.fsm.utils import get_doc, setup_instance
 
@@ -239,6 +245,95 @@ def get_transition_id(transition):
     return getattr(transition, 'field', str(transition.name)).replace(' ', '-')
 
 
+def _relation_applies(model, effect_cls):
+    relation = getattr(effect_cls, 'relation', '')
+    return not relation or hasattr(model, relation.split('.')[0])
+
+
+def _humanize(name):
+    return re.sub(r'(?<!^)(?=[A-Z])', ' ', name.strip('_')).capitalize()
+
+
+def _relation_from_name(effect_cls):
+    """``_ActiveDurationsTransitionEffect`` changes ``active_durations``."""
+    name = re.sub(r'TransitionEffect$', '', effect_cls.__name__.strip('_'))
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+
+
+def _effect_graph_info(model, effect_cls, cond_str, notification):
+    """Short description of an effect for the effect graphs; None when it never applies to ``model``."""
+    base_id = model._meta.model_name
+    transition = getattr(effect_cls, 'transition', None)
+    if hasattr(effect_cls, 'transition_effect_class') or (
+        transition is not None and not issubclass(effect_cls, BaseTransitionEffect)
+    ):
+        if not _relation_applies(model, effect_cls):
+            return None
+        if hasattr(effect_cls, 'transition_effect_class'):
+            relation = effect_cls.relation
+            transition = effect_cls.transition_effect_class.transition
+        else:
+            relation = _relation_from_name(effect_cls)
+        return {
+            'kind': 'related',
+            'label': '{} → {}'.format(relation, transition.name),
+            'conditions': cond_str,
+            'relation': relation,
+            'transition': transition,
+        }
+    if transition is not None:
+        return {
+            'kind': 'own',
+            'label': '{} → {}'.format(transition.name, transition.target.name.capitalize()),
+            'url': '#{}-trans-{}'.format(base_id, get_transition_id(transition)),
+            'conditions': cond_str,
+            'transition': transition,
+        }
+    if notification:
+        tooltip = notification['message_class']
+        if notification.get('recipients_doc'):
+            tooltip += ' to ' + notification['recipients_doc']
+        return {
+            'kind': 'notification',
+            'label': notification['message_class'],
+            'tooltip': tooltip,
+            'conditions': cond_str,
+        }
+    app = effect_cls.__module__.split('.')[1] if effect_cls.__module__.startswith('bluebottle.') else ''
+    label = _effect_clarification(effect_cls) or _humanize(effect_cls.__name__)
+    return {
+        'kind': 'other',
+        'label': '{}: {}'.format(app.replace('_', ' ').capitalize(), label) if app else label,
+        'conditions': cond_str,
+    }
+
+
+def _describe_effect(model, effect_cls, instance):
+    try:
+        conds = getattr(effect_cls, 'conditions', None) or []
+        cond_str = ' and '.join([get_doc(c) for c in conds])
+        summary = _format_effect_summary(effect_cls, cond_str)
+        detail = {
+            'doc': _effect_docstring(effect_cls),
+            'notification': _effect_notification_detail(effect_cls, instance=instance),
+            'transition': _effect_transition_detail(effect_cls),
+            'related': _effect_related_detail(effect_cls),
+        }
+        graph = _effect_graph_info(model, effect_cls, cond_str, detail['notification'])
+        if not any([detail['doc'], detail['notification'], detail['transition'], detail['related']]):
+            detail = None
+        else:
+            detail['show_doc'] = not _is_redundant_effect_doc(detail.get('doc'), detail)
+        if graph is None:
+            summary += ' (relation does not exist on this model, so this never runs)'
+        return {'summary': summary, 'detail': detail, 'graph': graph, 'effect_cls': effect_cls}
+    except Exception:
+        return {
+            'summary': getattr(effect_cls, '__name__', str(effect_cls)),
+            'detail': None, 'graph': None, 'effect_cls': effect_cls,
+        }
+
+
 def document_fsm_from_classes(model):
     """
     Build FSM documentation from model/state machine/trigger classes only.
@@ -267,36 +362,35 @@ def document_fsm_from_classes(model):
         'triggers': [],
         'periodic_tasks': [],
     }
+    known = {s['id'] for s in doc['states']}
+    for transition in transitions:
+        for state in list(transition.sources) + [transition.target]:
+            state_id = get_state_id(state)
+            if state_id not in known and state_id != 'all':
+                known.add(state_id)
+                doc['states'].append({
+                    'name': str(state.name).capitalize(),
+                    'description': getattr(state, 'description', '') or '',
+                    'value': getattr(state, 'value', ''),
+                    'id': state_id,
+                })
+
     for transition in transitions:
         triggers_for_trans = [
             t for t in model.triggers.triggers
             if isinstance(t, TransitionTrigger) and t.transition == transition
         ]
-        effects = []
-        for t in triggers_for_trans:
-            for effect_cls in t.effects:
-                try:
-                    conds = getattr(effect_cls, 'conditions', None) or []
-                    cond_str = ' and '.join([get_doc(c) for c in conds])
-                    summary = _format_effect_summary(effect_cls, cond_str)
-                    detail = {
-                        'doc': _effect_docstring(effect_cls),
-                        'notification': _effect_notification_detail(effect_cls, instance=instance),
-                        'transition': _effect_transition_detail(effect_cls),
-                        'related': _effect_related_detail(effect_cls),
-                    }
-                    if not any([detail['doc'], detail['notification'], detail['transition'], detail['related']]):
-                        detail = None
-                    else:
-                        detail['show_doc'] = not _is_redundant_effect_doc(detail.get('doc'), detail)
-                    effects.append({'summary': summary, 'detail': detail})
-                except Exception:
-                    effects.append({'summary': getattr(effect_cls, '__name__', str(effect_cls)), 'detail': None})
+        effects = [
+            _describe_effect(model, effect_cls, instance)
+            for t in triggers_for_trans for effect_cls in t.effects
+        ]
         doc['transitions'].append({
-            'name': transition.name,
+            'name': str(transition.name),
             'description': transition.description or '',
             'from_states': [s.name.capitalize() for s in transition.sources],
+            'from_ids': [get_state_id(s) for s in transition.sources],
             'to': transition.target.name.capitalize(),
+            'to_id': get_state_id(transition.target),
             'manual': 'Automatic' if transition.automatic else 'Manual',
             'conditions': [get_doc(c) for c in transition.conditions],
             'effects': effects,
@@ -318,6 +412,9 @@ def document_fsm_from_classes(model):
                     transition = te.transition
             if transition is None:
                 continue
+            if hasattr(effect_cls, 'transition_effect_class'):
+                # A related effect changes another object, not this one.
+                continue
             if isinstance(trigger, TransitionTrigger) and trigger.transition == transition:
                 continue
             idx = transition_by_id.get(id(transition))
@@ -333,28 +430,9 @@ def document_fsm_from_classes(model):
     for trigger in model.triggers.triggers:
         if isinstance(trigger, TransitionTrigger):
             continue
-        effect_list = []
-        for effect_cls in trigger.effects:
-            try:
-                conds = getattr(effect_cls, 'conditions', None) or []
-                cond_str = ' and '.join([get_doc(c) for c in conds])
-                summary = _format_effect_summary(effect_cls, cond_str)
-                detail = {
-                    'doc': _effect_docstring(effect_cls),
-                    'notification': _effect_notification_detail(effect_cls, instance=instance),
-                    'transition': _effect_transition_detail(effect_cls),
-                    'related': _effect_related_detail(effect_cls),
-                }
-                if not any([detail['doc'], detail['notification'], detail['transition'], detail['related']]):
-                    detail = None
-                else:
-                    detail['show_doc'] = not _is_redundant_effect_doc(detail.get('doc'), detail)
-                effect_list.append({'summary': summary, 'detail': detail})
-            except Exception:
-                effect_list.append({'summary': getattr(effect_cls, '__name__', str(effect_cls)), 'detail': None})
         doc['triggers'].append({
             'when': str(trigger),
-            'effects': effect_list,
+            'effects': [_describe_effect(model, effect_cls, instance) for effect_cls in trigger.effects],
             'id': re.sub(r'[^a-z0-9]+', '-', str(trigger).lower().strip()).strip('-'),
         })
     # Periodic tasks (model.periodic_tasks)
@@ -363,30 +441,14 @@ def document_fsm_from_classes(model):
         task_doc = get_doc(task_cls)
         if task_doc and '(documentation missing)' in str(task_doc):
             task_doc = None
-        effects = []
-        for effect_cls in getattr(task_cls, 'effects', []) or []:
-            try:
-                conds = getattr(effect_cls, 'conditions', None) or []
-                cond_str = ' and '.join([get_doc(c) for c in conds])
-                summary = _format_effect_summary(effect_cls, cond_str)
-                detail = {
-                    'doc': _effect_docstring(effect_cls),
-                    'notification': _effect_notification_detail(effect_cls, instance=instance),
-                    'transition': _effect_transition_detail(effect_cls),
-                    'related': _effect_related_detail(effect_cls),
-                }
-                if not any([detail['doc'], detail['notification'], detail['transition'], detail['related']]):
-                    detail = None
-                else:
-                    detail['show_doc'] = not _is_redundant_effect_doc(detail.get('doc'), detail)
-                effects.append({'summary': summary, 'detail': detail})
-            except Exception:
-                effects.append({'summary': getattr(effect_cls, '__name__', str(effect_cls)), 'detail': None})
         doc['periodic_tasks'].append({
             'name': task_name,
             'id': re.sub(r'[^a-z0-9]+', '-', task_name.lower()).strip('-') or 'task',
             'description': task_doc,
-            'effects': effects,
+            'effects': [
+                _describe_effect(model, effect_cls, instance)
+                for effect_cls in getattr(task_cls, 'effects', []) or []
+            ],
         })
     return doc
 
@@ -398,6 +460,155 @@ def document_fsm_enriched(model):
     Uses class-only introspection so no DB is required.
     """
     return document_fsm_from_classes(model)
+
+
+FAMILIES = OrderedDict([
+    ('Date activities', ['DateActivity', 'DateActivitySlot', 'DateRegistration', 'DateParticipant']),
+    ('Registered date activities', ['RegisteredDateActivity', 'RegisteredDateParticipant']),
+    ('Deadline activities', ['DeadlineActivity', 'DeadlineRegistration', 'DeadlineParticipant']),
+    ('Periodic activities', ['PeriodicActivity', 'PeriodicSlot', 'PeriodicRegistration', 'PeriodicParticipant']),
+    ('Schedule activities', [
+        'ScheduleActivity', 'ScheduleSlot', 'ScheduleRegistration', 'ScheduleParticipant',
+        'Team', 'TeamMember', 'TeamScheduleSlot', 'TeamScheduleRegistration', 'TeamScheduleParticipant',
+    ]),
+])
+SHARED_MODELS = {
+    'TimeContribution': [
+        'Date activities', 'Registered date activities', 'Deadline activities',
+        'Periodic activities', 'Schedule activities',
+    ],
+}
+APP_FAMILIES = {'funding_stripe': 'funding'}
+
+
+def get_families(model):
+    """Families (activity types) a model belongs to; falls back to its app."""
+    name = model.__name__
+    if name in SHARED_MODELS:
+        return set(SHARED_MODELS[name])
+    for family, members in FAMILIES.items():
+        if name in members:
+            return {family}
+    app_label = model._meta.app_label
+    return {APP_FAMILIES.get(app_label, app_label)}
+
+
+def get_primary_family(model):
+    name = model.__name__
+    if name in SHARED_MODELS:
+        return 'Time contributions'
+    family = sorted(get_families(model))[0]
+    return family if family in FAMILIES else family.replace('_', ' ').capitalize()
+
+
+def _related_model(model, relation):
+    for part in relation.split('.'):
+        try:
+            model = model._meta.get_field(part).related_model
+        except Exception:
+            return None
+        if model is None:
+            return None
+    return model
+
+
+def resolve_related_targets(model, relation, transition, owners):
+    """
+    Documented models whose state machine holds the transition a related effect fires.
+
+    Related effects are declared on base classes and walk properties as well as fields,
+    so the relation alone often points at an abstract base. The transition object
+    is what the effect checks at runtime, so start from the models that own it and
+    narrow down by relation and by activity family.
+    """
+    candidates = owners.get(id(transition), [])
+    related = _related_model(model, relation)
+    if related is not None:
+        narrowed = [c for c in candidates if issubclass(c, related)]
+        if narrowed:
+            candidates = narrowed
+    families = get_families(model)
+    same_family = [c for c in candidates if get_families(c) & families]
+    if same_family:
+        return same_family
+    return candidates if len(candidates) == 1 else []
+
+
+def build_graph_index(fsm_entries):
+    """
+    Resolve related effects to documented models and collect, per transition, what it can cause.
+
+    Returns ``{(base_id, transition_id): {...}}`` as used by :func:`docs_graphs.cascade_graph`,
+    and fills in link targets and incoming edges on the docs.
+    """
+    owners = {}
+    for model, _ in fsm_entries:
+        for transition in model._state_machines['states'].transitions.values():
+            owners.setdefault(id(transition), []).append(model)
+
+    labels = {model._meta.model_name: str(model._meta.verbose_name) for model, _ in fsm_entries}
+    index = {}
+    for model, doc in fsm_entries:
+        base_id = model._meta.model_name
+        for transition in doc['transitions']:
+            key = (base_id, transition['id'])
+            entry = {
+                'model': str(model._meta.verbose_name).capitalize(),
+                'name': transition['name'],
+                'url': '#{}-trans-{}'.format(base_id, transition['id']),
+                'notifications': 0,
+                'related': [],
+            }
+            for effect in transition['effects']:
+                info = effect['graph']
+                if not info:
+                    continue
+                if info['kind'] == 'notification':
+                    entry['notifications'] += 1
+                elif info['kind'] == 'own':
+                    entry['related'].append({
+                        'relation': 'self', 'conditions': info.get('conditions'),
+                        'targets': [(base_id, get_transition_id(info['transition']))],
+                    })
+                elif info['kind'] == 'related':
+                    target_transition = info['transition']
+                    targets = [
+                        (target._meta.model_name, get_transition_id(target_transition))
+                        for target in resolve_related_targets(model, info['relation'], target_transition, owners)
+                    ]
+                    if targets:
+                        names = [labels[target_base] for target_base, _ in targets]
+                        info['url'] = '#{}-trans-{}'.format(*targets[0])
+                        info['tooltip'] = '{} on {}'.format(target_transition.name, ', '.join(names))
+                        info['label'] += ' ({})'.format(names[0] if len(names) == 1 else 'several models')
+                    entry['related'].append({
+                        'relation': info['relation'], 'conditions': info.get('conditions'),
+                        'targets': targets,
+                    })
+            index[key] = entry
+
+    docs = {model._meta.model_name: doc for model, doc in fsm_entries}
+    for (base_id, transition_id), entry in index.items():
+        for related in entry['related']:
+            if related['relation'] == 'self':
+                continue
+            for target_base, target_id in related['targets']:
+                for transition in docs[target_base]['transitions']:
+                    if transition['id'] == target_id:
+                        transition.setdefault('incoming', []).append({
+                            'label': '{}: {}'.format(entry['model'], entry['name']),
+                            'url': entry['url'],
+                            'conditions': related['conditions'],
+                        })
+    for doc in docs.values():
+        for transition in doc['transitions']:
+            transition.setdefault('incoming', [])
+            for cause in transition['caused_by']:
+                transition['incoming'].append({
+                    'label': cause['trigger'],
+                    'conditions': ' and '.join(cause['conditions']),
+                })
+    return index
 
 
 def get_fsm_models_for_apps(app_labels):
@@ -461,36 +672,46 @@ def _state_links_from_doc(doc, base_id):
     return result
 
 
-def render_html(fsm_entries):
+def _script_json(value):
+    """JSON that is safe inside a <script> element."""
+    return json.dumps(value).replace('</', '<\\/')
+
+
+def _section_graphs(base_id, doc, index):
+    for transition in doc['transitions']:
+        effects = docs_graphs.effects_graph(transition, base_id)
+        transition['effects_dot'] = _script_json(docs_graphs.to_dot(effects)) if effects else None
+        cascade = docs_graphs.cascade_graph(index, (base_id, transition['id']))
+        has_cascade = cascade and len(cascade['clusters']) > 1
+        transition['cascade_dot'] = _script_json(docs_graphs.to_dot(cascade)) if has_cascade else None
+        transition['cascade_truncated'] = cascade['truncated'] if has_cascade else 0
+    lifecycle = docs_graphs.lifecycle_graph(doc, base_id)
+    return {
+        'lifecycle_dots': _script_json(docs_graphs.lifecycle_variants(doc, base_id)),
+        'globals': lifecycle['globals'],
+        'edges_before': docs_graphs.edge_count(doc, collapsed=False),
+        'edges_after': docs_graphs.edge_count(doc, collapsed=True),
+    }
+
+
+def render_html(fsm_entries, viz_script=None):
     """
     Render the FSM documentation page using a Django template.
 
     ``fsm_entries`` is a list of ``(model_class, doc_dict)`` where
     ``doc_dict`` comes from :func:`document_fsm_enriched`.
+    ``viz_script`` is the viz.js source to inline; when empty the page loads it from a CDN.
     """
     if not fsm_entries:
         return ''
 
-    # Build grouped navigation data by app; keep order stable.
-    by_app: OrderedDict[str, list] = OrderedDict()
-    first_id_by_app: dict[str, str] = {}
-    sections = []
+    index = build_graph_index(fsm_entries)
 
+    groups = OrderedDict()
     for model, doc in fsm_entries:
-        app_label = model._meta.app_label
         model_name = model._meta.model_name
         verbose_name = model._meta.verbose_name
-
-        if app_label not in by_app:
-            by_app[app_label] = []
-            first_id_by_app[app_label] = model_name
-
-        by_app[app_label].append(
-            {
-                'id': model_name,
-                'label': verbose_name,
-            }
-        )
+        family = get_primary_family(model)
 
         class_path = f'{model.__module__}.{model.__name__}'
         model_doc = getattr(model, '__doc__', None)
@@ -499,31 +720,34 @@ def render_html(fsm_entries):
         else:
             model_doc = ''
 
-        sections.append(
-            {
-                'base_id': model_name,
-                'label': verbose_name,
-                'class_path': class_path,
-                'model_doc': model_doc,
-                'doc': doc,
-                'state_links': _state_links_from_doc(doc, model_name),
-            }
-        )
+        section = {
+            'base_id': model_name,
+            'label': verbose_name,
+            'class_path': class_path,
+            'model_doc': model_doc,
+            'doc': doc,
+            'state_links': _state_links_from_doc(doc, model_name),
+        }
+        section.update(_section_graphs(model_name, doc, index))
+        groups.setdefault(family, []).append(section)
 
-    # Build nav groups for the template
-    nav_groups = []
-    for app_label, models in by_app.items():
-        nav_groups.append(
-            {
-                'app_label': app_label.replace('_', ' ').title(),
-                'models': models,
-            }
-        )
+    family_order = list(FAMILIES) + ['Time contributions']
+    ordered = sorted(
+        groups.items(),
+        key=lambda item: (family_order.index(item[0]) if item[0] in family_order else len(family_order), item[0])
+    )
+    group_list = []
+    for family, sections in ordered:
+        family_id = 'family-' + re.sub(r'[^a-z0-9]+', '-', family.lower()).strip('-')
+        members = [(s['base_id'], str(s['label']).capitalize()) for s in sections]
+        family_graph = docs_graphs.family_map(members, index)
+        group_list.append({
+            'id': family_id,
+            'label': family,
+            'sections': sections,
+            'map_dot': _script_json(docs_graphs.to_dot(family_graph)) if family_graph else None,
+        })
 
-    jump_links = [
-        {'href': '#{}'.format(first_id_by_app[app]), 'label': app.replace('_', ' ').title()}
-        for app in first_id_by_app
-    ]
     apps_label = ', '.join(sorted(set(m._meta.app_label for m, _ in fsm_entries)))
     title = 'FSM documentation – ' + apps_label
 
@@ -539,20 +763,34 @@ def render_html(fsm_entries):
     context = {
         'title': title,
         'apps_label': apps_label,
-        'nav_groups': nav_groups,
-        'jump_links': jump_links,
-        'sections': sections,
+        'groups': group_list,
         'inline_css': inline_css,
+        'viz_script': viz_script,
+        'viz_url': VIZ_URL,
     }
 
     return render_to_string('fsm/fsm_documentation.html', context)
 
 
+VIZ_URL = 'https://cdn.jsdelivr.net/npm/@viz-js/viz@3.31.0/dist/viz-global.js'
+VIZ_CACHE = Path(__file__).resolve().parent.parent.parent / 'static' / 'fsm' / 'vendor' / 'viz-global.js'
+
+
+def load_viz_script():
+    if not VIZ_CACHE.exists():
+        VIZ_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        response = requests.get(VIZ_URL, timeout=30)
+        response.raise_for_status()
+        VIZ_CACHE.write_text(response.text, encoding='utf-8')
+    return VIZ_CACHE.read_text(encoding='utf-8').replace('</script', '<\\/script')
+
+
 class Command(BaseCommand):
     help = (
         'Generate clickable HTML documentation for FSM models (states, transitions, '
-        'triggers, conditions, effects). By default includes deeds, funding, funding_stripe, '
-        'collect, grant_management, time_based, initiatives. Use --app to limit to specific app(s). No DB required.'
+        'triggers, conditions, effects) with lifecycle, effect and cascade graphs. By default includes '
+        'deeds, funding, funding_stripe, collect, grant_management, time_based, initiatives. '
+        'Use --app to limit to specific app(s). No DB required.'
     )
 
     def add_arguments(self, parser):
@@ -572,6 +810,11 @@ class Command(BaseCommand):
                 'App label(s) to document. Can be repeated. Default: deeds, funding, '
                 'funding_stripe, collect, grant_management, time_based, initiatives.'
             ),
+        )
+        parser.add_argument(
+            '--offline',
+            action='store_true',
+            help='Inline the graph renderer (viz.js) so the page works without network access.',
         )
 
     def handle(self, *args, **options):
@@ -598,7 +841,11 @@ class Command(BaseCommand):
             try:
                 doc = document_fsm_enriched(model)
                 fsm_entries.append((model, doc))
-                self.stdout.write('  {}'.format(model._meta.label))
+                self.stdout.write('  {:<40} lifecycle edges {:>3} -> {:>3}'.format(
+                    model._meta.label,
+                    docs_graphs.edge_count(doc, collapsed=False),
+                    docs_graphs.edge_count(doc, collapsed=True),
+                ))
             except Exception as e:
                 self.stdout.write(self.style.WARNING('  Skip {}: {}'.format(model._meta.label, e)))
 
@@ -606,7 +853,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR('No documentation generated.'))
             return
 
-        html = render_html(fsm_entries)
+        viz_script = load_viz_script() if options.get('offline') else None
+        html = render_html(fsm_entries, viz_script=viz_script)
         out_path = options['output']
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(html)

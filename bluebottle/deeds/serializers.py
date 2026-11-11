@@ -36,15 +36,6 @@ class StartDateValidator():
 
 
 class DeedSerializer(BaseActivitySerializer):
-    def __init__(self, instance=None, *args, **kwargs):
-        super().__init__(instance, *args, **kwargs)
-
-        if not instance or instance.status in ('draft', 'needs_work'):
-            for key in self.fields:
-                self.fields[key].allow_blank = True
-                self.fields[key].validators = []
-                self.fields[key].allow_null = True
-                self.fields[key].required = False
 
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     end = serializers.DateField(allow_null=True)

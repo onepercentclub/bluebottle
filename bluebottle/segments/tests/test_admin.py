@@ -142,7 +142,7 @@ class ActivityAdminSegmentQueryTest(BluebottleAdminTestCase):
 
         segment_queries = [
             q for q in connection.queries
-            if "segments_segment" in q["sql"].lower()
+            if "segments_segment" in q["sql"].lower()bluebottle.activities.tests.test_api.ActivityListSearchAPITestCase.test_filter_country_slots
             and "segmenttype" not in q["sql"].lower()
             and "segment_manager" not in q["sql"].lower()
         ]

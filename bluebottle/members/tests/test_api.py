@@ -23,6 +23,7 @@ from bluebottle.members.models import (
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.voting.tests.factories import PollVoteFactory
 
@@ -1650,6 +1651,7 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
             secret='google-secret', client_id='google-client', enabled=False
         )
         self.saml = SAMLAuthentication.objects.create(
+            organization=OrganizationFactory.create(),
             entity_id='https://idp.example.com',
             single_sign_on_url='https://idp.example.com/sso',
             certificate='cert',

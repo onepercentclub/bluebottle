@@ -132,7 +132,7 @@ class StripePayoutAccountTriggers(TriggerManager):
         """has a grant application that is granted"""
         return (
             effect.instance.pk and
-            effect.instance.grant_application.filter(status='granted').exists()
+            effect.instance.grant_application.filter(status__in=['granted', 'processing_payout']).exists()
         )
 
     def account_verified(self):

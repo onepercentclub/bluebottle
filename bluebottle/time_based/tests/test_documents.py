@@ -6,26 +6,60 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from bluebottle.test.elasticsearch import ElasticsearchTestCase
-from bluebottle.test.geo_utils import ensure_geolocation_geofeatures, save_built_geolocation
 from bluebottle.test.factory_models.geo import GeolocationFactory, PlaceFactory
+from bluebottle.test.geo_utils import ensure_geolocation_geofeatures, save_built_geolocation
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.documents import (
     DateActivityDocument,
     DeadlineActivityDocument,
+    ScheduleActivityDocument,
     deduplicate_locations,
     deduplicate_positions,
     unique_slot_geolocations,
 )
+from bluebottle.time_based.models import DateActivity, DateActivitySlot, Team
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
     DeadlineActivityFactory,
+    ScheduleActivityFactory,
+    TeamFactory,
 )
 
 
 class DateActivityDocumentTestCase(BluebottleTestCase):
     def create_geolocation(self, **kwargs):
         return save_built_geolocation(GeolocationFactory.build(**kwargs))
+
+    def test_prepare_slot_stats(self):
+        activity = DateActivityFactory.create(slots=[])
+        slots = DateActivitySlotFactory.create_batch(5, activity=activity)
+        statuses = ['open', 'full', 'finished', 'finished', 'cancelled']
+        for slot, status in zip(slots, statuses):
+            DateActivitySlot.objects.filter(pk=slot.pk).update(status=status)
+
+        activity = DateActivity.objects.get(pk=activity.pk)
+
+        self.assertEqual(
+            DateActivityDocument().prepare_slot_stats(activity),
+            {'upcoming': 2, 'succeeded': 2},
+        )
+
+    def test_prepare_team_stats(self):
+        activity = ScheduleActivityFactory.create(team_activity='teams')
+        teams = TeamFactory.create_batch(4, activity=activity)
+        for team, status in zip(teams, ['accepted', 'accepted', 'scheduled', 'withdrawn']):
+            Team.objects.filter(pk=team.pk).update(status=status)
+
+        self.assertEqual(
+            ScheduleActivityDocument().prepare_team_stats(activity),
+            {'accepted': 2, 'scheduled': 1, 'succeeded': 0},
+        )
+
+    def test_prepare_team_stats_individuals(self):
+        activity = ScheduleActivityFactory.create(team_activity='individuals')
+
+        self.assertIsNone(ScheduleActivityDocument().prepare_team_stats(activity))
 
     def test_unique_slot_geolocations_deduplicates_by_location(self):
         location = self.create_geolocation(locality='Leiden')

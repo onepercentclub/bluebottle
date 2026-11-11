@@ -933,6 +933,10 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
         """Team is accepted"""
         return effect.instance.team_member and effect.instance.team_member.team.status != "new"
 
+    def slot_is_finished(effect):
+        """Slot is finished"""
+        return effect.instance.slot and effect.instance.slot.status == "finished"
+
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.initiate,
@@ -972,6 +976,21 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                 TransitionEffect(
                     TeamScheduleParticipantStateMachine.accept,
                     conditions=[team_is_accepted],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.succeed, conditions=[slot_is_finished]
                 ),
             ],
         ),

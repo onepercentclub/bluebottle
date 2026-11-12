@@ -1,4 +1,4 @@
-from bluebottle.members.models import GoogleAuthentication, PasswordAuthentication
+from bluebottle.members.models import PasswordAuthentication
 from bluebottle.test.utils import BluebottleTestCase
 
 from django.core.exceptions import ValidationError
@@ -10,53 +10,56 @@ from bluebottle.members.tests.factories import (
     SAMLAuthenticationFactory
 )
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.utils import BluebottleTestCase
 
 
 class SingletonAuthenticationMethodTestMixin:
     factory = None
+
+    def setUp(self):
+        super().setUp()
+        self.method = self.factory.create()
 
     @property
     def model(self):
         return self.factory._meta.model
 
     def test_create(self):
-        self.factory.create()
         self.assertEqual(self.model.objects.count(), 1)
 
     def test_create_second(self):
-        self.factory.create()
-
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                self.factory.create()
+                self.model.objects.create()
 
         self.assertEqual(self.model.objects.count(), 1)
 
     def test_create_second_disabled(self):
-        self.factory.create()
-
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                self.factory.create(enabled=False)
+                self.model.objects.create(enabled=False)
+
+    def test_factory_updates_existing(self):
+        method = self.factory.create(enabled=False)
+
+        self.assertEqual(method.pk, self.method.pk)
+        self.assertEqual(self.model.objects.count(), 1)
+        self.method.refresh_from_db()
+        self.assertFalse(self.method.enabled)
 
     def test_validate_second(self):
-        self.factory.create()
-
         with self.assertRaises(ValidationError):
             self.factory.build().full_clean()
 
     def test_update_existing(self):
-        method = self.factory.create()
-        method.enabled = False
-        method.full_clean()
-        method.save()
+        self.method.enabled = False
+        self.method.full_clean()
+        self.method.save()
 
-        method.refresh_from_db()
-        self.assertFalse(method.enabled)
+        self.method.refresh_from_db()
+        self.assertFalse(self.method.enabled)
 
     def test_create_after_delete(self):
-        self.factory.create().delete()
+        self.method.delete()
         self.factory.create()
 
         self.assertEqual(self.model.objects.count(), 1)
@@ -65,61 +68,66 @@ class SingletonAuthenticationMethodTestMixin:
 class PasswordAuthenticationTestCase(SingletonAuthenticationMethodTestMixin, BluebottleTestCase):
     factory = PasswordAuthenticationFactory
 
+    def disable(self):
+        self.method.enabled = False
+        self.method.save()
+
     def test_load_enabled(self):
-        method = PasswordAuthentication.objects.create()
-        self.assertEqual(PasswordAuthentication.load(), method)
+        self.assertEqual(PasswordAuthentication.load(), self.method)
 
     def test_load_returns_concrete_instance(self):
-        PasswordAuthentication.objects.create()
         self.assertIsInstance(PasswordAuthentication.load(), PasswordAuthentication)
 
     def test_load_disabled(self):
-        PasswordAuthentication.objects.create(enabled=False)
+        self.disable()
         self.assertIsNone(PasswordAuthentication.load())
 
     def test_load_ignores_other_methods(self):
-        GoogleAuthentication.objects.create(secret='secret', client_id='client-id')
+        self.method.delete()
+        GoogleAuthenticationFactory.create()
         self.assertIsNone(PasswordAuthentication.load())
 
     def test_load_none(self):
+        self.method.delete()
         self.assertIsNone(PasswordAuthentication.load())
 
     def test_is_enabled_none(self):
+        self.method.delete()
         self.assertFalse(PasswordAuthentication.is_enabled())
 
     def test_is_enabled(self):
-        PasswordAuthentication.objects.create()
         self.assertTrue(PasswordAuthentication.is_enabled())
 
     def test_is_enabled_disabled(self):
-        PasswordAuthentication.objects.create(enabled=False)
+        self.disable()
         self.assertFalse(PasswordAuthentication.is_enabled())
 
     def test_is_enabled_after_disabling(self):
-        method = PasswordAuthentication.objects.create()
         self.assertTrue(PasswordAuthentication.is_enabled())
 
-        method.enabled = False
-        method.save()
+        self.disable()
         self.assertFalse(PasswordAuthentication.is_enabled())
 
     def test_is_enabled_other_method(self):
-        GoogleAuthentication.objects.create(secret='secret', client_id='client-id')
+        self.method.delete()
+        GoogleAuthenticationFactory.create()
         self.assertFalse(PasswordAuthentication.is_enabled())
 
     def test_confirm_signup_enabled_none(self):
+        self.method.delete()
         self.assertFalse(PasswordAuthentication.confirm_signup_enabled())
 
     def test_confirm_signup_enabled_default(self):
-        PasswordAuthentication.objects.create()
         self.assertFalse(PasswordAuthentication.confirm_signup_enabled())
 
     def test_confirm_signup_enabled(self):
-        PasswordAuthentication.objects.create(confirm_signup=True)
+        self.method.confirm_signup = True
+        self.method.save()
         self.assertTrue(PasswordAuthentication.confirm_signup_enabled())
 
     def test_confirm_signup_enabled_method_disabled(self):
-        PasswordAuthentication.objects.create(confirm_signup=True, enabled=False)
+        self.method.confirm_signup = True
+        self.disable()
         self.assertFalse(PasswordAuthentication.confirm_signup_enabled())
 
 

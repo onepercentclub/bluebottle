@@ -16,11 +16,12 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
-from bluebottle.members.models import (
-    MemberPlatformSettings, UserActivity, Member,
-    PasswordAuthentication, FacebookAuthentication, GoogleAuthentication, SAMLAuthentication
-)
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
+from bluebottle.members.tests.factories import (
+    PasswordAuthenticationFactory, FacebookAuthenticationFactory, GoogleAuthenticationFactory,
+    SAMLAuthenticationFactory
+)
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
@@ -235,7 +236,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
     def setUp(self):
         self.settings = MemberPlatformSettings.load()
         super(SignUpTokenTestCase, self).setUp()
-        self.password_authentication = PasswordAuthentication.objects.create()
+        self.password_authentication = PasswordAuthenticationFactory.create()
         self.client = JSONAPITestClient()
 
     def test_create(self):
@@ -1106,7 +1107,7 @@ class MemberSignUpAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.url = reverse('member-signup')
-        self.password_authentication = PasswordAuthentication.objects.create()
+        self.password_authentication = PasswordAuthenticationFactory.create()
 
         self.serializer = MemberSignUpSerializer
 
@@ -1230,7 +1231,7 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
-        self.password_authentication = PasswordAuthentication.objects.create()
+        self.password_authentication = PasswordAuthenticationFactory.create()
         self.url = reverse('user-signup-token')
 
     def test_anyone_can_signup(self):
@@ -1422,7 +1423,7 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
         super().setUp()
         self.client = JSONAPITestClient()
         self.url = reverse('user-signup-token')
-        self.password_authentication = PasswordAuthentication.objects.create()
+        self.password_authentication = PasswordAuthenticationFactory.create()
 
     def test_signup_token_with_access_code_creates_inactive_user(self):
         """Test that signup with access code creates inactive user"""
@@ -1516,7 +1517,7 @@ class AccountAcceptanceTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.jsonapi_client = JSONAPITestClient()
-        self.password_authentication = PasswordAuthentication.objects.create()
+        self.password_authentication = PasswordAuthenticationFactory.create()
         self.url = reverse('user-signup-token')
 
     def test_accepted_member_can_login(self):
@@ -1568,7 +1569,7 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.jsonapi_client = JSONAPITestClient()
-        self.password_authentication = PasswordAuthentication.objects.create()
+        self.password_authentication = PasswordAuthenticationFactory.create()
         self.password_authentication.account_creation_rules = 'whitelist_and_request'
         self.password_authentication.email_domains = ['allowed.com']
         self.password_authentication.request_access_code = 'oldcode123'
@@ -1647,14 +1648,14 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.url = reverse('authentication-method-list')
 
-        self.password = PasswordAuthentication.objects.create(
+        self.password = PasswordAuthenticationFactory.create(
             account_creation_rules='whitelist', email_domains=['example.com']
         )
-        self.facebook = FacebookAuthentication.objects.create(secret='fb-secret', client_id='fb-client')
-        self.google = GoogleAuthentication.objects.create(
+        self.facebook = FacebookAuthenticationFactory.create(secret='fb-secret', client_id='fb-client')
+        self.google = GoogleAuthenticationFactory.create(
             secret='google-secret', client_id='google-client', enabled=False
         )
-        self.saml = SAMLAuthentication.objects.create(
+        self.saml = SAMLAuthenticationFactory.create(
             organization=OrganizationFactory.create(),
             entity_id='https://idp.example.com',
             single_sign_on_url='https://idp.example.com/sso',

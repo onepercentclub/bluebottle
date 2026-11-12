@@ -508,7 +508,7 @@ class AuthenticationMethod(PolymorphicModel):
         return _("{method} authentication").format(method=self.method)
 
 
-class PasswordAuthentication(AuthenticationMethod, TranslatableModel):
+class PasswordAuthentication(TranslatableModel, AuthenticationMethod):
     ACCOUNT_CREATION_RULES = (
         ('anyone', _('Anyone can create an account')),
         ('whitelist', _('Only people with a whitelisted domain can create an account')),

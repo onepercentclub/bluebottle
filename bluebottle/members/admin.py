@@ -161,7 +161,10 @@ class SingletonAuthenticationMethodAdminMixin:
 
 @admin.register(PasswordAuthentication)
 class PasswordAuthenticationAdmin(
-    SingletonAuthenticationMethodAdminMixin, TranslatableLabelAdminMixin, TranslatableAdmin, AuthenticationMethodChildAdmin
+    SingletonAuthenticationMethodAdminMixin,
+    TranslatableLabelAdminMixin,
+    TranslatableAdmin,
+    AuthenticationMethodChildAdmin
 ):
     model = PasswordAuthentication
 

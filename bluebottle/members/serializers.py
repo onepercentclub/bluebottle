@@ -793,7 +793,6 @@ class PasswordSetSerializer(serializers.Serializer):
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
     read_only_fields = serializers.SerializerMethodField()
-    social_login_methods = serializers.SerializerMethodField()
     reminder_emails_enabled = serializers.SerializerMethodField()
 
     def get_read_only_fields(self, obj):
@@ -801,12 +800,6 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             return properties.TOKEN_AUTH['assertion_mapping'].keys()
         except (AttributeError, IndexError):
             return []
-
-    def get_social_login_methods(self, obj):
-        return [
-            {'key': method.client_id, 'backend': method.backend}
-            for method in obj.social_login_methods.all()
-        ]
 
     def get_reminder_emails_enabled(self, obj):
         return any([obj.reminder_q1, obj.reminder_q2, obj.reminder_q3, obj.reminder_q4])
@@ -840,7 +833,6 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'retention_delete',
             'read_only_fields',
             'translate_user_content',
-            'social_login_methods',
             'explicit_terms'
         )
 

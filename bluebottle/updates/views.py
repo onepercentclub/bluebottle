@@ -37,19 +37,10 @@ class UpdateThrottle(UserRateThrottle):
         return True
 
 
-class UpdateMemberNamesMixin:
-    """
-    Pass MemberPlatformSettings.display_member_names and the activity owners to
-    the serializer context, so included members (authors) are displayed according
-    to the platform setting.
-    """
-
-    def get_update_activity(self):
-        return None
-
+class DisplayMemberNamesMixin:
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
-        activity = self.get_update_activity()
+        activity = self.get_activity()
         owners = list(activity.owners) if activity else []
         context['owners'] = owners
 
@@ -100,7 +91,7 @@ class UpdateDocumentList(JsonApiViewMixin, CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
 
-class UpdateDetail(UpdateMemberNamesMixin, JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+class UpdateDetail(DisplayMemberNamesMixin, JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     queryset = Update.objects.all().select_related(
         'author',
         'author__avatar',
@@ -116,7 +107,7 @@ class UpdateDetail(UpdateMemberNamesMixin, JsonApiViewMixin, RetrieveUpdateDestr
 
     serializer_class = UpdateSerializer
 
-    def get_update_activity(self):
+    def get_activity(self):
         update = Update.objects.filter(
             pk=self.kwargs.get('pk')
         ).select_related('activity').first()
@@ -137,7 +128,7 @@ class UpdateDetail(UpdateMemberNamesMixin, JsonApiViewMixin, RetrieveUpdateDestr
         super().check_object_permissions(request, obj)
 
 
-class ActivityUpdateList(UpdateMemberNamesMixin, JsonApiViewMixin, ListAPIView):
+class ActivityUpdateList(DisplayMemberNamesMixin, JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose]
     queryset = Update.objects.all().select_related(
         'author',
@@ -155,12 +146,6 @@ class ActivityUpdateList(UpdateMemberNamesMixin, JsonApiViewMixin, ListAPIView):
     )
 
     serializer_class = UpdateSerializer
-
-    def get_update_activity(self):
-        try:
-            return self.get_activity()
-        except Activity.DoesNotExist:
-            return None
 
     def get_activity(self):
         if not hasattr(self, '_activity'):

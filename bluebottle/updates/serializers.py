@@ -120,6 +120,8 @@ class UpdateSerializer(ModelSerializer):
             'author.avatar',
             'image',
             'replies',
+            'replies.author',
+            'replies.author.avatar',
             'images',
             'documents',
             'contribution',

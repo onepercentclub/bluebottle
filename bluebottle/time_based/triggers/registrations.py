@@ -1,14 +1,15 @@
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
+from bluebottle.fsm.triggers import ModelDeletedTrigger, TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import LockFilledSlotsEffect
 from bluebottle.time_based.effects.interests import DeleteInterestEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
+    AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect,
+    RemovePeriodicParticipantsEffect,
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -81,6 +82,14 @@ def is_admin(effect):
     user = effect.options.get("user")
     return (
         user and effect.instance.user_id and effect.instance.user != user and (user.is_staff or user.is_superuser)
+    )
+
+
+def is_manager(effect):
+    """Is an activity manager or staff member, not the user"""
+    user = effect.options.get("user")
+    return bool(user) and effect.instance.user != user and (
+        user.is_staff or user.is_superuser or user in effect.instance.activity.owners
     )
 
 
@@ -395,6 +404,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                RelatedTransitionEffect(
+                    "unfinished_participants",
+                    PeriodicParticipantStateMachine.auto_remove,
+                ),
             ],
         ),
 
@@ -413,6 +426,11 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicParticipantStateMachine.auto_remove,
                 ),
             ],
+        ),
+        ModelDeletedTrigger(
+            effects=[
+                RemovePeriodicParticipantsEffect,
+            ]
         ),
     ]
 
@@ -684,6 +702,10 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
+                TransitionEffect(
+                    RegistrationStateMachine.add,
+                    conditions=[is_manager]
+                ),
                 NotificationEffect(
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],

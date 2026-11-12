@@ -14917,3 +14917,22 @@ msgstr "Heropen de peiling voor stemmen."
 msgid "You have already voted in this poll"
 msgstr "Je hebt al gestemd in deze peiling"
 
+
+#: bluebottle/time_based/effects/registrations.py:129
+msgid "Remove the participants of this registration on unfinished slots"
+msgstr "Verwijder de deelnemers van deze registratie op nog niet afgelopen slots"
+
+#: bluebottle/time_based/templates/admin/remove_periodic_participants.html:2
+msgid "Remove participants"
+msgstr "Deelnemers verwijderen"
+
+#: bluebottle/time_based/templates/admin/remove_periodic_participants.html:5
+#, python-format
+msgid ""
+"\n"
+"    Remove the participants of this registration on slots that have not "
+"finished and fail their contributions.\n"
+msgstr ""
+"\n"
+"    Verwijder de deelnemers van deze registratie op slots die nog niet "
+"afgelopen zijn en laat hun bijdragen mislukken.\n"

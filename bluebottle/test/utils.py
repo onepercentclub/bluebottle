@@ -481,14 +481,32 @@ class APITestCase(BluebottleTestCase):
         )
 
     def get_included(self, relationship):
-        relations = []
-        for resource in self.response.json()['data']:
-            relations.append(resource['relationships'][relationship]['data'])
+        """
+        Return the included resources for `relationship`. Works for both list
+        and detail responses, and supports dotted paths (e.g. `replies.author`).
+        """
+        response = self.response.json()
+        included = response.get('included', [])
 
-        return [
-            included for included in self.response.json()['included']
-            if {'type': included['type'], 'id': included['id']} in relations
-        ]
+        resources = response['data']
+        if not isinstance(resources, (tuple, list)):
+            resources = [resources]
+
+        for part in relationship.split('.'):
+            relations = []
+            for resource in resources:
+                data = resource['relationships'][part]['data']
+                if isinstance(data, (tuple, list)):
+                    relations.extend(data)
+                elif data:
+                    relations.append(data)
+
+            resources = [
+                inc for inc in included
+                if {'type': inc['type'], 'id': inc['id']} in relations
+            ]
+
+        return resources
 
     def getRelatedLink(self, relation, data=None):
         """

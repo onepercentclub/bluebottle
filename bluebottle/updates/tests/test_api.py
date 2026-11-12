@@ -4,6 +4,7 @@ from rest_framework import status
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.updates.models import Update, UpdateDocument, AudienceChoices
@@ -231,7 +232,32 @@ class UpdateListTestCase(APITestCase):
         self.assertStatus(status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class UpdateDetailView(APITestCase):
+class DisplayMemberNamesMixin:
+    def set_display_member_names(self, value):
+        settings = MemberPlatformSettings.load()
+        settings.display_member_names = value
+        settings.save()
+
+    def get_member_attributes(self, member):
+        authors = self.get_included('author') + self.get_included('replies.author')
+        return next(
+            included['attributes'] for included in authors
+            if included['id'] == str(member.pk)
+        )
+
+    def assertFullName(self, member):
+        attributes = self.get_member_attributes(member)
+        self.assertEqual(attributes['last-name'], member.last_name)
+        self.assertEqual(attributes['full-name'], member.full_name)
+
+    def assertFirstNameOnly(self, member):
+        attributes = self.get_member_attributes(member)
+        self.assertIsNone(attributes['last-name'])
+        self.assertEqual(attributes['full-name'], member.first_name)
+        self.assertEqual(attributes['initials'], member.first_name[:1])
+
+
+class UpdateDetailView(DisplayMemberNamesMixin, APITestCase):
     serializer = UpdateSerializer
     factory = UpdateFactory
 
@@ -260,6 +286,49 @@ class UpdateDetailView(APITestCase):
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_200_OK)
+
+    def test_get_display_member_names_full_name(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertFullName(self.model.author)
+
+    def test_get_display_member_names_first_name(self):
+        self.set_display_member_names('first_name')
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertFirstNameOnly(self.model.author)
+
+    def test_get_display_member_names_first_name_anonymous(self):
+        self.set_display_member_names('first_name')
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertFirstNameOnly(self.model.author)
+
+    def test_get_display_member_names_first_name_strict(self):
+        self.set_display_member_names('first_name_strict')
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertFirstNameOnly(self.model.author)
+
+    def test_get_display_member_names_first_name_activity_owner(self):
+        self.set_display_member_names('first_name')
+        self.perform_get(user=self.model.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertFullName(self.model.author)
+
+    def test_get_display_member_names_first_name_staff(self):
+        self.set_display_member_names('first_name')
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertFullName(self.model.author)
+
+    def test_get_display_member_names_first_name_author_is_owner(self):
+        self.set_display_member_names('first_name')
+        self.model.author = self.model.activity.owner
+        self.model.save()
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertFullName(self.model.activity.owner)
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -345,7 +414,7 @@ class UpdateDetailView(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class ActivityUpdateListTestCase(APITestCase):
+class ActivityUpdateListTestCase(DisplayMemberNamesMixin, APITestCase):
     factory = DeedFactory
     serializer = UpdateSerializer
 
@@ -388,6 +457,45 @@ class ActivityUpdateListTestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.models))
+
+    def authors(self):
+        return [update.author for update in self.models] + [
+            reply.author for update in self.models for reply in update.replies.all()
+        ]
+
+    def test_get_display_member_names_full_name(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
+        for author in self.authors():
+            self.assertFullName(author)
+
+    def test_get_display_member_names_first_name(self):
+        self.set_display_member_names('first_name')
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
+        for author in self.authors():
+            self.assertFirstNameOnly(author)
+
+    def test_get_display_member_names_first_name_anonymous(self):
+        self.set_display_member_names('first_name')
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        for author in self.authors():
+            self.assertFirstNameOnly(author)
+
+    def test_get_display_member_names_first_name_activity_owner(self):
+        self.set_display_member_names('first_name')
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        for author in self.authors():
+            self.assertFullName(author)
+
+    def test_get_display_member_names_first_name_staff(self):
+        self.set_display_member_names('first_name')
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
+        self.assertStatus(status.HTTP_200_OK)
+        for author in self.authors():
+            self.assertFullName(author)
 
     def test_closed_platform(self):
         with self.closed_site():

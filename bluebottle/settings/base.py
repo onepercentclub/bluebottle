@@ -757,6 +757,15 @@ QUILL_CONFIGS = {
             ],
         },
     },
+    'activity_message': {
+        'theme': 'snow',
+        'modules': {
+            'toolbar': [
+                ['bold', 'italic', 'link'],
+                [{'list': 'ordered'}, {'list': 'bullet'}],
+            ],
+        },
+    },
 }
 
 HOMEPAGE = {}

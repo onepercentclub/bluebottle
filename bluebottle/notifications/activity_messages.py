@@ -91,6 +91,14 @@ def get_activity_actions(activity):
     return get_activity_messages().get(activity.get_real_instance_class(), {})
 
 
+def get_customisable_actions(activity):
+    if getattr(activity, 'review', False):
+        actions = ('accept', 'reject', 'succeed')
+    else:
+        actions = ('join', 'succeed')
+    return [action for action in actions if action in get_activity_actions(activity)]
+
+
 def get_message_action(activity, message):
     for action, message_classes in get_activity_actions(activity).items():
         if type(message) in message_classes:

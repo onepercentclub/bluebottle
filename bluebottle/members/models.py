@@ -22,6 +22,7 @@ from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import Place, Location
 from bluebottle.utils.fields import CheckboxField
+from bluebottle.utils.managers import TranslatablePolymorphicManager
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..offices.models import OfficeSubRegion
@@ -37,7 +38,7 @@ def default_support_groups():
     return ['Engineering Team', 'Support']
 
 
-class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
+class MemberPlatformSettings(BasePlatformSettings):
     DISPLAY_MEMBER_OPTIONS = (
         ('full_name', _('Full name')),
         ('first_name', _('First name (members)')),
@@ -105,16 +106,6 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         _('Explicit terms'),
         default=False,
         help_text=_('Users have to explicitly accept terms when logging in')
-    )
-
-    translations = TranslatedFields(
-        request_access_instructions=models.CharField(
-            _('request access instructions'),
-            help_text=_('Explain how people can request access to the platform.'),
-            max_length=2000,
-            null=True,
-            blank=True
-        ),
     )
 
     required_questions_location = models.CharField(
@@ -524,7 +515,19 @@ class AuthenticationMethod(PolymorphicModel):
         return _("{method} authentication").format(method=self.method)
 
 
-class PasswordAuthentication(AuthenticationMethod):
+class SingletonAuthenticationMixin(models.Model):
+    class Meta:
+        abstract = True
+        constraints = [
+            models.UniqueConstraint(models.Value(True), name='unique_%(class)s'),
+        ]
+
+    @classmethod
+    def load(cls):
+        return cls.objects.filter(enabled=True).first()
+
+
+class PasswordAuthentication(SingletonAuthenticationMixin, TranslatableModel, AuthenticationMethod):
     ACCOUNT_CREATION_RULES = (
         ('anyone', _('Anyone can create an account')),
         ('whitelist', _('Only people with a whitelisted domain can create an account')),
@@ -580,43 +583,53 @@ class PasswordAuthentication(AuthenticationMethod):
         blank=True
     )
 
+    translations = TranslatedFields(
+        request_access_instructions=models.CharField(
+            _('request access instructions'),
+            help_text=_('Explain how people can request access to the platform.'),
+            max_length=2000,
+            null=True,
+            blank=True
+        ),
+    )
+
+    objects = TranslatablePolymorphicManager()
+
     class JSONAPIMeta:
         resource_name = 'authentication-methods/password'
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(models.Value(True), name='unique_password_authentication'),
-        ]
-
     method = _('Email/Password')
 
+    @classmethod
+    def is_enabled(cls):
+        return bool(cls.load())
 
-class FacebookAuthentication(AuthenticationMethod):
+    @classmethod
+    def confirm_signup_enabled(cls):
+        method = cls.load()
+
+        if method:
+            return method.confirm_signup
+        else:
+            return False
+
+
+class FacebookAuthentication(SingletonAuthenticationMixin, AuthenticationMethod):
     secret = models.CharField(_('Secret'))
     client_id = models.CharField(_('Client id'))
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/facebook'
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(models.Value(True), name='unique_facebook_authentication'),
-        ]
-
     method = 'Facebook'
 
 
-class GoogleAuthentication(AuthenticationMethod):
+class GoogleAuthentication(SingletonAuthenticationMixin, AuthenticationMethod):
     secret = models.CharField(_('Secret'))
     client_id = models.CharField(_('Client id'))
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/google'
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(models.Value(True), name='unique_google_authentication'),
-        ]
 
     method = 'Google'
 
@@ -667,7 +680,7 @@ class SAMLAuthentication(AuthenticationMethod):
                     'url': reverse('token-auth:saml-login')
                 },
                 'singleLogoutService': {
-                   'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+                    'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
                     'url': reverse('token-auth:saml-logout')
 
                 }
@@ -697,7 +710,6 @@ class SAMLAuthentication(AuthenticationMethod):
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/saml'
-
 
     @property
     def method(self):

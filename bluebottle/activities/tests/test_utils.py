@@ -7,6 +7,7 @@ from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.members.tests.factories import PasswordAuthenticationFactory
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -55,7 +56,7 @@ class BulkAddParticipantTestCase(TestCase):
         self.assertParticipant(self.emails[0])
 
     def test_bulk_add_confirm_signup(self):
-        MemberPlatformSettings.objects.create(confirm_signup=True)
+        PasswordAuthenticationFactory.create(confirm_signup=True)
         result = bulk_add_participants(self.activity, self.emails, False)
 
         self.assertEqual(result, {

@@ -7,7 +7,28 @@ from bluebottle.members.models import (
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 
 
-class PasswordAuthenticationFactory(factory.DjangoModelFactory):
+class SingletonAuthenticationFactory(factory.DjangoModelFactory):
+    """
+    Authentication methods other than SAML can only exist once. Instead of
+    creating a second instance (which violates the unique constraint), update
+    the existing one with the given attributes.
+    """
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        instance = model_class.objects.first()
+        if instance is None:
+            return super()._create(model_class, *args, **kwargs)
+
+        for key, value in kwargs.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance
+
+
+class PasswordAuthenticationFactory(SingletonAuthenticationFactory):
     class Meta():
         model = PasswordAuthentication
 
@@ -15,7 +36,7 @@ class PasswordAuthenticationFactory(factory.DjangoModelFactory):
     account_creation_rules = 'anyone'
 
 
-class FacebookAuthenticationFactory(factory.DjangoModelFactory):
+class FacebookAuthenticationFactory(SingletonAuthenticationFactory):
     class Meta():
         model = FacebookAuthentication
 
@@ -24,7 +45,7 @@ class FacebookAuthenticationFactory(factory.DjangoModelFactory):
     client_id = 'facebook-client-id'
 
 
-class GoogleAuthenticationFactory(factory.DjangoModelFactory):
+class GoogleAuthenticationFactory(SingletonAuthenticationFactory):
     class Meta():
         model = GoogleAuthentication
 

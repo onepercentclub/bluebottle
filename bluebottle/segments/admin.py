@@ -142,7 +142,7 @@ class SegmentAdmin(
     form = SegmentAdminForm
 
     readonly_fields = (
-        'translatable_info', 'text_color', 'color_contrast_panel',
+        'translatable_info', 'color_contrast_panel',
         'activities_link', 'members_link', 'type_link',
     )
 
@@ -162,8 +162,7 @@ class SegmentAdmin(
         (_('Content'), {
             'fields': [
                 'slogan', 'story', 'logo', 'cover_image',
-                'background_color', 'text_color', 'color_contrast_panel',
-                'button_color', 'button_text_color'
+                'background_color', 'color_contrast_panel',
             ],
         }),
 
@@ -210,11 +209,6 @@ class SegmentAdmin(
         return format_html("<a href='{}'>{}</a>", url, segment_type_name)
 
     type_link.short_description = _('Segment type')
-
-    def text_color(self, obj):
-        return obj.text_color
-
-    text_color.short_description = _("Text colour")
 
     def color_contrast_panel(self, obj):
         return render_solid_preview(

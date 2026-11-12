@@ -35,9 +35,9 @@ class TestSegmentModel(BluebottleTestCase):
         )
 
         for color, text_color in [
-            ("#ffffff", "text"),
-            ("#000000", "white"),
-            ("#ff4422", "text"),
+            ("#ffffff", "#2A2A2A"),
+            ("#000000", "#FFFFFF"),
+            ("#ff4422", "#2A2A2A"),
         ]:
             segment.background_color = color
             self.assertEqual(segment.text_color, text_color)

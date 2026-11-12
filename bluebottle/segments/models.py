@@ -244,8 +244,7 @@ class Segment(TranslatableModel, models.Model):
 
     @property
     def text_color(self):
-        on_color = choose_on_color(self.accessible_background_color or WHITE)
-        return 'white' if on_color == WHITE else 'text'
+        return choose_on_color(self.accessible_background_color or WHITE)
 
     def __str__(self):
         try:

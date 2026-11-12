@@ -51,7 +51,6 @@ class SegmentListSerializer(ModelSerializer):
         fields = (
             'id', 'name', 'segment_type', 'email_domains', 'slug', 'tag_line',
             'background_color', 'text_color',
-            'button_color', 'button_text_color',
             'logo', 'cover_image', 'story', 'closed',
         )
 

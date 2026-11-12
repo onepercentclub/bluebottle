@@ -6,6 +6,7 @@ from django.template.loader_tags import BLOCK_CONTEXT_KEY, BlockContext, BlockNo
 from django.utils.translation import pgettext
 
 from bluebottle.notifications.activity_messages import get_activity_actions
+from bluebottle.time_based.models import ScheduleActivity
 from bluebottle.utils.utils import get_current_language
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ def render_block(template_name, block_name, context):
 
 
 def get_message_class(activity, message_classes):
-    if len(message_classes) > 1 and getattr(activity, 'team_activity', None) == 'teams':
+    if isinstance(activity, ScheduleActivity) and activity.team_activity == 'teams':
         return message_classes[1]
     return message_classes[0]
 

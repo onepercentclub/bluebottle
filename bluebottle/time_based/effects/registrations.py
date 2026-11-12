@@ -122,3 +122,17 @@ class DeleteRegistrationEffect(Effect):
             return False
         registration = self.instance.registration
         return not registration.participants.exists()
+
+
+class RemovePeriodicParticipantsEffect(Effect):
+
+    title = _('Remove the participants of this registration on unfinished slots')
+    template = 'admin/remove_periodic_participants.html'
+
+    def pre_save(self, **kwargs):
+        for participant in self.instance.unfinished_participants.filter(
+            status__in=['new', 'accepted', 'succeeded'],
+        ):
+            participant.states.auto_remove()
+            participant.execute_triggers(**self.options)
+            participant.save()

@@ -716,7 +716,7 @@ class AddedParticipantMessageTemplateTestCase(BluebottleTestCase):
             message.subject, 'You have been added to the activity "{}" 🎉'.format(self.deed.title)
         )
         self.assertCustomMessageAppended(message, 'You have been added to the activity')
-        self.assertIn('Hi Henk, see you soon!', message.body)
+        self.assertIn('Hi there, see you soon!', message.body)
 
     def test_deed_added_inactive_user(self):
         MemberPlatformSettings.objects.update_or_create(confirm_signup=True)
@@ -750,8 +750,10 @@ class AddedParticipantMessageTemplateTestCase(BluebottleTestCase):
         self.add_to_deed(self.user.email)
 
         message = self.mail_to(self.user.email)
-        self.assertEqual(message.subject, 'Welcome to {}'.format(self.deed.title))
-        self.assertIn('Hi Henk, see you soon!', message.body)
+        self.assertEqual(
+            message.subject, 'You have been added to the activity "{}" 🎉'.format(self.deed.title)
+        )
+        self.assertIn('Hi there, see you soon!', message.body)
         self.assertNotIn('You have been added to the activity', message.body)
 
     def test_deed_added_inactive_user_replace(self):
@@ -760,7 +762,7 @@ class AddedParticipantMessageTemplateTestCase(BluebottleTestCase):
         self.add_to_deed('new@example.com')
 
         message = self.mail_to('new@example.com')
-        self.assertEqual(message.subject, 'Welcome to {}'.format(self.deed.title))
+        self.assertTrue(message.subject.startswith('You have been added to the activity'))
         self.assertIn(self.custom, message.body)
         self.assertNotIn('activate your account', message.body)
         self.assertIn('/auth/confirm/?token=', message.body)
@@ -826,7 +828,7 @@ class BulkAddedParticipantMessageTemplateTestCase(BluebottleAdminTestCase):
         message = messages[0]
         default_text = 'You have been added to the activity'
         self.assertIn(default_text, message.body)
-        self.assertIn('Hi Henk, see you soon!', message.body)
+        self.assertIn('Hi there, see you soon!', message.body)
         self.assertLess(message.body.index(default_text), message.body.index(self.custom))
 
     def create_slot(self):

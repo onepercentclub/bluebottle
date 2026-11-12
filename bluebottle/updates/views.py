@@ -6,6 +6,7 @@ from rest_framework.throttling import UserRateThrottle
 from bluebottle.activities.models import Activity
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.files.views import FileContentView, ImageContentView
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.updates.models import Update, UpdateDocument, UpdateImage, AudienceChoices
 from bluebottle.updates.permissions import (
     IsAuthorPermission, ActivityOwnerUpdatePermission,
@@ -34,6 +35,33 @@ class UpdateThrottle(UserRateThrottle):
             pass
 
         return True
+
+
+class UpdateMemberNamesMixin:
+    """
+    Pass MemberPlatformSettings.display_member_names and the activity owners to
+    the serializer context, so included members (authors) are displayed according
+    to the platform setting.
+    """
+
+    def get_update_activity(self):
+        return None
+
+    def get_serializer_context(self, **kwargs):
+        context = super().get_serializer_context(**kwargs)
+        activity = self.get_update_activity()
+        owners = list(activity.owners) if activity else []
+        context['owners'] = owners
+
+        display_member_names = MemberPlatformSettings.load().display_member_names
+        user = self.request.user
+        if user and user.is_authenticated and (
+            user.is_staff or user.is_superuser or user in owners
+        ):
+            display_member_names = 'full_name'
+
+        context['display_member_names'] = display_member_names
+        return context
 
 
 class UpdateList(JsonApiViewMixin, CreateAPIView):
@@ -72,9 +100,27 @@ class UpdateDocumentList(JsonApiViewMixin, CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
 
-class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
-    queryset = Update.objects.all()
+class UpdateDetail(UpdateMemberNamesMixin, JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    queryset = Update.objects.all().select_related(
+        'author',
+        'author__avatar',
+    ).prefetch_related(
+        'activity__owner',
+        'activity__initiative__owner',
+        'activity__initiative__activity_managers',
+        'contribution',
+        'images__image',
+        'documents__document',
+        'replies'
+    )
+
     serializer_class = UpdateSerializer
+
+    def get_update_activity(self):
+        update = Update.objects.filter(
+            pk=self.kwargs.get('pk')
+        ).select_related('activity').first()
+        return update.activity if update else None
 
     permission_classes = [
         ContributorAudiencePermission,
@@ -91,10 +137,30 @@ class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
         super().check_object_permissions(request, obj)
 
 
-class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
+class ActivityUpdateList(UpdateMemberNamesMixin, JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose]
-    queryset = Update.objects.order_by('-pinned', '-created')
+    queryset = Update.objects.all().select_related(
+        'author',
+        'author__avatar',
+    ).prefetch_related(
+        'activity__owner',
+        'activity__initiative__owner',
+        'activity__initiative__activity_managers',
+        'contribution',
+        'images__image',
+        'documents__document',
+        'replies'
+    ).order_by(
+        '-pinned', '-created'
+    )
+
     serializer_class = UpdateSerializer
+
+    def get_update_activity(self):
+        try:
+            return self.get_activity()
+        except Activity.DoesNotExist:
+            return None
 
     def get_activity(self):
         if not hasattr(self, '_activity'):

@@ -108,10 +108,7 @@ class UpdateDetail(DisplayMemberNamesMixin, JsonApiViewMixin, RetrieveUpdateDest
     serializer_class = UpdateSerializer
 
     def get_activity(self):
-        update = Update.objects.filter(
-            pk=self.kwargs.get('pk')
-        ).select_related('activity').first()
-        return update.activity if update else None
+        return self.get_object().activity
 
     permission_classes = [
         ContributorAudiencePermission,

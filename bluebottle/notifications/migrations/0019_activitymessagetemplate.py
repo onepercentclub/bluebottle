@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='ActivityMessageTemplate',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('join', 'Participant joined'), ('apply', 'Participant applied'), ('accept', 'Participant accepted'), ('reject', 'Participant rejected')], max_length=20, verbose_name='Action')),
+                ('action', models.CharField(choices=[('join', 'Participant joined'), ('apply', 'Participant applied'), ('accept', 'Participant accepted'), ('reject', 'Participant rejected'), ('succeed', 'Thank you')], max_length=20, verbose_name='Action')),
                 ('insert_method', models.CharField(choices=[('replace', 'Replace the entire message'), ('append', 'Append this to the original message')], default='append', max_length=20, verbose_name='Insert method')),
                 ('subject', models.CharField(blank=True, max_length=200, verbose_name='Subject')),
                 ('body_html', django_quill.fields.QuillField(blank=True, verbose_name='Message')),

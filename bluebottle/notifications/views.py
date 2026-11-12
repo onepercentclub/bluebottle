@@ -11,6 +11,7 @@ from bluebottle.notifications.previews import get_message_previews
 from bluebottle.notifications.serializers import (
     ActivityMessageDefaultSerializer, ActivityMessageTemplateSerializer
 )
+from bluebottle.utils.permissions import OneOf, ResourcePermission
 from bluebottle.utils.views import (
     JsonApiViewMixin,
     ListAPIView,
@@ -22,7 +23,7 @@ from bluebottle.utils.views import (
 class ActivityMessageTemplateMixin:
     queryset = ActivityMessageTemplate.objects.prefetch_related('activity').order_by('pk')
     serializer_class = ActivityMessageTemplateSerializer
-    permission_classes = (RelatedActivityOwnerPermission,)
+    permission_classes = (OneOf(ResourcePermission, RelatedActivityOwnerPermission),)
 
     def get_queryset(self):
         queryset = super().get_queryset()

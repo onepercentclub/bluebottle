@@ -119,6 +119,7 @@ class ActivityMessageTemplate(models.Model):
         ('apply', _('Participant applied')),
         ('accept', _('Participant accepted')),
         ('reject', _('Participant rejected')),
+        ('succeed', _('Thank you')),
     )
 
     activity = models.ForeignKey(
@@ -147,8 +148,8 @@ class ActivityMessageTemplate(models.Model):
         return self.get_action_display()
 
     class Meta:
-        verbose_name = _('Activity message template')
-        verbose_name_plural = _('Activity message templates')
+        verbose_name = _('Automated email')
+        verbose_name_plural = _('Automated emails')
         unique_together = ('activity', 'action')
         permissions = (
             ('api_read_activitymessagetemplate', 'Can view activity message template through the API'),

@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
@@ -17,7 +18,6 @@ from bluebottle.notifications.models import ActivityMessageTemplate, MessageTemp
 from bluebottle.notifications.serializers import ActivityMessageTemplateSerializer
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
-from bluebottle.notifications.activity_messages import get_message_action
 from bluebottle.time_based.messages import ParticipantSlotParticipantRegisteredNotification
 from bluebottle.time_based.messages.registrations import (
     DateUserAppliedNotification,
@@ -44,10 +44,15 @@ from bluebottle.time_based.tests.factories import (
 ACCEPTED = 'bluebottle.time_based.messages.registrations.UserRegistrationAcceptedNotification'
 
 
+def create_staff_user():
+    user = BlueBottleUserFactory.create(is_staff=True)
+    user.groups.add(Group.objects.get(name='Staff'))
+    return user
+
+
 def create_template(activity, action='accept', **kwargs):
     defaults = {
-        'subject': 'Welcome to {title}',
-        'body_html': json.dumps({'html': '<p>Hi {first_name}, see you soon!</p>', 'delta': ''}),
+        'body_html': json.dumps({'html': '<p>Hi there, see you soon!</p>', 'delta': ''}),
         'insert_method': 'replace',
     }
     defaults.update(kwargs)
@@ -60,7 +65,7 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.owner = BlueBottleUserFactory.create()
-        self.activity = DeadlineActivityFactory.create(owner=self.owner)
+        self.activity = DeadlineActivityFactory.create(owner=self.owner, review=True)
         self.url = reverse('activity-message-template-list')
 
     def get_data(self, activity=None, **attributes):
@@ -96,6 +101,15 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
         self.perform_create(user=manager, data=self.get_data())
         self.assertStatus(status.HTTP_201_CREATED)
 
+    def test_create_staff(self):
+        self.perform_create(user=create_staff_user(), data=self.get_data())
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.activity, self.activity)
+
+    def test_create_superuser(self):
+        self.perform_create(user=BlueBottleUserFactory.create(is_superuser=True), data=self.get_data())
+        self.assertStatus(status.HTTP_201_CREATED)
+
     def test_create_other_user(self):
         self.perform_create(user=BlueBottleUserFactory.create(), data=self.get_data())
         self.assertStatus(status.HTTP_403_FORBIDDEN)
@@ -115,7 +129,25 @@ class ActivityMessageTemplateListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_create_invalid_action(self):
-        self.perform_create(user=self.owner, data=self.get_data(action='succeed'))
+        self.perform_create(user=self.owner, data=self.get_data(action='unknown'))
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_apply(self):
+        self.perform_create(user=self.owner, data=self.get_data(action='apply'))
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_join_with_review(self):
+        self.perform_create(user=self.owner, data=self.get_data(action='join'))
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_join_without_review(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, review=False)
+        self.perform_create(user=self.owner, data=self.get_data(activity=activity, action='join'))
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_accept_without_review(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, review=False)
+        self.perform_create(user=self.owner, data=self.get_data(activity=activity, action='accept'))
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_create_deed_join(self):
@@ -196,7 +228,7 @@ class ActivityMessageTemplateDetailAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.owner = BlueBottleUserFactory.create()
-        self.activity = DeadlineActivityFactory.create(owner=self.owner)
+        self.activity = DeadlineActivityFactory.create(owner=self.owner, review=True)
         self.model = create_template(self.activity)
         self.url = reverse('activity-message-template-detail', args=(self.model.pk,))
 
@@ -217,7 +249,7 @@ class ActivityMessageTemplateDetailAPITestCase(APITestCase):
     def test_get_owner(self):
         self.perform_get(user=self.owner)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertAttribute('body', '<p>Hi {first_name}, see you soon!</p>')
+        self.assertAttribute('body', '<p>Hi there, see you soon!</p>')
 
     def test_get_activity_type(self):
         self.perform_get(user=self.owner)
@@ -236,9 +268,27 @@ class ActivityMessageTemplateDetailAPITestCase(APITestCase):
         self.model.refresh_from_db()
         self.assertEqual(self.model.body_html.html, '<p>Changed</p>')
 
+    def test_update_staff(self):
+        self.patch(create_staff_user(), body='<p>Changed</p>')
+        self.assertStatus(status.HTTP_200_OK)
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.body_html.html, '<p>Changed</p>')
+
+    def test_update_superuser(self):
+        self.patch(BlueBottleUserFactory.create(is_superuser=True), body='<p>Changed</p>')
+        self.assertStatus(status.HTTP_200_OK)
+
     def test_update_other_user(self):
         self.patch(BlueBottleUserFactory.create(), body='<p>Changed</p>')
         self.assertStatus(status.HTTP_404_NOT_FOUND)
+
+    def test_update_anonymous(self):
+        self.response = self.client.patch(self.url, json.dumps({}))
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_staff(self):
+        self.perform_delete(user=create_staff_user())
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
 
     def test_delete_owner(self):
         self.perform_delete(user=self.owner)
@@ -279,53 +329,53 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
     def user_mails(self):
         return [m for m in mail.outbox if m.to == [self.user.email]]
 
+    def assertDefaultSubject(self, message):
+        self.assertEqual(
+            message.subject,
+            'You have been selected for the activity "{}"'.format(self.activity.title)
+        )
+
     def test_accepted(self):
         create_template(self.activity)
         registration = self.register()
         registration.states.accept(save=True)
 
         message = self.user_mails()[0]
-        self.assertEqual(message.subject, 'Welcome to {}'.format(self.activity.title))
-        self.assertIn('Hi Henk, see you soon!', message.body)
+        self.assertDefaultSubject(message)
+        self.assertIn('Hi there, see you soon!', message.body)
+        self.assertNotIn('Good news, you have been accepted', message.body)
 
     def test_rejected(self):
-        create_template(self.activity, action='reject', subject='Sorry, {title} is full')
+        create_template(self.activity, action='reject')
         registration = self.register()
         registration.states.reject(save=True)
 
-        self.assertEqual(
-            self.user_mails()[0].subject, 'Sorry, {} is full'.format(self.activity.title)
-        )
+        self.assertIn('Hi there, see you soon!', self.user_mails()[0].body)
 
     def test_joined(self):
         self.activity.review = False
         self.activity.save()
-        create_template(self.activity, action='join', subject='Joined {title}')
+        create_template(self.activity, action='join')
         mail.outbox = []
         DeadlineRegistrationFactory.create(activity=self.activity, user=self.user, as_user=self.user)
 
-        self.assertEqual(
-            self.user_mails()[0].subject, 'Joined {}'.format(self.activity.title)
-        )
+        self.assertIn('Hi there, see you soon!', self.user_mails()[0].body)
 
     def test_applied(self):
-        create_template(self.activity, action='apply', subject='Applied for {title}')
+        create_template(self.activity, action='apply')
         mail.outbox = []
         DeadlineRegistrationFactory.create(activity=self.activity, user=self.user, as_user=self.user)
 
-        self.assertEqual(
-            self.user_mails()[0].subject, 'Applied for {}'.format(self.activity.title)
-        )
+        self.assertIn('Hi there, see you soon!', self.user_mails()[0].body)
 
     def test_other_activity_not_affected(self):
         create_template(DeadlineActivityFactory.create())
         registration = self.register()
         registration.states.accept(save=True)
 
-        self.assertEqual(
-            self.user_mails()[0].subject,
-            'You have been selected for the activity "{}"'.format(self.activity.title)
-        )
+        message = self.user_mails()[0]
+        self.assertDefaultSubject(message)
+        self.assertNotIn('Hi there, see you soon!', message.body)
 
     def test_activity_template_beats_global_template(self):
         global_template = MessageTemplate.objects.create(message=ACCEPTED)
@@ -338,7 +388,24 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
         registration = self.register()
         registration.states.accept(save=True)
 
-        self.assertEqual(self.user_mails()[0].subject, 'Welcome to {}'.format(self.activity.title))
+        message = self.user_mails()[0]
+        self.assertDefaultSubject(message)
+        self.assertIn('Hi there, see you soon!', message.body)
+        self.assertNotIn('Global', message.body)
+
+    def test_global_template_placeholders(self):
+        global_template = MessageTemplate.objects.create(message=ACCEPTED)
+        global_template.set_current_language('en')
+        global_template.subject = 'Welcome to {title}'
+        global_template.body_html = json.dumps({'html': '<p>Hi {first_name}</p>', 'delta': ''})
+        global_template.save()
+
+        registration = self.register()
+        registration.states.accept(save=True)
+
+        message = self.user_mails()[0]
+        self.assertEqual(message.subject, 'Welcome to {}'.format(self.activity.title))
+        self.assertIn('Hi Henk', message.body)
 
     def test_append(self):
         create_template(self.activity, insert_method='append')
@@ -346,29 +413,49 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
         registration.states.accept(save=True)
 
         message = self.user_mails()[0]
-        self.assertIn('Hi Henk, see you soon!', message.body)
+        self.assertIn('Hi there, see you soon!', message.body)
         self.assertIn('Good news, you have been accepted', message.body)
 
-    def test_empty_subject_keeps_default_subject(self):
-        create_template(self.activity, subject='', insert_method='append')
+    def test_template_subject_is_ignored(self):
+        create_template(self.activity, subject='Custom {title}')
+        registration = self.register()
+        registration.states.accept(save=True)
+
+        self.assertDefaultSubject(self.user_mails()[0])
+
+    def test_placeholders_are_sent_literally(self):
+        create_template(
+            self.activity,
+            body_html=json.dumps({'html': '<p>Hello {title} {recipient_name}</p>', 'delta': ''})
+        )
+        registration = self.register()
+        registration.states.accept(save=True)
+
+        self.assertIn('Hello {title} {recipient_name}', self.user_mails()[0].body)
+
+    def test_lone_brace_is_sent_literally(self):
+        create_template(
+            self.activity,
+            insert_method='append',
+            body_html=json.dumps({'html': '<p>a { b</p>', 'delta': ''})
+        )
         registration = self.register()
         registration.states.accept(save=True)
 
         message = self.user_mails()[0]
-        self.assertEqual(
-            message.subject,
-            'You have been selected for the activity "{}"'.format(self.activity.title)
+        self.assertIn('a { b', message.body)
+        self.assertIn('Good news, you have been accepted', message.body)
+
+    def test_message_block_html_is_literal(self):
+        create_template(
+            self.activity,
+            body_html=json.dumps({'html': '<p>a { b {title}</p>', 'delta': ''})
         )
-        self.assertIn('Hi Henk, see you soon!', message.body)
-
-    def test_broken_template_falls_back_to_default(self):
-        create_template(self.activity, subject='Hi {title')
         registration = self.register()
-        registration.states.accept(save=True)
 
         self.assertEqual(
-            self.user_mails()[0].subject,
-            'You have been selected for the activity "{}"'.format(self.activity.title)
+            UserRegistrationAcceptedNotification(registration).get_message_block_html(self.user),
+            '<p>a { b {title}</p>'
         )
 
 
@@ -379,26 +466,25 @@ class DeedCollectMessageTemplateSendTestCase(BluebottleTestCase):
 
     def test_deed_joined(self):
         participant = DeedParticipantFactory.create(user=self.user)
-        create_template(participant.activity, action='join', subject='Deed {title}')
+        create_template(participant.activity, action='join')
         mail.outbox = []
 
         DeedJoinedNotification(participant).compose_and_send()
 
-        self.assertEqual(mail.outbox[0].subject, 'Deed {}'.format(participant.activity.title))
-        self.assertIn('Hi Henk, see you soon!', mail.outbox[0].body)
+        self.assertIn('Hi there, see you soon!', mail.outbox[0].body)
 
     def test_collect_joined(self):
         contributor = CollectContributorFactory.create(user=self.user)
-        create_template(contributor.activity, action='join', subject='Collect {title}')
+        create_template(contributor.activity, action='join')
         mail.outbox = []
 
         CollectJoinedNotification(contributor).compose_and_send()
 
-        self.assertEqual(mail.outbox[0].subject, 'Collect {}'.format(contributor.activity.title))
+        self.assertIn('Hi there, see you soon!', mail.outbox[0].body)
 
     def test_deed_template_not_used_for_collect(self):
         contributor = CollectContributorFactory.create(user=self.user)
-        create_template(DeedFactory.create(), action='join', subject='Deed {title}')
+        create_template(DeedFactory.create(), action='join')
         mail.outbox = []
 
         CollectJoinedNotification(contributor).compose_and_send()
@@ -407,15 +493,7 @@ class DeedCollectMessageTemplateSendTestCase(BluebottleTestCase):
             mail.outbox[0].subject,
             'You have joined the activity "{}"'.format(contributor.activity.title)
         )
-
-    def test_missing_placeholder_renders_empty(self):
-        participant = DeedParticipantFactory.create(user=self.user)
-        create_template(participant.activity, action='join', subject='Deed {title}{duration}')
-        mail.outbox = []
-
-        DeedJoinedNotification(participant).compose_and_send()
-
-        self.assertEqual(mail.outbox[0].subject, 'Deed {}'.format(participant.activity.title))
+        self.assertNotIn('Hi there, see you soon!', mail.outbox[0].body)
 
 
 class ActivityMessageActionTestCase(BluebottleTestCase):
@@ -458,25 +536,96 @@ class TimeBasedMessageTemplateSendTestCase(BluebottleTestCase):
 
     def test_periodic_accepted(self):
         registration = PeriodicRegistrationFactory.create(user=self.user)
-        create_template(registration.activity, subject='Periodic {title}')
+        create_template(registration.activity)
         mail.outbox = []
 
         UserRegistrationAcceptedNotification(registration).compose_and_send()
 
-        self.assertEqual(mail.outbox[0].subject, 'Periodic {}'.format(registration.activity.title))
-        self.assertIn('Hi Henk, see you soon!', mail.outbox[0].body)
+        self.assertIn('Hi there, see you soon!', mail.outbox[0].body)
 
     def test_date_joined(self):
         activity = DateActivityFactory.create(slots=[])
         slot = DateActivitySlotFactory.create(activity=activity)
         registration = DateRegistrationFactory.create(activity=activity, user=self.user)
         participant = DateParticipantFactory.create(registration=registration, slot=slot)
-        create_template(activity, action='join', subject='Date {title}')
+        create_template(activity, action='join')
         mail.outbox = []
 
         ParticipantSlotParticipantRegisteredNotification(participant).compose_and_send()
 
-        self.assertEqual(mail.outbox[0].subject, 'Date {}'.format(activity.title))
+        self.assertIn('Hi there, see you soon!', mail.outbox[0].body)
+
+
+class DateReviewJoinMessageTemplateTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        InitiativePlatformSettingsFactory.create(activity_types=['dateactivity'])
+        self.owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            owner=self.owner,
+            review=True,
+            slots=[],
+        )
+        self.slots = DateActivitySlotFactory.create_batch(2, activity=self.activity)
+        self.activity.states.publish(save=True)
+        self.user = BlueBottleUserFactory.create(first_name='Henk')
+
+    def join(self, slot):
+        return DateParticipantFactory.create(
+            activity=self.activity, slot=slot, user=self.user, registration=None, as_user=self.user
+        )
+
+    def user_mails(self):
+        return [m for m in mail.outbox if m.to == [self.user.email]]
+
+    def join_after_accept(self):
+        participant = self.join(self.slots[0])
+        participant.registration.states.accept(save=True)
+        mail.outbox = []
+        return self.join(self.slots[1])
+
+    def test_join_uses_accept_template(self):
+        create_template(self.activity, subject='', insert_method='append')
+        participant = self.join_after_accept()
+
+        self.assertEqual(participant.status, 'accepted')
+        messages = self.user_mails()
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            messages[0].subject,
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title)
+        )
+        self.assertIn('You are registered for a time slot', messages[0].body)
+        self.assertIn('Hi there, see you soon!', messages[0].body)
+
+    def test_join_template_beats_accept_template(self):
+        create_template(self.activity)
+        create_template(
+            self.activity,
+            action='join',
+            body_html=json.dumps({'html': '<p>Joined body</p>', 'delta': ''}),
+        )
+        self.join_after_accept()
+
+        body = self.user_mails()[0].body
+        self.assertIn('Joined body', body)
+        self.assertNotIn('see you soon', body)
+
+    def test_review_disabled_ignores_accept_template(self):
+        self.activity.review = False
+        self.activity.save()
+        create_template(self.activity)
+        mail.outbox = []
+        self.join(self.slots[0])
+
+        self.assertEqual(
+            self.user_mails()[0].subject,
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title)
+        )
 
 
 class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
@@ -503,7 +652,10 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         previews = self.previews(response)
-        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
+        self.assertEqual(
+            previews['succeed']['subject'], 'Thank you for participating in the activity "Clean the park"'
+        )
         self.assertEqual(
             previews['accept']['subject'],
             'You have been selected for the activity "Clean the park"'
@@ -518,17 +670,17 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         activity = DeedFactory.create(owner=self.owner, title='Plant a tree')
         previews = self.previews(self.get(activity))
 
-        self.assertEqual(set(previews), {'join'})
+        self.assertEqual(set(previews), {'join', 'succeed'})
         self.assertEqual(previews['join']['subject'], 'You have joined the activity "Plant a tree"')
 
     def test_collect(self):
         previews = self.previews(self.get(CollectActivityFactory.create(owner=self.owner)))
-        self.assertEqual(set(previews), {'join'})
+        self.assertEqual(set(previews), {'join', 'succeed'})
 
     def test_date(self):
         activity = DateActivityFactory.create(owner=self.owner)
         previews = self.previews(self.get(activity))
-        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject'})
+        self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
 
     def test_schedule_teams(self):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
@@ -607,7 +759,7 @@ class RegistrationReviewMessageTestCase(BluebottleTestCase):
         self.assertIn('Maybe next time', message.body)
 
     def test_message_replaces_activity_template(self):
-        create_template(self.activity, action='accept', subject='')
+        create_template(self.activity, action='accept')
         message = self.transition('accept', '<p>Bring gloves</p>')
 
         self.assertIn('Bring gloves', message.body)
@@ -616,3 +768,39 @@ class RegistrationReviewMessageTestCase(BluebottleTestCase):
             message.subject,
             'You have been selected for the activity "{}"'.format(self.activity.title)
         )
+
+
+class SendThankYouMessageAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.activity = DeadlineActivityFactory.create(owner=self.owner)
+        self.url = reverse('deadline-detail', args=(self.activity.pk,))
+
+    def test_default_off(self):
+        response = self.client.get(self.url, user=self.owner)
+        self.assertFalse(response.json()['data']['attributes']['send-thank-you-message'])
+
+    def enable(self, user):
+        data = {
+            'data': {
+                'type': 'activities/time-based/deadlines',
+                'id': self.activity.pk,
+                'attributes': {'send-thank-you-message': True},
+            }
+        }
+        response = self.client.patch(self.url, json.dumps(data), user=user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.activity.refresh_from_db()
+        self.assertTrue(self.activity.send_thank_you_message)
+
+    def test_owner_enables(self):
+        self.enable(self.owner)
+
+    def test_staff_enables(self):
+        self.enable(create_staff_user())
+
+    def test_superuser_enables(self):
+        self.enable(BlueBottleUserFactory.create(is_superuser=True))

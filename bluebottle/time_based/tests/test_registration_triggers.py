@@ -191,6 +191,50 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.registration, "new")
         self.assertStatus(self.participant, "new")
 
+    def test_initial_review_multiple_slots(self):
+        self.activity.review = True
+        self.activity.save()
+        self.create()
+        DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=DateActivitySlotFactory.create(activity=self.activity),
+            activity=self.activity,
+            as_user=self.user,
+        )
+        self.registration.states.accept(save=True)
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title),
+            subjects
+        )
+        self.assertEqual(
+            subjects.count('You have been selected for the activity "{}"'.format(self.activity.title)),
+            1
+        )
+
+    def test_join_slot_after_accept(self):
+        self.test_accept()
+        mail.outbox = []
+
+        participant = DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=DateActivitySlotFactory.create(activity=self.activity),
+            activity=self.activity,
+            as_user=self.user,
+        )
+
+        self.assertStatus(participant, "accepted")
+        self.assertEqual(participant.registration, self.registration)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.user.email])
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title),
+        )
+
     def test_initial_past(self):
         self.test_initial()
         self.slot.start = now() - timedelta(days=3)

@@ -41,17 +41,10 @@ class DisplayMemberNamesMixin:
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
         activity = self.get_activity()
-        owners = list(activity.owners) if activity else []
-        context['owners'] = owners
+        context['owners'] = list(activity.owners)
 
-        display_member_names = MemberPlatformSettings.load().display_member_names
-        user = self.request.user
-        if user and user.is_authenticated and (
-            user.is_staff or user.is_superuser or user in owners
-        ):
-            display_member_names = 'full_name'
+        context['display_member_names'] = MemberPlatformSettings.load().display_member_names
 
-        context['display_member_names'] = display_member_names
         return context
 
 

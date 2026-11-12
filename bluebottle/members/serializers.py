@@ -903,8 +903,6 @@ class SAMLAuthenticationSerializer(BaseAuthenticationMethodSerializer):
     class Meta(BaseAuthenticationMethodSerializer.Meta):
         model = SAMLAuthentication
         fields = BaseAuthenticationMethodSerializer.Meta.fields + (
-            'entity_id',
-            'single_sign_on_url',
             'admin_login_enabled',
             'organization'
         )

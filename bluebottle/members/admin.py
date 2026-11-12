@@ -256,7 +256,7 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
         ('Settings', {'fields': ['enabled', 'organization', 'admin_login_enabled', 'provision', 'debug', 'strict']}),
         ('SAML conffiguration', {
             'fields': [
-                'metadata_file', 'entity_id', 'local_entity_id', 'certificate', 'single_sign_on_url', 'name_id_format'
+                'metadata_file', 'entity_id',
             ]
         }),
         ('Attribute mapping', {

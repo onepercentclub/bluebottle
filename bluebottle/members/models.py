@@ -13,6 +13,8 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
+from django.urls import reverse
+
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
 
@@ -24,6 +26,11 @@ from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType, Segment
+
+from onelogin.saml2 import idp_metadata_parser
+from cryptography import x509
+
+metadata_parser = idp_metadata_parser.OneLogin_Saml2_IdPMetadataParser()
 
 
 def default_support_groups():
@@ -636,13 +643,7 @@ class GoogleAuthentication(AuthenticationMethod):
 
 class SAMLAuthentication(AuthenticationMethod):
     entity_id = models.CharField(_('Entity id'))
-    local_entity_id = models.CharField(_('Local entity id'))
     organization = models.ForeignKey('organizations.Organization', on_delete=models.CASCADE)
-
-    certificate = models.CharField(_('x509 certificate'))
-    single_sign_on_url = models.CharField(_('Single sign on url'))
-    single_logout_url = models.CharField(_('Single logout url'))
-    name_id_format = models.CharField(_('Name id format'))
 
     remote_id_attribute = models.CharField(_('Remote id attribute'))
     email_attribute = models.CharField(_('Email attribute'))
@@ -650,15 +651,73 @@ class SAMLAuthentication(AuthenticationMethod):
     first_name_attribute = models.CharField(_('First name attribute'))
     work_location_attribute = models.CharField(_('Work location attribute'))
 
-    metadata_file = models.FileField(upload_to='members/saml-metadata', null=True)
+    metadata_file = models.FileField(upload_to='members/saml-metadata', null=True, blank=True)
 
     admin_login_enabled = models.BooleanField(_('Admin login enabled'), default=True)
     provision = models.BooleanField(_('Provision users'), default=True)
-    debug = models.BooleanField(_('Debug'), default=True)
-    strict = models.BooleanField(_('Strict'), default=True)
+    debug = models.BooleanField(_('Debug'), default=False)
+    strict = models.BooleanField(_('Strict'), default=False)
+
+    @property
+    def idp_metadata(self):
+        if not hasattr(self, '_parsed'):
+            self.metadata_file.seek(0)
+            self._parsed = metadata_parser.parse(self.metadata_file.read())
+
+        return self._parsed
+
+    @property
+    def signon_url(self):
+        return self.idp_metadata['idp']['singleSignOnService']['url']
+
+    @property
+    def idp_entity_id(self):
+        return self.idp_metadata['idp']['entityId']
+
+    @property
+    def metadata(self):
+        idp_metadata = self.idp_metadata
+        return {
+            'idp': idp_metadata['idp'],
+            'sp': {
+                'entityId': self.entity_id,
+                'NameIDFormat': self.name_id_format,
+                'assertionConsumerService': {
+                    'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+                    'url': reverse('token-auth:saml-login')
+                },
+                'singleLogoutService': {
+                   'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+                    'url': reverse('token-auth:saml-logout')
+
+                }
+            }
+        }
+
+    @property
+    def settings(self):
+        metadata = self.metadata
+        return dict(
+            strict=self.strict,
+            debug=self.debug,
+            security={'requestedAuthnContext': False},
+            **metadata
+        )
+
+    @property
+    def certificate(self):
+        cert_string = f"-----BEGIN CERTIFICATE-----\n{self.idp_metadata['idp']['x509cert']}\n-----END CERTIFICATE-----"
+        return x509.load_pem_x509_certificate(cert_string.encode())
+
+    @property
+    def name_id_format(self):
+        return (
+            self.idp_metadata['sp']['NameIDFormat'] or 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+        )
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/saml'
+
 
     @property
     def method(self):

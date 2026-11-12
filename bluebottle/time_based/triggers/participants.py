@@ -1019,6 +1019,15 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
+            TeamScheduleParticipantStateMachine.schedule,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+            ],
+        ),
+        TransitionTrigger(
             TeamScheduleParticipantStateMachine.unschedule,
             effects=[
                 RelatedTransitionEffect(

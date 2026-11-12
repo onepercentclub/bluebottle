@@ -1,14 +1,15 @@
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
+from bluebottle.fsm.triggers import ModelDeletedTrigger, TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import LockFilledSlotsEffect
 from bluebottle.time_based.effects.interests import DeleteInterestEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
+    AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect,
+    RemovePeriodicParticipantsEffect,
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -403,6 +404,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                RelatedTransitionEffect(
+                    "unfinished_participants",
+                    PeriodicParticipantStateMachine.auto_remove,
+                ),
             ],
         ),
 
@@ -421,6 +426,11 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicParticipantStateMachine.auto_remove,
                 ),
             ],
+        ),
+        ModelDeletedTrigger(
+            effects=[
+                RemovePeriodicParticipantsEffect,
+            ]
         ),
     ]
 

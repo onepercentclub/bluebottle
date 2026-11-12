@@ -148,8 +148,10 @@ class BaseRelatedTransitionEffect(Effect):
     def __init__(self, *args, **kwargs):
         super(BaseRelatedTransitionEffect, self).__init__(*args, **kwargs)
         self.executed = False
+        self.transitioned_instances = []
+        relation = getattr(self.instance, self.relation, [])
+
         try:
-            relation = getattr(self.instance, self.relation, [])
             self.instances = list(relation.all())
         except ValueError:
             self.instances = []

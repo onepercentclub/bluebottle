@@ -14989,3 +14989,11 @@ msgstr "Heropen de peiling voor stemmen."
 msgid "You have already voted in this poll"
 msgstr "Je hebt al gestemd in deze peiling"
 
+
+#: bluebottle/notifications/models.py:151
+msgid "Automated email"
+msgstr "Geautomatiseerde e-mail"
+
+#: bluebottle/notifications/models.py:152
+msgid "Automated emails"
+msgstr "Geautomatiseerde e-mails"

@@ -1,8 +1,6 @@
 import re
 from social_django.strategy import DjangoStrategy
-from bluebottle.members.models import (
-    AuthenticationMethod, FacebookAuthentication, GoogleAuthentication
-)
+from bluebottle.members.models import FacebookAuthentication, GoogleAuthentication
 
 
 class DRFStrategy(DjangoStrategy):
@@ -24,10 +22,10 @@ class DRFStrategy(DjangoStrategy):
             match = re.match(r'^SOCIAL_AUTH_(FACEBOOK|GOOGLE)_(\w+)$', name)
 
             (backend, matched_name) = match.groups()
-            authentication_method = self.authentication_methods[backend.lower()].objects.get()
+            authentication_method = self.authentication_methods[backend.lower()].load()
 
             matched_name = self.name_mapping.get(matched_name, 'invalid')
 
             return getattr(authentication_method, matched_name)
-        except (AuthenticationMethod.DoesNotExist, AttributeError):
+        except AttributeError:
             return super(DRFStrategy, self).get_setting(name)

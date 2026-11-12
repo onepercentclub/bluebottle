@@ -508,7 +508,19 @@ class AuthenticationMethod(PolymorphicModel):
         return _("{method} authentication").format(method=self.method)
 
 
-class PasswordAuthentication(TranslatableModel, AuthenticationMethod):
+class SingletonAuthenticationMixin(models.Model):
+    class Meta:
+        abstract = True
+        constraints = [
+            models.UniqueConstraint(models.Value(True), name='unique_%(class)s'),
+        ]
+
+    @classmethod
+    def load(cls):
+        return cls.objects.filter(enabled=True).first()
+
+
+class PasswordAuthentication(SingletonAuthenticationMixin, TranslatableModel, AuthenticationMethod):
     ACCOUNT_CREATION_RULES = (
         ('anyone', _('Anyone can create an account')),
         ('whitelist', _('Only people with a whitelisted domain can create an account')),
@@ -579,16 +591,7 @@ class PasswordAuthentication(TranslatableModel, AuthenticationMethod):
     class JSONAPIMeta:
         resource_name = 'authentication-methods/password'
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(models.Value(True), name='unique_password_authentication'),
-        ]
-
     method = _('Email/Password')
-
-    @classmethod
-    def load(cls):
-        return cls.objects.filter(enabled=True).first()
 
     @classmethod
     def is_enabled(cls):
@@ -604,32 +607,22 @@ class PasswordAuthentication(TranslatableModel, AuthenticationMethod):
             return False
 
 
-class FacebookAuthentication(AuthenticationMethod):
+class FacebookAuthentication(SingletonAuthenticationMixin, AuthenticationMethod):
     secret = models.CharField(_('Secret'))
     client_id = models.CharField(_('Client id'))
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/facebook'
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(models.Value(True), name='unique_facebook_authentication'),
-        ]
-
     method = 'Facebook'
 
 
-class GoogleAuthentication(AuthenticationMethod):
+class GoogleAuthentication(SingletonAuthenticationMixin, AuthenticationMethod):
     secret = models.CharField(_('Secret'))
     client_id = models.CharField(_('Client id'))
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/google'
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(models.Value(True), name='unique_google_authentication'),
-        ]
 
     method = 'Google'
 

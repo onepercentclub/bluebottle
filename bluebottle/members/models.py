@@ -31,26 +31,6 @@ def default_support_groups():
     return ['Engineering Team', 'Support']
 
 
-class SocialLoginSettings(models.Model):
-    LOGIN_BACKENDS = (
-        ('facebook', _('Facebook')),
-        ('google', _('Google')),
-    )
-    settings = models.ForeignKey(
-        'members.MemberPlatformSettings',
-        on_delete=models.CASCADE,
-        related_name='social_login_methods'
-    )
-
-    backend = models.CharField(_('Platform'), choices=LOGIN_BACKENDS)
-    secret = models.CharField(_('Secret'))
-    client_id = models.CharField(_('Client id'))
-
-    class Meta(object):
-        verbose_name_plural = _('Social login settings')
-        verbose_name = _('Social login settings')
-
-
 class MemberPlatformSettings(BasePlatformSettings):
     DISPLAY_MEMBER_OPTIONS = (
         ('full_name', _('Full name')),
@@ -599,6 +579,11 @@ class PasswordAuthentication(AuthenticationMethod, TranslatableModel):
     class JSONAPIMeta:
         resource_name = 'authentication-methods/password'
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(models.Value(True), name='unique_password_authentication'),
+        ]
+
     method = _('Email/Password')
 
     @classmethod
@@ -626,6 +611,11 @@ class FacebookAuthentication(AuthenticationMethod):
     class JSONAPIMeta:
         resource_name = 'authentication-methods/facebook'
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(models.Value(True), name='unique_facebook_authentication'),
+        ]
+
     method = 'Facebook'
 
 
@@ -635,6 +625,11 @@ class GoogleAuthentication(AuthenticationMethod):
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/google'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(models.Value(True), name='unique_google_authentication'),
+        ]
 
     method = 'Google'
 

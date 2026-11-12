@@ -152,8 +152,17 @@ class AuthenticationMethodChildAdmin(PolymorphicChildModelAdmin):
     list_display = ['method', 'enabled']
 
 
+class SingletonAuthenticationMethodAdminMixin:
+    def has_add_permission(self, request, obj=None):
+        if self.model.objects.exists():
+            return False
+        return super().has_add_permission(request)
+
+
 @admin.register(PasswordAuthentication)
-class PasswordAuthenticationAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, AuthenticationMethodChildAdmin):
+class PasswordAuthenticationAdmin(
+    SingletonAuthenticationMethodAdminMixin, TranslatableLabelAdminMixin, TranslatableAdmin, AuthenticationMethodChildAdmin
+):
     model = PasswordAuthentication
 
     readonly_fields = (
@@ -225,13 +234,13 @@ class PasswordAuthenticationAdmin(TranslatableLabelAdminMixin, TranslatableAdmin
 
 
 @admin.register(FacebookAuthentication)
-class FacebookAuthenticationAdmin(AuthenticationMethodChildAdmin):
+class FacebookAuthenticationAdmin(SingletonAuthenticationMethodAdminMixin, AuthenticationMethodChildAdmin):
     model = FacebookAuthentication
     fields = ['enabled', 'secret', 'client_id']
 
 
 @admin.register(GoogleAuthentication)
-class GoogleAuthenticationAdmin(AuthenticationMethodChildAdmin):
+class GoogleAuthenticationAdmin(SingletonAuthenticationMethodAdminMixin, AuthenticationMethodChildAdmin):
     model = GoogleAuthentication
     fields = ['enabled', 'secret', 'client_id']
 

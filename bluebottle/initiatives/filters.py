@@ -12,6 +12,7 @@ from bluebottle.geo.models import Country, Location
 from bluebottle.initiatives.documents import initiative
 from bluebottle.initiatives.models import InitiativePlatformSettings, Theme
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
+from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, SegmentFacet, ModelFacet
@@ -92,6 +93,7 @@ class InitiativeSearch(Search):
     facets = {
         'owner': OwnerFacet(),
         'status': StatusFacet(),
+        'organization': UntranslatedModelFacet('organization', Organization),
     }
 
     possible_facets = {

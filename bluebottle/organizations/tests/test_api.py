@@ -2,17 +2,33 @@
 from future import standard_library
 standard_library.install_aliases()
 from urllib.parse import urlencode
+import datetime
 import json
 
 from django.urls import reverse
+from django.utils.timezone import now
+from moneyed import Money
 from rest_framework import status
 
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
     OrganizationContactFactory, OrganizationFactory
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DateParticipantFactory,
+    DateRegistrationFactory,
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
+)
 
 
 class OrganizationsEndpointTestCase(BluebottleTestCase):
@@ -117,12 +133,141 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
     Endpoint: /api/organizations/{pk}
     """
 
-    def test_unauth_api_organizations_detail_endpoint(self):
+    def test_anonymous_api_organizations_detail_endpoint(self):
         response = self.client.get(
             reverse('organization_detail', kwargs={'pk': self.organization_1.pk})
         )
 
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['data']['id'], str(self.organization_1.pk))
+        stats = response.json()['data']['meta']['stats']
+        self.assertEqual(stats['hours'], 0)
+        self.assertEqual(stats['effort'], 0)
+        self.assertEqual(stats['contributors'], 0)
+        self.assertEqual(stats['amount'], {'amount': 0, 'currency': stats['amount']['currency']})
+        self.assertEqual(stats['collected'], [])
+        self.assertEqual(stats['impact'], [])
+
+    def test_get_stats(self):
+        initiative = InitiativeFactory.create(status='approved')
+
+        deadline_activity = DeadlineActivityFactory.create(
+            initiative=initiative,
+            organization=self.organization_1,
+            status='succeeded',
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+            deadline=datetime.date.today() - datetime.timedelta(weeks=1),
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+        )
+        DeadlineParticipantFactory.create_batch(3, activity=deadline_activity)
+
+        date_activity = DateActivityFactory.create(
+            initiative=initiative,
+            organization=self.organization_1,
+            status='succeeded',
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2),
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=date_activity,
+            start=now() - datetime.timedelta(weeks=1),
+        )
+
+        registrations = DateRegistrationFactory.create_batch(3, activity=date_activity)
+        for registration in registrations:
+            DateParticipantFactory.create(slot=slot, registration=registration)
+
+        funding = FundingFactory.create(
+            initiative=initiative,
+            organization=self.organization_1,
+            deadline=now() + datetime.timedelta(weeks=1),
+            status='open'
+        )
+        for donor in DonorFactory.create_batch(3, activity=funding, user=None, amount=Money(10, 'USD')):
+            donor.contributions.get().states.succeed(save=True)
+        for donor in DonorFactory.create_batch(3, activity=funding, user=None, amount=Money(10, 'EUR')):
+            donor.contributions.get().states.succeed(save=True)
+
+        deed_activity = DeedFactory.create(
+            initiative=initiative,
+            organization=self.organization_1,
+            status='open',
+            start=datetime.date.today() - datetime.timedelta(days=10),
+            end=datetime.date.today() + datetime.timedelta(days=5)
+        )
+
+        DeedParticipantFactory.create_batch(3, activity=deed_activity)
+        participants = DeedParticipantFactory.create_batch(3, activity=deed_activity)
+        for participant in participants:
+            participant.states.withdraw(save=True)
+
+        collect_activity = CollectActivityFactory.create(
+            initiative=initiative,
+            organization=self.organization_1,
+            status='open',
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+        )
+        collect_activity.realized = 100
+        collect_activity.save()
+        CollectContributorFactory.create_batch(3, activity=collect_activity)
+
+        unrelated_activity = DeadlineActivityFactory.create(
+            initiative=initiative,
+            status='open',
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+            deadline=datetime.date.today() + datetime.timedelta(weeks=1),
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+        )
+        DeadlineParticipantFactory.create_batch(3, activity=unrelated_activity)
+
+        response = self.client.get(
+            reverse('organization_detail', kwargs={'pk': self.organization_1.pk})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        stats = response.json()['data']['meta']['stats']
+        self.assertEqual(stats['hours'], 18.0)
+        self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
+        self.assertEqual(stats['contributors'], 18)
+        self.assertEqual(stats['effort'], 3)
+
+    def test_anonymous_cannot_update(self):
+        data = {
+            'data': {
+                'type': 'organizations',
+                'id': self.organization_1.pk,
+                'attributes': {
+                    'name': 'Hacked',
+                    'slogan': 'nope',
+                }
+            }
+        }
+        response = self.client.put(
+            reverse('organization_detail', kwargs={'pk': self.organization_1.pk}),
+            json.dumps(data),
+        )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_closed_platform_anonymous(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        try:
+            response = self.client.get(
+                reverse('organization_detail', kwargs={'pk': self.organization_1.pk})
+            )
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        finally:
+            MemberPlatformSettings.objects.update(closed=False)
+
+    def test_closed_platform_authenticated(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        try:
+            response = self.client.get(
+                reverse('organization_detail', kwargs={'pk': self.organization_1.pk}),
+                user=self.user_1,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        finally:
+            MemberPlatformSettings.objects.update(closed=False)
 
 
 class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
@@ -141,7 +286,8 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
                 'attributes': {
                     'name': '1%Club',
                     'slug': 'hm',
-                    'description': 'some description',
+                    'slogan': 'some slogan',
+                    'story': '<p>some story</p>',
                     'website': 'http://onepercentclub.com',
                 }
             }
@@ -173,9 +319,10 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         organization = Organization.objects.get(pk=org_id)
         self.assertEqual(organization.name, '1%Club')
         self.assertEqual(organization.slug, '1club')
-        self.assertEqual(organization.description, 'some description')
+        self.assertEqual(organization.slogan, 'some slogan')
+        self.assertIn('some story', organization.story.html)
 
-    def test_api_manage_organizations_update_description(self):
+    def test_api_manage_organizations_update_slogan(self):
         """
         Tests POSTing new data to the endpoint.
         """
@@ -185,10 +332,10 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Update description
+        # Update slogan
         org_id = response.data['id']
         self.post_data['data']['id'] = org_id
-        self.post_data['data']['attributes']['description'] = 'Bla bla'
+        self.post_data['data']['attributes']['slogan'] = 'Bla bla'
         url = reverse('organization_detail', kwargs={'pk': org_id})
 
         response = self.client.put(
@@ -199,7 +346,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check the data.
         organization = Organization.objects.get(pk=org_id)
-        self.assertEqual(organization.description, 'Bla bla')
+        self.assertEqual(organization.slogan, 'Bla bla')
 
     def test_api_manage_organizations_update_other_user(self):
         """
@@ -211,17 +358,16 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             user=self.user_1)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Update description
+        # Update slogan
         org_id = response.data['id']
         self.post_data['data']['id'] = org_id
-        self.post_data['data']['attributes']['description'] = 'Bla bla'
+        self.post_data['data']['attributes']['slogan'] = 'Bla bla'
         url = reverse('organization_detail', kwargs={'pk': org_id})
 
         response = self.client.put(
             url,
             json.dumps(self.post_data),
             user=BlueBottleUserFactory.create())
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.patch(
@@ -299,16 +445,14 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
     Endpoint: /api/organizations/{pk}
     """
 
-    def test_manage_organizations_detail_login_required(self):
+    def test_manage_organizations_detail_get_anonymous(self):
         """
-        Tests that the endpoint first restricts results to logged-in users.
+        Public platforms allow anonymous GET of organization detail.
         """
-        # Making the request without logging in...
         response = self.client.get(
             reverse('organization_detail',
                     kwargs={'pk': self.organization_1.pk}))
-        self.assertEqual(
-            response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
     def test_manage_organizations_detail_get_success(self):
         """
@@ -320,3 +464,4 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
                                    user=self.user_1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('stats', response.json()['data']['meta'])

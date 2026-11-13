@@ -514,6 +514,10 @@ class AuthenticationMethod(PolymorphicModel):
 
     method = None
 
+    @property
+    def usable(self):
+        return True
+
     def __str__(self):
         return _("{method} authentication").format(method=self.method)
 
@@ -676,6 +680,10 @@ class SAMLAuthentication(AuthenticationMethod):
             return self.idp_metadata['idp']['singleSignOnService']['url']
 
     @property
+    def usable(self):
+        return bool(self.signon_url)
+
+    @property
     def idp_entity_id(self):
         if self.idp_metadata:
             return self.idp_metadata['idp']['entityId']
@@ -689,13 +697,13 @@ class SAMLAuthentication(AuthenticationMethod):
                 'assertionConsumerService': {
                     'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
                     'url': connection.tenant.build_absolute_url(
-                        reverse('token-auth:saml-login')
+                        reverse('token-auth:saml-login', args=(self.pk, ))
                     )
                 },
                 'singleLogoutService': {
                     'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
                     'url': connection.tenant.build_absolute_url(
-                        reverse('token-auth:saml-logout')
+                        reverse('token-auth:saml-logout', args=(self.pk, ))
                     )
 
                 }

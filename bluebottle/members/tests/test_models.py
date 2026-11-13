@@ -208,11 +208,11 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
                 'NameIDFormat': 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
                 'assertionConsumerService': {
                     'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-                    'url': f"http://test.localhost{reverse('token-auth:saml-login')}",
+                    'url': f"http://test.localhost{reverse('token-auth:saml-login', args=(self.method.pk, ))}",
                 },
                 'singleLogoutService': {
                     'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
-                    'url': f"http://test.localhost{reverse('token-auth:saml-logout')}",
+                    'url': f"http://test.localhost{reverse('token-auth:saml-logout', args=(self.method.pk, ))}",
                 },
             }
         )

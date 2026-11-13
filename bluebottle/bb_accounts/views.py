@@ -117,6 +117,9 @@ class AuthenticationMethodList(JsonApiViewMixin, generics.ListAPIView):
     permission_classes = (AllowAny, )
     pagination_class = None
 
+    def get_queryset(self):
+        return [method for method in super().get_queryset() if method.usable]
+
 
 class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
     """

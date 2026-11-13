@@ -4,14 +4,15 @@ import re
 import django_otp
 from django.conf import settings
 from django.contrib.auth import login
+from django.http import Http404
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
 from django.template import loader
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
 from rest_framework.exceptions import PermissionDenied
 
-from bluebottle.clients import properties
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import SAMLAuthentication as SAMLAuthenticationMethod
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.models import SAMLDevice
@@ -24,7 +25,31 @@ def get_auth(request, settings, saml_request=None):
     return SAMLAuthentication(request, settings, saml_request=saml_request)
 
 
-class TokenRedirectView(View):
+class SAMLMethodMixin:
+    """
+    Resolve the SAML authentication method the request is for.
+    Without a pk, fall back to the method that allows admin login.
+    """
+
+    def get_method(self):
+        methods = SAMLAuthenticationMethod.objects.filter(enabled=True)
+
+        if 'pk' in self.kwargs:
+            method = methods.filter(pk=self.kwargs['pk']).first()
+        else:
+            method = methods.filter(admin_login_enabled=True).first()
+
+        if not method:
+            raise Http404('No SAML authentication method configured')
+
+        return method
+
+    @property
+    def settings(self):
+        return self.get_method().settings
+
+
+class TokenRedirectView(SAMLMethodMixin, View):
     """
     Redirect to SSO login page
     """
@@ -55,12 +80,12 @@ class TokenRedirectView(View):
     def get(self, request, *args, **kwargs):
         client_ip = get_client_ip(request)
 
-        if client_ip == settings.VPN_CLIENT_IP or client_ip == '127.0.0.1':
+        if 'pk' not in kwargs and client_ip in (settings.VPN_CLIENT_IP, '127.0.0.1'):
             saml_settings = settings.SUPPORT_TOKEN_AUTH
         else:
-            saml_settings = properties.TOKEN_AUTH
+            saml_settings = self.settings
 
-        auth = get_auth(request, settings=saml_settings, **kwargs)
+        auth = get_auth(request, settings=saml_settings)
         sso_url = auth.sso_url(target_url=self.target_url(request))
         return HttpResponseRedirect(sso_url)
 
@@ -106,10 +131,8 @@ class SAMLLoginView(View):
         return response
 
 
-class UserSAMLLoginView(SAMLLoginView):
-    @property
-    def settings(self):
-        return properties.TOKEN_AUTH
+class UserSAMLLoginView(SAMLMethodMixin, SAMLLoginView):
+    pass
 
 
 class SupportSAMLLoginView(SAMLLoginView):
@@ -148,7 +171,7 @@ class SupportSAMLLoginView(SAMLLoginView):
         return settings.SUPPORT_TOKEN_AUTH
 
 
-class TokenLogoutView(TemplateView):
+class TokenLogoutView(SAMLMethodMixin, TemplateView):
     """
     Process Single Logout
     FIXME: Not working yet
@@ -157,7 +180,7 @@ class TokenLogoutView(TemplateView):
     template_name = 'token/token-logout.tpl'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
+        auth = get_auth(request, settings=self.settings)
         url = auth.process_logout()
         if url:
             return HttpResponseRedirect(url)
@@ -175,12 +198,12 @@ class TokenErrorView(TemplateView):
         return self.render_to_response(context)
 
 
-class MetadataView(View):
+class MetadataView(SAMLMethodMixin, View):
     """
     Show (SAML) metadata
     """
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
+        auth = get_auth(request, settings=self.settings)
         metadata = auth.get_metadata()
         return HttpResponse(content=metadata, content_type='text/xml')

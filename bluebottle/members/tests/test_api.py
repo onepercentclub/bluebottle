@@ -1694,6 +1694,16 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
         ids = {item['id'] for item in response.json()['data']}
         self.assertEqual(ids, {str(self.password.pk), str(self.saml.pk)})
 
+    def test_saml_without_metadata_excluded(self):
+        self.saml.metadata_file = None
+        self.saml.save()
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ids = {item['id'] for item in response.json()['data']}
+        self.assertEqual(ids, {str(self.password.pk), str(self.facebook.pk)})
+
     def test_secrets_not_exposed(self):
         response = self.client.get(self.url)
         content = response.content.decode()

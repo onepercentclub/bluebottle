@@ -899,10 +899,14 @@ class GoogleAuthenticationSerializer(BaseAuthenticationMethodSerializer):
 
 
 class SAMLAuthenticationSerializer(BaseAuthenticationMethodSerializer):
+    single_sign_on_url = serializers.CharField(read_only=True, source='signon_url')
+
     class Meta(BaseAuthenticationMethodSerializer.Meta):
         model = SAMLAuthentication
         fields = BaseAuthenticationMethodSerializer.Meta.fields + (
             'admin_login_enabled',
+            'entity_id',
+            'single_sign_on_url',
             'organization'
         )
 

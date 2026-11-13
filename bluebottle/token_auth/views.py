@@ -2,6 +2,12 @@ import logging
 import re
 
 import django_otp
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import SAMLAuthentication as SAMLAuthenticationMethod
+from bluebottle.token_auth.auth.saml import SAMLAuthentication
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.token_auth.models import SAMLDevice
+from bluebottle.utils.utils import get_client_ip
 from django.conf import settings
 from django.contrib.auth import login
 from django.http import Http404
@@ -10,13 +16,6 @@ from django.template import loader
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
 from rest_framework.exceptions import PermissionDenied
-
-from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.members.models import SAMLAuthentication as SAMLAuthenticationMethod
-from bluebottle.token_auth.auth.saml import SAMLAuthentication
-from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.models import SAMLDevice
-from bluebottle.utils.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ def get_auth(request, settings, saml_request=None):
 class SAMLMethodMixin:
     """
     Resolve the SAML authentication method the request is for.
-    Without a pk, fall back to the method that allows admin login.
+    Without a pk, fall back to the first method.
     """
 
     def get_method(self):
@@ -37,7 +36,7 @@ class SAMLMethodMixin:
         if 'pk' in self.kwargs:
             method = methods.filter(pk=self.kwargs['pk']).first()
         else:
-            method = methods.filter(admin_login_enabled=True).first()
+            method = methods.first()
 
         if not method:
             raise Http404('No SAML authentication method configured')

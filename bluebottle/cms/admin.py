@@ -375,7 +375,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
         css = {
             'all': ('admin/css/platform_color_contrast.css',)
         }
-        js = ('admin/js/platform_color_contrast.js',)
+        js = ('admin/js/color_contrast_base.js', 'admin/js/platform_color_contrast.js')
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

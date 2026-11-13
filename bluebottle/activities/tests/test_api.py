@@ -50,6 +50,7 @@ from bluebottle.test.factory_models.geo import (
     LocationFactory,
     PlaceFactory,
 )
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.models import Registration
@@ -1216,6 +1217,39 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_filter_organization(self):
+        matching_organization, other_organization = OrganizationFactory.create_batch(2)
+
+        matching = DeedFactory.create_batch(
+            3, status="open", organization=matching_organization
+        )
+        other = DeedFactory.create_batch(
+            2, status="open", organization=other_organization
+        )
+        DeedFactory.create_batch(2, status="open", organization=None)
+
+        self.search({
+            'organization': matching_organization.pk,
+        })
+
+        self.assertFacets(
+            'organization',
+            {
+                f'{matching_organization.pk}': (matching_organization.name, len(matching)),
+                f'{other_organization.pk}': (other_organization.name, len(other)),
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_organization_unknown(self):
+        DeedFactory.create_batch(2, status="open")
+
+        self.search({
+            'organization': 999999,
+        })
+
+        self.assertFound([])
+
     def test_filter_theme(self):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
@@ -1841,6 +1875,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             2,
             status='open',
             initiative=None,
+            slots=[],
         )
         for activity in matching:
             DateActivitySlotFactory.create_batch(
@@ -1853,6 +1888,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             3,
             status='open',
             initiative=None,
+            slots=[],
         )
         for activity in other:
             DateActivitySlotFactory.create_batch(

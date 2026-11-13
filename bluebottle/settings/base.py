@@ -348,6 +348,7 @@ TENANT_APPS = (
     'bluebottle.time_based',
     'bluebottle.collect',
     'bluebottle.deeds',
+    'bluebottle.cta',
     'bluebottle.events',
     'bluebottle.assignments',
     'bluebottle.grant_management',

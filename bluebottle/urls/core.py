@@ -74,6 +74,10 @@ urlpatterns = [
     ),
 
     path(
+        'api/cta',
+        include('bluebottle.cta.urls')
+    ),
+    path(
         'api/time-based',
         include('bluebottle.time_based.urls.api')
     ),

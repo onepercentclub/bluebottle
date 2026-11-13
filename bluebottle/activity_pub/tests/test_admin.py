@@ -9,6 +9,7 @@ from django.test import RequestFactory
 from django.urls import reverse
 
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub import admin as admin_module
 from bluebottle.activity_pub.admin import FollowerAdmin, adopt_events
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import Accept, Follower, Following, Recipient
@@ -217,7 +218,7 @@ class AdoptEventsActionTestCase(BluebottleAdminTestCase):
         self.event.source.follow.adoption_type = 'template'
 
     def test_adopt_passes_request(self):
-        with mock.patch('bluebottle.activity_pub.admin.adapter') as patched:
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
             adopt_events(self.modeladmin, self.request, [self.event])
 
         patched.adopt.assert_called_once_with(self.event, self.request)
@@ -225,7 +226,7 @@ class AdoptEventsActionTestCase(BluebottleAdminTestCase):
 
     def test_link_passes_request(self):
         self.event.source.follow.adoption_type = 'link'
-        with mock.patch('bluebottle.activity_pub.admin.adapter') as patched:
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
             adopt_events(self.modeladmin, self.request, [self.event])
 
         patched.link.assert_called_once_with(self.event, self.request)
@@ -233,10 +234,12 @@ class AdoptEventsActionTestCase(BluebottleAdminTestCase):
     def test_adopt_failure_reports_error_and_continues(self):
         other = mock.Mock()
         other.source.follow.adoption_type = 'template'
-        with mock.patch('bluebottle.activity_pub.admin.adapter') as patched:
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
             patched.adopt.side_effect = [ValueError('boom'), None]
-            adopt_events(self.modeladmin, self.request, [self.event, other])
+            with mock.patch.object(admin_module.logger, 'exception') as log:
+                adopt_events(self.modeladmin, self.request, [self.event, other])
 
+        log.assert_called_once()
         self.assertEqual(patched.adopt.call_count, 2)
         levels = [call[0][2] for call in self.modeladmin.message_user.call_args_list]
         self.assertEqual(levels, [messages.ERROR, messages.SUCCESS])

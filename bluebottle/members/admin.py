@@ -248,6 +248,7 @@ class GoogleAuthenticationAdmin(SingletonAuthenticationMethodAdminMixin, Authent
 
 class SAMLSegmentMappingInline(admin.TabularInline):
     model = SAMLSegmentMapping
+    extra = 0
 
 
 @admin.register(SAMLAuthentication)
@@ -257,11 +258,16 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
     inlines = [SAMLSegmentMappingInline]
     raw_id_fields = ['organization']
 
+    readonly_fields = ('idp_certificate_expiration', 'single_signon_url', 'redirect_url', )
+
     fieldsets = (
-        ('Settings', {'fields': ['enabled', 'organization', 'admin_login_enabled', 'provision', 'debug', 'strict']}),
-        ('SAML conffiguration', {
+        ('General', {'fields': [
+            'enabled', 'organization', 'metadata_file', 'entity_id', 'idp_certificate_expiration',
+            'single_signon_url', 'redirect_url',
+        ]}),
+        ('Settings', {
             'fields': [
-                'metadata_file', 'entity_id',
+                'admin_login_enabled', 'provision', 'strict', 'debug'
             ]
         }),
         ('Attribute mapping', {
@@ -271,6 +277,18 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
             ]
         })
     )
+
+    def redirect_url(self, obj):
+        return format_html(
+            '<a href="{url}">{url}</a>',
+            url=obj.redirect_url,
+        )
+
+    def single_signon_url(self, obj):
+        return format_html(
+            '<a href="{url}">{url}</a>',
+            url=obj.single_signon_url,
+        )
 
 
 @admin.register(MemberPlatformSettings)

@@ -163,8 +163,10 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
             str(self.method.certificate.subject),
             '<Name(C=NO,ST=Andreas Solberg,L=Foo,O=UNINETT,CN=feide.erlang.no,1.2.840.113549.1.9.1=andreas@uninett.no)>'
         )
+
+    def test_idp_certificate_expiration(self):
         self.assertEqual(
-            self.method.certificate.not_valid_after_utc, datetime(2007, 8, 14, 12, 1, 35, tzinfo=timezone.utc)
+            self.method.idp_certificate_expiration, datetime(2007, 8, 14, 12, 1, 35, tzinfo=timezone.utc)
         )
 
     def test_idp_metadata(self):
@@ -206,11 +208,11 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
                 'NameIDFormat': 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
                 'assertionConsumerService': {
                     'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-                    'url': reverse('token-auth:saml-login'),
+                    'url': f"http://test.localhost{reverse('token-auth:saml-login')}",
                 },
                 'singleLogoutService': {
                     'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
-                    'url': reverse('token-auth:saml-logout'),
+                    'url': f"http://test.localhost{reverse('token-auth:saml-logout')}",
                 },
             }
         )
@@ -257,3 +259,46 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
         SAMLAuthenticationFactory.create()
 
         self.assertEqual(SAMLAuthentication.objects.count(), 2)
+
+    def test_idp_metadata_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        self.assertIsNone(method.idp_metadata)
+
+    def test_signon_url_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        self.assertIsNone(method.signon_url)
+
+    def test_single_signon_url_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        self.assertIsNone(method.single_signon_url)
+
+    def test_idp_entity_id_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        self.assertIsNone(method.idp_entity_id)
+
+    def test_name_id_format_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        self.assertIsNone(method.name_id_format)
+
+    def test_certificate_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        self.assertIsNone(method.certificate)
+
+    def test_idp_certificate_expiration_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        self.assertIsNone(method.idp_certificate_expiration)
+
+    def test_metadata_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        metadata = method.metadata
+
+        self.assertNotIn('idp', metadata)
+        self.assertEqual(metadata['sp']['entityId'], method.entity_id)
+        self.assertIsNone(metadata['sp']['NameIDFormat'])
+
+    def test_settings_without_metadata_file(self):
+        method = SAMLAuthenticationFactory.create(metadata_file=None)
+        settings = method.settings
+
+        self.assertNotIn('idp', settings)
+        self.assertEqual(settings['sp'], method.metadata['sp'])

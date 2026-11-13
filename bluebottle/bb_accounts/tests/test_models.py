@@ -1,3 +1,5 @@
+import logging
+
 from django.core import mail
 from django.db import IntegrityError
 from django.test.utils import override_settings
@@ -47,6 +49,25 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
             user = BlueBottleUserFactory.build()
             user.email = None
             user.save()
+
+    def test_get_by_natural_key_with_duplicate_emails(self):
+        first = BlueBottleUserFactory.create(email='duplicate@example.com')
+        first.set_unusable_password()
+        first.save()
+        second = BlueBottleUserFactory.create(email='Duplicate@example.com')
+        logging.disable(logging.NOTSET)
+        self.addCleanup(logging.disable, logging.CRITICAL)
+
+        with self.assertLogs('bluebottle.bb_accounts.models', level='ERROR') as logs:
+            user = Member.objects.get_by_natural_key('DUPLICATE@example.com')
+
+        self.assertEqual(user, second)
+        self.assertEqual(len(logs.records), 1)
+        self.assertEqual(logs.records[0].levelname, 'ERROR')
+        self.assertIn(
+            '{}, {}. Using {}.'.format(first.pk, second.pk, second.pk),
+            logs.output[0]
+        )
 
     def test_location_sets_country(self):
         country = CountryFactory.create()

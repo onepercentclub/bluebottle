@@ -3,6 +3,7 @@
 import bluebottle.members.models
 import django.db.models.deletion
 import django_better_admin_arrayfield.models.fields
+import parler.models
 from django.db import migrations, models
 
 
@@ -62,7 +63,7 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-            bases=('members.authenticationmethod',),
+            bases=('members.authenticationmethod', parler.models.TranslatableModelMixin),
         ),
         migrations.CreateModel(
             name='SAMLAuthentication',

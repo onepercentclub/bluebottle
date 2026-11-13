@@ -46,15 +46,8 @@ class SettingsView(views.APIView):
                     'members': {
                         'closed': member_settings['closed'],
                         'background': member_settings['background'],
-                        'login_methods': member_settings['login_methods'],
                         'session_only': member_settings['session_only'],
-                        'email_domains': member_settings['email_domains'],
-                        'confirm_signup': member_settings['confirm_signup'],
                         'consent_link': member_settings['consent_link'],
-                        'request_access_method': member_settings['request_access_method'],
-                        'request_access_instructions': member_settings['request_access_instructions'],
-                        'request_access_email': member_settings['request_access_email'],
-                        'account_creation_rules': member_settings['account_creation_rules'],
                     }
                 }
             }

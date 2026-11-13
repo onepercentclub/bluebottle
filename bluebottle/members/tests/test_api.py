@@ -16,11 +16,12 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
-from bluebottle.members.models import (
-    MemberPlatformSettings, UserActivity, Member,
-    PasswordAuthentication, FacebookAuthentication, GoogleAuthentication, SAMLAuthentication
-)
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
+from bluebottle.members.tests.factories import (
+    PasswordAuthenticationFactory, FacebookAuthenticationFactory, GoogleAuthenticationFactory,
+    SAMLAuthenticationFactory
+)
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
@@ -235,6 +236,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
     def setUp(self):
         self.settings = MemberPlatformSettings.load()
         super(SignUpTokenTestCase, self).setUp()
+        self.password_authentication = PasswordAuthenticationFactory.create()
         self.client = JSONAPITestClient()
 
     def test_create(self):
@@ -320,8 +322,8 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
     def test_create_correct_domain(self):
         email = 'test@example.com'
-        self.settings.email_domains = ['example.com']
-        self.settings.save()
+        self.password_authentication.email_domains = ['example.com']
+        self.password_authentication.save()
 
         response = self.client.post(
             reverse('user-signup-token'),
@@ -336,9 +338,9 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
     def test_create_incorrect_domain(self):
         email = 'test@secondexample.com'
-        self.settings.email_domains = ['example.com']
-        self.settings.account_creation_rules = 'whitelist'
-        self.settings.save()
+        self.password_authentication.email_domains = ['example.com']
+        self.password_authentication.account_creation_rules = 'whitelist'
+        self.password_authentication.save()
 
         response = self.client.post(
             reverse('user-signup-token'),
@@ -352,7 +354,8 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
     def test_create_password_login_disabled(self):
         email = 'test@secondexample.com'
-        self.settings.login_methods = 'SSO'
+        self.password_authentication.enabled = False
+        self.password_authentication.save()
         self.settings.closed = True
         self.settings.save()
 
@@ -1104,6 +1107,7 @@ class MemberSignUpAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.url = reverse('member-signup')
+        self.password_authentication = PasswordAuthenticationFactory.create()
 
         self.serializer = MemberSignUpSerializer
 
@@ -1207,7 +1211,8 @@ class MemberSignUpAPITestCase(APITestCase):
         )
 
     def test_create_confirmation_enabled(self):
-        MemberPlatformSettings.objects.create(confirm_signup=True)
+        self.password_authentication.confirm_signup = True
+        self.password_authentication.save()
         with self.closed_site():
             self.perform_create()
 
@@ -1226,13 +1231,13 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
-        self.settings = MemberPlatformSettings.load()
+        self.password_authentication = PasswordAuthenticationFactory.create()
         self.url = reverse('user-signup-token')
 
     def test_anyone_can_signup(self):
         """Test that anyone can sign up when account_creation_rules is 'anyone'"""
-        self.settings.account_creation_rules = 'anyone'
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'anyone'
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1245,9 +1250,9 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
 
     def test_whitelist_allowed_domain(self):
         """Test signup with whitelisted domain"""
-        self.settings.account_creation_rules = 'whitelist'
-        self.settings.email_domains = ['example.com', 'test.org']
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist'
+        self.password_authentication.email_domains = ['example.com', 'test.org']
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1259,9 +1264,9 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
 
     def test_whitelist_disallowed_domain(self):
         """Test signup rejected with non-whitelisted domain"""
-        self.settings.account_creation_rules = 'whitelist'
-        self.settings.email_domains = ['example.com']
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist'
+        self.password_authentication.email_domains = ['example.com']
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1276,9 +1281,9 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
 
     def test_whitelist_and_request_whitelisted_domain(self):
         """Test signup with whitelisted domain in whitelist_and_request mode"""
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['example.com']
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['example.com']
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1290,10 +1295,10 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
 
     def test_whitelist_and_request_no_access_code(self):
         """Test signup fails without access code for non-whitelisted domain"""
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['example.com']
-        self.settings.request_access_code = 'testcode123'
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['example.com']
+        self.password_authentication.request_access_code = 'testcode123'
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1308,10 +1313,10 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
 
     def test_whitelist_and_request_with_valid_access_code(self):
         """Test signup succeeds with valid access code for non-whitelisted domain"""
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['example.com']
-        self.settings.request_access_code = 'validcode123'
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['example.com']
+        self.password_authentication.request_access_code = 'validcode123'
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1329,10 +1334,10 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
 
     def test_whitelist_and_request_with_invalid_access_code(self):
         """Test signup fails with invalid access code"""
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['example.com']
-        self.settings.request_access_code = 'validcode123'
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['example.com']
+        self.password_authentication.request_access_code = 'validcode123'
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1353,9 +1358,9 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
 
     def test_whitelist_empty_domains_list(self):
         """Test that empty domain list allows any email"""
-        self.settings.account_creation_rules = 'whitelist'
-        self.settings.email_domains = []
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist'
+        self.password_authentication.email_domains = []
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1390,9 +1395,9 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
 
     def test_multiple_whitelisted_domains(self):
         """Test signup with multiple whitelisted domains"""
-        self.settings.account_creation_rules = 'whitelist'
-        self.settings.email_domains = ['domain1.com', 'domain2.org', 'domain3.net']
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist'
+        self.password_authentication.email_domains = ['domain1.com', 'domain2.org', 'domain3.net']
+        self.password_authentication.save()
 
         # Test each domain
         for domain in ['domain1.com', 'domain2.org', 'domain3.net']:
@@ -1418,14 +1423,14 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
         super().setUp()
         self.client = JSONAPITestClient()
         self.url = reverse('user-signup-token')
-        self.settings = MemberPlatformSettings.load()
+        self.password_authentication = PasswordAuthenticationFactory.create()
 
     def test_signup_token_with_access_code_creates_inactive_user(self):
         """Test that signup with access code creates inactive user"""
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['allowed.com']
-        self.settings.request_access_code = 'secret123'
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['allowed.com']
+        self.password_authentication.request_access_code = 'secret123'
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1445,10 +1450,10 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
 
     def test_signup_token_without_required_access_code_fails(self):
         """Test signup token without access code when required"""
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['allowed.com']
-        self.settings.request_access_code = 'secret123'
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['allowed.com']
+        self.password_authentication.request_access_code = 'secret123'
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1465,10 +1470,10 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
 
     def test_signup_token_with_wrong_access_code(self):
         """Test signup token with wrong access code"""
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['allowed.com']
-        self.settings.request_access_code = 'secret123'
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['allowed.com']
+        self.password_authentication.request_access_code = 'secret123'
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1486,10 +1491,10 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
 
     def test_signup_token_whitelisted_no_code_needed(self):
         """Test that whitelisted domains don't need access code for token signup"""
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['allowed.com']
-        self.settings.request_access_code = 'secret123'
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['allowed.com']
+        self.password_authentication.request_access_code = 'secret123'
+        self.password_authentication.save()
 
         response = self.client.post(
             self.url,
@@ -1512,14 +1517,14 @@ class AccountAcceptanceTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.jsonapi_client = JSONAPITestClient()
-        self.settings = MemberPlatformSettings.load()
+        self.password_authentication = PasswordAuthenticationFactory.create()
         self.url = reverse('user-signup-token')
 
     def test_accepted_member_can_login(self):
         """Test that accepted member can log in after activation"""
-        self.settings.account_creation_rules = 'whitelist'
-        self.settings.email_domains = ['example.com']
-        self.settings.save()
+        self.password_authentication.account_creation_rules = 'whitelist'
+        self.password_authentication.email_domains = ['example.com']
+        self.password_authentication.save()
 
         # Create signup token using JSON:API client
         response = self.jsonapi_client.post(
@@ -1564,11 +1569,11 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.jsonapi_client = JSONAPITestClient()
-        self.settings = MemberPlatformSettings.load()
-        self.settings.account_creation_rules = 'whitelist_and_request'
-        self.settings.email_domains = ['allowed.com']
-        self.settings.request_access_code = 'oldcode123'
-        self.settings.save()
+        self.password_authentication = PasswordAuthenticationFactory.create()
+        self.password_authentication.account_creation_rules = 'whitelist_and_request'
+        self.password_authentication.email_domains = ['allowed.com']
+        self.password_authentication.request_access_code = 'oldcode123'
+        self.password_authentication.save()
         self.url = reverse('user-signup-token')
 
     def test_old_code_invalid_after_rotation(self):
@@ -1587,8 +1592,8 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Rotate the code
-        self.settings.request_access_code = 'newcode456'
-        self.settings.save()
+        self.password_authentication.request_access_code = 'newcode456'
+        self.password_authentication.save()
 
         # Old code should fail
         response = self.jsonapi_client.post(
@@ -1619,8 +1624,8 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
 
     def test_empty_access_code_behavior(self):
         """Test behavior when access code is empty/None"""
-        self.settings.request_access_code = None
-        self.settings.save()
+        self.password_authentication.request_access_code = None
+        self.password_authentication.save()
 
         # Should fail without code when whitelist_and_request is set
         response = self.jsonapi_client.post(
@@ -1643,14 +1648,14 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.url = reverse('authentication-method-list')
 
-        self.password = PasswordAuthentication.objects.create(
+        self.password = PasswordAuthenticationFactory.create(
             account_creation_rules='whitelist', email_domains=['example.com']
         )
-        self.facebook = FacebookAuthentication.objects.create(secret='fb-secret', client_id='fb-client')
-        self.google = GoogleAuthentication.objects.create(
+        self.facebook = FacebookAuthenticationFactory.create(secret='fb-secret', client_id='fb-client')
+        self.google = GoogleAuthenticationFactory.create(
             secret='google-secret', client_id='google-client', enabled=False
         )
-        self.saml = SAMLAuthentication.objects.create(
+        self.saml = SAMLAuthenticationFactory.create(
             organization=OrganizationFactory.create(),
             entity_id='https://idp.example.com',
             single_sign_on_url='https://idp.example.com/sso',

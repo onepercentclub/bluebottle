@@ -1,4 +1,4 @@
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, PasswordAuthentication
 from bluebottle.utils.permissions import BasePermission
 
 
@@ -25,8 +25,8 @@ class SignUpTokenPermission(BasePermission):
 
     def has_object_action_permission(self, action, user, obj):
         settings = MemberPlatformSettings.load()
-        return not settings.closed or 'password' in settings.login_methods
+        return not settings.closed or PasswordAuthentication.is_enabled()
 
     def has_permission(self, request, view):
         settings = MemberPlatformSettings.load()
-        return not settings.closed or 'password' in settings.login_methods
+        return not settings.closed or PasswordAuthentication.is_enabled()

@@ -344,6 +344,16 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
         )
         self.assertEqual(GeoFeature.objects.count(), feature_count)
 
+    def test_share_geofeature_without_names_falls_back_to_address_fields(self):
+        place = self.create_geofeature('dXJu-test-nameless', 'place', '')
+        geolocation, place = self.create_geolocation_from_geofeatures(primary=place)
+        geolocation.locality = 'Assendelft'
+        geolocation.save(skip_mapbox_sync=True)
+        funding = FundingFactory.create(impact_location=geolocation)
+
+        event = adapter.create_or_update_event(funding)
+        self.assertEqual(event.location.name, 'Assendelft')
+
     def test_share_neighborhood_includes_parent_city(self):
         place = self.create_geofeature(
             'dXJu-test-amsterdam-place',

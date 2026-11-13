@@ -990,15 +990,16 @@ def adopt_events(modeladmin, request, events):
                 if event.source.follow.adoption_type == 'template':
                     adapter.adopt(event, request)
             adopted += 1
-        except Exception:
+        except Exception as error:
             logger.exception(
-                'Failed to adopt received activity %s for tenant %s',
+                'Failed to adopt received activity %s for tenant %s: %s',
                 event.pk,
                 connection.tenant.schema_name,
+                error,
             )
             modeladmin.message_user(
                 request,
-                _('Failed to adopt {name}. The error has been logged.').format(name=event.name),
+                _('Failed to adopt {name}: {error}').format(name=event.name, error=error),
                 messages.ERROR,
             )
     if adopted:

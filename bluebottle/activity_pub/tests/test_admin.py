@@ -240,6 +240,8 @@ class AdoptEventsActionTestCase(BluebottleAdminTestCase):
                 adopt_events(self.modeladmin, self.request, [self.event, other])
 
         log.assert_called_once()
+        self.assertIn('boom', str(log.call_args))
+        self.assertIn('boom', self.modeladmin.message_user.call_args_list[0][0][1])
         self.assertEqual(patched.adopt.call_count, 2)
         levels = [call[0][2] for call in self.modeladmin.message_user.call_args_list]
         self.assertEqual(levels, [messages.ERROR, messages.SUCCESS])

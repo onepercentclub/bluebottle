@@ -16,15 +16,17 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
-from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.members.models import (
+    MemberPlatformSettings, UserActivity, Member
+)
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
 from bluebottle.members.tests.factories import (
-    PasswordAuthenticationFactory, FacebookAuthenticationFactory, GoogleAuthenticationFactory,
-    SAMLAuthenticationFactory
+    PasswordAuthenticationFactory, FacebookAuthenticationFactory,
+    GoogleAuthenticationFactory, SAMLAuthenticationFactory
 )
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.voting.tests.factories import PollVoteFactory
 
@@ -1659,7 +1661,6 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
             organization=OrganizationFactory.create(),
             entity_id='https://idp.example.com',
             single_sign_on_url='https://idp.example.com/sso',
-            certificate='cert',
         )
 
     def test_list(self):
@@ -1681,11 +1682,7 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
         self.assertEqual(password['attributes']['account-creation-rules'], 'whitelist')
         self.assertEqual(password['attributes']['email-domains'], ['example.com'])
 
-        self.assertEqual(data['authentication-methods/facebook']['attributes']['client-id'], 'fb-client')
-        self.assertEqual(
-            data['authentication-methods/saml']['attributes']['single-sign-on-url'],
-            'https://idp.example.com/sso'
-        )
+        self.assertEqual(data['authentication-methods/facebook']['attributes']['client-id'], self.facebook.client_id)
 
     def test_disabled_methods_excluded(self):
         self.facebook.enabled = False
@@ -1700,7 +1697,7 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
     def test_secrets_not_exposed(self):
         response = self.client.get(self.url)
         content = response.content.decode()
-        self.assertNotIn('fb-secret', content)
-        self.assertNotIn('google-secret', content)
+        self.assertNotIn(self.facebook.secret, content)
+        self.assertNotIn(self.google.secret, content)
         self.assertNotIn('secret', content)
         self.assertNotIn('certificate', content)

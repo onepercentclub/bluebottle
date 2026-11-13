@@ -6,20 +6,22 @@ from bluebottle.token_auth.views import (
 )
 
 
+app_name = 'token-auth'
+
 urlpatterns = [
     path(
-        'redirect/', TokenRedirectView.as_view(),
-        name='token-redirect'
+        'redirect/<uuid:pk>/', TokenRedirectView.as_view(),
+        name='saml-redirect'
     ),
     path(
         'login/', UserSAMLLoginView.as_view(),
-        name='token-login'
+        name='saml-login'
     ),
     path(
         'support-login/', SupportSAMLLoginView.as_view(),
-        name='support-token-login'
+        name='support-saml-login'
     ),
-    path('logout/', TokenLogoutView.as_view(), name='token-logout'),
-    path('error/', TokenErrorView.as_view(), name='token-error'),
-    path('metadata/', MetadataView.as_view(), name='token-metadata'),
+    path('logout/', TokenLogoutView.as_view(), name='saml-logout'),
+    path('error/', TokenErrorView.as_view(), name='saml-error'),
+    path('metadata/<uuid:pk>/', MetadataView.as_view(), name='saml-metadata'),
 ]

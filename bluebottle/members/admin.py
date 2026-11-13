@@ -259,12 +259,12 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
 
     inlines = [SAMLSegmentMappingInline]
 
-    readonly_fields = ('idp_certificate_expiration', 'single_signon_url', 'redirect_url', )
+    readonly_fields = ('idp_certificate_expiration', 'single_signon_url', 'redirect_url', 'metadata_url', )
 
     fieldsets = (
         ('General', {'fields': [
             'enabled', 'organization', 'metadata_file', 'entity_id', 'idp_certificate_expiration',
-            'single_signon_url', 'redirect_url',
+            'single_signon_url', 'redirect_url', 'metadata_url'
         ]}),
         ('Settings', {
             'fields': [
@@ -289,6 +289,12 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
         return format_html(
             '<a href="{url}">{url}</a>',
             url=obj.single_signon_url,
+        )
+
+    def metadata_url(self, obj):
+        return format_html(
+            '<a href="{url}">{url}</a>',
+            url=obj.metadata_url,
         )
 
 

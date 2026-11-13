@@ -645,7 +645,7 @@ class SAMLAuthentication(AuthenticationMethod):
     email_attribute = models.CharField(_('Email attribute'))
     last_name_attribute = models.CharField(_('Last name attribute'))
     first_name_attribute = models.CharField(_('First name attribute'))
-    work_location_attribute = models.CharField(_('Work location attribute'))
+    work_location_attribute = models.CharField(_('Work location attribute'), null=True, blank=True)
 
     metadata_file = models.FileField(upload_to='members/saml-metadata', null=True, blank=True)
 
@@ -737,15 +737,21 @@ class SAMLAuthentication(AuthenticationMethod):
     @property
     def redirect_url(self):
         return connection.tenant.build_absolute_url(
+            reverse('token-auth:saml-redirect', args=(self.pk, ))
+        )
+
+    @property
+    def metadata_url(self):
+        return connection.tenant.build_absolute_url(
             reverse('token-auth:saml-metadata', args=(self.pk, ))
         )
 
     @property
     def name_id_format(self):
-        if self.idp_metadata:
-            return (
-                self.idp_metadata['sp']['NameIDFormat'] or 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
-            )
+        if self.idp_metadata and 'sp' in self.idp_metadata and 'NameIdFormat' in self.idp_metadata['sp']:
+            return self.idp_metadata['sp']['NameIDFormat']
+        else:
+            return 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/saml'

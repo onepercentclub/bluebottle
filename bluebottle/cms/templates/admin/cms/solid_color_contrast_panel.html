@@ -1,0 +1,21 @@
+{% load i18n %}
+<div class="platform-color-contrast" data-accessible="{{ accessible|yesno:'true,false' }}" data-field-id="{{ field_id }}" data-preview-name="solid">
+    <p class="platform-color-contrast__intro">{{ intro }}</p>
+    <div class="platform-color-contrast__group">
+        <div class="platform-color-contrast__swatches">
+            <div class="platform-color-contrast__swatch" data-preview="solid">
+                <span class="platform-color-contrast__sample">Aa</span>
+                <span class="platform-color-contrast__caption">
+                    {% trans "Header background" %}
+                    <span class="platform-color-contrast__mark" hidden>*</span>
+                </span>
+            </div>
+        </div>
+    </div>
+    <p class="platform-color-contrast__disclaimer" data-disclaimer="adjusted" hidden>
+        {% trans "* This colour was adjusted so it stays readable for everyone." %}
+    </p>
+    <p class="platform-color-contrast__disclaimer" data-disclaimer="contrast" hidden>
+        {% trans "* For some people this colour is not very well readable due to the lack of contrast. Please toggle Accessible colours in Site platform settings." %}
+    </p>
+</div>

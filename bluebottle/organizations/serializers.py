@@ -1,23 +1,38 @@
 from builtins import object
+
 from rest_framework import serializers
-
-from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.bluebottle_drf2.serializers import (
-    ImageSerializer
-)
-
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
+from bluebottle.activities.utils import get_stats_for_activities
+from bluebottle.bluebottle_drf2.serializers import (
+    ImageSerializer,
+    SorlImageField,
+)
+from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.utils.fields import (
+    RichTextField,
+    ValidationErrorsField,
+    RequiredErrorsField,
+)
 from bluebottle.utils.serializers import NoCommitMixin, ResourcePermissionField
 
 
 class OrganizationSerializer(NoCommitMixin, ModelSerializer):
-    description = serializers.CharField(required=False, allow_blank=True)
+    description = serializers.CharField(
+        source='slogan', required=False, allow_blank=True, allow_null=True
+    )
+    slogan = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    story = RichTextField(required=False, allow_blank=True, allow_null=True)
     slug = serializers.SlugField(allow_null=True, required=False)
     name = serializers.CharField(required=True)
     website = serializers.CharField(allow_blank=True, required=False)
     logo = ImageSerializer(required=False, allow_null=True)
+    cover_image = SorlImageField(
+        '465x262', crop='center', source='image', read_only=True
+    )
+    color = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    background_color = serializers.CharField(read_only=True)
+    text_color = serializers.CharField(read_only=True)
 
     permissions = ResourcePermissionField('organization_detail', view_args=('pk',))
 
@@ -35,7 +50,9 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
     class Meta(object):
         model = Organization
         fields = (
-            'id', 'name', 'slug', 'description', 'website', 'owner', 'logo',
+            'id', 'name', 'slug', 'description', 'slogan', 'story',
+            'website', 'owner', 'logo', 'cover_image',
+            'color', 'background_color', 'text_color',
             'required', 'errors', 'verified',
         )
 
@@ -44,6 +61,20 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
     class JSONAPIMeta(object):
         resource_name = 'organizations'
         included_resources = ['owner', ]
+
+
+class OrganizationDetailSerializer(OrganizationSerializer):
+    cover_image = SorlImageField(
+        '1280x720', crop='center', source='image', read_only=True
+    )
+    stats = serializers.SerializerMethodField()
+
+    def get_stats(self, obj):
+        return get_stats_for_activities(obj.activities.all())
+
+    class Meta(OrganizationSerializer.Meta):
+        fields = OrganizationSerializer.Meta.fields + ('stats',)
+        meta_fields = OrganizationSerializer.Meta.meta_fields + ['stats']
 
 
 class OrganizationContactSerializer(NoCommitMixin, ModelSerializer):

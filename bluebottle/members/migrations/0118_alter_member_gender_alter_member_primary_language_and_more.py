@@ -12,16 +12,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='member',
-            name='gender',
-            field=models.CharField(blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Non-binary'), ('none', 'I would rather not say')], max_length=8, verbose_name='gender'),
-        ),
-        migrations.AlterField(
-            model_name='member',
-            name='primary_language',
-            field=models.CharField(choices="[('en', 'English')]", default='en', help_text='Language used for website and emails.', max_length=7, verbose_name='primary language'),
-        ),
-        migrations.AlterField(
             model_name='memberplatformsettings',
             name='translate_user_content',
             field=models.BooleanField(default=False, help_text='Visitors see translated content by default and can switch back to the original. Content is translated by DeepL.', verbose_name="Translate user content into each visitor's chosen language."),

@@ -360,11 +360,14 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
     throttle_classes = [UserRateThrottle]
 
     def perform_create(self, serializer):
-        try:
-            user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'], is_active=True)
+        users = list(
+            USER_MODEL.objects.filter(
+                email__iexact=serializer.validated_data['email'], is_active=True
+            ).order_by('-pk')
+        )
+        if users:
+            user = next((u for u in users if u.has_usable_password()), users[0])
             PasswordResetMessage(user).compose_and_send()
-        except USER_MODEL.DoesNotExist:
-            pass
 
         model = namedtuple('Model', ('pk', 'email'))
         serializer.instance = model(str(uuid.uuid4()), serializer.validated_data['email'])

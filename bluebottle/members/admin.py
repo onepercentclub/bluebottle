@@ -1,11 +1,46 @@
 import functools
-from builtins import object
-
 import secrets
 import string
+from builtins import object
 
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
+from bluebottle.bb_accounts.utils import send_welcome_mail
+from bluebottle.bb_follow.models import Follow
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.clients import properties
+from bluebottle.clients.utils import tenant_url
+from bluebottle.collect.models import CollectContributor
+from bluebottle.deeds.models import DeedParticipant
+from bluebottle.funding.models import Donor, PaymentProvider
+from bluebottle.funding_pledge.models import PledgePaymentProvider
+from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import Initiative
+from bluebottle.members.forms import (
+    LoginAsConfirmationForm,
+    SendPasswordResetMailConfirmationForm,
+    SendWelcomeMailConfirmationForm,
+)
+from bluebottle.members.messages import PasswordResetMessage
+from bluebottle.members.models import MemberPlatformSettings, UserActivity
+from bluebottle.notifications.models import Message
+from bluebottle.segments.admin import SegmentAdminFormMetaClass
+from bluebottle.segments.filters import MemberSegmentAdminMixin
+from bluebottle.segments.models import Segment, SegmentType
+from bluebottle.time_based.models import (
+    DateParticipant,
+    DeadlineParticipant,
+    PeriodicParticipant,
+    ScheduleParticipant,
+    TeamScheduleParticipant, RegisteredDateParticipant,
+)
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
+from bluebottle.utils.admin import (
+    BasePlatformSettingsAdmin,
+    admin_info_box,
+    export_as_csv_action,
+)
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin, UserAdmin
@@ -25,49 +60,12 @@ from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from parler.admin import TranslatableAdmin
-from rest_framework.authtoken.models import Token
-
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicParentModelAdmin,
 )
+from rest_framework.authtoken.models import Token
 
-from bluebottle.bb_accounts.utils import send_welcome_mail
-from bluebottle.bb_follow.models import Follow
-from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.clients import properties
-from bluebottle.clients.utils import tenant_url
-from bluebottle.collect.models import CollectContributor
-from bluebottle.deeds.models import DeedParticipant
-from bluebottle.funding.models import Donor, PaymentProvider
-from bluebottle.funding_pledge.models import PledgePaymentProvider
-from bluebottle.geo.models import Location
-from bluebottle.initiatives.models import Initiative
-from bluebottle.members.forms import (
-    LoginAsConfirmationForm,
-    SendPasswordResetMailConfirmationForm,
-    SendWelcomeMailConfirmationForm,
-)
-from bluebottle.members.models import MemberPlatformSettings, UserActivity
-from bluebottle.notifications.models import Message
-from bluebottle.segments.admin import SegmentAdminFormMetaClass
-from bluebottle.segments.filters import MemberSegmentAdminMixin
-from bluebottle.segments.models import Segment, SegmentType
-from bluebottle.time_based.models import (
-    DateParticipant,
-    DeadlineParticipant,
-    PeriodicParticipant,
-    ScheduleParticipant,
-    TeamScheduleParticipant, RegisteredDateParticipant,
-)
-from bluebottle.translations.admin import TranslatableLabelAdminMixin
-from bluebottle.utils.admin import (
-    BasePlatformSettingsAdmin,
-    admin_info_box,
-    export_as_csv_action,
-)
-from bluebottle.members.messages import PasswordResetMessage
-from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import (
     AuthenticationMethod, FacebookAuthentication, GoogleAuthentication, Member, PasswordAuthentication,
     SAMLAuthentication, SAMLSegmentMapping, UserSegment
@@ -257,6 +255,7 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
     model = SAMLAuthentication
 
     inlines = [SAMLSegmentMappingInline]
+    raw_id_fields = ['organization']
 
     fieldsets = (
         ('Settings', {'fields': ['enabled', 'organization', 'admin_login_enabled', 'provision', 'debug', 'strict']}),

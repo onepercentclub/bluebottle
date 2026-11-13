@@ -271,6 +271,49 @@ class ManagingFacet(Facet):
             return Term(manager=user.id)
 
 
+def reviewer_filter(user):
+    if not user.is_authenticated:
+        return MatchNone()
+
+    if not user.has_perm('activities.api_review_activity'):
+        return MatchNone()
+
+    must_filters = [~Term(activity_type='grantapplication')]
+
+    subregions = getattr(user, "subregion_manager", None)
+    if subregions:
+        subregion_ids = list(subregions.values_list("id", flat=True))
+        if subregion_ids:
+            must_filters.append(
+                Nested(
+                    path="office_subregion",
+                    query=Terms(**{"office_subregion__id": subregion_ids})
+                )
+            )
+    offices = getattr(user, "office_manager", None)
+    if offices:
+        office_ids = list(offices.values_list("id", flat=True))
+        if office_ids:
+            must_filters.append(
+                Nested(
+                    path="office",
+                    query=Terms(**{"office__id": office_ids})
+                )
+            )
+
+    segments = getattr(user, "segment_manager", None)
+    if segments and segments.exists():
+        segment_ids = list(segments.values_list("id", flat=True))
+        if segment_ids:
+            must_filters.append(
+                Nested(
+                    path="segments",
+                    query=Terms(**{"segments__id": segment_ids})
+                )
+            )
+    return Bool(must=must_filters)
+
+
 class ReviewingFacet(Facet):
     agg_type = "terms"
 
@@ -282,49 +325,7 @@ class ReviewingFacet(Facet):
 
     def add_filter(self, filter_values):
         if filter_values == ["1"]:
-            user = get_current_user()
-
-            if not user.is_authenticated:
-                return MatchNone()
-
-            if user.has_perm('activities.api_review_activity'):
-
-                must_filters = [~Term(activity_type='grantapplication')]
-
-                subregions = getattr(user, "subregion_manager", None)
-                if subregions:
-                    subregion_ids = list(subregions.values_list("id", flat=True))
-                    if subregion_ids:
-                        must_filters.append(
-                            Nested(
-                                path="office_subregion",
-                                query=Terms(**{"office_subregion__id": subregion_ids})
-                            )
-                        )
-                offices = getattr(user, "office_manager", None)
-                if offices:
-                    office_ids = list(offices.values_list("id", flat=True))
-                    if office_ids:
-                        must_filters.append(
-                            Nested(
-                                path="office",
-                                query=Terms(**{"office__id": office_ids})
-                            )
-                        )
-
-                segments = getattr(user, "segment_manager", None)
-                if segments and segments.exists():
-                    segment_ids = list(segments.values_list("id", flat=True))
-                    if segment_ids:
-                        must_filters.append(
-                            Nested(
-                                path="segments",
-                                query=Terms(**{"segments__id": segment_ids})
-                            )
-                        )
-                return Bool(must=must_filters)
-
-            return MatchNone()
+            return reviewer_filter(get_current_user())
 
 
 class StatusFacet(Facet):

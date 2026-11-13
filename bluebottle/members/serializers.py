@@ -248,6 +248,16 @@ class UserPreviewSerializer(serializers.ModelSerializer):
         )
 
 
+class MyActionsPermissionField(serializers.Serializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(source='*', *args, **kwargs)
+
+    def to_representation(self, instance):
+        from bluebottle.cta.audience import has_actions
+
+        return has_actions(instance)
+
+
 class UserPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
@@ -256,13 +266,15 @@ class UserPermissionsSerializer(serializers.Serializer):
     project_manage_list = PermissionField('initiative-list')
     homepage = PermissionField('home-detail')
     review_activities = UserPermissionField('activities.api_review_activity')
+    my_actions = MyActionsPermissionField()
 
     class Meta(object):
         fields = [
             'project_list',
             'project_manage_list',
             'homepage',
-            'review_activities'
+            'review_activities',
+            'my_actions',
         ]
 
 

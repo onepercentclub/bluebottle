@@ -977,16 +977,26 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
 
 @admin.action(description="Adopt selected activities")
 def adopt_events(modeladmin, request, events):
+    adopted = 0
     for event in events:
-        if event.source.follow.adoption_type == 'link':
-            adapter.link(event)
-        if event.source.follow.adoption_type == 'template':
-            adapter.adopt(event)
-    modeladmin.message_user(
-        request,
-        _('{amount} activities have been adopted.').format(amount=len(events)),
-        messages.SUCCESS,
-    )
+        try:
+            if event.source.follow.adoption_type == 'link':
+                adapter.link(event, request)
+            if event.source.follow.adoption_type == 'template':
+                adapter.adopt(event, request)
+            adopted += 1
+        except Exception as error:
+            modeladmin.message_user(
+                request,
+                _('Failed to adopt {name}: {error}').format(name=event.name, error=error),
+                messages.ERROR,
+            )
+    if adopted:
+        modeladmin.message_user(
+            request,
+            _('{amount} activities have been adopted.').format(amount=adopted),
+            messages.SUCCESS,
+        )
 
 
 @admin.register(ReceivedActivity)

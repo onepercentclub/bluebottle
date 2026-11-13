@@ -199,6 +199,41 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             }
         )
 
+    def test_location_info_same_location_hint(self):
+        location = GeolocationFactory.create()
+        DateActivitySlotFactory.create_batch(
+            2, activity=self.activity, location=location, location_hint='First floor'
+        )
+        self.assertAttribute(
+            'location_info',
+            {
+                'has_multiple': False,
+                'is_online': False,
+                'location': activity_geolocation_display([location]),
+                'online_meeting_url': None,
+                'location_hint': 'First floor',
+            }
+        )
+
+    def test_location_info_different_location_hints(self):
+        location = GeolocationFactory.create()
+        DateActivitySlotFactory.create(
+            activity=self.activity, location=location, location_hint='First floor'
+        )
+        DateActivitySlotFactory.create(
+            activity=self.activity, location=location, location_hint='Second floor'
+        )
+        self.assertAttribute(
+            'location_info',
+            {
+                'has_multiple': False,
+                'is_online': False,
+                'location': activity_geolocation_display([location]),
+                'online_meeting_url': None,
+                'location_hint': None,
+            }
+        )
+
     def test_location_info_all_online(self):
         DateActivitySlotFactory.create_batch(
             3,

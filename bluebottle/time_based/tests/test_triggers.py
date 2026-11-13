@@ -474,6 +474,74 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.assertStatus(self.slot, "full")
 
+    def test_reject_and_accept_participant(self):
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        participant = DateParticipantFactory.create(registration=registration, slot=self.slot)
+        contribution = participant.contributions.exclude(
+            timecontribution__contribution_type='preparation'
+        ).get()
+
+        participant.states.reject(save=True)
+        self.assertStatus(contribution, 'failed')
+
+        participant.states.accept(save=True)
+        self.assertStatus(participant, 'accepted')
+        self.assertStatus(contribution, 'new')
+
+    def test_reject_and_accept_participant_running_slot(self):
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        participant = DateParticipantFactory.create(registration=registration, slot=self.slot)
+        contribution = participant.contributions.get()
+
+        participant.states.reject(save=True)
+        self.slot.start = now() - timedelta(minutes=30)
+        self.slot.save()
+        self.assertStatus(self.slot, 'running')
+
+        participant.states.accept(save=True)
+        self.assertStatus(participant, 'accepted')
+        self.assertStatus(contribution, 'new')
+
+    def test_reject_and_accept_participant_slot_without_start(self):
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        participant = DateParticipantFactory.create(registration=registration, slot=self.slot)
+        contribution = participant.contributions.get()
+
+        participant.states.reject(save=True)
+        self.slot.start = None
+        self.slot.save()
+
+        participant.states.accept(save=True)
+        self.assertStatus(participant, 'accepted')
+        self.assertStatus(contribution, 'new')
+
+    def test_withdraw_and_accept_participant(self):
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        participant = DateParticipantFactory.create(registration=registration, slot=self.slot)
+        contribution = participant.contributions.get()
+
+        participant.states.withdraw(save=True)
+        self.assertStatus(contribution, 'failed')
+
+        participant.states.accept(save=True)
+        self.assertStatus(participant, 'accepted')
+        self.assertStatus(contribution, 'new')
+
+    def test_reject_and_accept_participant_finished_slot(self):
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        participant = DateParticipantFactory.create(registration=registration, slot=self.slot)
+        contribution = participant.contributions.exclude(
+            timecontribution__contribution_type='preparation'
+        ).get()
+
+        participant.states.reject(save=True)
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
+        self.assertStatus(contribution, 'failed')
+
+        participant.states.accept(save=True)
+        self.assertStatus(participant, 'succeeded')
+        self.assertStatus(contribution, 'succeeded')
     def add_participant(self, user, as_user, slot=None):
         return DateParticipantFactory.create(
             activity=self.activity,

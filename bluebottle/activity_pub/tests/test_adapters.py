@@ -1,9 +1,19 @@
+import pickle
 from io import BytesIO
 from unittest import mock
 
-from django.test import TestCase
+from django.db import connection
+from django.test import TestCase, override_settings
+from kombu.exceptions import EncodeError
 
-from bluebottle.activity_pub.adapters import JSONLDAdapter
+from bluebottle.activity_pub.adapters import JSONLDAdapter, publish_to_recipient
+from bluebottle.activity_pub.models import Inbox
+from bluebottle.activity_pub.tests.factories import FollowFactory
+from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.test.factory_models.organizations import (
+    OrganizationFactory as BluebottleOrganizationFactory
+)
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class JSONLDAdapterTestCase(TestCase):
@@ -42,3 +52,48 @@ class JSONLDAdapterTestCase(TestCase):
 
         with self.assertRaises(Exception):
             self.adapter.execute('get', 'https://remote.example/resource')
+
+
+@override_settings(TESTING=False, CELERY_ALWAYS_EAGER=False)
+class PublishRecipientTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        SitePlatformSettings.objects.create(
+            organization=BluebottleOrganizationFactory.create()
+        )
+
+    def create_follow(self):
+        return FollowFactory.create(actor=None)
+
+    def test_task_gets_primitive_arguments(self):
+        with mock.patch('bluebottle.activity_pub.adapters.publish_to_recipient.delay') as delay:
+            follow = self.create_follow()
+
+        recipient = follow.recipients.get()
+        delay.assert_called_once_with(recipient.pk, connection.tenant.schema_name)
+        pickle.dumps(delay.call_args)
+
+    def test_queue_failure_does_not_fail_save(self):
+        with mock.patch(
+            'bluebottle.activity_pub.adapters.publish_to_recipient.delay',
+            side_effect=EncodeError("Can't pickle QuerySet.distinct")
+        ):
+            with mock.patch('bluebottle.activity_pub.adapters.logger') as logger:
+                follow = self.create_follow()
+
+        logger.exception.assert_called_once()
+        self.assertEqual(follow.recipients.count(), 1)
+
+    def test_task_publishes_recipient(self):
+        with mock.patch('bluebottle.activity_pub.adapters.publish_to_recipient.delay'):
+            follow = self.create_follow()
+
+        recipient = follow.recipients.get()
+        Inbox.objects.filter(pk=recipient.actor.inbox_id).update(iri='https://example.com/inbox')
+
+        with mock.patch.object(JSONLDAdapter, 'post') as post:
+            publish_to_recipient(recipient.pk, connection.tenant.schema_name)
+
+        post.assert_called_once()
+        recipient.refresh_from_db()
+        self.assertTrue(recipient.send)

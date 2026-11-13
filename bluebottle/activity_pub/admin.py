@@ -209,8 +209,7 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
 
         try:
             from bluebottle.activity_pub.adapters import publish_to_recipient
-            tenant = connection.tenant
-            publish_to_recipient.delay(recipient, tenant)
+            publish_to_recipient.delay(recipient.pk, connection.tenant.schema_name)
             self.message_user(
                 request,
                 _('Republish task queued for recipient {actor}.').format(actor=recipient.actor),

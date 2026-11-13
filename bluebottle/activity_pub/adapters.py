@@ -17,6 +17,7 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
+from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
 
@@ -162,9 +163,11 @@ def publish_activities(recipient, activities, tenant):
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
     name="bluebottle.activity_pub.adapters.publish_to_recipient"
 )
-def publish_to_recipient(recipient, tenant):
+def publish_to_recipient(recipient_id, schema_name):
     from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
+    tenant = Client.objects.get(schema_name=schema_name)
     with LocalTenant(tenant, clear_tenant=True):
+        recipient = Recipient.objects.get(pk=recipient_id)
         activity = recipient.activity
         actor = recipient.actor
         inbox = getattr(actor, "inbox", None)
@@ -206,9 +209,15 @@ def publish_recipient(instance, created, **kwargs):
             getattr(settings, 'TESTING', False) or
             getattr(settings, 'CELERY_ALWAYS_EAGER', False)
         ):
-            publish_to_recipient(instance, connection.tenant)
+            publish_to_recipient(instance.pk, connection.tenant.schema_name)
         else:
-            publish_to_recipient.delay(instance, connection.tenant)
+            try:
+                publish_to_recipient.delay(instance.pk, connection.tenant.schema_name)
+            except Exception:
+                logger.exception(
+                    'Could not queue publishing to recipient %s on tenant %s',
+                    instance.pk, connection.tenant.schema_name
+                )
 
         # Sometimes we need to send follow up activities to the recipient,
         # for example when the activity transitioned before the recipient was created

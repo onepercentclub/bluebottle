@@ -2,12 +2,15 @@ from io import BytesIO
 
 import mock
 import requests
+from django.contrib import messages
 from django.contrib.admin.sites import AdminSite
 from django.core.files import File
+from django.test import RequestFactory
 from django.urls import reverse
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.admin import FollowerAdmin
+from bluebottle.activity_pub import admin as admin_module
+from bluebottle.activity_pub.admin import FollowerAdmin, adopt_events
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import Accept, Follower, Following, Recipient
 from bluebottle.activity_pub.tests.factories import OrganizationFactory
@@ -202,3 +205,43 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         follower.refresh_from_db()
         self.assertEqual(follower.publish_mode, 'automatic')
         self.assertTrue(Accept.objects.filter(object=follower).exists())
+
+
+class AdoptEventsActionTestCase(BluebottleAdminTestCase):
+    def setUp(self):
+        super().setUp()
+        self.modeladmin = mock.Mock()
+        self.request = RequestFactory().post('/')
+        self.request.user = self.superuser
+        self.event = mock.Mock()
+        self.event.name = 'Event'
+        self.event.source.follow.adoption_type = 'template'
+
+    def test_adopt_passes_request(self):
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.adopt.assert_called_once_with(self.event, self.request)
+        self.assertEqual(self.modeladmin.message_user.call_args[0][2], messages.SUCCESS)
+
+    def test_link_passes_request(self):
+        self.event.source.follow.adoption_type = 'link'
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.link.assert_called_once_with(self.event, self.request)
+
+    def test_adopt_failure_reports_error_and_continues(self):
+        other = mock.Mock()
+        other.source.follow.adoption_type = 'template'
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            patched.adopt.side_effect = [ValueError('boom'), None]
+            with mock.patch.object(admin_module.logger, 'exception') as log:
+                adopt_events(self.modeladmin, self.request, [self.event, other])
+
+        log.assert_called_once()
+        self.assertIn('boom', str(log.call_args))
+        self.assertIn('boom', self.modeladmin.message_user.call_args_list[0][0][1])
+        self.assertEqual(patched.adopt.call_count, 2)
+        levels = [call[0][2] for call in self.modeladmin.message_user.call_args_list]
+        self.assertEqual(levels, [messages.ERROR, messages.SUCCESS])

@@ -1,3 +1,7 @@
+import logging
+from functools import wraps
+
+from django.db import connection
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_links.models import LinkedActivity
@@ -8,6 +12,25 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
 
+logger = logging.getLogger(__name__)
+
+
+def log_federation_errors(post_save):
+    @wraps(post_save)
+    def wrapper(self, **kwargs):
+        try:
+            return post_save(self, **kwargs)
+        except Exception:
+            logger.exception(
+                'Federation effect %s failed for tenant %s, %s %s',
+                self.__class__.__name__,
+                connection.tenant.schema_name,
+                self.instance.__class__.__name__,
+                self.instance.pk,
+            )
+
+    return wrapper
+
 
 class CreateEffect(Effect):
     """
@@ -17,6 +40,7 @@ class CreateEffect(Effect):
     display = True
     template = 'admin/activity_pub/create_effect.html'
 
+    @log_federation_errors
     def post_save(self, **kwargs):
         adapter.create_or_update_event(self.instance)
 
@@ -69,6 +93,7 @@ class UpdateEventEffect(Effect):
     display = True
     template = 'admin/activity_pub/update_event_effect.html'
 
+    @log_federation_errors
     def post_save(self, **kwargs):
         adapter.create_or_update_event(self.instance)
         Update.objects.create(

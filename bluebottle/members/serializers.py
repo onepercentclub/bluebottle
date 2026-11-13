@@ -903,8 +903,9 @@ class SAMLAuthenticationSerializer(BaseAuthenticationMethodSerializer):
         model = SAMLAuthentication
         fields = BaseAuthenticationMethodSerializer.Meta.fields + (
             'admin_login_enabled',
-            'organization'
+            'organization',
         )
+        meta_fields = ('redirect_url', )
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/saml'
@@ -926,6 +927,9 @@ class AuthenticationMethodSerializer(PolymorphicModelSerializer):
     class Meta:
         model = AuthenticationMethod
         fields = ('id', 'enabled')
+        # The JSON:API renderer reads meta_fields from the (polymorphic) parent
+        # serializer, not from the child. Only fields present on the resource are added.
+        meta_fields = ('redirect_url', )
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods'

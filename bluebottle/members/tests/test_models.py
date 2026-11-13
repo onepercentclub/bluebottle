@@ -1,13 +1,16 @@
+import re
+from datetime import datetime, timezone
 from bluebottle.members.models import PasswordAuthentication
 from bluebottle.test.utils import BluebottleTestCase
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.urls import reverse
 
 from bluebottle.members.models import SAMLAuthentication
 from bluebottle.members.tests.factories import (
-    FacebookAuthenticationFactory, GoogleAuthenticationFactory, PasswordAuthenticationFactory,
-    SAMLAuthenticationFactory
+    IDP_CERTIFICATE, FacebookAuthenticationFactory, GoogleAuthenticationFactory,
+    PasswordAuthenticationFactory, SAMLAuthenticationFactory
 )
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 
@@ -140,14 +143,102 @@ class GoogleAuthenticationTestCase(SingletonAuthenticationMethodTestMixin, Blueb
 
 
 class SAMLAuthenticationTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.method = SAMLAuthenticationFactory.create()
+
+    def test_parse(self):
+        self.assertEqual(
+            self.method.name_id_format, 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress'
+        )
+        self.assertTrue(
+            re.match('https://idp\d+.example.com/sso', self.method.signon_url)
+        )
+        self.assertTrue(
+            re.match('https://idp\d+.example.com', self.method.idp_entity_id)
+        )
+
+    def test_certificate(self):
+        self.assertEqual(
+            str(self.method.certificate.subject),
+            '<Name(C=NO,ST=Andreas Solberg,L=Foo,O=UNINETT,CN=feide.erlang.no,1.2.840.113549.1.9.1=andreas@uninett.no)>'
+        )
+        self.assertEqual(
+            self.method.certificate.not_valid_after_utc, datetime(2007, 8, 14, 12, 1, 35, tzinfo=timezone.utc)
+        )
+
+    def test_idp_metadata(self):
+        entity_id = self.method.entity_id
+        idp = self.method.idp_metadata['idp']
+
+        self.assertEqual(idp['entityId'], entity_id)
+        self.assertEqual(idp['x509cert'], IDP_CERTIFICATE)
+        self.assertEqual(
+            idp['singleSignOnService'],
+            {
+                'url': f'{entity_id}/sso',
+                'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            }
+        )
+        self.assertEqual(
+            idp['singleLogoutService'],
+            {
+                'url': f'{entity_id}/slo',
+                'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            }
+        )
+        self.assertEqual(
+            self.method.idp_metadata['sp']['NameIDFormat'],
+            'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress'
+        )
+
+    def test_idp_metadata_cached(self):
+        self.assertIs(self.method.idp_metadata, self.method.idp_metadata)
+
+    def test_metadata(self):
+        metadata = self.method.metadata
+
+        self.assertEqual(metadata['idp'], self.method.idp_metadata['idp'])
+        self.assertEqual(
+            metadata['sp'],
+            {
+                'entityId': self.method.entity_id,
+                'NameIDFormat': 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
+                'assertionConsumerService': {
+                    'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+                    'url': reverse('token-auth:saml-login'),
+                },
+                'singleLogoutService': {
+                    'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+                    'url': reverse('token-auth:saml-logout'),
+                },
+            }
+        )
+
+    def test_settings(self):
+        self.method.strict = True
+        self.method.debug = True
+
+        settings = self.method.settings
+
+        self.assertTrue(settings['strict'])
+        self.assertTrue(settings['debug'])
+        self.assertEqual(settings['security'], {'requestedAuthnContext': False})
+        self.assertEqual(settings['idp'], self.method.metadata['idp'])
+        self.assertEqual(settings['sp'], self.method.metadata['sp'])
+
+    def test_settings_defaults(self):
+        settings = self.method.settings
+
+        self.assertFalse(settings['strict'])
+        self.assertFalse(settings['debug'])
+
     def test_create_multiple(self):
-        SAMLAuthenticationFactory.create_batch(3)
+        SAMLAuthenticationFactory.create_batch(2)
 
         self.assertEqual(SAMLAuthentication.objects.count(), 3)
 
     def test_validate_second(self):
-        SAMLAuthenticationFactory.create()
-
         second = SAMLAuthenticationFactory.build(organization=OrganizationFactory.create())
 
         try:
@@ -163,6 +254,6 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
         FacebookAuthenticationFactory.create()
         GoogleAuthenticationFactory.create()
 
-        SAMLAuthenticationFactory.create_batch(2)
+        SAMLAuthenticationFactory.create()
 
         self.assertEqual(SAMLAuthentication.objects.count(), 2)

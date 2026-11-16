@@ -4,6 +4,7 @@ import mock
 import requests
 from django.contrib import messages
 from django.contrib.admin.sites import AdminSite
+from django.core.exceptions import PermissionDenied
 from django.core.files import File
 from django.test import RequestFactory
 from django.urls import reverse
@@ -214,6 +215,7 @@ class AdoptEventsActionTestCase(BluebottleAdminTestCase):
         self.request = RequestFactory().post('/')
         self.request.user = self.superuser
         self.event = mock.Mock()
+        self.event.adopted = False
         self.event.name = 'Event'
         self.event.source.follow.adoption_type = 'template'
 
@@ -233,6 +235,7 @@ class AdoptEventsActionTestCase(BluebottleAdminTestCase):
 
     def test_adopt_failure_reports_error_and_continues(self):
         other = mock.Mock()
+        other.adopted = False
         other.source.follow.adoption_type = 'template'
         with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
             patched.adopt.side_effect = [ValueError('boom'), None]
@@ -240,8 +243,35 @@ class AdoptEventsActionTestCase(BluebottleAdminTestCase):
                 adopt_events(self.modeladmin, self.request, [self.event, other])
 
         log.assert_called_once()
-        self.assertIn('boom', str(log.call_args))
         self.assertIn('boom', self.modeladmin.message_user.call_args_list[0][0][1])
         self.assertEqual(patched.adopt.call_count, 2)
         levels = [call[0][2] for call in self.modeladmin.message_user.call_args_list]
         self.assertEqual(levels, [messages.ERROR, messages.SUCCESS])
+
+    def test_already_adopted_is_skipped(self):
+        self.event.adopted = True
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.adopt.assert_not_called()
+        patched.link.assert_not_called()
+        self.assertEqual(self.modeladmin.message_user.call_args[0][2], messages.WARNING)
+
+    def test_unknown_adoption_type_reports_error(self):
+        self.event.source.follow.adoption_type = 'other'
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.adopt.assert_not_called()
+        patched.link.assert_not_called()
+        levels = [call[0][2] for call in self.modeladmin.message_user.call_args_list]
+        self.assertEqual(levels, [messages.ERROR])
+
+    def test_requires_add_permission(self):
+        self.request.user = mock.Mock()
+        self.request.user.has_perm.return_value = False
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            with self.assertRaises(PermissionDenied):
+                adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.adopt.assert_not_called()

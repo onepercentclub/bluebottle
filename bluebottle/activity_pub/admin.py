@@ -981,27 +981,42 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
 
 @admin.action(description="Adopt selected activities")
 def adopt_events(modeladmin, request, events):
+    if not request.user.has_perm("deeds.add_activity"):
+        raise PermissionDenied
+
     adopted = 0
+    skipped = 0
     for event in events:
+        if event.adopted:
+            skipped += 1
+            continue
+        adoption_type = event.source.follow.adoption_type
         try:
             with transaction.atomic():
-                if event.source.follow.adoption_type == 'link':
+                if adoption_type == 'link':
                     adapter.link(event, request)
-                if event.source.follow.adoption_type == 'template':
+                elif adoption_type == 'template':
                     adapter.adopt(event, request)
+                else:
+                    raise ValueError(f'Unknown adoption type {adoption_type}')
             adopted += 1
         except Exception as error:
             logger.exception(
-                'Failed to adopt received activity %s for tenant %s: %s',
+                'Failed to adopt received activity %s for tenant %s',
                 event.pk,
                 connection.tenant.schema_name,
-                error,
             )
             modeladmin.message_user(
                 request,
                 _('Failed to adopt {name}: {error}').format(name=event.name, error=error),
                 messages.ERROR,
             )
+    if skipped:
+        modeladmin.message_user(
+            request,
+            _('{amount} activities were already adopted and have been skipped.').format(amount=skipped),
+            messages.WARNING,
+        )
     if adopted:
         modeladmin.message_user(
             request,

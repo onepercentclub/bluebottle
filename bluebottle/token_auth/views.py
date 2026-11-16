@@ -8,10 +8,10 @@ from django.template import loader
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
 
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 
-from bluebottle.clients import properties
+from onelogin.saml2.response import OneLogin_Saml2_Response
+
 from bluebottle.members.models import SAMLAuthentication as SAMLAuthenticationMethod
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
@@ -21,16 +21,13 @@ from bluebottle.utils.utils import get_client_ip
 logger = logging.getLogger(__name__)
 
 
-def get_auth(request, settings, saml_request=None):
-    return SAMLAuthentication(request, settings, saml_request=saml_request)
-
-
 class TokenRedirectView(View):
     """
     Redirect to SSO login page
     """
     def target_url(self, request):
         url = request.GET.get('url')
+
         try:
             allowed = url and url_has_allowed_host_and_scheme(
                 url,
@@ -62,32 +59,36 @@ class TokenRedirectView(View):
             enabled=True
         )
 
-        auth = get_auth(request, settings=method.settings)
+        auth = SAMLAuthentication(request, method.settings)
         sso_url = auth.sso_url(target_url=self.target_url(request))
         return HttpResponseRedirect(sso_url)
 
 
 class SAMLLoginView(View):
-    def get_auth(self, request):
-        return get_auth(request, self.settings)
+    def get_method(self):
+        response = OneLogin_Saml2_Response({}, self.request.POST['SAMLResponse'])
+        methods = SAMLAuthenticationMethod.objects.filter(
+            entity_id__in=response.get_audiences(), enabled=True
+        )
 
-    def authenticated(self, user, auth, created):
-        pass
+        for method in methods:
+            if method.idp_entity_id in response.get_issuers():
+                return method
 
     def post(self, request):
-        auth = self.get_auth(request)
+        method = self.get_method()
+
+        if not method:
+            return HttpResponseForbidden('Unknown audience or issuer')
+
+        auth = SAMLAuthentication(request, method.settings)
 
         try:
-            user, created = auth.authenticate()
+            user, _created = auth.authenticate()
             user.backend = 'django.contrib.auth.backends.ModelBackend'
         except TokenAuthenticationError as e:
             url = '/token/error?message={0}'.format(e)
             return HttpResponseRedirect(url)
-
-        try:
-            self.authenticated(user, auth, created)
-        except PermissionDenied as e:
-            return HttpResponseForbidden(str(e))
 
         target_url = auth.target_url or "/"
 
@@ -117,7 +118,7 @@ class TokenLogoutView(TemplateView):
     template_name = 'token/token-logout.tpl'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
+        auth = SAMLAuthentication(request)
         url = auth.process_logout()
         if url:
             return HttpResponseRedirect(url)
@@ -142,6 +143,6 @@ class MetadataView(View):
 
     def get(self, request, *args, **kwargs):
         method = get_object_or_404(SAMLAuthenticationMethod, pk=kwargs['pk'])
-        auth = get_auth(request, settings=method.settings)
+        auth = SAMLAuthentication(request, method.settings)
 
         return HttpResponse(content=auth.get_metadata(), content_type='text/xml')

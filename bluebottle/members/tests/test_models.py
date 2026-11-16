@@ -278,7 +278,7 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
 
     def test_name_id_format_without_metadata_file(self):
         method = SAMLAuthenticationFactory.create(metadata_file=None)
-        self.assertIsNone(method.name_id_format)
+        self.assertEqual(method.name_id_format, 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified')
 
     def test_certificate_without_metadata_file(self):
         method = SAMLAuthenticationFactory.create(metadata_file=None)
@@ -294,7 +294,9 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
 
         self.assertNotIn('idp', metadata)
         self.assertEqual(metadata['sp']['entityId'], method.entity_id)
-        self.assertIsNone(metadata['sp']['NameIDFormat'])
+        self.assertEqual(
+            metadata['sp']['NameIDFormat'], 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+        )
 
     def test_settings_without_metadata_file(self):
         method = SAMLAuthenticationFactory.create(metadata_file=None)

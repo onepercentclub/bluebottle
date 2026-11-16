@@ -16,8 +16,7 @@ class TestBaseTokenAuthentication(TestCase):
     """
 
     def setUp(self):
-        with self.settings(TOKEN_AUTH={}):
-            self.auth = BaseTokenAuthentication(None, settings={})
+        self.auth = BaseTokenAuthentication(None)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -32,12 +31,11 @@ class TestBaseTokenAuthentication(TestCase):
         When the user is successfully authenticated,
         a new user should be created
         """
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.email, 'test@example.com')
 
     @patch.object(
         BaseTokenAuthentication,
@@ -50,16 +48,15 @@ class TestBaseTokenAuthentication(TestCase):
     )
     def test_user_created_location(self, authenticate_request):
         location = LocationFactory.create(name="Amsterdam")
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
 
-            user.refresh_from_db()
+        user.refresh_from_db()
 
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(user.location, location)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(user.location, location)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -72,16 +69,15 @@ class TestBaseTokenAuthentication(TestCase):
     )
     def test_user_created_location_different_case(self, authenticate_request):
         location = LocationFactory.create(name="Amsterdam")
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
 
-            user.refresh_from_db()
+        user.refresh_from_db()
 
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(user.location, location)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(user.location, location)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -95,16 +91,15 @@ class TestBaseTokenAuthentication(TestCase):
     def test_user_created_location_alternate_name(self, authenticate_request):
         location = LocationFactory.create(name="Amsterdam", alternate_names=["Mokum"])
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
 
-            user.refresh_from_db()
+        user.refresh_from_db()
 
-            self.assertEqual(user.email, "test@example.com")
-            self.assertEqual(user.location, location)
+        self.assertEqual(user.email, "test@example.com")
+        self.assertEqual(user.location, location)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -120,16 +115,15 @@ class TestBaseTokenAuthentication(TestCase):
 
         location = LocationFactory.create(name="Amsterdam")
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertFalse(created)
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertFalse(created)
 
-            user.refresh_from_db()
+        user.refresh_from_db()
 
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(user.location, location)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(user.location, location)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -149,16 +143,15 @@ class TestBaseTokenAuthentication(TestCase):
 
         LocationFactory.create(name="Amsterdam")
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertFalse(created)
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertFalse(created)
 
-            user.refresh_from_db()
+        user.refresh_from_db()
 
-            self.assertEqual(user.email, "test@example.com")
-            self.assertEqual(user.location, location)
+        self.assertEqual(user.email, "test@example.com")
+        self.assertEqual(user.location, location)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -170,13 +163,12 @@ class TestBaseTokenAuthentication(TestCase):
         },
     )
     def test_user_created_location_missing(self, authenticate_request):
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertIsNone(user.location)
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertIsNone(user.location)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -192,13 +184,12 @@ class TestBaseTokenAuthentication(TestCase):
         member_settings.create_locations = True
         member_settings.save()
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.email, "test@example.com")
-            self.assertEqual(user.location.name, "Amsterdam")
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.email, "test@example.com")
+        self.assertEqual(user.location.name, "Amsterdam")
 
     @patch.object(
         BaseTokenAuthentication,
@@ -219,28 +210,27 @@ class TestBaseTokenAuthentication(TestCase):
         unit_segment = SegmentFactory.create(name='Marketing', segment_type=unit)
         SegmentFactory.create(name='Communications', segment_type=unit, email_domains=[])
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertTrue(
-                team_segment in user.segments.all()
-            )
-            self.assertTrue(
-                unit_segment in user.segments.all()
-            )
-            self.assertFalse(
-                UserSegment.objects.get(segment=team_segment, member=user).verified
-            )
-            self.assertFalse(
-                UserSegment.objects.get(segment=unit_segment, member=user).verified
-            )
-            self.assertEqual(
-                user.required,
-                []
-            )
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertTrue(
+            team_segment in user.segments.all()
+        )
+        self.assertTrue(
+            unit_segment in user.segments.all()
+        )
+        self.assertFalse(
+            UserSegment.objects.get(segment=team_segment, member=user).verified
+        )
+        self.assertFalse(
+            UserSegment.objects.get(segment=unit_segment, member=user).verified
+        )
+        self.assertEqual(
+            user.required,
+            []
+        )
 
     @patch.object(
         BaseTokenAuthentication,
@@ -256,32 +246,30 @@ class TestBaseTokenAuthentication(TestCase):
         team_segment = SegmentFactory.create(name='Online Marketing', segment_type=team, email_domains=[])
         other_segment = SegmentFactory.create(name='Direct Marketing', segment_type=team, email_domains=[])
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertTrue(
-                team_segment in user.segments.all()
-            )
-            self.assertTrue(
-                other_segment not in user.segments.all()
-            )
-            self.assertFalse(UserSegment.objects.get(segment=team_segment, member=user).verified)
+        self.assertTrue(
+            team_segment in user.segments.all()
+        )
+        self.assertTrue(
+            other_segment not in user.segments.all()
+        )
+        self.assertFalse(UserSegment.objects.get(segment=team_segment, member=user).verified)
 
         user.segments.add(
             other_segment,
             through_defaults={'verified': False}
         )
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertTrue(
-                team_segment in user.segments.all()
-            )
-            self.assertTrue(
-                other_segment not in user.segments.all()
-            )
-            self.assertFalse(UserSegment.objects.get(segment=team_segment, member=user).verified)
+        self.assertTrue(
+            team_segment in user.segments.all()
+        )
+        self.assertTrue(
+            other_segment not in user.segments.all()
+        )
+        self.assertFalse(UserSegment.objects.get(segment=team_segment, member=user).verified)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -299,8 +287,7 @@ class TestBaseTokenAuthentication(TestCase):
         )
         other_segment = SegmentFactory.create(name='Direct Marketing', segment_type=team, email_domains=[])
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
         user.segments.clear()
         user.segments.add(
@@ -308,17 +295,16 @@ class TestBaseTokenAuthentication(TestCase):
             through_defaults={'verified': True}
         )
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertTrue(
-                team_segment not in user.segments.all()
-            )
+        self.assertTrue(
+            team_segment not in user.segments.all()
+        )
 
-            self.assertTrue(
-                other_segment in user.segments.all()
-            )
-            self.assertTrue(UserSegment.objects.get(segment=other_segment, member=user).verified)
+        self.assertTrue(
+            other_segment in user.segments.all()
+        )
+        self.assertTrue(UserSegment.objects.get(segment=other_segment, member=user).verified)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -343,18 +329,17 @@ class TestBaseTokenAuthentication(TestCase):
         unit_segment = SegmentFactory.create(name='Marketing', segment_type=unit)
         SegmentFactory.create(name='Communications', segment_type=unit)
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertTrue(
-                team_segment in user.segments.all()
-            )
-            self.assertTrue(
-                unit_segment in user.segments.all()
-            )
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertTrue(
+            team_segment in user.segments.all()
+        )
+        self.assertTrue(
+            unit_segment in user.segments.all()
+        )
 
     @patch.object(
         BaseTokenAuthentication,
@@ -378,15 +363,14 @@ class TestBaseTokenAuthentication(TestCase):
             email_domains=[]
         )
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertTrue(
-                team_segment in user.segments.all()
-            )
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertTrue(
+            team_segment in user.segments.all()
+        )
 
     @patch.object(
         BaseTokenAuthentication,
@@ -409,13 +393,12 @@ class TestBaseTokenAuthentication(TestCase):
         )
         SegmentFactory.create(name='Direct Marketing', segment_type=team)
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(len(user.segments.all()), 0)
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(len(user.segments.all()), 0)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -432,15 +415,14 @@ class TestBaseTokenAuthentication(TestCase):
         member_settings.save()
         SegmentTypeFactory.create(name='Team')
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(len(user.segments.all()), 1)
-            self.assertEqual(user.segments.first().name, 'Online Marketing')
-            self.assertEqual(user.segments.first().alternate_names, ['Online Marketing'])
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(len(user.segments.all()), 1)
+        self.assertEqual(user.segments.first().name, 'Online Marketing')
+        self.assertEqual(user.segments.first().alternate_names, ['Online Marketing'])
 
     @patch.object(
         BaseTokenAuthentication,
@@ -466,19 +448,18 @@ class TestBaseTokenAuthentication(TestCase):
             SegmentFactory.create(name='Communications', segment_type=unit)
         )
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertFalse(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(len(user.segments.all()), 2)
-            self.assertTrue(
-                team_segment in user.segments.all()
-            )
-            self.assertTrue(
-                unit_segment in user.segments.all()
-            )
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertFalse(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(len(user.segments.all()), 2)
+        self.assertTrue(
+            team_segment in user.segments.all()
+        )
+        self.assertTrue(
+            unit_segment in user.segments.all()
+        )
 
     @patch.object(
         BaseTokenAuthentication,
@@ -500,12 +481,11 @@ class TestBaseTokenAuthentication(TestCase):
         SegmentFactory.create(name='Marketing', segment_type=unit)
         SegmentFactory.create(name='Communications', segment_type=unit)
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertFalse(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(len(user.segments.all()), 0)
+        user, created = self.auth.authenticate()
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertFalse(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(len(user.segments.all()), 0)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -524,10 +504,9 @@ class TestBaseTokenAuthentication(TestCase):
         SegmentTypeFactory.create(name='Team')
         SegmentTypeFactory.create(name='Unit')
 
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(len(user.segments.all()), 2)
+        user, created = self.auth.authenticate()
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(len(user.segments.all()), 2)
 
     @patch.object(
         BaseTokenAuthentication,
@@ -538,14 +517,13 @@ class TestBaseTokenAuthentication(TestCase):
         }
     )
     def test_user_already_exists(self, authenticate_request):
-        with self.settings(TOKEN_AUTH={}):
-            get_user_model()(remote_id='test@example.com', email='test@example.com').save()
+        get_user_model()(remote_id='test@example.com', email='test@example.com').save()
 
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertFalse(created)
-            self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertFalse(created)
+        self.assertEqual(user.email, 'test@example.com')
 
     @patch.object(
         BaseTokenAuthentication,
@@ -553,14 +531,13 @@ class TestBaseTokenAuthentication(TestCase):
         return_value={'remote_id': 'test@example.com'}
     )
     def test_user_already_exists_only_remote_id(self, authenticate_request):
-        with self.settings(TOKEN_AUTH={}):
-            get_user_model()(remote_id='test@example.com', email='test@example.com').save()
+        get_user_model()(remote_id='test@example.com', email='test@example.com').save()
 
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertFalse(created)
-            self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertFalse(created)
+        self.assertEqual(user.email, 'test@example.com')
 
     @patch.object(
         BaseTokenAuthentication,
@@ -571,15 +548,14 @@ class TestBaseTokenAuthentication(TestCase):
         }
     )
     def test_user_already_exists_without_remote_id(self, authenticate_request):
-        with self.settings(TOKEN_AUTH={}):
-            get_user_model()(email='test@example.com').save()
+        get_user_model()(email='test@example.com').save()
 
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertFalse(created)
-            self.assertEqual(user.email, 'test@example.com')
-            self.assertEqual(user.remote_id, 'test@example.com')
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertFalse(created)
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(user.remote_id, 'test@example.com')
 
     @patch.object(
         BaseTokenAuthentication,
@@ -589,12 +565,11 @@ class TestBaseTokenAuthentication(TestCase):
         }
     )
     def test_user_new_only_remote_id(self, authenticate_request):
-        with self.settings(TOKEN_AUTH={}):
-            user, created = self.auth.authenticate()
+        user, created = self.auth.authenticate()
 
-            self.assertEqual(authenticate_request.call_count, 1)
-            self.assertTrue(created)
-            self.assertEqual(user.remote_id, 'test@example.com')
+        self.assertEqual(authenticate_request.call_count, 1)
+        self.assertTrue(created)
+        self.assertEqual(user.remote_id, 'test@example.com')
 
     @patch.object(
         BaseTokenAuthentication,

@@ -47,13 +47,13 @@ def get_saml_request(request):
 
 class SAMLAuthentication(BaseTokenAuthentication):
 
-    def __init__(self, request, settings, saml_request=None, **kwargs):
-        super(SAMLAuthentication, self).__init__(request, settings, **kwargs)
-        self.saml_request = saml_request
+    def __init__(self, request, settings):
+        self.settings = settings
+        super().__init__(request)
 
     @cached_property
     def auth(self):
-        return OneLogin_Saml2_Auth(self.saml_request or get_saml_request(self.request), self.settings)
+        return OneLogin_Saml2_Auth(get_saml_request(self.request), self.settings)
 
     def sso_url(self, target_url=None):
         result = self.auth.login(
@@ -140,7 +140,6 @@ class SAMLAuthentication(BaseTokenAuthentication):
             # del self.request.session['saml_request_id']
             self.attributes = self.auth.get_attributes()
             self.attributes['nameId'] = [self.auth.get_nameid()]
-
             return self.parse_user(self.attributes)
         else:
             error = "Saml login error: {}, reason: {}, assertions: {}".format(

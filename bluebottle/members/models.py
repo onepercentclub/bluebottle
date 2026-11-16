@@ -707,12 +707,31 @@ class SAMLAuthentication(AuthenticationMethod):
         return metadata
 
     @property
+    def assertion_mapping(self):
+        mapping = {
+            'remote_id': self.remote_id_attribute,
+            'email': self.email_attribute,
+            'last_name': self.last_name_attribute,
+            'first_name': self.first_name_attribute,
+            'office.name': self.work_location_attribute
+        }
+
+        mapping.update(
+            (f'segment.{segment_mapping.segment_type.slug}', segment_mapping.source_attribute)
+            for segment_mapping in self.samlsegmentmapping_set.select_related('segment_type')
+        )
+
+        return mapping
+
+    @property
     def settings(self):
         metadata = self.metadata
         return dict(
             strict=self.strict,
             debug=self.debug,
+            provision=self.provision,
             security={'requestedAuthnContext': False},
+            assertion_mapping=self.assertion_mapping,
             **metadata
         )
 
@@ -748,7 +767,7 @@ class SAMLAuthentication(AuthenticationMethod):
 
     @property
     def name_id_format(self):
-        if self.idp_metadata and 'sp' in self.idp_metadata and 'NameIdFormat' in self.idp_metadata['sp']:
+        if self.idp_metadata and 'sp' in self.idp_metadata and 'NameIDFormat' in self.idp_metadata['sp']:
             return self.idp_metadata['sp']['NameIDFormat']
         else:
             return 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
@@ -764,7 +783,7 @@ class SAMLAuthentication(AuthenticationMethod):
 class SAMLSegmentMapping(models.Model):
     authentication_method = models.ForeignKey(SAMLAuthentication, on_delete=models.CASCADE)
     source_attribute = models.CharField(_('Source attribute'))
-    segment = models.ForeignKey('segments.segment', on_delete=models.CASCADE)
+    segment_type = models.ForeignKey('segments.segmenttype', on_delete=models.CASCADE)
 
 
 from . import signals  # noqa

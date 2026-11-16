@@ -1382,6 +1382,13 @@ class PeriodicRegistration(Registration):
         else:
             return []
 
+    @property
+    def unfinished_participants(self):
+        if self.pk:
+            return self.periodicparticipant_set.exclude(slot__status='finished')
+        else:
+            return []
+
     class Meta:
         verbose_name = _("Candidate for recurring activities")
         verbose_name_plural = _("Candidates for recurring activities")

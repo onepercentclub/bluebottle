@@ -2,22 +2,19 @@ import logging
 import re
 
 import django_otp
+from bluebottle.clients import properties
+from bluebottle.members.models import MemberPlatformSettings, SAMLAuthentication as SAMLAuthenticationMethod
+from bluebottle.token_auth.auth.saml import SAMLAuthentication
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.token_auth.models import SAMLDevice
 from django.conf import settings
 from django.contrib.auth import login
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
 from django.template import loader
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
-
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
-
-from bluebottle.clients import properties
-from bluebottle.members.models import MemberPlatformSettings, SAMLAuthentication as SAMLAuthenticationMethod
-from bluebottle.token_auth.auth.saml import SAMLAuthentication
-from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.models import SAMLDevice
-from bluebottle.utils.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +52,6 @@ class TokenRedirectView(View):
         return request.build_absolute_uri('/')
 
     def get(self, request, *args, **kwargs):
-        client_ip = get_client_ip(request)
 
         method = get_object_or_404(
             SAMLAuthenticationMethod.objects.exclude(

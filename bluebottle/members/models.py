@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import uuid
+
 from builtins import object
 from datetime import timedelta, datetime
 
@@ -7,12 +9,14 @@ from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import validate_email
-from django.db import models
+from django.db import models, connection
 from django.db.models import Sum, CharField
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
+from django.urls import reverse
+
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
 
@@ -25,6 +29,11 @@ from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType, Segment
+
+from onelogin.saml2 import idp_metadata_parser
+from cryptography import x509
+
+metadata_parser = idp_metadata_parser.OneLogin_Saml2_IdPMetadataParser()
 
 
 def default_support_groups():
@@ -497,6 +506,7 @@ class UserActivity(models.Model):
 
 
 class AuthenticationMethod(PolymorphicModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     enabled = models.BooleanField(_('Enabled'), default=True)
 
     class JSONAPIMeta:
@@ -629,26 +639,119 @@ class GoogleAuthentication(SingletonAuthenticationMixin, AuthenticationMethod):
 
 class SAMLAuthentication(AuthenticationMethod):
     entity_id = models.CharField(_('Entity id'))
-    local_entity_id = models.CharField(_('Local entity id'))
     organization = models.ForeignKey('organizations.Organization', on_delete=models.CASCADE)
-
-    certificate = models.CharField(_('x509 certificate'))
-    single_sign_on_url = models.CharField(_('Single sign on url'))
-    single_logout_url = models.CharField(_('Single logout url'))
-    name_id_format = models.CharField(_('Name id format'))
 
     remote_id_attribute = models.CharField(_('Remote id attribute'))
     email_attribute = models.CharField(_('Email attribute'))
     last_name_attribute = models.CharField(_('Last name attribute'))
     first_name_attribute = models.CharField(_('First name attribute'))
-    work_location_attribute = models.CharField(_('Work location attribute'))
+    work_location_attribute = models.CharField(_('Work location attribute'), null=True, blank=True)
 
-    metadata_file = models.FileField(upload_to='members/saml-metadata', null=True)
+    metadata_file = models.FileField(upload_to='members/saml-metadata', null=True, blank=True)
 
-    admin_login_enabled = models.BooleanField(_('Admin login enabled'), default=True)
-    provision = models.BooleanField(_('Provision users'), default=True)
-    debug = models.BooleanField(_('Debug'), default=True)
-    strict = models.BooleanField(_('Strict'), default=True)
+    admin_login_enabled = models.BooleanField(
+        _('Admin login enabled'), default=True, help_text=_('Let users login into to the admin using SSO')
+    )
+    provision = models.BooleanField(
+        _('Provision users'),
+        default=True,
+        help_text=_('Provision user on login. Disable this if the platform implments SCIM')
+    )
+    debug = models.BooleanField(
+        _('Debug'), default=False, help_text=_('Log more data, to make it easier to debug the intergration')
+    )
+    strict = models.BooleanField(_('Strict'), default=False, help_text=_('Be more strict when checking login requests'))
+
+    @property
+    def idp_metadata(self):
+        if not hasattr(self, '_parsed') and self.metadata_file:
+            self.metadata_file.seek(0)
+            self._parsed = metadata_parser.parse(self.metadata_file.read())
+
+        return getattr(self, '_parsed', None)
+
+    @property
+    def signon_url(self):
+        if self.idp_metadata:
+            return self.idp_metadata['idp']['singleSignOnService']['url']
+
+    @property
+    def idp_entity_id(self):
+        if self.idp_metadata:
+            return self.idp_metadata['idp']['entityId']
+
+    @property
+    def metadata(self):
+        metadata = {
+            'sp': {
+                'entityId': self.entity_id,
+                'NameIDFormat': self.name_id_format,
+                'assertionConsumerService': {
+                    'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+                    'url': connection.tenant.build_absolute_url(
+                        reverse('token-auth:saml-login')
+                    )
+                },
+                'singleLogoutService': {
+                    'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+                    'url': connection.tenant.build_absolute_url(
+                        reverse('token-auth:saml-logout')
+                    )
+
+                }
+            }
+        }
+        if self.idp_metadata:
+            metadata['idp'] = self.idp_metadata['idp']
+
+        return metadata
+
+    @property
+    def settings(self):
+        metadata = self.metadata
+        return dict(
+            strict=self.strict,
+            debug=self.debug,
+            security={'requestedAuthnContext': False},
+            **metadata
+        )
+
+    @property
+    def certificate(self):
+        if self.idp_metadata:
+            cert_string = (
+                f"-----BEGIN CERTIFICATE-----\n{self.idp_metadata['idp']['x509cert']}\n-----END CERTIFICATE-----"
+            )
+            return x509.load_pem_x509_certificate(cert_string.encode())
+
+    @property
+    def idp_certificate_expiration(self):
+        if self.certificate:
+            return self.certificate.not_valid_after_utc
+
+    @property
+    def single_signon_url(self):
+        if self.idp_metadata:
+            return self.idp_metadata['idp']['singleSignOnService']['url']
+
+    @property
+    def redirect_url(self):
+        return connection.tenant.build_absolute_url(
+            reverse('token-auth:saml-redirect', args=(self.pk, ))
+        )
+
+    @property
+    def metadata_url(self):
+        return connection.tenant.build_absolute_url(
+            reverse('token-auth:saml-metadata', args=(self.pk, ))
+        )
+
+    @property
+    def name_id_format(self):
+        if self.idp_metadata and 'sp' in self.idp_metadata and 'NameIdFormat' in self.idp_metadata['sp']:
+            return self.idp_metadata['sp']['NameIDFormat']
+        else:
+            return 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods/saml'

@@ -142,7 +142,10 @@ class BasePermissionField(serializers.Field):
 
         # Loop over all methods and check the permissions on the view
         permissions = {}
-        user = self.context['request'].user
+        if 'request' in self.context:
+            user = self.context['request'].user
+        else:
+            user = AnonymousUser()
 
         for method in view.allowed_methods:
             permissions[method] = self._method_permissions(method, user, view, value)

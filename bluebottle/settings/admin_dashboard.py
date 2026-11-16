@@ -311,7 +311,7 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["members.change_memberplatformsettings"],
             },
             {
-                "name": "members.change_authenticationmethod",
+                "name": "members.authenticationmethod",
                 "permissions": ["members.change_authenticationmethod"],
             },
             {

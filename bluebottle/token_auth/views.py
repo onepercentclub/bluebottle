@@ -2,6 +2,11 @@ import logging
 import re
 
 import django_otp
+from bluebottle.clients import properties
+from bluebottle.members.models import MemberPlatformSettings, SAMLAuthentication as SAMLAuthenticationMethod
+from bluebottle.token_auth.auth.saml import SAMLAuthentication
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.token_auth.models import SAMLDevice
 from django.conf import settings
 from django.contrib.auth import login
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
@@ -9,13 +14,7 @@ from django.template import loader
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
 from rest_framework.exceptions import PermissionDenied
-
-from bluebottle.clients import properties
-from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.token_auth.auth.saml import SAMLAuthentication
-from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.models import SAMLDevice
-from bluebottle.utils.utils import get_client_ip
+from rest_framework.generics import get_object_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +52,17 @@ class TokenRedirectView(View):
         return request.build_absolute_uri('/')
 
     def get(self, request, *args, **kwargs):
-        client_ip = get_client_ip(request)
 
-        if client_ip == settings.VPN_CLIENT_IP or client_ip == '127.0.0.1':
-            saml_settings = settings.SUPPORT_TOKEN_AUTH
-        else:
-            saml_settings = properties.TOKEN_AUTH
+        method = get_object_or_404(
+            SAMLAuthenticationMethod.objects.exclude(
+                metadata_file='',
+            ),
+            pk=kwargs['pk'],
+            metadata_file__isnull=False,
+            enabled=True
+        )
 
-        auth = get_auth(request, settings=saml_settings, **kwargs)
+        auth = get_auth(request, settings=method.settings)
         sso_url = auth.sso_url(target_url=self.target_url(request))
         return HttpResponseRedirect(sso_url)
 
@@ -181,6 +183,7 @@ class MetadataView(View):
     """
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
-        metadata = auth.get_metadata()
-        return HttpResponse(content=metadata, content_type='text/xml')
+        method = get_object_or_404(SAMLAuthenticationMethod, pk=kwargs['pk'])
+        auth = get_auth(request, settings=method.settings)
+
+        return HttpResponse(content=auth.get_metadata(), content_type='text/xml')

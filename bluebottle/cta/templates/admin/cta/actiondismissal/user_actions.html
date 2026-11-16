@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a> &rsaquo;
+    <a href="{{ dismissals_url }}">{{ opts.verbose_name_plural|capfirst }}</a> &rsaquo;
+    {% trans "Current actions" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <form method="get">
+      <p>
+        <label for="user">{% trans "Member id" %}</label>
+        <input type="number" name="user" id="user" value="{{ user_id }}">
+        <input type="submit" value="{% trans 'Show actions' %}">
+      </p>
+    </form>
+
+    {% if user_id and not member %}
+      <p>{% trans "No member found with that id." %}</p>
+    {% elif member %}
+      <h2>{{ member }} ({{ member.email }})</h2>
+      {% if items %}
+        <table>
+          <thead>
+            <tr>
+              <th>{% trans "Type" %}</th>
+              <th>{% trans "Severity" %}</th>
+              <th>{% trans "Title" %}</th>
+              <th>{% trans "Message" %}</th>
+              <th>{% trans "Count" %}</th>
+              <th>{% trans "Snoozed until" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr>
+                <td>{{ item.type }}{% if item.is_demo %} (demo){% endif %}</td>
+                <td>{{ item.severity }}</td>
+                <td>{{ item.title }}</td>
+                <td>{{ item.message }}</td>
+                <td>{{ item.count }}</td>
+                <td>{{ item.snoozed_until|default:"-" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>{% trans "This member has no actions." %}</p>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endblock %}

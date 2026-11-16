@@ -57,7 +57,15 @@ class TokenRedirectView(View):
     def get(self, request, *args, **kwargs):
         client_ip = get_client_ip(request)
 
-        method = get_object_or_404(SAMLAuthenticationMethod, pk=kwargs['pk'])
+        method = get_object_or_404(
+            SAMLAuthenticationMethod.objects.exclude(
+                metadata_file='',
+            ),
+            pk=kwargs['pk'],
+            metadata_file__isnull=False,
+            enabled=True
+        )
+
         auth = get_auth(request, settings=method.settings)
         sso_url = auth.sso_url(target_url=self.target_url(request))
         return HttpResponseRedirect(sso_url)

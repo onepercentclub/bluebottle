@@ -62,6 +62,7 @@ from bluebottle.time_based.states import (
     RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
     RegistrationStateMachine
 )
+from bluebottle.time_based.triggers.registrations import is_manager
 
 
 def activity_is_expired(effect):
@@ -1023,6 +1024,15 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
+            TeamScheduleParticipantStateMachine.schedule,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+            ],
+        ),
+        TransitionTrigger(
             TeamScheduleParticipantStateMachine.unschedule,
             effects=[
                 RelatedTransitionEffect(
@@ -1239,6 +1249,16 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 DeleteInterestEffect,
                 CreateDateRegistrationEffect,
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.restore,
+                    conditions=[is_participant],
+                ),
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.add,
+                    conditions=[is_manager],
+                ),
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.add,

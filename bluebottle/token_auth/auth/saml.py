@@ -17,6 +17,7 @@ from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.errors import OneLogin_Saml2_Error
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
+from bluebottle.geo.models import Location
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
@@ -114,12 +115,30 @@ class SAMLAuthentication(BaseTokenAuthentication):
         ]:
             source = getattr(self.method, field)
             target = field.replace('_attribute', '')
-            if source in user_data:
+            if source in user_data and user_data[source]:
                 data[target] = user_data[source][0]
             else:
                 logger.error('Missing claim {}({})'.format(source, target))
 
         return data
+
+    def get_location(self):
+        source = self.method.work_location_attribute
+
+        if source:
+            if source in self.attributes and self.attributes[source]:
+                name = self.attributes[source][0]
+                location = Location.objects.extra(
+                    where=["%s ILIKE ANY (alternate_names)"],
+                    params=[
+                        name.lower(),
+                    ],
+                ).first()
+                if location:
+                    return location
+                else:
+                    if MemberPlatformSettings.load().create_locations:
+                        return Location.objects.create(name=name)
 
     def get_segments(self):
         segments = {}

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-16 12:35+0100\n"
-"PO-Revision-Date: 2026-11-17 10:41\n"
+"PO-Revision-Date: 2026-11-17 11:04\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -13138,7 +13138,8 @@ msgstr "Retirer les participants"
 #: bluebottle/time_based/templates/admin/remove_periodic_participants.html:5
 msgid "\n"
 "    Remove the participants of this registration on slots that have not finished and fail their contributions.\n"
-msgstr "Retirer les participants de cette inscription sur les créneaux qui n'ont pas fini et échouer leurs contributions."
+msgstr "\n"
+"Retirer les participants de cette inscription sur les créneaux qui n'ont pas fini et échouer leurs contributions.\n"
 
 #: bluebottle/time_based/templates/admin/reset_slot_selection.html:2
 msgid "Reset slot selection to 'all'"

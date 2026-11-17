@@ -295,6 +295,33 @@ class DateRegistrationTriggerTestCase(
 
         self.assertEqual(self.registration.participants.get().status, "accepted")
 
+    def test_reject_then_accept_resets_contribution(self):
+        self.test_reject_then_accept()
+
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.contribution, "new")
+
+    def test_reject_then_accept_after_slot_finished(self):
+        super().test_reject()
+        self.slot.start = now() - timedelta(days=3)
+        self.slot.save()
+        self.assertStatus(self.slot, "finished")
+        self.assertStatus(self.contribution, "failed")
+
+        self.registration.states.accept(save=True)
+
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.contribution, "succeeded")
+
+    def test_initial_keeps_single_new_contribution(self):
+        self.create()
+
+        self.assertStatus(self.participant, "accepted")
+        self.assertEqual(self.participant.contributions.count(), 1)
+        self.assertStatus(self.contribution, "new")
+
 
 class DeadlineRegistrationTriggerTestCase(
     RegistrationTriggerTestCase, BluebottleTestCase

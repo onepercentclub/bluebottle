@@ -1,4 +1,5 @@
 from builtins import object
+
 import factory
 
 from bluebottle.organizations.models import OrganizationContact, Organization
@@ -11,7 +12,6 @@ class OrganizationFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Organization_{0}'.format(n))
     slug = factory.Sequence(lambda n: 'organization_{0}'.format(n))
-    description = 'Some info'
     website = 'https://goodup.com'
     owner = factory.SubFactory(BlueBottleUserFactory)
 

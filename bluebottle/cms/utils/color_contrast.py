@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-from typing import List, Optional, Sequence
+from typing import Callable, List, Optional, Sequence
 
 import wcag_contrast_ratio as contrast
 from PIL import ImageColor
+from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 
 PAGE_BACKGROUND = '#FFFFFF'
 WHITE = '#FFFFFF'
+BLACK = '#000000'
 DARK_NEUTRAL = '#2A2A2A'
 PALE_GREY = '#EEEEEE'
 DARK_TEXT_RATIO = 7
@@ -25,19 +27,6 @@ class PairResult:
     passes: bool
 
 
-def hex_to_rgb(hex_color: str):
-    rgb = ImageColor.getcolor(hex_color, 'RGB')
-    return tuple(channel / 255.0 for channel in rgb)
-
-
-def contrast_ratio(foreground: str, background: str) -> float:
-    return contrast.rgb(hex_to_rgb(foreground), hex_to_rgb(background))
-
-
-def passes_aa(foreground: str, background: str, large: bool = False) -> bool:
-    return contrast.passes_AA(contrast_ratio(foreground, background), large=large)
-
-
 def _normalize_hex(value: Optional[str]) -> Optional[str]:
     if not value:
         return None
@@ -51,65 +40,102 @@ def _normalize_hex(value: Optional[str]) -> Optional[str]:
     return value.upper()
 
 
-def _round_channel(value: float) -> int:
-    return max(0, min(255, int(value + 0.5)))
+class Color:
+    """A hex colour with the mixing and WCAG contrast helpers we need."""
+
+    def __init__(self, hex_color: str):
+        self.hex = hex_color
+
+    @classmethod
+    def parse(cls, value: Optional[str]) -> Optional['Color']:
+        hex_color = _normalize_hex(value)
+        return cls(hex_color) if hex_color else None
+
+    def __str__(self):
+        return self.hex
+
+    @property
+    def rgb(self):
+        return ImageColor.getcolor(self.hex, 'RGB')
+
+    def contrast_with(self, other: 'Color') -> float:
+        return contrast.rgb(
+            tuple(channel / 255.0 for channel in self.rgb),
+            tuple(channel / 255.0 for channel in other.rgb),
+        )
+
+    def passes_aa_on(self, other: 'Color', large: bool = False) -> bool:
+        return contrast.passes_AA(self.contrast_with(other), large=large)
+
+    def mix(self, other: 'Color', amount: int) -> 'Color':
+        """Move `amount` percent of the way towards `other`."""
+        weight = amount / 100.0
+        channels = [
+            max(0, min(255, int(own + (target - own) * weight + 0.5)))
+            for own, target in zip(self.rgb, other.rgb)
+        ]
+        return Color('#{:02X}{:02X}{:02X}'.format(*channels))
+
+    def with_white(self, amount: int) -> 'Color':
+        return self.mix(Color(WHITE), amount)
+
+    def with_black(self, amount: int) -> 'Color':
+        return self.mix(Color(BLACK), amount)
+
+    def darkened_until(self, is_readable: Callable[['Color'], bool]) -> Optional['Color']:
+        """Smallest amount of black that makes this colour pass `is_readable`."""
+        low, high, best = 1, 100, None
+        while low <= high:
+            mid = (low + high) // 2
+            candidate = self.with_black(mid)
+            if is_readable(candidate):
+                best = candidate
+                high = mid - 1
+            else:
+                low = mid + 1
+        return best
+
+    def readable_on(self, background: 'Color') -> 'Color':
+        if self.passes_aa_on(background):
+            return self
+        return self.darkened_until(lambda c: c.passes_aa_on(background)) or Color(DARK_NEUTRAL)
+
+    def readable_fill(self) -> 'Color':
+        """A fill that white (or very dark) text can be read on."""
+        white, dark = Color(WHITE), Color(DARK_NEUTRAL)
+        if white.passes_aa_on(self) or dark.contrast_with(self) >= DARK_TEXT_RATIO:
+            return self
+        return self.darkened_until(lambda c: white.passes_aa_on(c)) or Color(BLACK)
+
+    def on_color(self) -> 'Color':
+        """White or dark text, whichever reads best on this colour."""
+        white, dark = Color(WHITE), Color(DARK_NEUTRAL)
+        ratios = [(white.contrast_with(self), white), (dark.contrast_with(self), dark)]
+        passing = [item for item in ratios if contrast.passes_AA(item[0], large=False)]
+        return max(passing or ratios, key=lambda item: item[0])[1]
 
 
-def _hex_from_rgb(red: int, green: int, blue: int) -> str:
-    return f'#{red:02X}{green:02X}{blue:02X}'
+def contrast_ratio(foreground: str, background: str) -> float:
+    return Color(_normalize_hex(foreground)).contrast_with(Color(_normalize_hex(background)))
+
+
+def passes_aa(foreground: str, background: str, large: bool = False) -> bool:
+    return contrast.passes_AA(contrast_ratio(foreground, background), large=large)
 
 
 def mix_with_white(hex_color: Optional[str], amount: int) -> Optional[str]:
-    hex_color = _normalize_hex(hex_color)
-    if not hex_color:
-        return None
-    red, green, blue = ImageColor.getcolor(hex_color, 'RGB')
-    weight = amount / 100.0
-    return _hex_from_rgb(
-        _round_channel((255 - red) * weight + red),
-        _round_channel((255 - green) * weight + green),
-        _round_channel((255 - blue) * weight + blue),
-    )
-
-
-def mix_with_black(hex_color: Optional[str], amount: int) -> Optional[str]:
-    hex_color = _normalize_hex(hex_color)
-    if not hex_color:
-        return None
-    red, green, blue = ImageColor.getcolor(hex_color, 'RGB')
-    keep = 1 - (amount / 100.0)
-    return _hex_from_rgb(
-        _round_channel(red * keep),
-        _round_channel(green * keep),
-        _round_channel(blue * keep),
-    )
+    color = Color.parse(hex_color)
+    return str(color.with_white(amount)) if color else None
 
 
 def ensure_contrast(foreground: Optional[str], background: Optional[str]) -> Optional[str]:
-    foreground = _normalize_hex(foreground)
-    background = _normalize_hex(background)
+    foreground, background = Color.parse(foreground), Color.parse(background)
     if not foreground or not background:
         return None
-
     try:
-        if contrast.passes_AA(contrast_ratio(foreground, background), large=False):
-            return foreground
+        return str(foreground.readable_on(background))
     except ValueError:
         return None
-
-    low = 1
-    high = 100
-    best = None
-    while low <= high:
-        mid = (low + high) // 2
-        candidate = mix_with_black(foreground, mid)
-        if contrast.passes_AA(contrast_ratio(candidate, background), large=False):
-            best = candidate
-            high = mid - 1
-        else:
-            low = mid + 1
-
-    return best or DARK_NEUTRAL
 
 
 def ensure_contrast_on_surfaces(
@@ -117,63 +143,29 @@ def ensure_contrast_on_surfaces(
     backgrounds: Sequence[str],
 ) -> Optional[str]:
     result = _normalize_hex(foreground)
-    if not result:
-        return None
     for background in backgrounds:
         result = ensure_contrast(result, background)
-        if not result:
-            return None
     return result
 
 
 def ensure_readable_fill(fill: Optional[str]) -> Optional[str]:
-    fill = _normalize_hex(fill)
-    if not fill:
+    color = Color.parse(fill)
+    if not color:
         return None
-
     try:
-        if passes_aa(WHITE, fill) or contrast_ratio(DARK_NEUTRAL, fill) >= DARK_TEXT_RATIO:
-            return fill
+        return str(color.readable_fill())
     except ValueError:
         return None
-
-    low = 1
-    high = 100
-    best = None
-    while low <= high:
-        mid = (low + high) // 2
-        candidate = mix_with_black(fill, mid)
-        try:
-            readable = bool(candidate) and passes_aa(WHITE, candidate)
-        except ValueError:
-            readable = False
-        if readable:
-            best = candidate
-            high = mid - 1
-        else:
-            low = mid + 1
-
-    return best or '#000000'
 
 
 def choose_on_color(background: Optional[str]) -> Optional[str]:
-    background = _normalize_hex(background)
-    if not background:
+    color = Color.parse(background)
+    if not color:
         return None
-
     try:
-        white_ratio = contrast_ratio(WHITE, background)
-        dark_ratio = contrast_ratio(DARK_NEUTRAL, background)
+        return str(color.on_color())
     except ValueError:
         return None
-    passing = []
-    if contrast.passes_AA(white_ratio, large=False):
-        passing.append((white_ratio, WHITE))
-    if contrast.passes_AA(dark_ratio, large=False):
-        passing.append((dark_ratio, DARK_NEUTRAL))
-
-    candidates = passing or [(white_ratio, WHITE), (dark_ratio, DARK_NEUTRAL)]
-    return max(candidates, key=lambda item: item[0])[1]
 
 
 def _apply_brand_patterns(
@@ -323,3 +315,16 @@ def evaluate_platform_colors(settings) -> List[PairResult]:
         pairs.append(link)
 
     return pairs
+
+
+def render_solid_preview(field_id, intro):
+    from bluebottle.cms.models import SitePlatformSettings
+
+    return render_to_string(
+        'admin/cms/solid_color_contrast_panel.html',
+        {
+            'field_id': field_id,
+            'intro': intro,
+            'accessible': SitePlatformSettings.load().accessible_colours,
+        },
+    )

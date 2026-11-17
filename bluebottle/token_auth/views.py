@@ -12,10 +12,9 @@ from rest_framework.generics import get_object_or_404
 
 from onelogin.saml2.response import OneLogin_Saml2_Response
 
-from bluebottle.members.models import SAMLAuthentication as SAMLAuthenticationMethod
+from bluebottle.members.models import SAMLDevice, SAMLAuthentication as SAMLAuthenticationMethod
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.models import SAMLDevice
 from bluebottle.utils.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
@@ -48,7 +47,6 @@ class TokenRedirectView(View):
         return request.build_absolute_uri('/')
 
     def get(self, request, *args, **kwargs):
-        client_ip = get_client_ip(request)
 
         method = get_object_or_404(
             SAMLAuthenticationMethod.objects.exclude(

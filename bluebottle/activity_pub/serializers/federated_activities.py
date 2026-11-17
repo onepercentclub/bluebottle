@@ -159,7 +159,13 @@ class OrganizationSerializer(FederatedObjectSerializer):
     id = FederatedIdField('json-ld:organization')
     name = serializers.CharField(allow_null=True)
     summary = serializers.CharField(
-        source='description',
+        source='slogan',
+        allow_blank=True,
+        allow_null=True,
+        required=False
+    )
+    content = RichTextField(
+        source='story',
         allow_blank=True,
         allow_null=True,
         required=False
@@ -168,7 +174,7 @@ class OrganizationSerializer(FederatedObjectSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'name', 'summary', 'icon')
+        fields = ('id', 'name', 'summary', 'content', 'icon')
 
 
 class LocationSerializer(FederatedObjectSerializer):

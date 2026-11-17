@@ -1,12 +1,14 @@
 from bluebottle.activity_links.documents import (
     LinkedDateActivityDocument,
     LinkedDeadlineActivityDocument,
+    LinkedDeedDocument,
     LinkedFundingDocument,
 )
 from bluebottle.activity_links.tests.factories import (
     LinkedDateActivityFactory,
     LinkedDateSlotFactory,
     LinkedDeadlineActivityFactory,
+    LinkedDeedFactory,
     LinkedFundingFactory,
 )
 from bluebottle.funding.documents import FundingDocument
@@ -28,6 +30,13 @@ class LinkedActivityDocumentIdTestCase(BluebottleTestCase):
         self.assertEqual(linked_doc_id, f'linked_{linked_funding.pk}')
         self.assertEqual(funding_doc_id, funding.pk)
         self.assertNotEqual(linked_doc_id, str(funding_doc_id))
+
+    def test_linked_deed_prepare_without_partner_organization(self):
+        linked_deed = LinkedDeedFactory.create()
+
+        prepared = LinkedDeedDocument().prepare(linked_deed)
+
+        self.assertIsNone(prepared.get('organization'))
 
 
 class LinkedDateActivityDocumentTestCase(BluebottleTestCase):

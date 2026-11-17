@@ -10,7 +10,7 @@ app_name = 'token-auth'
 
 urlpatterns = [
     path(
-        'redirect/<int:pk>/', TokenRedirectView.as_view(),
+        'redirect/<uuid:pk>/', TokenRedirectView.as_view(),
         name='saml-redirect'
     ),
     path(
@@ -23,5 +23,5 @@ urlpatterns = [
     ),
     path('logout/', TokenLogoutView.as_view(), name='saml-logout'),
     path('error/', TokenErrorView.as_view(), name='saml-error'),
-    path('metadata/<int:pk>/', MetadataView.as_view(), name='saml-metadata'),
+    path('metadata/<uuid:pk>/', MetadataView.as_view(), name='saml-metadata'),
 ]

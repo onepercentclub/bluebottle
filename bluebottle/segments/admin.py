@@ -10,6 +10,7 @@ from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from parler.admin import TranslatableAdmin, TranslatableModelForm, TranslatableTabularInline
 
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
+from bluebottle.cms.utils.color_contrast import render_solid_preview
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
 from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
@@ -140,7 +141,10 @@ class SegmentAdmin(
     model = Segment
     form = SegmentAdminForm
 
-    readonly_fields = ('translatable_info', 'text_color', 'activities_link', 'members_link', 'type_link')
+    readonly_fields = (
+        'translatable_info', 'color_contrast_panel',
+        'activities_link', 'members_link', 'type_link',
+    )
 
     list_display = ['name', 'segment_type', 'activities_link', ]
 
@@ -158,8 +162,7 @@ class SegmentAdmin(
         (_('Content'), {
             'fields': [
                 'slogan', 'story', 'logo', 'cover_image',
-                'background_color', 'text_color',
-                'button_color', 'button_text_color'
+                'background_color', 'color_contrast_panel',
             ],
         }),
 
@@ -169,6 +172,12 @@ class SegmentAdmin(
     )
 
     merge_form = SegmentMergeForm
+
+    class Media:
+        css = {
+            'all': ('admin/css/platform_color_contrast.css',)
+        }
+        js = ('admin/js/color_contrast_base.js', 'admin/js/solid_color_contrast.js')
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(
@@ -201,10 +210,13 @@ class SegmentAdmin(
 
     type_link.short_description = _('Segment type')
 
-    def text_color(self, obj):
-        return obj.text_color
+    def color_contrast_panel(self, obj):
+        return render_solid_preview(
+            'id_background_color',
+            _('How this colour will look on the segment page'),
+        )
 
-    text_color.short_description = _("Text colour")
+    color_contrast_panel.short_description = _('Colour preview')
 
 
 @admin.register(SegmentType)

@@ -2,13 +2,18 @@ import logging
 import os
 import uuid
 from xml.etree import ElementTree
+from unittest import mock
 from urllib.parse import parse_qs, urlencode, urlparse
 
+from django.contrib.auth.models import Group
 from django.core.files.base import ContentFile
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
+from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
-from bluebottle.members.models import Member, MemberPlatformSettings, SAMLSegmentMapping
+from bluebottle.members.models import (
+    Member, MemberPlatformSettings, SAMLGroupMapping, SAMLSegmentMapping
+)
 from bluebottle.members.tests.factories import SAMLAuthenticationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -369,7 +374,7 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
     def test_segment_mapping_sets_segment(self):
         role = SegmentTypeFactory.create(name='Role')
         user_segment = SegmentFactory.create(name='User', segment_type=role, alternate_names=[])
-        SegmentFactory.create(name='Admin', segment_type=role, alternate_names=[])
+        SegmentFactory.create(name='Reviewer', segment_type=role, alternate_names=[])
         self.add_segment_mapping(role)
 
         response = self.login()
@@ -392,11 +397,11 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
     def test_segment_mapping_replaces_unverified_segment(self):
         role = SegmentTypeFactory.create(name='Role')
         user_segment = SegmentFactory.create(name='User', segment_type=role, alternate_names=[])
-        admin_segment = SegmentFactory.create(name='Admin', segment_type=role, alternate_names=[])
+        other_segment = SegmentFactory.create(name='Reviewer', segment_type=role, alternate_names=[])
         self.add_segment_mapping(role)
 
         user = BlueBottleUserFactory.create(remote_id='smartin', email='smartin@yaco.es')
-        user.segments.add(admin_segment, through_defaults={'verified': False})
+        user.segments.add(other_segment, through_defaults={'verified': False})
 
         self.login()
 
@@ -404,7 +409,7 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
 
     def test_segment_mapping_unknown_segment(self):
         role = SegmentTypeFactory.create(name='Role')
-        SegmentFactory.create(name='Admin', segment_type=role, alternate_names=[])
+        SegmentFactory.create(name='Reviewer', segment_type=role, alternate_names=[])
         self.add_segment_mapping(role)
 
         response = self.login()
@@ -438,3 +443,90 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 302)
         user = Member.objects.get(email='smartin@yaco.es')
         self.assertEqual(user.segments.count(), 0)
+
+    def add_group_mapping(self, group_name, group_names=('Support',), **kwargs):
+        group = Group.objects.get_or_create(name=group_name)[0]
+        SAMLGroupMapping.objects.create(
+            authentication_method=self.method,
+            group=group,
+            group_names=list(group_names),
+            **kwargs
+        )
+        return group
+
+    def login_with_groups(self, groups=('Support', 'Sales')):
+        # The test response is signed, so we cannot add a group attribute to it.
+        # Inject it into the parsed attributes instead.
+        get_attributes = OneLogin_Saml2_Auth.get_attributes
+
+        def get_attributes_with_groups(auth):
+            return dict(
+                get_attributes(auth),
+                **{'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups': list(groups)}
+            )
+
+        with mock.patch.object(OneLogin_Saml2_Auth, 'get_attributes', get_attributes_with_groups):
+            response = self.login()
+
+        self.assertEqual(response.status_code, 302)
+        return Member.objects.get(email='smartin@yaco.es')
+
+    def test_group_mapping_adds_user_to_group(self):
+        group = self.add_group_mapping('Partner', staff=False)
+
+        user = self.login_with_groups()
+
+        self.assertIn(group, user.groups.all())
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
+    def test_group_mapping_set_staff(self):
+        group = self.add_group_mapping('Staff', staff=True)
+
+        user = self.login_with_groups()
+
+        self.assertIn(group, user.groups.all())
+        self.assertTrue(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
+    def test_group_mapping_set_superuser(self):
+        group = self.add_group_mapping('Staff', staff=True, superuser=True)
+
+        user = self.login_with_groups()
+
+        self.assertIn(group, user.groups.all())
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+
+    def test_group_mapping_without_group_names_applies_to_nobody(self):
+        group = self.add_group_mapping('Staff', group_names=(), staff=True, superuser=True)
+
+        user = self.login_with_groups()
+
+        self.assertNotIn(group, user.groups.all())
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
+    def test_group_mapping_matches_any_group_name(self):
+        group = self.add_group_mapping('Partner', group_names=('Marketing', 'Sales'))
+
+        user = self.login_with_groups()
+
+        self.assertIn(group, user.groups.all())
+
+    def test_group_mapping_no_match(self):
+        group = self.add_group_mapping('Partner', group_names=('Marketing',), staff=True)
+
+        user = self.login_with_groups()
+
+        self.assertNotIn(group, user.groups.all())
+        self.assertFalse(user.is_staff)
+
+    def test_group_mapping_without_groups_claim(self):
+        group = self.add_group_mapping('Partner')
+
+        response = self.login()
+
+        self.assertEqual(response.status_code, 302)
+        user = Member.objects.get(email='smartin@yaco.es')
+        self.assertNotIn(group, user.groups.all())

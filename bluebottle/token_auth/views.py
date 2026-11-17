@@ -59,7 +59,7 @@ class TokenRedirectView(View):
             enabled=True
         )
 
-        auth = SAMLAuthentication(request, method.settings)
+        auth = SAMLAuthentication(request, method)
         sso_url = auth.sso_url(target_url=self.target_url(request))
         return HttpResponseRedirect(sso_url)
 
@@ -81,7 +81,7 @@ class SAMLLoginView(View):
         if not method:
             return HttpResponseForbidden('Unknown audience or issuer')
 
-        auth = SAMLAuthentication(request, method.settings)
+        auth = SAMLAuthentication(request, method)
 
         try:
             user, _created = auth.authenticate()
@@ -143,6 +143,6 @@ class MetadataView(View):
 
     def get(self, request, *args, **kwargs):
         method = get_object_or_404(SAMLAuthenticationMethod, pk=kwargs['pk'])
-        auth = SAMLAuthentication(request, method.settings)
+        auth = SAMLAuthentication(request, method)
 
         return HttpResponse(content=auth.get_metadata(), content_type='text/xml')

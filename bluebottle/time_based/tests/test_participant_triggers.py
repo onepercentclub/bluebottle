@@ -277,6 +277,47 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
             'You have been added to the activity "{}" 🎉'.format(self.activity.title),
         )
 
+    def test_register_before_start(self):
+        self.activity.start = date.today() + timedelta(days=3)
+        self.activity.save()
+
+        self.register()
+
+        self.assertEqual(self.participant.status, "accepted")
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "new")
+
+    def test_register_on_start(self):
+        self.activity.start = date.today()
+        self.activity.save()
+
+        self.register()
+
+        self.assertEqual(self.participant.status, "succeeded")
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "succeeded")
+
+    def test_accept_before_start(self):
+        self.activity.start = date.today() + timedelta(days=3)
+        self.activity.review = True
+        self.activity.save()
+
+        self.register()
+        self.assertEqual(self.participant.status, "new")
+
+        self.participant.registration.states.accept(save=True)
+        self.participant.refresh_from_db()
+
+        self.assertEqual(self.participant.status, "accepted")
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "new")
+
     def test_initial_removed_through_admin(self):
         self.create(as_user=self.admin_user)
         mail.outbox = []

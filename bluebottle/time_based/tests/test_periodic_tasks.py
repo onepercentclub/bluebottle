@@ -693,6 +693,79 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
 
         self.assertEqual(self.activity.status, 'registration_closed')
 
+    def test_succeed_participants_when_started(self):
+        activity = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            review=False,
+            capacity=5,
+            start=date.today() + timedelta(days=5),
+            deadline=date.today() + timedelta(days=20),
+        )
+        activity.states.publish(save=True)
+
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=activity,
+            user=user,
+            as_user=user,
+        )
+        participant = registration.participants.get()
+        contribution = participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(contribution.status, "new")
+
+        self.run_task(
+            make_aware(
+                datetime.combine(activity.start - timedelta(days=1), time(12)),
+                timezone.get_current_timezone(),
+            )
+        )
+        participant.refresh_from_db()
+        contribution.refresh_from_db()
+        self.assertEqual(participant.status, "accepted")
+        self.assertEqual(contribution.status, "new")
+
+        self.run_task(
+            make_aware(
+                datetime.combine(activity.start, time(12)),
+                timezone.get_current_timezone(),
+            )
+        )
+        participant.refresh_from_db()
+        contribution.refresh_from_db()
+        self.assertEqual(participant.status, "succeeded")
+        self.assertEqual(contribution.status, "succeeded")
+
+    def test_started_does_not_succeed_pending_participants(self):
+        activity = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            review=True,
+            capacity=5,
+            start=date.today() + timedelta(days=5),
+            deadline=date.today() + timedelta(days=20),
+        )
+        activity.states.publish(save=True)
+
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=activity,
+            user=user,
+            as_user=user,
+        )
+        participant = registration.participants.get()
+        self.assertEqual(participant.status, "new")
+
+        self.run_task(
+            make_aware(
+                datetime.combine(activity.start, time(12)),
+                timezone.get_current_timezone(),
+            )
+        )
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, "new")
+
 
 class SlotActivityPeriodicTasksTest(BluebottleTestCase):
 

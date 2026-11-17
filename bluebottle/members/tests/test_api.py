@@ -1694,6 +1694,33 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
         ids = {item['id'] for item in response.json()['data']}
         self.assertEqual(ids, {str(self.password.pk), str(self.saml.pk)})
 
+    def test_saml_restricted_ips_excluding_current_ip(self):
+        self.saml.restricted_ips = ['198.51.100.1']
+        self.saml.save()
+
+        response = self.client.get(self.url, REMOTE_ADDR='203.0.113.10')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ids = {item['id'] for item in response.json()['data']}
+        self.assertEqual(ids, {str(self.password.pk), str(self.facebook.pk)})
+
+    def test_saml_restricted_ips_including_current_ip(self):
+        self.saml.restricted_ips = ['198.51.100.1', '203.0.113.10']
+        self.saml.save()
+
+        response = self.client.get(self.url, REMOTE_ADDR='203.0.113.10')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ids = {item['id'] for item in response.json()['data']}
+        self.assertEqual(ids, {str(self.password.pk), str(self.facebook.pk), str(self.saml.pk)})
+
+    def test_saml_restricted_ips_empty(self):
+        response = self.client.get(self.url, REMOTE_ADDR='203.0.113.10')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ids = {item['id'] for item in response.json()['data']}
+        self.assertEqual(ids, {str(self.password.pk), str(self.facebook.pk), str(self.saml.pk)})
+
     def test_secrets_not_exposed(self):
         response = self.client.get(self.url)
         content = response.content.decode()

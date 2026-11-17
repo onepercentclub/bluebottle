@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-16 12:35+0100\n"
-"PO-Revision-Date: 2026-11-17 10:41\n"
+"PO-Revision-Date: 2026-11-17 11:17\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -10035,11 +10035,11 @@ msgstr "Logotipo da organização"
 
 #: bluebottle/organizations/models.py:76
 msgid "Organization image"
-msgstr ""
+msgstr "Imagem da organização"
 
 #: bluebottle/organizations/models.py:89
 msgid "Colour"
-msgstr ""
+msgstr "Cor"
 
 #: bluebottle/organizations/models.py:92
 msgid "Background colour for the organisation page header."

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-16 12:35+0100\n"
-"PO-Revision-Date: 2026-11-17 11:04\n"
+"PO-Revision-Date: 2026-11-17 11:17\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -10033,11 +10033,11 @@ msgstr "Logo de l’organisation"
 
 #: bluebottle/organizations/models.py:76
 msgid "Organization image"
-msgstr ""
+msgstr "Image de l’organisation"
 
 #: bluebottle/organizations/models.py:89
 msgid "Colour"
-msgstr ""
+msgstr "Couleur"
 
 #: bluebottle/organizations/models.py:92
 msgid "Background colour for the organisation page header."
@@ -10388,7 +10388,7 @@ msgstr "Type de segment"
 
 #: bluebottle/segments/admin.py:216
 msgid "How this colour will look on the segment page"
-msgstr ""
+msgstr "Comment cette couleur apparaîtra sur la page du segment"
 
 #: bluebottle/segments/admin.py:243
 msgid "Number of segments"
@@ -11123,7 +11123,7 @@ msgstr "Supprimer l'inscription si elle n'a plus de participants"
 
 #: bluebottle/time_based/effects/registrations.py:129
 msgid "Remove the participants of this registration on unfinished slots"
-msgstr ""
+msgstr "Supprimer les participants de cette inscription sur les créneaux inachevés"
 
 #: bluebottle/time_based/effects/slots.py:9
 msgid "Create participants for this team slot"

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-16 12:35+0100\n"
-"PO-Revision-Date: 2026-11-16 11:36\n"
+"PO-Revision-Date: 2026-11-17 10:41\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -10001,7 +10001,7 @@ msgstr "Slogan"
 
 #: bluebottle/organizations/models.py:34
 msgid "A short sentence to explain your organisation. This sentence is directly visible on the page."
-msgstr ""
+msgstr "Une courte phrase pour expliquer votre organisation. Cette phrase est directement visible sur la page."
 
 #: bluebottle/organizations/models.py:37 bluebottle/segments/models.py:118
 msgid "Story"
@@ -10009,15 +10009,15 @@ msgstr "Histoire"
 
 #: bluebottle/organizations/models.py:39
 msgid "A more detailed story about your organisation. This story can be accessed via a link on the page."
-msgstr ""
+msgstr "Une histoire plus détaillée sur votre organisation. Cette histoire peut être consultée via un lien sur la page."
 
 #: bluebottle/organizations/models.py:44
 msgid "Created"
-msgstr ""
+msgstr "Créé"
 
 #: bluebottle/organizations/models.py:45
 msgid "Updated"
-msgstr ""
+msgstr "Mis à jour"
 
 #: bluebottle/organizations/models.py:47
 msgid "Verified"
@@ -10025,11 +10025,11 @@ msgstr "Vérifié"
 
 #: bluebottle/organizations/models.py:59
 msgid "Logo"
-msgstr ""
+msgstr "Logo"
 
 #: bluebottle/organizations/models.py:61
 msgid "Organization logo"
-msgstr ""
+msgstr "Logo de l’organisation"
 
 #: bluebottle/organizations/models.py:76
 msgid "Organization image"
@@ -10041,7 +10041,7 @@ msgstr ""
 
 #: bluebottle/organizations/models.py:92
 msgid "Background colour for the organisation page header."
-msgstr ""
+msgstr "Couleur de fond pour l'en-tête de la page de l'organisation."
 
 #: bluebottle/organizations/models.py:143
 msgid "organisation"
@@ -13133,12 +13133,12 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/remove_periodic_participants.html:2
 msgid "Remove participants"
-msgstr ""
+msgstr "Retirer les participants"
 
 #: bluebottle/time_based/templates/admin/remove_periodic_participants.html:5
 msgid "\n"
 "    Remove the participants of this registration on slots that have not finished and fail their contributions.\n"
-msgstr ""
+msgstr "Retirer les participants de cette inscription sur les créneaux qui n'ont pas fini et échouer leurs contributions."
 
 #: bluebottle/time_based/templates/admin/reset_slot_selection.html:2
 msgid "Reset slot selection to 'all'"

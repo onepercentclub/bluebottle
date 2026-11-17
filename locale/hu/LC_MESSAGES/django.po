@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-16 12:35+0100\n"
-"PO-Revision-Date: 2026-11-16 11:36\n"
+"PO-Revision-Date: 2026-11-17 10:41\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -9993,7 +9993,7 @@ msgstr "Szlogen"
 
 #: bluebottle/organizations/models.py:34
 msgid "A short sentence to explain your organisation. This sentence is directly visible on the page."
-msgstr ""
+msgstr "Egy rövid mondat, hogy elmagyarázza a szervezetét. Ez a mondat közvetlenül látható az oldalon."
 
 #: bluebottle/organizations/models.py:37 bluebottle/segments/models.py:118
 msgid "Story"
@@ -10001,15 +10001,15 @@ msgstr "Történet"
 
 #: bluebottle/organizations/models.py:39
 msgid "A more detailed story about your organisation. This story can be accessed via a link on the page."
-msgstr ""
+msgstr "Egy részletesebb történet a szervezetéről. Ez a történet egy linken keresztül érhető el az oldalon."
 
 #: bluebottle/organizations/models.py:44
 msgid "Created"
-msgstr ""
+msgstr "Létrehozva"
 
 #: bluebottle/organizations/models.py:45
 msgid "Updated"
-msgstr ""
+msgstr "Frissítve"
 
 #: bluebottle/organizations/models.py:47
 msgid "Verified"
@@ -10017,23 +10017,23 @@ msgstr "Hitelesítve"
 
 #: bluebottle/organizations/models.py:59
 msgid "Logo"
-msgstr ""
+msgstr "Logó"
 
 #: bluebottle/organizations/models.py:61
 msgid "Organization logo"
-msgstr ""
+msgstr "Szervezet logója"
 
 #: bluebottle/organizations/models.py:76
 msgid "Organization image"
-msgstr ""
+msgstr "Szervezet képe"
 
 #: bluebottle/organizations/models.py:89
 msgid "Colour"
-msgstr ""
+msgstr "Szín"
 
 #: bluebottle/organizations/models.py:92
 msgid "Background colour for the organisation page header."
-msgstr ""
+msgstr "Háttérszín a szervezet oldalának fejlécéhez."
 
 #: bluebottle/organizations/models.py:143
 msgid "organisation"
@@ -10380,7 +10380,7 @@ msgstr "Szegmens típusa"
 
 #: bluebottle/segments/admin.py:216
 msgid "How this colour will look on the segment page"
-msgstr ""
+msgstr "Hogyan fog kinézni ez a szín a szegmens oldalon"
 
 #: bluebottle/segments/admin.py:243
 msgid "Number of segments"
@@ -11115,7 +11115,7 @@ msgstr "Törlés, ha már nem rendelkezik résztvevőkkel"
 
 #: bluebottle/time_based/effects/registrations.py:129
 msgid "Remove the participants of this registration on unfinished slots"
-msgstr ""
+msgstr "Távolítsa el a résztvevőket erről a regisztrációról a befejezetlen helyeken"
 
 #: bluebottle/time_based/effects/slots.py:9
 msgid "Create participants for this team slot"
@@ -13125,12 +13125,13 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/remove_periodic_participants.html:2
 msgid "Remove participants"
-msgstr ""
+msgstr "Résztvevők eltávolítása"
 
 #: bluebottle/time_based/templates/admin/remove_periodic_participants.html:5
 msgid "\n"
 "    Remove the participants of this registration on slots that have not finished and fail their contributions.\n"
-msgstr ""
+msgstr "\n"
+"    Távolítsa el a résztvevőket erről a regisztrációról azokról a helyekről, amelyek nem fejeződtek be, és meghiúsult a hozzájárulásuk.\n"
 
 #: bluebottle/time_based/templates/admin/reset_slot_selection.html:2
 msgid "Reset slot selection to 'all'"

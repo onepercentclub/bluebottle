@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-16 12:35+0100\n"
-"PO-Revision-Date: 2026-11-16 11:36\n"
+"PO-Revision-Date: 2026-11-17 10:41\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -10001,7 +10001,7 @@ msgstr "Eslogan"
 
 #: bluebottle/organizations/models.py:34
 msgid "A short sentence to explain your organisation. This sentence is directly visible on the page."
-msgstr ""
+msgstr "Una frase corta para explicar tu organización. Esta frase es directamente visible en la página."
 
 #: bluebottle/organizations/models.py:37 bluebottle/segments/models.py:118
 msgid "Story"
@@ -10009,15 +10009,15 @@ msgstr "Historia"
 
 #: bluebottle/organizations/models.py:39
 msgid "A more detailed story about your organisation. This story can be accessed via a link on the page."
-msgstr ""
+msgstr "Una historia más detallada sobre tu organización. Se puede acceder a esta historia a través de un enlace en la página."
 
 #: bluebottle/organizations/models.py:44
 msgid "Created"
-msgstr ""
+msgstr "Creado"
 
 #: bluebottle/organizations/models.py:45
 msgid "Updated"
-msgstr ""
+msgstr "Actualizado"
 
 #: bluebottle/organizations/models.py:47
 msgid "Verified"
@@ -10025,11 +10025,11 @@ msgstr "Verificado"
 
 #: bluebottle/organizations/models.py:59
 msgid "Logo"
-msgstr ""
+msgstr "Logotipo"
 
 #: bluebottle/organizations/models.py:61
 msgid "Organization logo"
-msgstr ""
+msgstr "Logotipo de la organización"
 
 #: bluebottle/organizations/models.py:76
 msgid "Organization image"
@@ -10041,7 +10041,7 @@ msgstr ""
 
 #: bluebottle/organizations/models.py:92
 msgid "Background colour for the organisation page header."
-msgstr ""
+msgstr "Color de fondo para la cabecera de la organización."
 
 #: bluebottle/organizations/models.py:143
 msgid "organisation"
@@ -10388,7 +10388,7 @@ msgstr "Tipo de segmento"
 
 #: bluebottle/segments/admin.py:216
 msgid "How this colour will look on the segment page"
-msgstr ""
+msgstr "Cómo se verá este color en la página del segmento."
 
 #: bluebottle/segments/admin.py:243
 msgid "Number of segments"
@@ -11123,7 +11123,7 @@ msgstr "Eliminar registro si ya no tiene participantes"
 
 #: bluebottle/time_based/effects/registrations.py:129
 msgid "Remove the participants of this registration on unfinished slots"
-msgstr ""
+msgstr "Eliminar a los participantes de esta inscripción en espacios no terminados"
 
 #: bluebottle/time_based/effects/slots.py:9
 msgid "Create participants for this team slot"
@@ -13133,12 +13133,13 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/remove_periodic_participants.html:2
 msgid "Remove participants"
-msgstr ""
+msgstr "Eliminar participantes"
 
 #: bluebottle/time_based/templates/admin/remove_periodic_participants.html:5
 msgid "\n"
 "    Remove the participants of this registration on slots that have not finished and fail their contributions.\n"
-msgstr ""
+msgstr "\n"
+"    Eliminar a los participantes de esta inscripción en espacios que no han terminado y no logran sus contribuciones.\n"
 
 #: bluebottle/time_based/templates/admin/reset_slot_selection.html:2
 msgid "Reset slot selection to 'all'"

@@ -2,12 +2,6 @@ import logging
 import re
 
 import django_otp
-from bluebottle.clients import properties
-from bluebottle.members.models import MemberPlatformSettings, SAMLAuthentication as SAMLAuthenticationMethod
-from bluebottle.token_auth.auth.saml import SAMLAuthentication
-from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.models import SAMLDevice
-from django.conf import settings
 from django.contrib.auth import login
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
 from django.template import loader
@@ -15,6 +9,12 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
+
+from bluebottle.clients import properties
+from bluebottle.members.models import SAMLDevice, SAMLAuthentication as SAMLAuthenticationMethod
+from bluebottle.token_auth.auth.saml import SAMLAuthentication
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.utils.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +27,6 @@ class TokenRedirectView(View):
     """
     Redirect to SSO login page
     """
-    permanent = False
-    query_string = True
-
     def target_url(self, request):
         url = request.GET.get('url')
         try:
@@ -106,48 +103,6 @@ class SAMLLoginView(View):
         response = HttpResponse(template.render(context, request), content_type='text/html')
         response['cache-control'] = "no-store, no-cache, private"
         return response
-
-
-class UserSAMLLoginView(SAMLLoginView):
-    @property
-    def settings(self):
-        return properties.TOKEN_AUTH
-
-
-class SupportSAMLLoginView(SAMLLoginView):
-    groups_uri = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups'
-
-    def authenticated(self, user, auth, created):
-        allowed_groups = set(MemberPlatformSettings.load().support_groups)
-        actual_groups = set(auth.attributes[self.groups_uri])
-
-        allowed = len(allowed_groups.intersection(actual_groups)) > 0
-
-        if allowed:
-            if not user.is_superuser or not user.is_staff:
-                user.is_staff = True
-                user.is_superuser = True
-                user.save()
-        else:
-            if created:
-                user.delete()
-
-            raise PermissionDenied('Not allowed to login for support')
-
-    def get_auth(self, request):
-        saml_request = {
-            'https': 'on',
-            'http_host': 'sso.goodup.com',
-            'script_name': '',
-            'get_data': request.GET.copy() or request.POST.copy(),
-            'post_data': request.POST.copy(),
-        }
-
-        return get_auth(request, self.settings, saml_request=saml_request)
-
-    @property
-    def settings(self):
-        return settings.SUPPORT_TOKEN_AUTH
 
 
 class TokenLogoutView(TemplateView):

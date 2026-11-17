@@ -152,10 +152,10 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
             self.method.name_id_format, 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress'
         )
         self.assertTrue(
-            re.match('https://idp\d+.example.com/sso', self.method.signon_url)
+            re.match(r'https://idp\d+.example.com/sso', self.method.signon_url)
         )
         self.assertTrue(
-            re.match('https://idp\d+.example.com', self.method.idp_entity_id)
+            re.match(r'https://idp\d+.example.com', self.method.idp_entity_id)
         )
 
     def test_certificate(self):

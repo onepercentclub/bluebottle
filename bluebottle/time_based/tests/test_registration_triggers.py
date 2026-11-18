@@ -315,6 +315,26 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.participant, "succeeded")
         self.assertStatus(self.contribution, "succeeded")
 
+    def test_reject_then_accept_with_preparation(self):
+        self.activity.review = True
+        self.activity.save()
+        self.create()
+        self.activity.preparation = timedelta(hours=2)
+        self.activity.save()
+        preparation = self.participant.contributions.get(
+            timecontribution__contribution_type="preparation"
+        )
+        self.assertStatus(preparation, "new")
+
+        self.registration.states.reject(save=True)
+        self.assertStatus(preparation, "failed")
+
+        self.registration.states.accept(save=True)
+
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(preparation, "succeeded")
+        self.assertStatus(self.contribution, "new")
+
     def test_initial_keeps_single_new_contribution(self):
         self.create()
 

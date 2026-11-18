@@ -1033,6 +1033,15 @@ class DateParticipant(Participant):
     )
 
     @property
+    def slot_contributions(self):
+        if self.pk:
+            return self.contributions.filter(
+                timecontribution__contribution_type=ContributionTypeChoices.date
+            )
+        else:
+            return []
+
+    @property
     def answer(self):
         return self.registration.answer
 

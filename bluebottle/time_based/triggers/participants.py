@@ -1304,7 +1304,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             DateParticipantStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    'contributions',
+                    'slot_contributions',
                     TimeContributionStateMachine.reset,
                 ),
                 TransitionEffect(

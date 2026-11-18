@@ -9,6 +9,21 @@ from bluebottle.fsm.admin import StateMachineAdminMixin
 from bluebottle.fsm.forms import StateMachineModelForm
 
 
+def get_address(location):
+    if not location:
+        return '-'
+    return location.formatted_address or str(location)
+
+
+def get_slot_addresses(activity):
+    addresses = []
+    for slot in activity.slots.select_related('location'):
+        address = get_address(slot.location)
+        if address not in addresses:
+            addresses.append(address)
+    return ', '.join(addresses) or '-'
+
+
 class LinkedBaseAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     form = StateMachineModelForm
     readonly_fields = ["title", "link", "status", "host_organization"]
@@ -26,6 +41,12 @@ class LinkedBaseAdmin(StateMachineAdminMixin, admin.ModelAdmin):
         return fieldsets
 
 
+class LinkedLocationAdminMixin:
+    @admin.display(description=_('Address'))
+    def address(self, obj):
+        return get_address(obj.location)
+
+
 @admin.register(LinkedDeed)
 class LinkedDeedAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end']
@@ -33,26 +54,32 @@ class LinkedDeedAdmin(LinkedBaseAdmin):
 
 
 @admin.register(LinkedCollectCampaign)
-class LinkedCollectCampaignAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'collect_type']
+class LinkedCollectCampaignAdmin(LinkedLocationAdminMixin, LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'collect_type', 'location', 'address']
     fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedFunding)
-class LinkedFundingAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'target', 'donated']
+class LinkedFundingAdmin(LinkedLocationAdminMixin, LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'target', 'donated', 'location', 'address']
     fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedGrantApplication)
-class LinkedGrantApplicationAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'target']
+class LinkedGrantApplicationAdmin(LinkedLocationAdminMixin, LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'target', 'location', 'address']
     fields = readonly_fields
 
 
 class LinkedDateSlotInline(admin.TabularInline):
     model = LinkedDateSlot
     extra = 0
+    fields = ['start', 'end', 'location', 'address']
+    readonly_fields = ['address']
+
+    @admin.display(description=_('Address'))
+    def address(self, obj):
+        return get_address(obj.location)
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -93,25 +120,29 @@ class UsedHostOrganizationListFilter(admin.SimpleListFilter):
 @admin.register(LinkedDateActivity)
 class LinkedDateActivityAdmin(LinkedBaseAdmin):
     inlines = [LinkedDateSlotInline]
-    readonly_fields = LinkedBaseAdmin.readonly_fields
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['address']
     fields = readonly_fields + ['archived']
+
+    @admin.display(description=_('Address'))
+    def address(self, obj):
+        return get_slot_addresses(obj)
 
 
 @admin.register(LinkedDeadlineActivity)
-class LinkedDeadlineActivityAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'location']
+class LinkedDeadlineActivityAdmin(LinkedLocationAdminMixin, LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'location', 'address']
     fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedPeriodicActivity)
-class LinkedPeriodicActivityAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'period', 'location']
+class LinkedPeriodicActivityAdmin(LinkedLocationAdminMixin, LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'period', 'location', 'address']
     fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedScheduleActivity)
-class LinkedScheduleActivityAdmin(LinkedBaseAdmin):
-    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'location']
+class LinkedScheduleActivityAdmin(LinkedLocationAdminMixin, LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'location', 'address']
     fields = readonly_fields + ['archived']
 
 
@@ -131,9 +162,17 @@ class LinkedActivityAdmin(PolymorphicParentModelAdmin):
         LinkedScheduleActivity
     )
 
+    polymorphic_list = True
+
     list_display = [
-        'title', 'activity_type', 'status'
+        'title', 'activity_type', 'address', 'status'
     ]
 
     def activity_type(self, obj):
         return obj.get_real_instance_class().activity_type
+
+    @admin.display(description=_('Address'))
+    def address(self, obj):
+        if isinstance(obj, LinkedDateActivity):
+            return get_slot_addresses(obj)
+        return get_address(getattr(obj, 'location', None))

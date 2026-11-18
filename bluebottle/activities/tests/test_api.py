@@ -1241,6 +1241,29 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_filter_organization_includes_activities_shared_by_organization(self):
+        supplier, other_supplier = OrganizationFactory.create_batch(2)
+
+        linked = (
+            LinkedDeedFactory.create(host_organization=supplier),
+            LinkedDateActivityFactory.create(host_organization=supplier),
+        )
+        LinkedDeedFactory.create(host_organization=other_supplier)
+        LinkedDeedFactory.create(host_organization=None)
+        adopted = DeedFactory.create(status="open", host_organization=supplier)
+        own = DeedFactory.create(status="open", organization=supplier)
+        DeedFactory.create(status="open", organization=other_supplier)
+
+        self.search({
+            'organization': supplier.pk,
+        })
+
+        self.assertEqual(self.data['meta']['pagination']['count'], 4)
+        self.assertEqual(
+            {item['id'] for item in self.data['data']},
+            {f'linked_{activity.pk}' for activity in linked} | {str(adopted.pk), str(own.pk)}
+        )
+
     def test_filter_organization_unknown(self):
         DeedFactory.create_batch(2, status="open")
 

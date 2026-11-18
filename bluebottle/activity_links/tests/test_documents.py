@@ -15,8 +15,10 @@ from bluebottle.funding.documents import FundingDocument
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.geo_utils import ensure_geolocation_geofeatures, save_built_geolocation
+from bluebottle.geo.serializers import format_card_location
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.documents import unique_slot_geolocations
+from bluebottle.utils.models import Language
 
 
 class LinkedActivityDocumentIdTestCase(BluebottleTestCase):
@@ -151,3 +153,59 @@ class LinkedDeadlineActivityDocumentTestCase(BluebottleTestCase):
         self.assertEqual(locations[0]['id'], location.id)
         self.assertEqual(locations[0]['locality'], 'Leiden')
         self.assertGreater(len(locations[0]['geofeatures']), 0)
+
+
+class LinkedLocationWithoutGeofeaturesTestCase(BluebottleTestCase):
+    def create_geolocation(self, **kwargs):
+        return save_built_geolocation(GeolocationFactory.build(**kwargs))
+
+    def card_label(self, activity, entry, mode='city'):
+        language = Language.objects.first().full_code
+        return format_card_location(activity, mode, language, geofeatures=entry['geofeatures'])
+
+    def test_deadline_location_gets_card_geofeatures_from_geolocation(self):
+        location = self.create_geolocation(locality='Groningen', formatted_address='Brugstraat 24, Groningen')
+        activity = LinkedDeadlineActivityFactory.create(location=location)
+
+        entry = LinkedDeadlineActivityDocument().prepare_location(activity)[0]
+
+        self.assertEqual(entry['locality'], 'Groningen')
+        self.assertEqual(
+            {geofeature['language'] for geofeature in entry['geofeatures']},
+            {language.full_code for language in Language.objects.all()}
+        )
+        self.assertEqual(entry['geofeatures'][0]['feature_type'], 'place')
+        self.assertEqual(entry['geofeatures'][0]['country_code'], location.country.alpha2_code)
+        self.assertEqual(self.card_label(activity, entry), 'Groningen')
+
+    def test_location_without_locality_falls_back_to_country(self):
+        location = self.create_geolocation(locality=None, formatted_address='Somewhere')
+        activity = LinkedDeadlineActivityFactory.create(location=location)
+
+        entry = LinkedDeadlineActivityDocument().prepare_location(activity)[0]
+
+        self.assertEqual(entry['geofeatures'][0]['feature_type'], 'country')
+        self.assertTrue(self.card_label(activity, entry))
+
+    def test_location_with_geofeatures_is_left_alone(self):
+        location = self.create_geolocation(locality='Leiden')
+        ensure_geolocation_geofeatures(location)
+        activity = LinkedDeadlineActivityFactory.create(location=location)
+
+        entry = LinkedDeadlineActivityDocument().prepare_location(activity)[0]
+
+        self.assertTrue(all('id' in geofeature for geofeature in entry['geofeatures']))
+
+    def test_date_activity_slot_locations_get_card_geofeatures(self):
+        location = self.create_geolocation(locality='Groningen', formatted_address='Brugstraat 24, Groningen')
+        activity = LinkedDateActivityFactory.create()
+        LinkedDateSlotFactory.create(activity=activity, location=location)
+        LinkedDateSlotFactory.create(activity=activity, location=location)
+        document = LinkedDateActivityDocument()
+
+        locations = document.prepare_location(activity)
+
+        self.assertEqual(len(locations), 1)
+        self.assertEqual(locations[0]['locality'], 'Groningen')
+        self.assertEqual(self.card_label(activity, locations[0]), 'Groningen')
+        self.assertEqual({slot['locality'] for slot in document.prepare_slots(activity)}, {'Groningen'})

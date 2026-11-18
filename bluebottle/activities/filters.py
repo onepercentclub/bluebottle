@@ -444,6 +444,20 @@ class UntranslatedModelFacet(ModelFacet):
         return MatchAll()
 
 
+class OrganizationFacet(UntranslatedModelFacet):
+    """Match activities of an organization plus activities that organization shared from another platform."""
+
+    def add_filter(self, filter_values):
+        if filter_values:
+            return Bool(
+                should=[
+                    Nested(path="organization", query=Terms(**{"organization.id": filter_values})),
+                    Nested(path="host_organization", query=Terms(**{"host_organization.id": filter_values})),
+                ],
+                minimum_should_match=1,
+            )
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -465,7 +479,7 @@ class ActivitySearch(Search):
 
     facets = {
         "initiative.id": InitiativeFacet(),
-        "organization": UntranslatedModelFacet("organization", Organization),
+        "organization": OrganizationFacet("organization", Organization),
         "upcoming": UpcomingFacet(),
         "draft": DraftFacet(),
         "activity-type": TermsFacet(field="activity_type", min_doc_count=0),

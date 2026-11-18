@@ -163,12 +163,20 @@ class LinkedDeadlineActivity(LinkedActivity):
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     activity_type = _('Flexible activity')
 
+    class Meta:
+        verbose_name = _('Flexible activity')
+        verbose_name_plural = _('Flexible activities')
+
     class JSONAPIMeta(object):
         resource_name = 'activities/deadline-links'
 
 
 class LinkedDateActivity(LinkedActivity):
     activity_type = _('Date activity')
+
+    class Meta:
+        verbose_name = _('Date activity')
+        verbose_name_plural = _('Date activities')
 
     class JSONAPIMeta(object):
         resource_name = 'activities/date-links'
@@ -204,6 +212,10 @@ class LinkedPeriodicActivity(LinkedActivity):
     period = models.CharField(null=True, blank=True, max_length=255)
     activity_type = _('Recurring activity')
 
+    class Meta:
+        verbose_name = _('Recurring activity')
+        verbose_name_plural = _('Recurring activities')
+
     class JSONAPIMeta(object):
         resource_name = 'activities/periodic-links'
 
@@ -214,6 +226,10 @@ class LinkedScheduleActivity(LinkedActivity):
     duration = models.DurationField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     activity_type = _('Past date activity')
+
+    class Meta:
+        verbose_name = _('Past date activity')
+        verbose_name_plural = _('Past date activities')
 
     class JSONAPIMeta(object):
         resource_name = 'activities/schedule-links'

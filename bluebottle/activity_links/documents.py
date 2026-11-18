@@ -18,7 +18,38 @@ from bluebottle.time_based.documents import (
     unique_slot_geolocations,
 )
 from bluebottle.utils.documents import TextField
-from bluebottle.utils.models import get_default_language
+from bluebottle.utils.models import Language, get_default_language
+
+
+def card_geofeatures(geolocation):
+    """Geofeature entries for the search card label, built from a geolocation that has no Mapbox features."""
+    country = geolocation.country
+    feature_type = 'place' if geolocation.locality else 'country'
+    entries = []
+    for language in Language.objects.all():
+        country_name = country.safe_translation_getter(
+            'name', language_code=language.full_code, any_language=True
+        ) if country else None
+        entry = {
+            'name': geolocation.locality or country_name or '',
+            'place_name': geolocation.formatted_address or '',
+            'language': language.full_code,
+            'feature_type': feature_type,
+            'is_primary': True,
+        }
+        if country:
+            entry['country_code'] = country.alpha2_code
+            entry['country'] = country_name
+        entries.append(entry)
+    return entries
+
+
+def linked_location_entry(geolocation, location_hint=None):
+    entry = slot_location_entry(geolocation, location_hint=location_hint)
+    if not entry['geofeatures'] and (geolocation.locality or geolocation.country):
+        entry['locality'] = entry['locality'] or geolocation.locality
+        entry['geofeatures'] = card_geofeatures(geolocation)
+    return entry
 
 
 class LinkedActivityDocument(ActivityDocument):
@@ -148,7 +179,7 @@ class LinkedActivityDocument(ActivityDocument):
         location = getattr(instance, 'location', None)
         if not location:
             return []
-        return [slot_location_entry(
+        return [linked_location_entry(
             location,
             location_hint=getattr(instance, 'location_hint', None),
         )]
@@ -382,7 +413,7 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
             location = slot.location
             if location:
                 country = location.country
-                locality = locality_from_geolocation(location)
+                locality = locality_from_geolocation(location) or location.locality
                 formatted_address = (
                     location.geofeature.place_name
                     if location.geofeature else location.formatted_address
@@ -411,7 +442,7 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
 
     def prepare_location(self, instance):
         locations = [
-            slot_location_entry(geolocation)
+            linked_location_entry(geolocation)
             for geolocation in unique_slot_geolocations(instance.slots.all())
         ]
         return deduplicate_locations(locations)

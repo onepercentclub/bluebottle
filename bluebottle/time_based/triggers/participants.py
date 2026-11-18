@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
@@ -248,7 +250,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
     def activity_has_started(effect):
         """ Activity has started """
         if effect.instance.activity.start:
-            return effect.instance.activity.start <= now().date()
+            return effect.instance.activity.start <= date.today()
         return True
 
     def is_not_self(self):

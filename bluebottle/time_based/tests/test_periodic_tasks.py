@@ -738,6 +738,69 @@ class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(participant.status, "succeeded")
         self.assertEqual(contribution.status, "succeeded")
 
+    def test_succeed_participants_when_started_and_full(self):
+        activity = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            review=False,
+            capacity=1,
+            start=date.today() + timedelta(days=5),
+            deadline=date.today() + timedelta(days=20),
+        )
+        activity.states.publish(save=True)
+
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=activity,
+            user=user,
+            as_user=user,
+        )
+        activity.refresh_from_db()
+        self.assertEqual(activity.status, "full")
+
+        self.run_task(
+            make_aware(
+                datetime.combine(activity.start, time(12)),
+                timezone.get_current_timezone(),
+            )
+        )
+        participant = registration.participants.get()
+        self.assertEqual(participant.status, "succeeded")
+        self.assertEqual(
+            participant.contributions.get(
+                timecontribution__contribution_type="period"
+            ).status,
+            "succeeded",
+        )
+
+    def test_succeed_participants_when_started_registration_closed(self):
+        activity = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            review=False,
+            capacity=5,
+            start=date.today() + timedelta(days=5),
+            registration_deadline=date.today() + timedelta(days=1),
+            deadline=date.today() + timedelta(days=20),
+        )
+        activity.states.publish(save=True)
+
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=activity,
+            user=user,
+            as_user=user,
+        )
+
+        self.run_task(
+            make_aware(
+                datetime.combine(activity.start, time(12)),
+                timezone.get_current_timezone(),
+            )
+        )
+        activity.refresh_from_db()
+        self.assertEqual(activity.status, "registration_closed")
+        participant = registration.participants.get()
+        self.assertEqual(participant.status, "succeeded")
+
     def test_started_does_not_succeed_pending_participants(self):
         activity = DeadlineActivityFactory.create(
             initiative=self.initiative,

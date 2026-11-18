@@ -301,6 +301,18 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         )
         self.assertEqual(contribution.status, "succeeded")
 
+    def test_added_through_admin_before_start(self):
+        self.activity.start = date.today() + timedelta(days=3)
+        self.activity.save()
+
+        self.create(as_user=self.admin_user)
+
+        self.assertEqual(self.participant.status, "accepted")
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "new")
+
     def test_accept_before_start(self):
         self.activity.start = date.today() + timedelta(days=3)
         self.activity.review = True

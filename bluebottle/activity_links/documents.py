@@ -506,7 +506,7 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
         return 'activities/time-based/dates'
 
     def prepare_activity_type(self, instance):
-        return 'date'
+        return 'time'
 
 
 @registry.register_document
@@ -563,7 +563,7 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
         return 'activities/time-based/deadlines'
 
     def prepare_activity_type(self, instance):
-        return 'deadline'
+        return 'time'
 
 
 @registry.register_document
@@ -620,7 +620,7 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
         return 'activities/time-based/schedules'
 
     def prepare_activity_type(self, instance):
-        return 'schedule'
+        return 'time'
 
 
 @registry.register_document
@@ -673,4 +673,4 @@ class LinkedPeriodicActivityDocument(LinkedActivityDocument):
         return 'activities/time-based/periodics'
 
     def prepare_activity_type(self, instance):
-        return 'periodic'
+        return 'time'

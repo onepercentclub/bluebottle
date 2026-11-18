@@ -1,15 +1,23 @@
 from bluebottle.activity_links.documents import (
+    LinkedCollectCampaignDocument,
     LinkedDateActivityDocument,
     LinkedDeadlineActivityDocument,
     LinkedDeedDocument,
     LinkedFundingDocument,
+    LinkedGrantApplicationDocument,
+    LinkedPeriodicActivityDocument,
+    LinkedScheduleActivityDocument,
 )
 from bluebottle.activity_links.tests.factories import (
+    LinkedCollectCampaignFactory,
     LinkedDateActivityFactory,
     LinkedDateSlotFactory,
     LinkedDeadlineActivityFactory,
     LinkedDeedFactory,
     LinkedFundingFactory,
+    LinkedGrantApplicationFactory,
+    LinkedPeriodicActivityFactory,
+    LinkedScheduleActivityFactory,
 )
 from bluebottle.funding.documents import FundingDocument
 from bluebottle.funding.tests.factories import FundingFactory
@@ -209,3 +217,21 @@ class LinkedLocationWithoutGeofeaturesTestCase(BluebottleTestCase):
         self.assertEqual(locations[0]['locality'], 'Groningen')
         self.assertEqual(self.card_label(activity, locations[0]), 'Groningen')
         self.assertEqual({slot['locality'] for slot in document.prepare_slots(activity)}, {'Groningen'})
+
+
+class LinkedActivityTypeTestCase(BluebottleTestCase):
+    def test_activity_type_matches_the_type_filter_of_local_activities(self):
+        expected = [
+            (LinkedDateActivityDocument, LinkedDateActivityFactory, 'time'),
+            (LinkedDeadlineActivityDocument, LinkedDeadlineActivityFactory, 'time'),
+            (LinkedPeriodicActivityDocument, LinkedPeriodicActivityFactory, 'time'),
+            (LinkedScheduleActivityDocument, LinkedScheduleActivityFactory, 'time'),
+            (LinkedDeedDocument, LinkedDeedFactory, 'deed'),
+            (LinkedCollectCampaignDocument, LinkedCollectCampaignFactory, 'collect'),
+            (LinkedFundingDocument, LinkedFundingFactory, 'funding'),
+            (LinkedGrantApplicationDocument, LinkedGrantApplicationFactory, 'grantapplication'),
+        ]
+
+        for document, factory, activity_type in expected:
+            with self.subTest(document=document.__name__):
+                self.assertEqual(document().prepare_activity_type(factory.create()), activity_type)

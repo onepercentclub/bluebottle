@@ -1164,6 +1164,48 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         returned_ids = {item['id'] for item in self.data['data']}
         self.assertEqual(returned_ids, expected_remote_ids)
 
+    def test_filter_type_includes_linked_activities(self):
+        local = (
+            DateActivityFactory.create(status='open'),
+            DeadlineActivityFactory.create(status='open'),
+        )
+        linked_time = (
+            LinkedDateActivityFactory.create(),
+            LinkedDeadlineActivityFactory.create(),
+            LinkedPeriodicActivityFactory.create(),
+            LinkedScheduleActivityFactory.create(),
+        )
+        linked_deed = LinkedDeedFactory.create()
+        linked_collect = LinkedCollectCampaignFactory.create()
+        linked_funding = LinkedFundingFactory.create()
+        DeedFactory.create(status='open')
+
+        self.search({'activity-type': 'time'})
+
+        self.assertFacets(
+            'activity-type',
+            {
+                'time': (None, len(local) + len(linked_time)),
+                'deed': (None, 2),
+                'collect': (None, 1),
+                'funding': (None, 1),
+            }
+        )
+        self.assertEqual(
+            {item['id'] for item in self.data['data']},
+            {str(activity.pk) for activity in local} | {f'linked_{activity.pk}' for activity in linked_time}
+        )
+
+        self.search({'activity-type': 'deed'})
+        self.assertEqual(self.data['meta']['pagination']['count'], 2)
+        self.assertIn(f'linked_{linked_deed.pk}', {item['id'] for item in self.data['data']})
+
+        self.search({'activity-type': 'collect'})
+        self.assertEqual({item['id'] for item in self.data['data']}, {f'linked_{linked_collect.pk}'})
+
+        self.search({'activity-type': 'funding'})
+        self.assertEqual({item['id'] for item in self.data['data']}, {f'linked_{linked_funding.pk}'})
+
     def test_filter_type_missing(self):
         matching = (
             DateActivityFactory.create_batch(3, status='open') +

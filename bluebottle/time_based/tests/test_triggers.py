@@ -542,6 +542,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         participant.states.accept(save=True)
         self.assertStatus(participant, 'succeeded')
         self.assertStatus(contribution, 'succeeded')
+
     def add_participant(self, user, as_user, slot=None):
         return DateParticipantFactory.create(
             activity=self.activity,

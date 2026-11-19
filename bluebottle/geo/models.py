@@ -337,7 +337,10 @@ class Geolocation(models.Model):
     def place_name(self):
         if not self.geofeature:
             return self.formatted_address or self.locality or '-'
-        return self.geofeature.safe_translation_getter('place_name') or self.geofeature.safe_translation_getter('name')
+        return (
+            self.geofeature.safe_translation_getter('place_name', any_language=True) or
+            self.geofeature.safe_translation_getter('name', any_language=True)
+        )
 
     @property
     def activity_pub_url(self):

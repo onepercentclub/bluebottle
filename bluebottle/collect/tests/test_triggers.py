@@ -15,6 +15,7 @@ from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
     CollectActivityDateChangedNotification, ParticipantJoinedNotification
 )
+from bluebottle.collect.models import CollectActivity
 from bluebottle.collect.states import (
     CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine
 )
@@ -161,6 +162,32 @@ class CollectTriggersTestCase(TriggerTestCase):
                 self.model.organizer.contributions.first()
             )
             self.assertNotificationEffect(ActivityExpiredNotification),
+
+    def test_succeed(self):
+        self.defaults['status'] = 'open'
+        self.create()
+
+        accepted = CollectContributorFactory.create(activity=self.model)
+        withdrawn = CollectContributorFactory.create(activity=self.model)
+        withdrawn.states.withdraw(save=True)
+        succeeded = CollectContributorFactory.create(activity=self.model)
+        succeeded.states.succeed(save=True)
+
+        CollectActivity.objects.filter(pk=self.model.pk).update(
+            start=date.today() - timedelta(days=5),
+            end=date.today() - timedelta(days=1)
+        )
+        self.model.refresh_from_db()
+        self.model.states.succeed()
+
+        with self.execute():
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed, accepted)
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, accepted.contributions.first()
+            )
+            self.assertNoTransitionEffect(CollectContributorStateMachine.succeed, withdrawn)
+            self.assertNoTransitionEffect(CollectContributorStateMachine.succeed, succeeded)
+            self.assertNotificationEffect(ActivitySucceededNotification)
 
     def test_set_end_date(self):
         self.create()

@@ -159,7 +159,13 @@ class OrganizationSerializer(FederatedObjectSerializer):
     id = FederatedIdField('json-ld:organization')
     name = serializers.CharField(allow_null=True)
     summary = serializers.CharField(
-        source='description',
+        source='slogan',
+        allow_blank=True,
+        allow_null=True,
+        required=False
+    )
+    content = RichTextField(
+        source='story',
         allow_blank=True,
         allow_null=True,
         required=False
@@ -168,7 +174,7 @@ class OrganizationSerializer(FederatedObjectSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'name', 'summary', 'icon')
+        fields = ('id', 'name', 'summary', 'content', 'icon')
 
 
 class LocationSerializer(FederatedObjectSerializer):
@@ -180,9 +186,7 @@ class LocationSerializer(FederatedObjectSerializer):
     identifier = IdentifierField(required=False, allow_null=True)
 
     def get_name(self, obj):
-        if obj.geofeature:
-            return obj.geofeature.place_name
-        return obj.formatted_address or obj.locality or '-'
+        return obj.place_name or obj.formatted_address or obj.locality or '-'
 
     def get_place_type(self, obj):
         if obj.geofeature and obj.geofeature.feature_type:

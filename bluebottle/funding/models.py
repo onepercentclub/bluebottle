@@ -24,6 +24,7 @@ from bluebottle.activities.models import Activity, Contribution, Contributor
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.funding.adapters.rabobank import IbanCheckError, RabobankAdapter
 from bluebottle.funding.validators import (
     BudgetLineValidator,
     DeadlineMaxValidator,
@@ -945,10 +946,12 @@ class IbanCheck(models.Model):
         return token
 
     def check_iban(self):
-        from bluebottle.funding.adapters.rabobank import RabobankAdapter
         adapter = RabobankAdapter()
 
-        result = adapter.check_iban_name(self.iban, self.name)
+        try:
+            result = adapter.check_iban_name(self.iban, self.name)
+        except IbanCheckError as error:
+            return error.message
         self.result = result
         matched = result.get('nameMatchResult', 'no_match').lower()
         self.matched = matched if matched in dict(self.MATCH_CHOICES) else 'no_match'

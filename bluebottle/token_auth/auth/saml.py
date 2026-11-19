@@ -11,15 +11,21 @@ standard_library.install_aliases()
 import logging
 import urllib.parse
 
+from django.utils.text import slugify
+
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.errors import OneLogin_Saml2_Error
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.models import Segment
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
 from bluebottle.utils.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
+
+GROUPS_URI = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups'
 
 
 def get_saml_request(request):
@@ -47,13 +53,17 @@ def get_saml_request(request):
 
 class SAMLAuthentication(BaseTokenAuthentication):
 
-    def __init__(self, request, settings, saml_request=None, **kwargs):
-        super(SAMLAuthentication, self).__init__(request, settings, **kwargs)
-        self.saml_request = saml_request
+    def __init__(self, request, method):
+        self.method = method
+        super().__init__(request)
+
+    @property
+    def settings(self):
+        return self.method.settings
 
     @cached_property
     def auth(self):
-        return OneLogin_Saml2_Auth(self.saml_request or get_saml_request(self.request), self.settings)
+        return OneLogin_Saml2_Auth(get_saml_request(self.request), self.settings)
 
     def sso_url(self, target_url=None):
         result = self.auth.login(
@@ -98,22 +108,62 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
     def parse_user(self, user_data):
         data = {}
-        for target, source in list(self.settings['assertion_mapping'].items()):
-            if isinstance(source, (list, tuple)):
-                target_data = [user_data[field][0] for field in source if field in user_data]
-                if target_data:
-                    data[target] = target_data
-                else:
-                    logger.error('Missing claim {}({})'.format(source, target))
+        for field in [
+            'remote_id_attribute', 'email_attribute', 'first_name_attribute',
+            'last_name_attribute', 'work_location_attribute'
+        ]:
+            source = getattr(self.method, field)
+            target = field.replace('_attribute', '')
+            if source in user_data:
+                data[target] = user_data[source][0]
             else:
-                try:
-                    if user_data[source] and len(user_data[source]):
-                        data[target] = user_data[source][0]
-                    else:
-                        data[target] = ''
-                except KeyError:
-                    logger.error('Missing claim {}({})'.format(source, target))
+                logger.error('Missing claim {}({})'.format(source, target))
+
         return data
+
+    def get_segments(self):
+        segments = {}
+        for segment_mapping in self.method.segment_mappings.all():
+            segment_type = segment_mapping.segment_type
+            try:
+                value = self.attributes.get(segment_mapping.source_attribute, [])
+                for val in value:
+                    segment = Segment.objects.filter(
+                        segment_type=segment_type
+                    ).extra(
+                        where=['%s ILIKE ANY (alternate_names)'],
+                        params=[val, ]
+                    ).first()
+                    if not segment:
+                        segment = Segment.objects.filter(
+                            segment_type=segment_type
+                        ).filter(slug=slugify(val)).first()
+                    if not segment and MemberPlatformSettings.load().create_segments:
+                        segment = Segment.objects.create(
+                            segment_type=segment_type,
+                            name=val,
+                            alternate_names=[val]
+                        )
+
+                    if segment:
+                        segments[segment_type.id] = segment
+                        break
+            except KeyError:
+                logger.error(f'Missing attribute for segment {segment_type.name}')
+
+        return segments
+
+    def get_groups(self):
+        result = []
+        groups = self.attributes.get(GROUPS_URI) or []
+
+        for group_mapping in self.method.group_mappings.all():
+            if any(group_name in groups for group_name in group_mapping.group_names):
+                result.append(
+                    (group_mapping.group, group_mapping.staff, group_mapping.superuser)
+                )
+
+        return result
 
     def authenticate_request(self):
         saml_request_id = self.request.session.get(
@@ -140,7 +190,6 @@ class SAMLAuthentication(BaseTokenAuthentication):
             # del self.request.session['saml_request_id']
             self.attributes = self.auth.get_attributes()
             self.attributes['nameId'] = [self.auth.get_nameid()]
-
             return self.parse_user(self.attributes)
         else:
             error = "Saml login error: {}, reason: {}, assertions: {}".format(

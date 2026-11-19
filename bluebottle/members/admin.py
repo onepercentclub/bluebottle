@@ -70,7 +70,7 @@ from bluebottle.members.messages import PasswordResetMessage
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import (
     AuthenticationMethod, FacebookAuthentication, GoogleAuthentication, Member, PasswordAuthentication,
-    SAMLAuthentication, SAMLSegmentMapping, UserSegment
+    SAMLAuthentication, SAMLSegmentMapping, SAMLGroupMapping, UserSegment
 )
 from ..grant_management.models import GrantApplication
 from ..offices.admin import RegionManagerAdminMixin
@@ -253,11 +253,16 @@ class SAMLSegmentMappingInline(admin.TabularInline):
     extra = 0
 
 
+class SAMLGroupMappingInline(admin.TabularInline):
+    model = SAMLGroupMapping
+    extra = 0
+
+
 @admin.register(SAMLAuthentication)
 class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
     model = SAMLAuthentication
 
-    inlines = [SAMLSegmentMappingInline]
+    inlines = [SAMLSegmentMappingInline, SAMLGroupMappingInline]
 
     readonly_fields = ('idp_certificate_expiration', 'single_signon_url', 'redirect_url', 'metadata_url', )
 

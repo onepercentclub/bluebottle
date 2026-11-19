@@ -2,11 +2,9 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.utils.text import slugify
 
 from bluebottle.geo.models import Location
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 
 from bluebottle.utils.models import get_default_language
@@ -20,12 +18,10 @@ class BaseTokenAuthentication():
     """
     Base class for TokenAuthentication.
     """
+    settings = {}
 
-    def __init__(self, request, settings, **kwargs):
-        self.args = kwargs
+    def __init__(self, request):
         self.request = request
-
-        self.settings = settings
 
     def sso_url(self, target_url=None):
         raise NotImplementedError()
@@ -72,66 +68,40 @@ class BaseTokenAuthentication():
                     user.location = location
                     user.save()
 
-    def get_segments_from_data(self, data):
-        segment_list = {}
-        segment_data = [
-            (field, value)
-            for field, value in list(data.items())
-            if field.startswith('segment.')
-        ]
-        for (path, value) in segment_data:
-            type_slug = path.split('.')[-1]
-            try:
-                segment_type = SegmentType.objects.get(slug=type_slug)
-            except SegmentType.DoesNotExist:
-                logger.info('SSO Error: Missing segment type: {}'.format(type_slug))
-                return segment_list
-
-            if not isinstance(value, (list, tuple)):
-                value = [value]
-            segment_list[segment_type.id] = []
-            for val in value:
-                try:
-                    segment = Segment.objects.filter(
-                        segment_type__slug=type_slug,
-                    ).extra(
-                        where=['%s ILIKE ANY (alternate_names)'],
-                        params=[val, ]
-                    ).first()
-                    if segment:
-                        segment_list[segment_type.id].append(segment)
-                    else:
-                        segment = Segment.objects.filter(
-                            segment_type__slug=type_slug,
-                        ).filter(slug=slugify(val)).first()
-                        if segment:
-                            segment_list[segment_type.id].append(segment)
-                        elif MemberPlatformSettings.load().create_segments:
-                            segment = Segment.objects.create(
-                                segment_type=segment_type,
-                                name=val,
-                                alternate_names=[val]
-                            )
-                            segment_list[segment_type.id].append(segment)
-                except IntegrityError:
-                    pass
-        return segment_list
+    def get_segments(self):
+        return {}
 
     def set_segments(self, user, data):
-        segment_list = self.get_segments_from_data(data)
-        for segment_type_id, segments in segment_list.items():
+        segments = self.get_segments()
+        for segment_type_id, segment in segments.items():
             if (
-                segments != user.segments.filter(segment_type__id=segment_type_id) and
+                [segment] != user.segments.filter(segment_type__id=segment_type_id) and
                 not user.segments.filter(
                     segment_type__id=segment_type_id, usersegment__verified=True
                 ).count()
             ):
                 user.segments.remove(*user.segments.filter(segment_type__id=segment_type_id))
-                for segment in segments:
-                    try:
-                        user.segments.add(segment)
-                    except IntegrityError as e:
-                        logger.error(e)
+                try:
+                    user.segments.add(segment)
+                except IntegrityError as e:
+                    logger.error(e)
+
+    def get_groups(self):
+        pass
+
+    def set_groups(self, user, data):
+        groups = self.get_groups()
+
+        for group, is_staff, is_admin in groups:
+            if is_staff:
+                user.is_staff = True
+
+            if is_admin:
+                user.is_superuser = True
+
+            user.groups.add(group)
+
+        user.save()
 
     def get_or_create_user(self, data):
         """
@@ -167,6 +137,7 @@ class BaseTokenAuthentication():
         with translation.override(get_default_language()):
             self.set_location(user, data)
             self.set_segments(user, data)
+            self.set_groups(user, data)
 
         return user, created
 

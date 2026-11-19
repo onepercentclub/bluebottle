@@ -7,6 +7,7 @@ from datetime import timedelta, datetime
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import validate_email
 from django.db import models, connection
@@ -712,6 +713,7 @@ class SAMLAuthentication(AuthenticationMethod):
         return dict(
             strict=self.strict,
             debug=self.debug,
+            provision=self.provision,
             security={'requestedAuthnContext': False},
             **metadata
         )
@@ -748,7 +750,7 @@ class SAMLAuthentication(AuthenticationMethod):
 
     @property
     def name_id_format(self):
-        if self.idp_metadata and 'sp' in self.idp_metadata and 'NameIdFormat' in self.idp_metadata['sp']:
+        if self.idp_metadata and 'sp' in self.idp_metadata and 'NameIDFormat' in self.idp_metadata['sp']:
             return self.idp_metadata['sp']['NameIDFormat']
         else:
             return 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
@@ -762,9 +764,36 @@ class SAMLAuthentication(AuthenticationMethod):
 
 
 class SAMLSegmentMapping(models.Model):
-    authentication_method = models.ForeignKey(SAMLAuthentication, on_delete=models.CASCADE)
+    authentication_method = models.ForeignKey(
+        SAMLAuthentication, on_delete=models.CASCADE, related_name="segment_mappings"
+    )
     source_attribute = models.CharField(_('Source attribute'))
-    segment = models.ForeignKey('segments.segment', on_delete=models.CASCADE)
+    segment_type = models.ForeignKey('segments.segmenttype', on_delete=models.CASCADE)
+
+    class Meta(object):
+        verbose_name_plural = _('SAML segment mappings')
+        verbose_name = _('SAML segment mapping')
+
+
+class SAMLGroupMapping(models.Model):
+    authentication_method = models.ForeignKey(
+        SAMLAuthentication, on_delete=models.CASCADE, related_name="group_mappings"
+    )
+
+    group_names = ArrayField(
+        models.CharField(),
+        verbose_name=_('Group names'),
+        help_text=_('Group names that should belong the authentication group'),
+        blank=True,
+        default=list,
+    )
+    group = models.ForeignKey(Group, verbose_name=_('Authentication group'), on_delete=models.CASCADE)
+    staff = models.BooleanField(_('Staff'), default=False)
+    superuser = models.BooleanField(_('Super user'), default=False)
+
+    class Meta(object):
+        verbose_name_plural = _('SAML group mappings')
+        verbose_name = _('SAML group mapping')
 
 
 from . import signals  # noqa

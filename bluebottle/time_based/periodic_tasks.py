@@ -15,6 +15,8 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     PeriodicSlot,
     ScheduleActivity,
+    ScheduleParticipant,
+    TeamScheduleParticipant,
     TimeContribution,
     DateActivitySlot,
     ScheduleSlot,
@@ -113,6 +115,14 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
             end__lt=timezone.now(),
             status='new',
             contributor__status__in=('accepted', 'stopped')
+        ).exclude(
+            contributor__in=ScheduleParticipant.objects.exclude(
+                status__in=('scheduled', 'succeeded')
+            )
+        ).exclude(
+            contributor__in=TeamScheduleParticipant.objects.exclude(
+                status__in=('scheduled', 'succeeded')
+            )
         )
 
     effects = [

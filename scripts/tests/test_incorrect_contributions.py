@@ -32,6 +32,8 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
+    TeamFactory,
+    TeamMemberFactory,
 )
 from scripts.incorrect_contributions import run
 
@@ -295,6 +297,22 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
 
         self.assertStatus(contribution, 'new')
 
+    def test_schedule_succeeded_contribution_never_scheduled_is_set_to_new(self):
+        """Contributions that were succeeded while the participant was unscheduled."""
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        self.assertStatus(participant, 'accepted')
+        contribution = self.contribution(participant)
+        TimeContribution.objects.filter(pk=contribution.pk).update(
+            status='succeeded', end=now() - timedelta(days=1)
+        )
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+        self.assertIsNone(contribution.end)
+
     def test_schedule_failed_contribution_without_slot_is_set_to_new(self):
         participant = self.register(
             self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
@@ -307,10 +325,24 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
 
         self.assertStatus(contribution, 'new')
 
-    def test_schedule_failed_contribution_finished_slot_is_set_to_succeeded(self):
+    def test_schedule_failed_contribution_unscheduled_participant_is_set_to_new(self):
+        """An unscheduled participant on an open activity stays 'new', even with a finished slot."""
         participant = self.register(
             self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
         )
+        self.assertStatus(participant, 'accepted')
+        self.force_status(participant.slot, 'finished')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'failed')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
+    def test_schedule_failed_contribution_unscheduled_participant_succeeded_activity_is_set_to_succeeded(self):
+        activity = self.create_activity(ScheduleActivityFactory)
+        participant = self.register(activity, ScheduleRegistrationFactory)
+        self.force_status(activity, 'succeeded')
         self.force_status(participant.slot, 'finished')
         contribution = self.contribution(participant)
         self.force_status(contribution, 'failed')
@@ -318,6 +350,81 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
         self.run_script('fix')
 
         self.assertStatus(contribution, 'succeeded')
+
+    def test_schedule_failed_contribution_scheduled_finished_slot_is_set_to_succeeded(self):
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        self.force_status(participant, 'scheduled')
+        self.force_status(participant.slot, 'finished')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'failed')
+
+        self.run_script('fix')
+
+        self.assertStatus(participant, 'succeeded')
+        self.assertStatus(contribution, 'succeeded')
+
+    def test_schedule_new_contribution_scheduled_finished_slot_is_set_to_succeeded(self):
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        self.force_status(participant, 'scheduled')
+        self.force_status(participant.slot, 'finished')
+        contribution = self.contribution(participant)
+        self.assertStatus(contribution, 'new')
+
+        self.run_script('fix')
+
+        self.assertStatus(participant, 'succeeded')
+        self.assertStatus(contribution, 'succeeded')
+
+    # Team schedule activities
+
+    def create_team_participant(self):
+        activity = ScheduleActivityFactory.create(
+            initiative=self.initiative,
+            review=False,
+            registration_deadline=None,
+            team_activity='teams',
+        )
+        activity.states.publish(save=True)
+        team = TeamFactory.create(activity=activity)
+        return TeamMemberFactory.create(team=team).participants.get()
+
+    def test_team_succeeded_contribution_unscheduled_is_set_to_new(self):
+        participant = self.create_team_participant()
+        self.assertStatus(participant, 'accepted')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'succeeded')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
+    def test_team_succeeded_contribution_scheduled_in_future_is_set_to_new(self):
+        participant = self.create_team_participant()
+        slot = participant.slot
+        slot.start = now() + timedelta(days=10)
+        slot.duration = timedelta(hours=4)
+        slot.save()
+        self.assertStatus(participant, 'scheduled')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'succeeded')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
+    def test_team_succeeded_contribution_removed_participant_is_set_to_failed(self):
+        participant = self.create_team_participant()
+        self.force_status(participant, 'removed')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'succeeded')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'failed')
 
     # Periodic activities
 

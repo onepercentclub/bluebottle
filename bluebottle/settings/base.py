@@ -223,6 +223,7 @@ AUTHENTICATION_BACKENDS = (
     'axes.backends.AxesBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'bluebottle.social.backends.NoStateGoogleOAuth2',
+    'bluebottle.utils.backends.BlueBottleModelBackend',
     'django.contrib.auth.backends.ModelBackend',
     'bluebottle.utils.backends.AnonymousAuthenticationBackend'
 )

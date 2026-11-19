@@ -62,7 +62,7 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     add = Transition(
-        new,
+        [new, withdrawn, rejected],
         accepted,
         name=_('Add'),
         description=_("Automatically add this person as a participant to the activity."),

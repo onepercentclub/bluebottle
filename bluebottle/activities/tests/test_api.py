@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import re
 from builtins import str
 from datetime import timedelta
@@ -49,6 +50,7 @@ from bluebottle.test.factory_models.geo import (
     LocationFactory,
     PlaceFactory,
 )
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.models import Registration
@@ -960,6 +962,84 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data[3]['id'], str(activity_lyutidol.id))
         self.assertEqual(len(data), 4)
 
+    def distance_sort_response(self, place_id=None):
+        url = '{}?sort=distance'.format(self.url)
+        if place_id is not None:
+            url = '{}&place={}'.format(url, place_id)
+        return self.client.get(url, HTTP_ACCEPT_LANGUAGE='en')
+
+    def enable_distance_sort_logging(self):
+        logging.disable(logging.NOTSET)
+        self.addCleanup(logging.disable, logging.CRITICAL)
+
+    def activities_in_date_order(self):
+        older = DeadlineActivityFactory(
+            status='open',
+            deadline=now().date() - timedelta(days=10),
+        )
+        newer = DeadlineActivityFactory(
+            status='open',
+            deadline=now().date() - timedelta(days=2),
+        )
+        online = DeadlineActivityFactory(
+            status='open',
+            is_online=True,
+            deadline=now().date() - timedelta(days=30),
+        )
+        return [str(online.pk), str(newer.pk), str(older.pk)]
+
+    def assert_unresolved_distance_sort(self, response, place_label):
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [item['id'] for item in json.loads(response.content)['data']],
+            self.expected_distance_fallback_order,
+        )
+        self.assertIn(
+            "place {} is missing or has no position".format(place_label),
+            self.distance_sort_logs.output[0],
+        )
+
+    def test_sort_distance_with_unknown_place(self):
+        self.expected_distance_fallback_order = self.activities_in_date_order()
+        self.enable_distance_sort_logging()
+
+        with self.assertLogs('bluebottle.activities.filters', level='WARNING') as logs:
+            response = self.distance_sort_response(999999)
+
+        self.distance_sort_logs = logs
+        self.assert_unresolved_distance_sort(response, "'999999'")
+
+    def test_sort_distance_with_a_non_numeric_place(self):
+        self.expected_distance_fallback_order = self.activities_in_date_order()
+        self.enable_distance_sort_logging()
+
+        with self.assertLogs('bluebottle.activities.filters', level='WARNING') as logs:
+            response = self.distance_sort_response('abc')
+
+        self.distance_sort_logs = logs
+        self.assert_unresolved_distance_sort(response, "'abc'")
+
+    def test_sort_distance_without_a_place(self):
+        self.expected_distance_fallback_order = self.activities_in_date_order()
+        self.enable_distance_sort_logging()
+
+        with self.assertLogs('bluebottle.activities.filters', level='WARNING') as logs:
+            response = self.distance_sort_response()
+
+        self.distance_sort_logs = logs
+        self.assert_unresolved_distance_sort(response, 'None')
+
+    def test_sort_distance_with_a_place_without_a_position(self):
+        self.expected_distance_fallback_order = self.activities_in_date_order()
+        place = PlaceFactory.create(position=None)
+        self.enable_distance_sort_logging()
+
+        with self.assertLogs('bluebottle.activities.filters', level='WARNING') as logs:
+            response = self.distance_sort_response(place.pk)
+
+        self.distance_sort_logs = logs
+        self.assert_unresolved_distance_sort(response, "'{}'".format(place.pk))
+
     def test_sort_date(self):
         today = now().date()
         activities = [
@@ -1136,6 +1216,39 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             }
         )
         self.assertFound(matching)
+
+    def test_filter_organization(self):
+        matching_organization, other_organization = OrganizationFactory.create_batch(2)
+
+        matching = DeedFactory.create_batch(
+            3, status="open", organization=matching_organization
+        )
+        other = DeedFactory.create_batch(
+            2, status="open", organization=other_organization
+        )
+        DeedFactory.create_batch(2, status="open", organization=None)
+
+        self.search({
+            'organization': matching_organization.pk,
+        })
+
+        self.assertFacets(
+            'organization',
+            {
+                f'{matching_organization.pk}': (matching_organization.name, len(matching)),
+                f'{other_organization.pk}': (other_organization.name, len(other)),
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_organization_unknown(self):
+        DeedFactory.create_batch(2, status="open")
+
+        self.search({
+            'organization': 999999,
+        })
+
+        self.assertFound([])
 
     def test_filter_theme(self):
         settings = InitiativePlatformSettings.objects.create()
@@ -1762,6 +1875,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             2,
             status='open',
             initiative=None,
+            slots=[],
         )
         for activity in matching:
             DateActivitySlotFactory.create_batch(
@@ -1774,6 +1888,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             3,
             status='open',
             initiative=None,
+            slots=[],
         )
         for activity in other:
             DateActivitySlotFactory.create_batch(

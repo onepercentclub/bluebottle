@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 12:35+0100\n"
-"PO-Revision-Date: 2026-11-17 11:17\n"
+"POT-Creation-Date: 2026-11-19 09:33+0100\n"
+"PO-Revision-Date: 2026-11-19 08:37\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -680,7 +680,7 @@ msgid "Slug"
 msgstr "Permalink"
 
 #: bluebottle/activities/models.py:121 bluebottle/activity_links/models.py:57
-#: bluebottle/activity_pub/admin.py:833 bluebottle/cms/models.py:53
+#: bluebottle/activity_pub/admin.py:837 bluebottle/cms/models.py:53
 #: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:26
 #: bluebottle/cms/utils/color_contrast.py:291 bluebottle/funding/models.py:351
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
@@ -1956,136 +1956,136 @@ msgstr "A iniciativa será bem-sucedida."
 msgid "The initiative will be cancelled."
 msgstr "A iniciativa será cancelada."
 
-#: bluebottle/activity_pub/admin.py:88 bluebottle/activity_pub/models.py:538
+#: bluebottle/activity_pub/admin.py:92 bluebottle/activity_pub/models.py:538
 msgid "Recipient"
 msgstr "Destinatário"
 
-#: bluebottle/activity_pub/admin.py:89 bluebottle/activity_pub/models.py:539
+#: bluebottle/activity_pub/admin.py:93 bluebottle/activity_pub/models.py:539
 msgid "Recipients"
 msgstr "Destinatários"
 
-#: bluebottle/activity_pub/admin.py:114
+#: bluebottle/activity_pub/admin.py:118
 msgid "Republish"
 msgstr "Republicar"
 
-#: bluebottle/activity_pub/admin.py:116
+#: bluebottle/activity_pub/admin.py:120
 msgid "Actions"
 msgstr "Ações"
 
-#: bluebottle/activity_pub/admin.py:216
+#: bluebottle/activity_pub/admin.py:220
 #, python-brace-format
 msgid "Republish task queued for recipient {actor}."
 msgstr "Tarefa de republicação agendada para o destinatário {actor}."
 
-#: bluebottle/activity_pub/admin.py:222
+#: bluebottle/activity_pub/admin.py:226
 #, python-brace-format
 msgid "Error queuing republish: {error}"
 msgstr "Erro ao agendar republicação: {error}"
 
-#: bluebottle/activity_pub/admin.py:289
+#: bluebottle/activity_pub/admin.py:293
 msgid "Adoption Status"
 msgstr "Status da Adoção"
 
-#: bluebottle/activity_pub/admin.py:294 bluebottle/activity_pub/admin.py:801
+#: bluebottle/activity_pub/admin.py:298 bluebottle/activity_pub/admin.py:805
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/recipients_list.html:13
 msgid "Adopted"
 msgstr "Adotado"
 
-#: bluebottle/activity_pub/admin.py:295
+#: bluebottle/activity_pub/admin.py:299
 msgid "Not Adopted"
 msgstr "Não Adotado"
 
-#: bluebottle/activity_pub/admin.py:306 bluebottle/activity_pub/admin.py:539
-#: bluebottle/activity_pub/admin.py:813 bluebottle/activity_pub/admin.py:1001
+#: bluebottle/activity_pub/admin.py:310 bluebottle/activity_pub/admin.py:543
+#: bluebottle/activity_pub/admin.py:817 bluebottle/activity_pub/admin.py:1037
 #: bluebottle/activity_pub/models.py:546
 msgid "Partner"
 msgstr "Parceiro"
 
-#: bluebottle/activity_pub/admin.py:321
+#: bluebottle/activity_pub/admin.py:325
 msgid "Partner URL"
 msgstr "URL do parceiro"
 
-#: bluebottle/activity_pub/admin.py:322
+#: bluebottle/activity_pub/admin.py:326
 msgid "Thi is the website address of the partner you want to follow."
 msgstr "Este é o endereço do site do parceiro que você deseja seguir."
 
-#: bluebottle/activity_pub/admin.py:327 bluebottle/activity_pub/admin.py:390
+#: bluebottle/activity_pub/admin.py:331 bluebottle/activity_pub/admin.py:394
 msgid "This person will be the activity manager of the activities that are adopted."
 msgstr "Esta pessoa será o gerente de atividades das atividades que forem adotadas."
 
-#: bluebottle/activity_pub/admin.py:331 bluebottle/activity_pub/admin.py:380
+#: bluebottle/activity_pub/admin.py:335 bluebottle/activity_pub/admin.py:384
 #: bluebottle/activity_pub/models.py:575
 msgid "Adoption type"
 msgstr "Tipo de adoção"
 
-#: bluebottle/activity_pub/admin.py:336 bluebottle/activity_pub/admin.py:385
+#: bluebottle/activity_pub/admin.py:340 bluebottle/activity_pub/admin.py:389
 #: bluebottle/activity_pub/models.py:576
 msgid "Select how a received activity should be adopted."
 msgstr "Selecione como a atividade recebida deve ser adotada."
 
-#: bluebottle/activity_pub/admin.py:366
+#: bluebottle/activity_pub/admin.py:370
 msgid "Supplier already exists for {}"
 msgstr "Fornecedor já existe para {}"
 
-#: bluebottle/activity_pub/admin.py:372 bluebottle/activity_pub/admin.py:481
+#: bluebottle/activity_pub/admin.py:376 bluebottle/activity_pub/admin.py:485
 msgid "Could not determine platform information needed for subscribing. Are you sure the url is correct?"
 msgstr "Não foi possível determinar as informações da plataforma necessárias para se inscrever. Você tem certeza de que a URL está correta?"
 
-#: bluebottle/activity_pub/admin.py:419 bluebottle/activity_pub/admin.py:554
+#: bluebottle/activity_pub/admin.py:423 bluebottle/activity_pub/admin.py:558
 #: bluebottle/members/models.py:387
 #: bluebottle/time_based/states/registrations.py:18
 msgid "Accepted"
 msgstr "Aceitou"
 
-#: bluebottle/activity_pub/admin.py:472
+#: bluebottle/activity_pub/admin.py:476
 #, python-format
 msgid "Follow request sent to %s. Your platforms will be connected when the request is accepted."
 msgstr "Solicitação de seguimento enviada para %s. Suas plataformas estarão conectadas quando a solicitação for aceita."
 
-#: bluebottle/activity_pub/admin.py:489
+#: bluebottle/activity_pub/admin.py:493
 #, python-format
 msgid "Error creating Follow relationship: %s"
 msgstr "Erro ao criar relação de seguimento: %s"
 
-#: bluebottle/activity_pub/admin.py:505 bluebottle/activity_pub/models.py:582
+#: bluebottle/activity_pub/admin.py:509 bluebottle/activity_pub/models.py:582
 msgid "Publish mode"
 msgstr "Modo de publicação"
 
-#: bluebottle/activity_pub/admin.py:510
+#: bluebottle/activity_pub/admin.py:514
 msgid "Select how you want to share activities."
 msgstr "Selecione como você deseja compartilhar as atividades."
 
-#: bluebottle/activity_pub/admin.py:633 bluebottle/activity_pub/admin.py:649
+#: bluebottle/activity_pub/admin.py:637 bluebottle/activity_pub/admin.py:653
 #, python-brace-format
 msgid "Publishing {count} activities. This may take a few minutes. You can refresh this page to see the progress."
 msgstr "Publicando {count} atividades. Isso pode levar alguns minutos. Você pode atualizar esta página para ver o progresso."
 
-#: bluebottle/activity_pub/admin.py:736 bluebottle/activity_pub/forms.py:79
+#: bluebottle/activity_pub/admin.py:740 bluebottle/activity_pub/forms.py:79
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:33
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:33
 msgid "Publish activities"
 msgstr "Publicar atividades"
 
-#: bluebottle/activity_pub/admin.py:753
+#: bluebottle/activity_pub/admin.py:757
 msgid "Coordinates"
 msgstr "Coordenadas"
 
-#: bluebottle/activity_pub/admin.py:763 bluebottle/activity_pub/admin.py:1106
+#: bluebottle/activity_pub/admin.py:767 bluebottle/activity_pub/admin.py:1142
 #: bluebottle/geo/admin.py:26 bluebottle/geo/admin.py:230
 #: bluebottle/geo/admin.py:268
 msgid "Location"
 msgstr "Local:"
 
-#: bluebottle/activity_pub/admin.py:764 bluebottle/cms/models.py:585
+#: bluebottle/activity_pub/admin.py:768 bluebottle/cms/models.py:585
 #: bluebottle/cms/models.py:588
 msgid "Locations"
 msgstr "Alocações"
 
-#: bluebottle/activity_pub/admin.py:807
+#: bluebottle/activity_pub/admin.py:811
 msgid "Linked"
 msgstr "Vinculado"
 
-#: bluebottle/activity_pub/admin.py:840 bluebottle/cms/models.py:211
+#: bluebottle/activity_pub/admin.py:844 bluebottle/cms/models.py:211
 #: bluebottle/cms/models.py:234 bluebottle/cms/models.py:527
 #: bluebottle/cms/models.py:608 bluebottle/cms/models.py:646
 #: bluebottle/cms/models.py:987 bluebottle/cms/models.py:1047
@@ -2094,21 +2094,31 @@ msgstr "Vinculado"
 msgid "Image"
 msgstr "Imagem:"
 
-#: bluebottle/activity_pub/admin.py:957 bluebottle/activity_pub/models.py:249
+#: bluebottle/activity_pub/admin.py:961 bluebottle/activity_pub/models.py:249
 #: bluebottle/notifications/admin.py:152
 msgid "Activity title"
 msgstr "Título da atividade"
 
-#: bluebottle/activity_pub/admin.py:987
+#: bluebottle/activity_pub/admin.py:1011
+#, python-brace-format
+msgid "Failed to adopt {name}: {error}"
+msgstr "Falha ao adotar {name}: {error}"
+
+#: bluebottle/activity_pub/admin.py:1017
+#, python-brace-format
+msgid "{amount} activities were already adopted and have been skipped."
+msgstr "{amount} atividades já foram adotadas e foram puladas."
+
+#: bluebottle/activity_pub/admin.py:1023
 #, python-brace-format
 msgid "{amount} activities have been adopted."
 msgstr "{amount} atividades foram adotadas."
 
-#: bluebottle/activity_pub/admin.py:1023
+#: bluebottle/activity_pub/admin.py:1059
 msgid "You can make changes to this activity after you adopt it which will create a draft version of this activity."
 msgstr "Você pode fazer alterações nesta atividade após adotá-la, o que criará uma versão em rascunho desta atividade."
 
-#: bluebottle/activity_pub/admin.py:1082 bluebottle/time_based/admin.py:711
+#: bluebottle/activity_pub/admin.py:1118 bluebottle/time_based/admin.py:711
 #: bluebottle/time_based/admin.py:995
 msgid "Slots"
 msgstr "Vagas"

@@ -29,29 +29,6 @@ logger = logging.getLogger(__name__)
 GROUPS_URI = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups'
 
 
-def get_saml_request(request):
-    http_host = request.headers.get('host', None)
-    if 'x-forwarded-for' in request.headers:
-        server_port = None
-        https = request.headers.get('x-forwarded-proto') == 'https'
-    else:
-        server_port = request.META.get('SERVER_PORT')
-        https = request.is_secure()
-
-    saml_request = {
-        'https': 'on' if https else 'off',
-        'http_host': http_host,
-        'script_name': request.META['PATH_INFO'],
-        'get_data': request.GET.copy() or request.POST.copy(),
-        'post_data': request.POST.copy()
-    }
-
-    if server_port:
-        saml_request['server_port'] = server_port
-
-    return saml_request
-
-
 class SAMLAuthentication(BaseTokenAuthentication):
 
     def __init__(self, request, method):
@@ -59,12 +36,45 @@ class SAMLAuthentication(BaseTokenAuthentication):
         super().__init__(request)
 
     @property
+    def saml_request(self):
+        http_host = self.request.headers.get('host', None)
+        if 'x-forwarded-for' in self.request.headers:
+            server_port = None
+            https = self.request.headers.get('x-forwarded-proto') == 'https'
+        else:
+            server_port = self.request.META.get('SERVER_PORT')
+            https = self.request.is_secure()
+
+        saml_request = {
+            'https': 'on' if https else 'off',
+            'http_host': http_host,
+            'script_name': self.request.META['PATH_INFO'],
+            'get_data': self.request.GET.copy() or self.request.POST.copy(),
+            'post_data': self.request.POST.copy()
+        }
+
+        if server_port:
+            saml_request['server_port'] = server_port
+
+        if self.method.entity_id == 'sso-hub':
+            saml_request['https'] = 'on'
+            saml_request['http_host'] = 'sso.goodup.com'
+            saml_request['script_name'] = ''
+            saml_request.pop('server_port', None)
+
+        return saml_request
+
+    @property
     def settings(self):
-        return self.method.settings
+        result = self.method.settings
+        if self.method.entity_id == 'sso-hub':
+            result['sp']['assertionConsumerService']['url'] = 'https://sso.goodup.com'
+
+        return result
 
     @cached_property
     def auth(self):
-        return OneLogin_Saml2_Auth(get_saml_request(self.request), self.settings)
+        return OneLogin_Saml2_Auth(self.saml_request, self.settings)
 
     def sso_url(self, target_url=None):
         result = self.auth.login(

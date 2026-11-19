@@ -44,7 +44,6 @@ class TestSAMLTokenAuthentication(TestCase):
         self.method = self.create_method()
 
     def create_method(self, **kwargs):
-        # The entityID in idp_metadata.xml must match the <saml:Issuer> in valid_response.xml.base64
         with open(os.path.join(DATA_DIR, 'idp_metadata.xml'), 'rb') as metadata_file:
             idp_metadata = ContentFile(metadata_file.read(), name='metadata.xml')
 
@@ -58,6 +57,7 @@ class TestSAMLTokenAuthentication(TestCase):
             work_location_attribute=None,
         )
         attributes.update(kwargs)
+        SAMLAuthenticationFactory._meta.model.objects.filter(entity_id=attributes['entity_id']).delete()
         return SAMLAuthenticationFactory.create(**attributes)
 
     def _request(self, method, target, session=None, *args, **kwargs):

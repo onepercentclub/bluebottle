@@ -20,9 +20,11 @@ from rest_framework.exceptions import AuthenticationFailed
 from social_core.exceptions import AuthCanceled, AuthException
 from social_core.utils import get_strategy
 from social_django.utils import psa, STORAGE
-from two_factor.views import SetupView
+from two_factor.views import LoginView, SetupView
 
 from bluebottle.auth.serializers import SocialLoginSerializer
+from bluebottle.members.models import SAMLAuthentication
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import CreateAPIView, JsonApiViewMixin
 
 logger = logging.getLogger(__name__)
@@ -192,6 +194,30 @@ class MethodForm(forms.Form):
             ),
         ]
         method.initial = method.choices[0][0]
+
+
+class AdminLoginView(LoginView):
+    """
+    Two-factor login view that also offers the SAML methods that can be used
+    to log in to the admin from the current IP address.
+    """
+    def get_sso_methods(self):
+        client_ip = get_client_ip(self.request)
+        methods = SAMLAuthentication.objects.filter(
+            enabled=True,
+            admin_login_enabled=True,
+            metadata_file__isnull=False,
+        ).exclude(metadata_file='').select_related('organization')
+
+        return [
+            method for method in methods
+            if not method.restricted_ips or client_ip in method.restricted_ips
+        ]
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form, **kwargs)
+        context['sso_methods'] = self.get_sso_methods()
+        return context
 
 
 class TwoFactorSetupView(SetupView):

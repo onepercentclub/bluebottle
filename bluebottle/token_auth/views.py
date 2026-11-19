@@ -8,6 +8,7 @@ from django.template import loader
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.base import View, TemplateView
 
+from onelogin.saml2.errors import OneLogin_Saml2_ValidationError
 from rest_framework.generics import get_object_or_404
 
 from onelogin.saml2.response import OneLogin_Saml2_Response
@@ -69,6 +70,8 @@ class TokenRedirectView(View):
 class SAMLLoginView(View):
     def get_method(self):
         response = OneLogin_Saml2_Response({}, self.request.POST['SAMLResponse'])
+        response.check_status()
+
         methods = SAMLAuthenticationMethod.objects.filter(
             entity_id__in=response.get_audiences(), enabled=True
         )
@@ -76,12 +79,15 @@ class SAMLLoginView(View):
         for method in methods:
             if method.idp_entity_id in response.get_issuers():
                 return method
+        else:
+            raise OneLogin_Saml2_ValidationError('Unknown audience or issuer')
 
     def post(self, request):
-        method = self.get_method()
-
-        if not method:
-            return HttpResponseForbidden('Unknown audience or issuer')
+        try:
+            method = self.get_method()
+        except OneLogin_Saml2_ValidationError as e:
+            url = '/token/error?message={0}'.format(e)
+            return HttpResponseRedirect(url)
 
         if method.restricted_ips and get_client_ip(request) not in method.restricted_ips:
             return HttpResponseForbidden('Login not allowed from this IP address')

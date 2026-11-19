@@ -48,13 +48,13 @@ class PasswordAuthenticationSerializerTestCase(AuthenticationMethodSerializerTes
         self.assertEqual(resource['attributes']['confirm-signup'], True)
         self.assertEqual(resource['attributes']['account-creation-rules'], 'whitelist_and_request')
         self.assertEqual(resource['attributes']['email-domains'], ['example.com', 'goodup.com'])
+        self.assertEqual(resource['attributes']['request-access-email'], 'access@example.com')
         self.assertEqual(resource['attributes']['request-access-method'], 'instructions')
         self.assertEqual(resource['attributes']['request-access-instructions'], 'Ask your manager')
         self.assertNotIn('relationships', resource)
         self.assertNotIn('meta', resource)
 
         self.assertNotIn('secret-code', json.dumps(result))
-        self.assertNotIn('access@example.com', json.dumps(result))
 
 
 class FacebookAuthenticationSerializerTestCase(AuthenticationMethodSerializerTestCase):

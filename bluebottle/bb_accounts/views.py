@@ -28,7 +28,7 @@ from bluebottle.files.views import ImageContentView
 from bluebottle.initiatives.serializers import (
     MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
 )
-from bluebottle.members.models import AuthenticationMethod, SAMLAuthentication
+from bluebottle.members.models import AuthenticationMethod, SAMLAuthentication, PasswordAuthentication
 from bluebottle.members.messages import SignUpTokenMessage, PasswordResetMessage
 from bluebottle.members.models import UserActivity
 from bluebottle.members.serializers import (
@@ -211,8 +211,10 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         instance = serializer.save()
-        token = TimestampSigner().sign(instance.pk)
-        if instance.accepted:
+        password_authentication = PasswordAuthentication.load()
+
+        if password_authentication.confirm_signup and instance.accepted:
+            token = TimestampSigner().sign(instance.pk)
             SignUpTokenMessage(
                 instance,
                 custom_message={

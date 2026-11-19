@@ -6,7 +6,9 @@ from django import forms
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
+from django.core.signing import TimestampSigner
 from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers, exceptions, validators
 from rest_framework_json_api.serializers import (
     Serializer, ModelSerializer, ResourceRelatedField, PolymorphicModelSerializer
@@ -424,6 +426,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     segment_id = serializers.CharField(required=False, allow_blank=True)
     accepted = serializers.BooleanField(read_only=True)
     access_code = serializers.CharField(required=False)
+    token = serializers.SerializerMethodField()
 
     def create(self, validated_data):
         password_authentication = PasswordAuthentication.load()
@@ -447,7 +450,12 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'email', 'url', 'segment_id', 'accepted', 'access_code')
+        fields = ('id', 'email', 'url', 'segment_id', 'accepted', 'access_code', 'token', )
+
+    def get_token(self, obj):
+        password_authentication = PasswordAuthentication.load()
+        if not password_authentication.confirm_signup:
+            return TimestampSigner().sign(obj.pk)
 
     def validate_email(self, email):
         member = Member.objects.filter(email__iexact=email).first()
@@ -872,6 +880,7 @@ class PasswordAuthenticationSerializer(BaseAuthenticationMethodSerializer):
             'confirm_signup',
             'account_creation_rules',
             'email_domains',
+            'request_access_email',
             'request_access_method',
             'request_access_instructions',
         )

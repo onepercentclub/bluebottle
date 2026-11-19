@@ -42,9 +42,13 @@
       {% include "two_factor/_wizard_actions.html" %}
 
       {%  if wizard.steps.current == 'auth' %}
-        {% if properties.TOKEN_AUTH.admin_login or client_ip == VPN_CLIENT_IP or client_ip == '127.0.0.1' %}
-            <p>or</p>
-            <a href="/token/redirect/?url={{request.GET.next}}" class="button default">{% trans "Login using SSO" %}</a>
+        {% if sso_methods %}
+            <p>{% trans "or" %}</p>
+            {% for method in sso_methods %}
+                <a href="{% url 'token-auth:saml-redirect' method.pk %}?url={{ request.GET.next|urlencode }}" class="button default">
+                    {% blocktrans with name=method.organization.name %}Login with your {{ name }} account{% endblocktrans %}
+                </a>
+            {% endfor %}
         {% endif %}
       {% endif %}
     </div>

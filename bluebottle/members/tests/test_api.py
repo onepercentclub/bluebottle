@@ -238,7 +238,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
     def setUp(self):
         self.settings = MemberPlatformSettings.load()
         super(SignUpTokenTestCase, self).setUp()
-        self.password_authentication = PasswordAuthenticationFactory.create()
+        self.password_authentication = PasswordAuthenticationFactory.create(confirm_signup=True)
         self.client = JSONAPITestClient()
 
     def test_create(self):
@@ -256,6 +256,32 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.assertEqual('Activate your account for Test', mail.outbox[0].subject)
         self.assertTrue('/auth/confirm' in mail.outbox[0].body)
         self.assertFalse(member.is_active)
+
+    def test_create_without_confirm_signup(self):
+        self.password_authentication.confirm_signup = False
+        self.password_authentication.save()
+        mail.outbox = []
+        email = 'test@example.com'
+
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 0)
+
+        member = Member.objects.get(email=email)
+        token = response.json()['data']['attributes']['token']
+        self.assertEqual(TimestampSigner().unsign(token), str(member.pk))
+        self.assertFalse(member.is_active)
+
+    def test_create_with_confirm_signup_has_no_token(self):
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': 'test@example.com'}, 'type': 'signup-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(response.json()['data']['attributes']['token'])
 
     def test_create_twice(self):
         email = 'test@example.com'
@@ -1233,7 +1259,7 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
-        self.password_authentication = PasswordAuthenticationFactory.create()
+        self.password_authentication = PasswordAuthenticationFactory.create(confirm_signup=True)
         self.url = reverse('user-signup-token')
 
     def test_anyone_can_signup(self):

@@ -2146,7 +2146,36 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
         logger.error.assert_called_once()
 
         self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('temporarily unavailable', self.response.json()['errors'][0]['detail'])
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['source']['pointer'], '/data/attributes/name')
+        self.assertIn('temporarily unavailable', error['detail'])
+
+    def test_rabobank_server_error(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL91ABNA0417164300',
+                    'name': 'Test Persoon'
+                }
+            }
+        }
+
+        error_response = mock.Mock(status_code=503, text='Service Unavailable')
+        with mock.patch(
+                "bluebottle.funding.adapters.rabobank.requests.post"
+        ) as mock_rabobank:
+            mock_rabobank.return_value.raise_for_status.side_effect = requests.HTTPError(
+                '503 Server Error', response=error_response
+            )
+            with mock.patch('bluebottle.funding.adapters.rabobank.logger') as logger:
+                self.perform_create(user=self.user, data=data)
+
+        logger.error.assert_called_once()
+        self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['source']['pointer'], '/data/attributes/name')
+        self.assertIn('temporarily unavailable', error['detail'])
 
     def test_close_match(self):
         # Mock ABN Amro API response for close match

@@ -237,6 +237,8 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def upcoming_slots(self):
+        if not self.pk:
+            return DateActivitySlot.objects.none()
         return self.slots.filter(
             models.Q(start__gt=timezone.now()) | models.Q(start__isnull=True)
         )

@@ -12,7 +12,8 @@ from rest_framework.generics import get_object_or_404
 
 from onelogin.saml2.response import OneLogin_Saml2_Response
 
-from bluebottle.members.models import SAMLDevice, SAMLAuthentication as SAMLAuthenticationMethod
+from bluebottle.members.models import SAMLAuthentication as SAMLAuthenticationMethod
+from bluebottle.token_auth.models import SAMLDevice
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.utils.utils import get_client_ip
@@ -57,6 +58,9 @@ class TokenRedirectView(View):
             enabled=True
         )
 
+        if method.restricted_ips and get_client_ip(request) not in method.restricted_ips:
+            return HttpResponseForbidden('Login not allowed from this IP address')
+
         auth = SAMLAuthentication(request, method)
         sso_url = auth.sso_url(target_url=self.target_url(request))
         return HttpResponseRedirect(sso_url)
@@ -78,6 +82,9 @@ class SAMLLoginView(View):
 
         if not method:
             return HttpResponseForbidden('Unknown audience or issuer')
+
+        if method.restricted_ips and get_client_ip(request) not in method.restricted_ips:
+            return HttpResponseForbidden('Login not allowed from this IP address')
 
         auth = SAMLAuthentication(request, method)
 

@@ -653,6 +653,14 @@ class SAMLAuthentication(AuthenticationMethod):
     admin_login_enabled = models.BooleanField(
         _('Admin login enabled'), default=True, help_text=_('Let users login into to the admin using SSO')
     )
+
+    restricted_ips = ArrayField(
+        models.GenericIPAddressField(),
+        verbose_name=_('Restricted IP addresses'),
+        help_text=_('Restrict access to the method to these IP adresses'),
+        blank=True,
+        default=list,
+    )
     provision = models.BooleanField(
         _('Provision users'),
         default=True,

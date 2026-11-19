@@ -168,6 +168,21 @@ class TokenRedirectViewTestCase(BluebottleTestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 404)
 
+    def test_restricted_ips_excluding_current_ip(self):
+        self.method.restricted_ips = ['198.51.100.1']
+        self.method.save()
+
+        response = self.client.get(self.url, REMOTE_ADDR='203.0.113.10')
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn('saml_request_id', self.client.session)
+
+    def test_restricted_ips_including_current_ip(self):
+        self.method.restricted_ips = ['198.51.100.1', '203.0.113.10']
+        self.method.save()
+
+        response = self.client.get(self.url, REMOTE_ADDR='203.0.113.10')
+        self.assertEqual(response.status_code, 302)
+
 
 class MetadataViewTestCase(BluebottleTestCase):
     namespaces = {'md': 'urn:oasis:names:tc:SAML:2.0:metadata'}
@@ -259,12 +274,13 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
         with open(filename) as response_file:
             self.saml_response = response_file.read()
 
-    def login(self):
+    def login(self, **extra):
         return self.client.post(
             self.url,
             urlencode({'SAMLResponse': self.saml_response, 'RelayState': '/en/admin'}),
             format=None,
-            content_type='application/x-www-form-urlencoded'
+            content_type='application/x-www-form-urlencoded',
+            **extra
         )
 
     def assert_logged_in_as(self, user):
@@ -363,6 +379,54 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
         user.refresh_from_db()
         self.assertEqual(user.email, 'someone-else@example.com')
         self.assertEqual(user.first_name, 'Old')
+
+    def test_restricted_ips_empty_allows_login(self):
+        self.assertEqual(self.method.restricted_ips, [])
+
+        response = self.login(REMOTE_ADDR='203.0.113.10')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/en/admin')
+        self.assert_logged_in_as(Member.objects.get(email='smartin@yaco.es'))
+
+    def test_restricted_ips_excluding_current_ip_blocks_login(self):
+        self.method.restricted_ips = ['198.51.100.1', '198.51.100.2']
+        self.method.save()
+
+        response = self.login(REMOTE_ADDR='203.0.113.10')
+
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Member.objects.filter(email__iexact='smartin@yaco.es').exists())
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_restricted_ips_including_current_ip_allows_login(self):
+        self.method.restricted_ips = ['198.51.100.1']
+        self.method.save()
+
+        response = self.login(REMOTE_ADDR='203.0.113.10')
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+        self.method.restricted_ips = ['198.51.100.1', '203.0.113.10']
+        self.method.save()
+
+        response = self.login(REMOTE_ADDR='203.0.113.10')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/en/admin')
+        self.assert_logged_in_as(Member.objects.get(email='smartin@yaco.es'))
+
+    def test_restricted_ips_uses_forwarded_for_header(self):
+        self.method.restricted_ips = ['203.0.113.10']
+        self.method.save()
+
+        response = self.login(
+            REMOTE_ADDR='10.0.0.1',
+            HTTP_X_FORWARDED_FOR='192.0.2.5, 203.0.113.10'
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assert_logged_in_as(Member.objects.get(email='smartin@yaco.es'))
 
     def add_segment_mapping(self, segment_type, source_attribute='eduPersonAffiliation'):
         return SAMLSegmentMapping.objects.create(

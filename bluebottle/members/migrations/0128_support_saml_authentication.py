@@ -3,7 +3,8 @@ import logging
 
 from django.conf import settings
 from django.core.files.base import ContentFile
-from django.db import connection, migrations
+from django.db import connection, migrations, models
+import django_better_admin_arrayfield.models.fields
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,11 @@ def create_support_saml_authentication(apps, schema_editor):
             name=SUPPORT_ORGANIZATION_NAME, slug=SUPPORT_ORGANIZATION_SLUG
         )
 
+    vpn_client_ip = getattr(settings, 'VPN_CLIENT_IP', None)
+    restricted_ips = [vpn_client_ip] if vpn_client_ip else []
+    if not restricted_ips:
+        logger.warning('VPN_CLIENT_IP is not set; support SAML authentication is not ip restricted')
+
     attributes = {field: '' for field in set(USER_FIELD_ATTRIBUTES.values())}
     for target, source in support_token_auth.get('assertion_mapping', {}).items():
         if not source:
@@ -73,6 +79,7 @@ def create_support_saml_authentication(apps, schema_editor):
         provision=True,
         debug=bool(support_token_auth.get('debug', False)),
         strict=bool(support_token_auth.get('strict', False)),
+        restricted_ips=restricted_ips,
         **attributes
     )
 
@@ -119,5 +126,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='samlauthentication',
+            name='restricted_ips',
+            field=django_better_admin_arrayfield.models.fields.ArrayField(base_field=models.GenericIPAddressField(), blank=True, default=list, help_text='Restrict access to the method to these IP adresses', size=None, verbose_name='Restricted IP addresses'),
+        ),
         migrations.RunPython(create_support_saml_authentication, remove_support_saml_authentication)
     ]

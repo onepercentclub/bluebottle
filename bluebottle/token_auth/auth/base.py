@@ -3,8 +3,6 @@ import logging
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
-from bluebottle.geo.models import Location
-from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 
 from bluebottle.utils.models import get_default_language
@@ -48,25 +46,15 @@ class BaseTokenAuthentication():
         user_model = get_user_model()()
         return dict([(key, value) for key, value in list(data.items()) if hasattr(user_model, key)])
 
+    def get_location(self):
+        pass
+
     def set_location(self, user, data):
-        name = data.get("location.name", data.get("location.slug", None))
+        location = self.get_location()
 
-        if name and not user.location_verified:
-            location = Location.objects.extra(
-                where=["%s ILIKE ANY (alternate_names)"],
-                params=[
-                    name.lower(),
-                ],
-            ).first()
-
-            if location:
-                user.location = location
-                user.save()
-            else:
-                if MemberPlatformSettings.load().create_locations:
-                    location = Location.objects.create(name=name)
-                    user.location = location
-                    user.save()
+        if location and not user.location_verified:
+            user.location = location
+            user.save()
 
     def get_segments(self):
         return {}
@@ -87,7 +75,7 @@ class BaseTokenAuthentication():
                     logger.error(e)
 
     def get_groups(self):
-        pass
+        return []
 
     def set_groups(self, user, data):
         groups = self.get_groups()

@@ -28,7 +28,7 @@ from bluebottle.files.views import ImageContentView
 from bluebottle.initiatives.serializers import (
     MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
 )
-from bluebottle.members.models import AuthenticationMethod
+from bluebottle.members.models import AuthenticationMethod, SAMLAuthentication
 from bluebottle.members.messages import SignUpTokenMessage, PasswordResetMessage
 from bluebottle.members.models import UserActivity
 from bluebottle.members.serializers import (
@@ -116,6 +116,14 @@ class AuthenticationMethodList(JsonApiViewMixin, generics.ListAPIView):
     serializer_class = AuthenticationMethodSerializer
     permission_classes = (AllowAny, )
     pagination_class = None
+
+    def get_queryset(self):
+        ip = get_client_ip(self.request)
+        restricted = SAMLAuthentication.objects.exclude(restricted_ips=[])
+        if ip:
+            restricted = restricted.exclude(restricted_ips__contains=[ip])
+
+        return super().get_queryset().exclude(pk__in=restricted.values('pk'))
 
 
 class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):

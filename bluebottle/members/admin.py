@@ -271,17 +271,17 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
             'enabled', 'organization', 'metadata_file', 'entity_id', 'idp_certificate_expiration',
             'single_signon_url', 'redirect_url', 'metadata_url'
         ]}),
-        ('Settings', {
-            'fields': [
-                'admin_login_enabled', 'provision', 'strict', 'debug'
-            ]
-        }),
         ('Attribute mapping', {
             'fields': [
                 'remote_id_attribute', 'email_attribute', 'last_name_attribute', 'first_name_attribute',
                 'work_location_attribute'
             ]
-        })
+        }),
+        ('Settings', {
+            'fields': [
+                'admin_login_enabled', 'provision', 'restricted_ips', 'strict', 'debug'
+            ]
+        }),
     )
 
     def redirect_url(self, obj):

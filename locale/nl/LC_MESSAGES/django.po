@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-16 12:35+0100\n"
-"PO-Revision-Date: 2026-11-17 11:17\n"
+"PO-Revision-Date: 2026-11-19 08:21\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -1623,7 +1623,7 @@ msgstr "Ga naar je activiteitpagina en vul de impact van je activiteit in, zodat
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_succeeded.html:17
 msgctxt "platform-email"
 msgid "And don’t forget to thank your awesome participants for their support."
-msgstr "Vergeet ook niet alle geweldige mensen te bedanken voor hun bijdrage en steun."
+msgstr "Vergeet ook niet alle geweldige deelnemers te bedanken voor hun bijdrage en steun."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:5
 #, python-format

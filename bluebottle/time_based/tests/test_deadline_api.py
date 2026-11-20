@@ -206,6 +206,25 @@ class DeadlineParticipantListAPITestCase(APITestCase):
         self.assertIsNotNone(self.model.registration)
         self.assertEqual(self.model.registration.status, 'accepted')
 
+    def test_create_by_email_owner_before_start_is_listed_as_active(self):
+        participant_user = BlueBottleUserFactory.create()
+        data = self.data
+        data['data']['attributes'] = {
+            'email': participant_user.email,
+            'send_messages': False,
+        }
+        self.perform_create(user=self.activity.owner, data=data)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.status, 'accepted')
+
+        response = self.client.get(
+            reverse('deadline-detail', args=(self.activity.pk,)),
+            user=self.activity.owner
+        )
+        links = response.json()['data']['relationships']['contributors']['links']
+        self.assertEqual(links['active']['meta']['count'], 1)
+        self.assertEqual(links['failed']['meta']['count'], 0)
+
     def test_create_anonymous(self):
         self.perform_create()
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)

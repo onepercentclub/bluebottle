@@ -868,7 +868,7 @@ class BaseAuthenticationMethodSerializer(ModelSerializer):
     """
     class Meta:
         model = AuthenticationMethod
-        fields = ('id', )
+        fields = ('id', 'secondary')
 
 
 class PasswordAuthenticationSerializer(BaseAuthenticationMethodSerializer):

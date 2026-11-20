@@ -1687,6 +1687,7 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
             organization=OrganizationFactory.create(),
             entity_id='https://idp.example.com',
             single_sign_on_url='https://idp.example.com/sso',
+            secondary=True,
         )
 
     def test_list(self):
@@ -1709,6 +1710,10 @@ class AuthenticationMethodListAPITestCase(BluebottleTestCase):
         self.assertEqual(password['attributes']['email-domains'], ['example.com'])
 
         self.assertEqual(data['authentication-methods/facebook']['attributes']['client-id'], self.facebook.client_id)
+
+        self.assertEqual(password['attributes']['secondary'], False)
+        self.assertEqual(data['authentication-methods/facebook']['attributes']['secondary'], False)
+        self.assertEqual(data['authentication-methods/saml']['attributes']['secondary'], True)
 
     def test_disabled_methods_excluded(self):
         self.facebook.enabled = False

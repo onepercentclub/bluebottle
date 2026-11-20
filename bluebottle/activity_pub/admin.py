@@ -990,8 +990,8 @@ def adopt_events(modeladmin, request, events):
         if event.adopted:
             skipped += 1
             continue
-        adoption_type = event.source.follow.adoption_type
         try:
+            adoption_type = event.source.follow.adoption_type
             with transaction.atomic():
                 if adoption_type == 'link':
                     adapter.link(event, request)

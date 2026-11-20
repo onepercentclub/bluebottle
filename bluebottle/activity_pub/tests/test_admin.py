@@ -3,7 +3,9 @@ from io import BytesIO
 import mock
 import requests
 from django.contrib import messages
+from django.contrib.admin import site as admin_site
 from django.contrib.admin.sites import AdminSite
+from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.exceptions import PermissionDenied
 from django.core.files import File
 from django.test import RequestFactory
@@ -13,8 +15,8 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub import admin as admin_module
 from bluebottle.activity_pub.admin import FollowerAdmin, adopt_events
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Accept, Follower, Following, Recipient
-from bluebottle.activity_pub.tests.factories import OrganizationFactory
+from bluebottle.activity_pub.models import Accept, Follower, Following, ReceivedActivity, Recipient
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory, OrganizationFactory
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
@@ -275,3 +277,27 @@ class AdoptEventsActionTestCase(BluebottleAdminTestCase):
                 adopt_events(self.modeladmin, self.request, [self.event])
 
         patched.adopt.assert_not_called()
+
+
+class AdoptEventsChangelistTestCase(BluebottleAdminTestCase):
+    def test_event_without_source_reports_error(self):
+        event = DoGoodEventFactory.create(iri='https://example.com/event/1')
+
+        request = RequestFactory().post(
+            '/',
+            {'action': 'adopt_events', 'index': 0, '_selected_action': [event.pk]},
+        )
+        request._dont_enforce_csrf_checks = True
+        request.user = self.superuser
+        request.session = {}
+        request._messages = FallbackStorage(request)
+
+        modeladmin = admin_site._registry[ReceivedActivity]
+        response = modeladmin.changelist_view(request)
+
+        self.assertEqual(response.status_code, 302)
+        messages = [str(message) for message in request._messages]
+        self.assertEqual(len(messages), 1)
+        self.assertIn('Failed to adopt', messages[0])
+        self.assertFalse(event.linked_activities.exists())
+        self.assertFalse(event.adopted_activities.exists())

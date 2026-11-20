@@ -177,7 +177,7 @@ class PasswordAuthenticationAdmin(
         (_('Request Access'), {
             'fields': [
                 'account_creation_rules', 'email_domains', 'request_access_method',
-                'request_access_info', 'request_access_instructions',
+                'request_access_info', 'request_access_instructions', 'request_access_email',
                 'request_access_code', 'request_access_code_display',
             ]
         }),
@@ -264,6 +264,7 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
 
     inlines = [SAMLSegmentMappingInline, SAMLGroupMappingInline]
 
+    raw_id_fields = ['organization']
     readonly_fields = ('idp_certificate_expiration', 'single_signon_url', 'redirect_url', 'metadata_url', )
 
     fieldsets = (
@@ -273,7 +274,7 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
         ]}),
         ('Attribute mapping', {
             'fields': [
-                'remote_id_attribute', 'email_attribute', 'last_name_attribute', 'first_name_attribute',
+                'remote_id_attribute', 'email_attribute', 'first_name_attribute', 'last_name_attribute',
                 'work_location_attribute'
             ]
         }),
@@ -288,12 +289,6 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
         return format_html(
             '<a href="{url}">{url}</a>',
             url=obj.redirect_url,
-        )
-
-    def single_signon_url(self, obj):
-        return format_html(
-            '<a href="{url}">{url}</a>',
-            url=obj.single_signon_url,
         )
 
     def metadata_url(self, obj):

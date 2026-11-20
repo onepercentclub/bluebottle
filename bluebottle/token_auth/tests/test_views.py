@@ -361,7 +361,8 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
 
         response = self.login()
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response['Location'].startswith('/token/error'))
         self.assertFalse(Member.objects.filter(email__iexact='smartin@yaco.es').exists())
         self.assertNotIn('_auth_user_id', self.client.session)
 
@@ -374,7 +375,8 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
 
         response = self.login()
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response['Location'].startswith('/token/error'))
         self.assertNotIn('_auth_user_id', self.client.session)
         user.refresh_from_db()
         self.assertEqual(user.email, 'someone-else@example.com')

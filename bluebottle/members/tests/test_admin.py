@@ -20,6 +20,7 @@ from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.admin import MemberAdmin, MemberCreationForm
 from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.members.tests.factories import SAMLAuthenticationFactory
 from bluebottle.notifications.models import MessageTemplate
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
@@ -702,3 +703,58 @@ class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.submitted_initiative_notifications)
+
+
+class AdminLoginViewTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('two_factor:login')
+
+    def get_sso_methods(self, **kwargs):
+        response = self.client.get(self.url, **kwargs)
+        self.assertEqual(response.status_code, 200)
+        return response.context['sso_methods']
+
+    def test_url_is_overridden(self):
+        self.assertEqual(self.url, reverse('admin-login'))
+
+    def test_no_methods(self):
+        self.assertEqual(self.get_sso_methods(), [])
+
+    def test_method(self):
+        method = SAMLAuthenticationFactory.create()
+        self.assertEqual(self.get_sso_methods(), [method])
+
+        response = self.client.get(self.url, {'next': '/en/admin/'})
+        self.assertContains(
+            response,
+            '{}?url=/en/admin/'.format(reverse('token-auth:saml-redirect', args=(method.pk, )))
+        )
+
+    def test_disabled_method(self):
+        SAMLAuthenticationFactory.create(enabled=False)
+        self.assertEqual(self.get_sso_methods(), [])
+
+    def test_admin_login_disabled(self):
+        SAMLAuthenticationFactory.create(admin_login_enabled=False)
+        self.assertEqual(self.get_sso_methods(), [])
+
+    def test_no_metadata(self):
+        SAMLAuthenticationFactory.create(metadata_file=None)
+        self.assertEqual(self.get_sso_methods(), [])
+
+    def test_restricted_ips_allowed(self):
+        method = SAMLAuthenticationFactory.create(restricted_ips=['10.0.0.1'])
+        self.assertEqual(self.get_sso_methods(REMOTE_ADDR='10.0.0.1'), [method])
+
+    def test_restricted_ips_not_allowed(self):
+        SAMLAuthenticationFactory.create(restricted_ips=['10.0.0.1'])
+        self.assertEqual(self.get_sso_methods(REMOTE_ADDR='10.0.0.2'), [])
+
+    def test_multiple_methods_show_organization(self):
+        first = SAMLAuthenticationFactory.create()
+        second = SAMLAuthenticationFactory.create()
+
+        response = self.client.get(self.url)
+        self.assertContains(response, first.organization.name)
+        self.assertContains(response, second.organization.name)

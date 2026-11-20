@@ -1,10 +1,13 @@
 import importlib
 import logging
+import os
 
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.db import connection, migrations, models
 import django_better_admin_arrayfield.models.fields
+
+from bluebottle.clients.utils import LocalTenant
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +18,8 @@ USER_FIELD_ATTRIBUTES = token_auth_migration.USER_FIELD_ATTRIBUTES
 SUPPORT_ORGANIZATION_NAME = 'GoodUp'
 SUPPORT_ORGANIZATION_SLUG = 'goodup'
 SUPPORT_GROUP_NAME = 'Staff'
+SUPPORT_ORGANIZATION_COLOR = '#3C96DC'
+SUPPORT_ORGANIZATION_LOGO = os.path.join(os.path.dirname(__file__), 'goodup-logo.png')
 
 
 def get_support_token_auth():
@@ -32,6 +37,7 @@ def get_support_token_auth():
 
 
 def create_support_saml_authentication(apps, schema_editor):
+    Client = apps.get_model('clients', 'Client')
     ContentType = apps.get_model('contenttypes', 'ContentType')
     Group = apps.get_model('auth', 'Group')
     Organization = apps.get_model('organizations', 'Organization')
@@ -39,72 +45,80 @@ def create_support_saml_authentication(apps, schema_editor):
     SAMLGroupMapping = apps.get_model('members', 'SAMLGroupMapping')
     MemberPlatformSettings = apps.get_model('members', 'MemberPlatformSettings')
 
-    support_token_auth = get_support_token_auth()
-    if not support_token_auth:
-        return
+    tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
+    with LocalTenant(tenant):
+        support_token_auth = get_support_token_auth()
+        if not support_token_auth:
+            return
 
-    idp = support_token_auth['idp']
-    sp = support_token_auth['sp']
+        idp = support_token_auth['idp']
+        sp = support_token_auth['sp']
 
-    if SAMLAuthentication.objects.filter(entity_id=sp['entityId']).exists():
-        return
+        if SAMLAuthentication.objects.filter(entity_id=sp['entityId']).exists():
+            return
 
-    organization = Organization.objects.filter(slug=SUPPORT_ORGANIZATION_SLUG).first()
-    if not organization:
-        organization = Organization.objects.create(
-            name=SUPPORT_ORGANIZATION_NAME, slug=SUPPORT_ORGANIZATION_SLUG
+        organization = Organization.objects.filter(slug=SUPPORT_ORGANIZATION_SLUG).first()
+        if not organization:
+            organization = Organization.objects.create(
+                name=SUPPORT_ORGANIZATION_NAME,
+                slug=SUPPORT_ORGANIZATION_SLUG,
+                color=SUPPORT_ORGANIZATION_COLOR,
+            )
+            with open(SUPPORT_ORGANIZATION_LOGO, 'rb') as logo:
+                organization.logo.save('goodup.png', ContentFile(logo.read()), save=True)
+
+        vpn_client_ip = getattr(settings, 'VPN_CLIENT_IP', None)
+        restricted_ips = [vpn_client_ip] if vpn_client_ip else []
+        restricted_ips.append('127.0.0.1')
+
+        if not restricted_ips:
+            logger.warning('VPN_CLIENT_IP is not set; support SAML authentication is not ip restricted')
+
+        attributes = {field: '' for field in set(USER_FIELD_ATTRIBUTES.values())}
+        for target, source in support_token_auth.get('assertion_mapping', {}).items():
+            if not source:
+                continue
+
+            if target in USER_FIELD_ATTRIBUTES:
+                attributes[USER_FIELD_ATTRIBUTES[target]] = source
+            else:
+                logger.warning('SUPPORT_TOKEN_AUTH: unsupported assertion mapping %s', target)
+
+        method = SAMLAuthentication.objects.create(
+            polymorphic_ctype=ContentType.objects.get_for_model(SAMLAuthentication),
+            enabled=True,
+            entity_id=sp['entityId'],
+            organization=organization,
+            admin_login_enabled=True,
+            provision=True,
+            debug=bool(support_token_auth.get('debug', False)),
+            strict=bool(support_token_auth.get('strict', False)),
+            restricted_ips=restricted_ips,
+            **attributes
         )
 
-    vpn_client_ip = getattr(settings, 'VPN_CLIENT_IP', None)
-    restricted_ips = [vpn_client_ip] if vpn_client_ip else []
-    if not restricted_ips:
-        logger.warning('VPN_CLIENT_IP is not set; support SAML authentication is not ip restricted')
-
-    attributes = {field: '' for field in set(USER_FIELD_ATTRIBUTES.values())}
-    for target, source in support_token_auth.get('assertion_mapping', {}).items():
-        if not source:
-            continue
-
-        if target in USER_FIELD_ATTRIBUTES:
-            attributes[USER_FIELD_ATTRIBUTES[target]] = source
+        if idp.get('x509cert'):
+            method.metadata_file.save(
+                f'{connection.tenant.client_name}-support-idp-metadata.xml',
+                ContentFile(build_idp_metadata(idp, sp.get('NameIDFormat'))),
+                save=True
+            )
         else:
-            logger.warning('SUPPORT_TOKEN_AUTH: unsupported assertion mapping %s', target)
+            logger.warning('SUPPORT_TOKEN_AUTH has no idp certificate; not creating a metadata file')
 
-    method = SAMLAuthentication.objects.create(
-        polymorphic_ctype=ContentType.objects.get_for_model(SAMLAuthentication),
-        enabled=True,
-        entity_id=sp['entityId'],
-        organization=organization,
-        admin_login_enabled=True,
-        provision=True,
-        debug=bool(support_token_auth.get('debug', False)),
-        strict=bool(support_token_auth.get('strict', False)),
-        restricted_ips=restricted_ips,
-        **attributes
-    )
+        member_settings = MemberPlatformSettings.objects.first()
+        if member_settings:
+            support_groups = member_settings.support_groups
+        else:
+            support_groups = MemberPlatformSettings._meta.get_field('support_groups').get_default()
 
-    if idp.get('x509cert'):
-        method.metadata_file.save(
-            f'{connection.tenant.client_name}-support-idp-metadata.xml',
-            ContentFile(build_idp_metadata(idp, sp.get('NameIDFormat'))),
-            save=True
+        SAMLGroupMapping.objects.create(
+            authentication_method=method,
+            group=Group.objects.get_or_create(name=SUPPORT_GROUP_NAME)[0],
+            group_names=list(support_groups or []),
+            staff=True,
+            superuser=True,
         )
-    else:
-        logger.warning('SUPPORT_TOKEN_AUTH has no idp certificate; not creating a metadata file')
-
-    member_settings = MemberPlatformSettings.objects.first()
-    if member_settings:
-        support_groups = member_settings.support_groups
-    else:
-        support_groups = MemberPlatformSettings._meta.get_field('support_groups').get_default()
-
-    SAMLGroupMapping.objects.create(
-        authentication_method=method,
-        group=Group.objects.get_or_create(name=SUPPORT_GROUP_NAME)[0],
-        group_names=list(support_groups or []),
-        staff=True,
-        superuser=True,
-    )
 
 
 def remove_support_saml_authentication(apps, schema_editor):
@@ -123,6 +137,7 @@ class Migration(migrations.Migration):
         ('members', '0127_samlgroupmapping_superuser_alter_member_gender_and_more'),
         ('auth', '0012_alter_user_first_name_max_length'),
         ('contenttypes', '0002_remove_content_type_name'),
+        ('organizations', '0027_organization_color'),
     ]
 
     operations = [

@@ -639,13 +639,22 @@ class GoogleAuthentication(SingletonAuthenticationMixin, AuthenticationMethod):
 
 
 class SAMLAuthentication(AuthenticationMethod):
-    entity_id = models.CharField(_('Entity id'))
+    entity_id = models.CharField(_('Entity id'), blank=True, unique=True)
     organization = models.ForeignKey('organizations.Organization', on_delete=models.CASCADE)
 
-    remote_id_attribute = models.CharField(_('Remote id attribute'))
-    email_attribute = models.CharField(_('Email attribute'))
-    last_name_attribute = models.CharField(_('Last name attribute'))
-    first_name_attribute = models.CharField(_('First name attribute'))
+    remote_id_attribute = models.CharField(_('Remote id attribute'), default='nameId')
+    email_attribute = models.CharField(
+        _('Email attribute'),
+        default='http://schemas.xmlsoap.org/ws/2005/05/identity/claims/email'
+    )
+    first_name_attribute = models.CharField(
+        _('First name attribute'),
+        default='http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'
+    )
+    last_name_attribute = models.CharField(
+        _('Last name attribute'),
+        default='http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'
+    )
     work_location_attribute = models.CharField(_('Work location attribute'), null=True, blank=True)
 
     metadata_file = models.FileField(upload_to='members/saml-metadata', null=True, blank=True)
@@ -670,6 +679,12 @@ class SAMLAuthentication(AuthenticationMethod):
         _('Debug'), default=False, help_text=_('Log more data, to make it easier to debug the intergration')
     )
     strict = models.BooleanField(_('Strict'), default=False, help_text=_('Be more strict when checking login requests'))
+
+    def save(self, *args, **kwargs):
+        if not self.entity_id and self.organization:
+            self.entity_id = f'https://{connection.tenant.domain_url}/saml/{self.organization.slug}'
+
+        super().save(*args, **kwargs)
 
     @property
     def idp_metadata(self):

@@ -35,6 +35,7 @@ class PasswordAuthenticationSerializerTestCase(AuthenticationMethodSerializerTes
             request_access_instructions='Ask your manager',
             request_access_email='access@example.com',
             request_access_code='secret-code',
+            secondary=True,
         )
 
     def test_render(self):
@@ -45,6 +46,7 @@ class PasswordAuthenticationSerializerTestCase(AuthenticationMethodSerializerTes
         resource = result['data']
         self.assertEqual(resource['type'], 'authentication-methods/password')
         self.assertEqual(resource['id'], str(self.method.pk))
+        self.assertEqual(resource['attributes']['secondary'], True)
         self.assertEqual(resource['attributes']['confirm-signup'], True)
         self.assertEqual(resource['attributes']['account-creation-rules'], 'whitelist_and_request')
         self.assertEqual(resource['attributes']['email-domains'], ['example.com', 'goodup.com'])
@@ -72,6 +74,7 @@ class FacebookAuthenticationSerializerTestCase(AuthenticationMethodSerializerTes
         self.assertEqual(resource['id'], str(self.method.pk))
 
         self.assertEqual(resource['attributes']['client-id'], 'fb-client-id')
+        self.assertEqual(resource['attributes']['secondary'], False)
         self.assertNotIn('relationships', resource)
         self.assertNotIn('meta', resource)
         self.assertNotIn('fb-secret', json.dumps(result))
@@ -91,6 +94,7 @@ class GoogleAuthenticationSerializerTestCase(AuthenticationMethodSerializerTestC
         self.assertEqual(resource['type'], 'authentication-methods/google')
         self.assertEqual(resource['id'], str(self.method.pk))
         self.assertEqual(resource['attributes']['client-id'], 'google-client-id')
+        self.assertEqual(resource['attributes']['secondary'], False)
         self.assertNotIn('relationships', resource)
         self.assertNotIn('meta', resource)
         self.assertNotIn('google-secret', json.dumps(result))
@@ -115,6 +119,7 @@ class SAMLAuthenticationSerializerTestCase(AuthenticationMethodSerializerTestCas
         self.assertEqual(resource['id'], str(self.method.pk))
 
         self.assertEqual(resource['attributes']['admin-login-enabled'], False)
+        self.assertEqual(resource['attributes']['secondary'], False)
         self.assertEqual(resource['relationships']['organization']['data']['id'], str(self.method.organization.pk))
         self.assertEqual(resource['meta']['redirect-url'], self.method.redirect_url)
 

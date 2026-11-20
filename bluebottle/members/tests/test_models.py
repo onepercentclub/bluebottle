@@ -61,6 +61,9 @@ class SingletonAuthenticationMethodTestMixin:
         self.method.refresh_from_db()
         self.assertFalse(self.method.enabled)
 
+    def test_secondary_default(self):
+        self.assertFalse(self.method.secondary)
+
     def test_create_after_delete(self):
         self.method.delete()
         self.factory.create()
@@ -146,6 +149,9 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.method = SAMLAuthenticationFactory.create()
+
+    def test_secondary_default(self):
+        self.assertFalse(self.method.secondary)
 
     def test_parse(self):
         self.assertEqual(

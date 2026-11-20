@@ -508,7 +508,16 @@ class UserActivity(models.Model):
 
 class AuthenticationMethod(PolymorphicModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    enabled = models.BooleanField(_('Enabled'), default=True)
+    enabled = models.BooleanField(
+        _('Enabled'),
+        help_text=_('Only enabled methods show in the login flow and let users authenticate.'),
+        default=True
+    )
+    secondary = models.BooleanField(
+        _('Secondary'),
+        help_text=_('Secondary authentication methods are shown with less emphasis in the authentication flow'),
+        default=False
+)
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods'

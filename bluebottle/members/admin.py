@@ -141,7 +141,7 @@ class AuthenticationMethodAdmin(PolymorphicParentModelAdmin):
         GoogleAuthentication,
         SAMLAuthentication
     )
-    list_display = ['authentication_method', 'enabled']
+    list_display = ['authentication_method', 'enabled', 'secondary']
 
     def authentication_method(self, obj):
         return obj.get_real_instance().method
@@ -173,7 +173,7 @@ class PasswordAuthenticationAdmin(
     )
 
     fieldsets = (
-        (_('Basic'), {'fields': ['translatable_info', 'enabled', 'confirm_signup']}),
+        (_('Basic'), {'fields': ['translatable_info', 'enabled', 'secondary', 'confirm_signup']}),
         (_('Request Access'), {
             'fields': [
                 'account_creation_rules', 'email_domains', 'request_access_method',
@@ -269,7 +269,7 @@ class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
 
     fieldsets = (
         ('General', {'fields': [
-            'enabled', 'organization', 'metadata_file', 'entity_id', 'idp_certificate_expiration',
+            'enabled', 'secondary', 'organization', 'metadata_file', 'entity_id', 'idp_certificate_expiration',
             'single_signon_url', 'redirect_url', 'metadata_url'
         ]}),
         ('Attribute mapping', {

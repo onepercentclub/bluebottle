@@ -1,3 +1,5 @@
+import logging
+
 import requests
 from django import forms
 from django.contrib import admin
@@ -5,7 +7,7 @@ from django.contrib import messages
 from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import connection
+from django.db import connection, transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -45,6 +47,8 @@ from bluebottle.bluebottle_dashboard.decorators import admin_form
 from bluebottle.members.models import Member
 from bluebottle.utils.admin import admin_info_box
 from bluebottle.webfinger.client import client
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(ActivityPubModel)
@@ -977,16 +981,48 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
 
 @admin.action(description="Adopt selected activities")
 def adopt_events(modeladmin, request, events):
+    if not request.user.has_perm("deeds.add_activity"):
+        raise PermissionDenied
+
+    adopted = 0
+    skipped = 0
     for event in events:
-        if event.source.follow.adoption_type == 'link':
-            adapter.link(event)
-        if event.source.follow.adoption_type == 'template':
-            adapter.adopt(event)
-    modeladmin.message_user(
-        request,
-        _('{amount} activities have been adopted.').format(amount=len(events)),
-        messages.SUCCESS,
-    )
+        if event.adopted:
+            skipped += 1
+            continue
+        try:
+            adoption_type = event.source.follow.adoption_type
+            with transaction.atomic():
+                if adoption_type == 'link':
+                    adapter.link(event, request)
+                elif adoption_type == 'template':
+                    adapter.adopt(event, request)
+                else:
+                    raise ValueError(f'Unknown adoption type {adoption_type}')
+            adopted += 1
+        except Exception as error:
+            logger.exception(
+                'Failed to adopt received activity %s for tenant %s',
+                event.pk,
+                connection.tenant.schema_name,
+            )
+            modeladmin.message_user(
+                request,
+                _('Failed to adopt {name}: {error}').format(name=event.name, error=error),
+                messages.ERROR,
+            )
+    if skipped:
+        modeladmin.message_user(
+            request,
+            _('{amount} activities were already adopted and have been skipped.').format(amount=skipped),
+            messages.WARNING,
+        )
+    if adopted:
+        modeladmin.message_user(
+            request,
+            _('{amount} activities have been adopted.').format(amount=adopted),
+            messages.SUCCESS,
+        )
 
 
 @admin.register(ReceivedActivity)

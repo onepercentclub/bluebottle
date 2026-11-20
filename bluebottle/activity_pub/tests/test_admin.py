@@ -2,15 +2,21 @@ from io import BytesIO
 
 import mock
 import requests
+from django.contrib import messages
+from django.contrib.admin import site as admin_site
 from django.contrib.admin.sites import AdminSite
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.core.exceptions import PermissionDenied
 from django.core.files import File
+from django.test import RequestFactory
 from django.urls import reverse
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.admin import FollowerAdmin
+from bluebottle.activity_pub import admin as admin_module
+from bluebottle.activity_pub.admin import FollowerAdmin, adopt_events
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Accept, Follower, Following, Recipient
-from bluebottle.activity_pub.tests.factories import OrganizationFactory
+from bluebottle.activity_pub.models import Accept, Follower, Following, ReceivedActivity, Recipient
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory, OrganizationFactory
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
@@ -202,3 +208,96 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         follower.refresh_from_db()
         self.assertEqual(follower.publish_mode, 'automatic')
         self.assertTrue(Accept.objects.filter(object=follower).exists())
+
+
+class AdoptEventsActionTestCase(BluebottleAdminTestCase):
+    def setUp(self):
+        super().setUp()
+        self.modeladmin = mock.Mock()
+        self.request = RequestFactory().post('/')
+        self.request.user = self.superuser
+        self.event = mock.Mock()
+        self.event.adopted = False
+        self.event.name = 'Event'
+        self.event.source.follow.adoption_type = 'template'
+
+    def test_adopt_passes_request(self):
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.adopt.assert_called_once_with(self.event, self.request)
+        self.assertEqual(self.modeladmin.message_user.call_args[0][2], messages.SUCCESS)
+
+    def test_link_passes_request(self):
+        self.event.source.follow.adoption_type = 'link'
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.link.assert_called_once_with(self.event, self.request)
+
+    def test_adopt_failure_reports_error_and_continues(self):
+        other = mock.Mock()
+        other.adopted = False
+        other.source.follow.adoption_type = 'template'
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            patched.adopt.side_effect = [ValueError('boom'), None]
+            with mock.patch.object(admin_module.logger, 'exception') as log:
+                adopt_events(self.modeladmin, self.request, [self.event, other])
+
+        log.assert_called_once()
+        self.assertIn('boom', self.modeladmin.message_user.call_args_list[0][0][1])
+        self.assertEqual(patched.adopt.call_count, 2)
+        levels = [call[0][2] for call in self.modeladmin.message_user.call_args_list]
+        self.assertEqual(levels, [messages.ERROR, messages.SUCCESS])
+
+    def test_already_adopted_is_skipped(self):
+        self.event.adopted = True
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.adopt.assert_not_called()
+        patched.link.assert_not_called()
+        self.assertEqual(self.modeladmin.message_user.call_args[0][2], messages.WARNING)
+
+    def test_unknown_adoption_type_reports_error(self):
+        self.event.source.follow.adoption_type = 'other'
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.adopt.assert_not_called()
+        patched.link.assert_not_called()
+        levels = [call[0][2] for call in self.modeladmin.message_user.call_args_list]
+        self.assertEqual(levels, [messages.ERROR])
+
+    def test_requires_add_permission(self):
+        self.request.user = mock.Mock()
+        self.request.user.has_perm.return_value = False
+        with mock.patch.object(admin_module, 'adapter', autospec=True) as patched:
+            with self.assertRaises(PermissionDenied):
+                adopt_events(self.modeladmin, self.request, [self.event])
+
+        patched.adopt.assert_not_called()
+
+
+class AdoptEventsChangelistTestCase(BluebottleAdminTestCase):
+    def test_event_without_source_reports_error(self):
+        event = DoGoodEventFactory.create(iri='https://example.com/event/1')
+
+        request = RequestFactory().post(
+            '/',
+            {'action': 'adopt_events', 'index': 0, '_selected_action': [event.pk]},
+        )
+        request._dont_enforce_csrf_checks = True
+        request.user = self.superuser
+        request.session = {}
+        request._messages = FallbackStorage(request)
+
+        modeladmin = admin_site._registry[ReceivedActivity]
+        response = modeladmin.changelist_view(request)
+
+        self.assertEqual(response.status_code, 302)
+        messages = [str(message) for message in request._messages]
+        self.assertEqual(len(messages), 1)
+        self.assertIn('Failed to adopt', messages[0])
+        self.assertFalse(event.linked_activities.exists())
+        self.assertFalse(event.adopted_activities.exists())

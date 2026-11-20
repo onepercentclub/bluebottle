@@ -517,7 +517,7 @@ class AuthenticationMethod(PolymorphicModel):
         _('Secondary'),
         help_text=_('Secondary authentication methods are shown with less emphasis in the authentication flow'),
         default=False
-)
+    )
 
     class JSONAPIMeta:
         resource_name = 'authentication-methods'

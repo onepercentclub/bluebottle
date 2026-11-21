@@ -775,14 +775,14 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     action_text_color = ColorField(
         _('Action text colour'), null=True, blank=True,
         help_text=_(
-            'Automatically set to white or dark grey so text stays readable on the action colour'
+            'Text colour on the action colour. Use white or dark grey, whichever is readable.'
         )
     )
     alternative_link_color = ColorField(
         _('Action text on white'), null=True, blank=True,
         default=None,
         help_text=_(
-            'Automatically darkened so the action colour stays readable as text on white or grey'
+            'The action colour as text on a white or grey background. Use a darker shade if the action colour is too light to read.'
         )
     )
     action_on_tint_color = ColorField(
@@ -818,7 +818,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
         help_text=_(
-            'Automatically set to white or dark grey so text stays readable on the description colour'
+            'Text colour on the descriptive colour. Use white or dark grey, whichever is readable.'
         )
     )
     description_on_background_color = ColorField(

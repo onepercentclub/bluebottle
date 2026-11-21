@@ -7,8 +7,17 @@ from bluebottle.activities.messages.base import BaseParticipantNotification
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
-from bluebottle.time_based.models import PeriodicActivity, DeadlineActivity
+from bluebottle.time_based.models import DateActivity, PeriodicActivity, DeadlineActivity
 from bluebottle.time_based.utils import duration_to_hours
+
+
+def get_upcoming_slots(registration):
+    return [
+        get_slot_info(p.slot) for p in registration.participants.filter(
+            status__in=['new', 'accepted', 'succeeded'],
+            slot__start__gte=now(),
+        ).all()
+    ]
 
 
 class ManagerRegistrationNotification(TransitionMessage):
@@ -96,6 +105,13 @@ class UserRegistrationNotification(BaseParticipantNotification):
 class UserRegistrationAcceptedNotification(UserRegistrationNotification):
     subject = pgettext('platform-email', 'You have been selected for the activity "{title}"')
     template = 'messages/registrations/user_accepted'
+    append_custom_message = True
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj.activity, DateActivity):
+            context['slots'] = get_upcoming_slots(self.obj)
+        return context
 
 
 class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
@@ -103,11 +119,13 @@ class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
         "platform-email", 'Your team has been selected for the activity "{title}"'
     )
     template = "messages/registrations/team_accepted"
+    append_custom_message = True
 
 
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext('platform-email', 'You have not been selected for the activity "{title}"')
     template = 'messages/registrations/user_rejected'
+    append_custom_message = True
     link_to_overview = True
 
 
@@ -122,6 +140,7 @@ class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
         "platform-email", 'Your team has not been selected for the activity "{title}"'
     )
     template = "messages/registrations/team_rejected"
+    append_custom_message = True
     link_to_overview = True
 
 
@@ -188,12 +207,7 @@ class PeriodicUserAppliedNotification(UserRegistrationNotification):
 class DateUserBaseNotification(UserRegistrationNotification):
     def get_context(self, recipient):
         context = super(DateUserBaseNotification, self).get_context(recipient)
-        context['slots'] = [
-            get_slot_info(p.slot) for p in self.obj.participants.filter(
-                status__in=['new', 'accepted', 'succeeded'],
-                slot__start__gte=now(),
-            ).all()
-        ]
+        context['slots'] = get_upcoming_slots(self.obj)
         return context
     delay = 60
 

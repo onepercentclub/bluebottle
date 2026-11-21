@@ -66,6 +66,7 @@ from bluebottle.grant_management.models import GrantApplication, GrantDonor
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.notifications.activity_messages import get_activity_messages
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
@@ -707,7 +708,10 @@ class ActivityChildAdmin(
     registration_fields = None
 
     def get_registration_fields(self, request, obj):
-        return self.registration_fields
+        fields = self.registration_fields
+        if fields and 'succeed' in get_activity_messages().get(self.model, {}):
+            fields = tuple(fields) + ('send_thank_you_message',)
+        return fields
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)

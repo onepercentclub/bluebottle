@@ -26,6 +26,7 @@ from bluebottle.time_based.messages.teams import (
     CaptainTeamMemberRemovedNotification,
     UserTeamMemberRemovedNotification,
 )
+from bluebottle.time_based.messages.thank_you import TeamThankYouNotification
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.states.participants import (
     TeamScheduleParticipantStateMachine,
@@ -55,6 +56,12 @@ class TeamTriggers(TriggerManager):
         )
 
     triggers = [
+        TransitionTrigger(
+            TeamStateMachine.succeed,
+            effects=[
+                NotificationEffect(TeamThankYouNotification),
+            ],
+        ),
         TransitionTrigger(
             TeamStateMachine.initiate,
             effects=[

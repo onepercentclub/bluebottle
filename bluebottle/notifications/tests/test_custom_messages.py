@@ -177,7 +177,7 @@ def _message_cases():
     ]
 
 
-def _assert_custom_message_replaces_default(test_case, obj, message_class, default_snippet):
+def _send_custom_message(test_case, obj, message_class, default_snippet):
     default_message = message_class(obj)
     custom_message = message_class(obj, custom_message=CUSTOM_MESSAGE)
     recipient = default_message.get_recipients()[0]
@@ -193,21 +193,46 @@ def _assert_custom_message_replaces_default(test_case, obj, message_class, defau
     custom_message.compose_and_send()
     test_case.assertEqual(len(mail.outbox), 1)
     test_case.assertIn(CUSTOM_MESSAGE, mail.outbox[0].body)
-    test_case.assertNotIn(default_snippet, mail.outbox[0].body)
+    return mail.outbox[0].body
 
 
 class CustomMessageNotificationTestCase(BluebottleTestCase):
 
     def test_custom_message_replaces_default_body(self):
         for case in _message_cases():
+            if case['message'].append_custom_message:
+                continue
             with self.subTest(case=case['label']):
                 obj = _create_test_object(case)
-                _assert_custom_message_replaces_default(
-                    self,
-                    obj,
-                    case['message'],
-                    case['default_snippet'],
+                body = _send_custom_message(self, obj, case['message'], case['default_snippet'])
+                self.assertNotIn(case['default_snippet'], body)
+
+    def test_custom_message_appended_to_default_body(self):
+        cases = [case for case in _message_cases() if case['message'].append_custom_message]
+        self.assertEqual(
+            [case['label'] for case in cases],
+            ['registration_accepted', 'registration_rejected'],
+        )
+        for case in cases:
+            with self.subTest(case=case['label']):
+                obj = _create_test_object(case)
+                body = _send_custom_message(self, obj, case['message'], case['default_snippet'])
+                self.assertIn(case['default_snippet'], body)
+                self.assertLess(body.index(case['default_snippet']), body.index(CUSTOM_MESSAGE))
+
+    def test_append_forms_are_not_prefilled(self):
+        for form_class in (RegistrationAcceptForm, RegistrationRejectForm):
+            with self.subTest(form=form_class.__name__):
+                registration = DateRegistrationFactory.create(
+                    activity=DateActivityFactory.create(title=ACTIVITY_TITLE, slots=[])
                 )
+                form = form_class(instance=registration)
+                self.assertIsNone(form.fields['custom_message'].initial)
+                self.assertIn('added below', str(form.fields['custom_message'].help_text))
+
+    def test_replace_forms_are_prefilled(self):
+        form = ActivityRejectedForm(instance=DeedFactory.create(title=ACTIVITY_TITLE))
+        self.assertTrue(form.fields['custom_message'].initial)
 
 
 def _notification_messages_for_transition(model, transition):

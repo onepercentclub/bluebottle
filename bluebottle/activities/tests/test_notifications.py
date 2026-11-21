@@ -176,6 +176,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertBodyContains(
             'You did it! Your activity "Save the world!" has succeeded, '
             'that calls for a celebration!')
+        self.assertBodyNotContains('thank your awesome participants')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View activity')
 

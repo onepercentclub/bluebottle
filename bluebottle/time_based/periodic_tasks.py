@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from bluebottle.activities.periodic_tasks import UnpublishedActivitiesReminderTask
 
-from bluebottle.fsm.effects import TransitionEffect
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import ReminderSlotNotification
@@ -27,6 +27,7 @@ from bluebottle.time_based.states import (
     TimeBasedStateMachine,
     TimeContributionStateMachine,
     DateActivitySlotStateMachine,
+    DeadlineParticipantStateMachine,
     ScheduleSlotStateMachine,
 )
 from bluebottle.time_based.states.slots import PeriodicSlotStateMachine
@@ -52,6 +53,26 @@ class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):
 
     def __str__(self):
         return str(_("Close registration when the registration date has passed."))
+
+
+class DeadlineActivityStartedTask(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return self.model.objects.filter(
+            start__lte=date.today(),
+            status__in=['open', 'full', 'registration_closed'],
+            contributors__status='accepted'
+        ).distinct()
+
+    effects = [
+        RelatedTransitionEffect(
+            'accepted_participants',
+            DeadlineParticipantStateMachine.succeed,
+        ),
+    ]
+
+    def __str__(self):
+        return str(_("Succeed the accepted participants when the start date has passed."))
 
 
 class DateActivityFinishedTask(ModelPeriodicTask):
@@ -262,6 +283,7 @@ DateActivitySlot.periodic_tasks = [
 TimeContribution.periodic_tasks = [TimeContributionFinishedTask]
 
 DeadlineActivity.periodic_tasks = [
+    DeadlineActivityStartedTask,
     ActivityFinishedTask,
     TimeBasedActivityRegistrationDeadlinePassedTask,
 ]

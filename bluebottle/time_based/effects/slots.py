@@ -1,7 +1,7 @@
 from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
-from bluebottle.fsm.effects import Effect, TransitionEffect
+from bluebottle.fsm.effects import Effect, RelatedTransitionEffect, TransitionEffect
 from bluebottle.time_based.states.slots import DateActivitySlotStateMachine
 
 
@@ -105,3 +105,17 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
             all(slot.status == 'full' for slot in joinable)
         ):
             activity.states.lock(save=True)
+
+
+class CancelUpcomingSlotsEffect(
+    RelatedTransitionEffect('upcoming_slots', DateActivitySlotStateMachine.auto_cancel)
+):
+    def pre_save(self, effects):
+        # Cancelling the last slot cancels the activity before that slot is saved,
+        # so its database copy here is still open. Skip it.
+        cancelled = [
+            effect.instance for effect in effects
+            if getattr(effect.instance, 'status', None) == 'cancelled'
+        ]
+        self.instances = [slot for slot in self.instances if slot not in cancelled]
+        super().pre_save(effects)

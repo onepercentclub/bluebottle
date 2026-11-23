@@ -39,9 +39,9 @@ class PreviewContributor:
     team = None
     answer = None
 
-    def __init__(self, activity, team=False, recipient=None):
+    def __init__(self, activity, recipient=None, team=False):
         self.activity = activity
-        self.user = PreviewMember(team=team)
+        self.user = PreviewMember(recipient, team=team)
         self.participants = EmptyQuery()
         slots = getattr(activity, 'slots', None)
         self.slot = slots.order_by('start').first() if slots is not None else None

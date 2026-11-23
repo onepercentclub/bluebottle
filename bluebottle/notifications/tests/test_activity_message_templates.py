@@ -997,7 +997,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         previews = self.previews(self.get(activity, recipient=stranger))
 
         self.assertNotIn('Stranger', previews['accept']['body'])
-        self.assertIn('Hi [name],', previews['accept']['body'])
+        self.assertIn('Hi [Participant&#x27;s first name],', previews['accept']['body'])
 
     def test_invalid_recipient(self):
         activity = DeadlineActivityFactory.create(owner=self.owner)
@@ -1008,7 +1008,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('Hi [name],', self.previews(response)['accept']['body'])
+        self.assertIn('Hi [Participant&#x27;s first name],', self.previews(response)['accept']['body'])
 
     def test_unsupported_type(self):
         response = self.get(RegisteredDateActivityFactory.create(owner=self.owner))

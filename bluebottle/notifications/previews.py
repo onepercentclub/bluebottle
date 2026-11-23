@@ -13,8 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 class PreviewMember:
-    def __init__(self, member=None):
-        placeholder = pgettext('platform-email', "[name]")
+
+  def __init__(self, member=None):
+        if team:
+            placeholder = pgettext('platform-email', "[Team captain's first name]")
+        else:
+            placeholder = pgettext('platform-email', "[Participant's first name]")
         self.first_name = member.first_name if member else placeholder
         self.full_name = member.full_name if member else placeholder
         self.primary_language = get_current_language()
@@ -35,9 +39,9 @@ class PreviewContributor:
     team = None
     answer = None
 
-    def __init__(self, activity, recipient=None):
+    def __init__(self, activity, team=False, recipient=None):
         self.activity = activity
-        self.user = PreviewMember(recipient)
+        self.user = PreviewMember(team=team)
         self.participants = EmptyQuery()
         slots = getattr(activity, 'slots', None)
         self.slot = slots.order_by('start').first() if slots is not None else None
@@ -78,8 +82,33 @@ def render_block(template_name, block_name, context):
         return re.sub(r'\s*\n\s*', '\n', html).strip()
 
 
+def get_preview_slot(activity, slot):
+    if slot and activity.slots.count() == 1:
+        return {**slot, 'location': slot['location'] or pgettext('platform-email', '[Location]')}
+    return {
+        'title': '',
+        'is_online': False,
+        'online_meeting_url': None,
+        'location': pgettext('platform-email', '[Location]'),
+        'location_hint': '',
+        'start_date': pgettext('platform-email', '[Date]'),
+        'start_time': pgettext('platform-email', '[Time]'),
+        'end_time': '',
+        'timezone': '',
+    }
+
+  
+def add_placeholders(activity, context):
+    if 'slot' in context:
+        context['slot'] = get_preview_slot(activity, context['slot'])
+
+
+def is_team_activity(activity):
+    return isinstance(activity, ScheduleActivity) and activity.team_activity == 'teams'
+
+
 def get_message_class(activity, message_classes):
-    if isinstance(activity, ScheduleActivity) and activity.team_activity == 'teams':
+    if is_team_activity(activity):
         return message_classes[1]
     return message_classes[0]
 
@@ -88,11 +117,12 @@ def get_message_previews(activity, recipient=None):
     previews = []
     for action, message_classes in get_activity_actions(activity).items():
         message_class = get_message_class(activity, message_classes)
-        obj = PreviewContributor(activity, recipient)
+        obj = PreviewContributor(activity, recipient, team=is_team_activity(activity))
         message = message_class(obj)
         message.attachments = lambda recipient=None: None
         try:
             context = message.get_context(obj.user)
+            add_placeholders(activity, context)
             previews.append(MessagePreview(
                 activity,
                 action,

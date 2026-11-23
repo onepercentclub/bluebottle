@@ -2,6 +2,7 @@ from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.activities.messages.base import ThankYouMessageMixin
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.time_based.messages.messages import get_slot_info
 
 
 class ThankYouNotification(ThankYouMessageMixin, TransitionMessage):
@@ -24,7 +25,11 @@ class ThankYouNotification(ThankYouMessageMixin, TransitionMessage):
 
 
 class DateParticipantThankYouNotification(ThankYouNotification):
-    pass
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if self.obj.slot and self.obj.slot.start:
+            context['slot'] = get_slot_info(self.obj.slot)
+        return context
 
 
 class ScheduleParticipantThankYouNotification(ThankYouNotification):

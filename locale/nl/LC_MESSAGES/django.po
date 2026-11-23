@@ -14977,3 +14977,21 @@ msgstr "Heropen de peiling voor stemmen."
 #: bluebottle/voting/views.py:54
 msgid "You have already voted in this poll"
 msgstr "Je hebt al gestemd in deze peiling"
+
+#: bluebottle/time_based/messages/registrations.py:249
+#, python-brace-format
+msgctxt "platform-email"
+msgid "You have registered your team to the activity '{title}'"
+msgstr "Je hebt je team geregistreerd voor de activiteit '{title}'"
+
+#: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:7
+#, python-format
+msgctxt "platform-email"
+msgid ""
+"\n"
+"      You registered your team to an activity on <b>%(site_name)s!</b>\n"
+"    "
+msgstr ""
+"\n"
+"      Je hebt je team geregistreerd voor een activiteit op <b>%(site_name)s!</b>\n"
+"    "

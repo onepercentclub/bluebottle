@@ -14568,19 +14568,19 @@ msgstr "Mises à jour récentes du mur"
 #: bluebottle/updates/messages.py:28
 #, python-brace-format
 msgctxt "platform-email"
-msgid "New update from '{title}'"
+msgid "New update from \"{title}\""
 msgstr "Nouvelle mise à jour de « {title} »"
 
 #: bluebottle/updates/messages.py:46
 #, python-brace-format
 msgctxt "platform-email"
-msgid "A new message is posted on '{title}'"
+msgid "A new message is posted on \"{title}\""
 msgstr "Un nouveau message a été publié sur « {title} »"
 
 #: bluebottle/updates/messages.py:58
 #, python-brace-format
 msgctxt "platform-email"
-msgid "You have a reply on '{title}'"
+msgid "You have a reply on \"{title}\""
 msgstr "Vous avez reçu une réponse sur « {title} »"
 
 #: bluebottle/updates/models.py:21

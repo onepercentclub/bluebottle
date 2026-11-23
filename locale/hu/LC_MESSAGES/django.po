@@ -14559,20 +14559,20 @@ msgstr "Legutolsó fal frissítések"
 #: bluebottle/updates/messages.py:28
 #, python-brace-format
 msgctxt "platform-email"
-msgid "New update from '{title}'"
-msgstr "'{title}' – Friss hírek"
+msgid "New update from \"{title}\""
+msgstr "\"{title}\" – Friss hírek"
 
 #: bluebottle/updates/messages.py:46
 #, python-brace-format
 msgctxt "platform-email"
-msgid "A new message is posted on '{title}'"
-msgstr "Új üzenet jelent meg '{title}' témára"
+msgid "A new message is posted on \"{title}\""
+msgstr "Új üzenet jelent meg \"{title}\" témára"
 
 #: bluebottle/updates/messages.py:58
 #, python-brace-format
 msgctxt "platform-email"
-msgid "You have a reply on '{title}'"
-msgstr "Válaszod érkezett '{title}' témában"
+msgid "You have a reply on \"{title}\""
+msgstr "Válaszod érkezett \"{title}\" témában"
 
 #: bluebottle/updates/models.py:21
 msgid "Author"

@@ -14541,20 +14541,20 @@ msgstr "Recente wall-updates"
 #: bluebottle/updates/messages.py:28
 #, python-brace-format
 msgctxt "platform-email"
-msgid "New update from '{title}'"
-msgstr "Nieuwe update van '{title}'"
+msgid "New update from \"{title}\""
+msgstr "Nieuwe update van \"{title}\""
 
 #: bluebottle/updates/messages.py:46
 #, python-brace-format
 msgctxt "platform-email"
-msgid "A new message is posted on '{title}'"
-msgstr "Er is een nieuw bericht geplaatst op '{title}'"
+msgid "A new message is posted on \"{title}\""
+msgstr "Er is een nieuw bericht geplaatst op \"{title}\""
 
 #: bluebottle/updates/messages.py:58
 #, python-brace-format
 msgctxt "platform-email"
-msgid "You have a reply on '{title}'"
-msgstr "Je hebt een reactie op '{title}'"
+msgid "You have a reply on \"{title}\""
+msgstr "Je hebt een reactie op \"{title}\""
 
 #: bluebottle/updates/models.py:21
 msgid "Author"

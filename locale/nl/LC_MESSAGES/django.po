@@ -14981,8 +14981,8 @@ msgstr "Je hebt al gestemd in deze peiling"
 #: bluebottle/time_based/messages/registrations.py:249
 #, python-brace-format
 msgctxt "platform-email"
-msgid "You have registered your team to the activity '{title}'"
-msgstr "Je hebt je team geregistreerd voor de activiteit '{title}'"
+msgid "You have registered your team to the activity \"{title}\""
+msgstr "Je hebt je team geregistreerd voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:7
 #, python-format

@@ -618,7 +618,7 @@ class TeamScheduleRegistrationTriggerTestCase(
         )
         self.assertEqual(
             mail.outbox[1].subject,
-            "You have registered your team to the activity '{}'".format(
+            'You have registered your team to the activity "{}"'.format(
                 self.activity.title
             ),
         )

@@ -1,7 +1,7 @@
 from datetime import datetime, time
 
 import dateutil
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import Trunc
 from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
@@ -609,10 +609,12 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         )
 
     def get_slot_count(self, obj):
-        slots = obj.slots.exclude(status__in=['draft', 'cancelled'])
+        slots = obj.slots.exclude(status='cancelled')
         # Date filters are ignored on purpose, unlike date_info.total.
+        # Incomplete (draft) slots count too, they are slots the manager added.
         # Past activities fall back to all slots, like the preview serializer.
-        return slots.filter(start__gte=now()).count() or slots.count()
+        upcoming = slots.filter(Q(start__gte=now()) | Q(status='draft'))
+        return upcoming.count() or slots.count()
 
     def get_filtered_slots(self, obj, only_upcoming=False):
 

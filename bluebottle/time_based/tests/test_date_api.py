@@ -156,11 +156,24 @@ class DateActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestC
 
         DateActivitySlotFactory.create_batch(3, activity=self.model, status='open')
         DateActivitySlotFactory.create_batch(2, activity=self.model, status='cancelled')
-        DateActivitySlotFactory.create_batch(2, activity=self.model, status='draft')
 
         self.perform_get(user=self.model.owner)
 
         self.assertMeta('slot-count', 3)
+
+    def test_get_slot_count_includes_draft_slots(self):
+        self.model.slots.get().delete()
+
+        DateActivitySlotFactory.create(
+            activity=self.model, status='draft', start=None, duration=None
+        )
+        DateActivitySlotFactory.create(
+            activity=self.model, status='open', start=now() + timedelta(days=2)
+        )
+
+        self.perform_get(user=self.model.owner)
+
+        self.assertMeta('slot-count', 2)
 
     def test_get_slot_count_no_slots(self):
         self.model.slots.get().delete()

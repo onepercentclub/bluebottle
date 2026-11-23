@@ -273,6 +273,35 @@ class DateThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
         self.finish(second_slot)
         self.assertEqual(len(self.thank_you_mails()), 2)
 
+    def test_slot_details_in_mail(self):
+        self.slot.title = 'Morning shift'
+        self.slot.save()
+        self.finish(self.slot)
+
+        message = self.thank_you_mails()[0]
+        self.assertIn('Morning shift', message.body)
+        self.assertIn('slot-info', message.alternatives[0][0])
+
+    def test_each_mail_shows_own_slot(self):
+        self.slot.title = 'First slot'
+        self.slot.save()
+        second_slot = DateActivitySlotFactory.create(
+            activity=self.activity, start=now() + timedelta(days=4), title='Second slot'
+        )
+        DateParticipantFactory.create(
+            registration=self.participant.registration, slot=second_slot, as_user=self.user
+        )
+        mail.outbox = []
+
+        self.finish(self.slot)
+        self.finish(second_slot)
+
+        first, second = self.thank_you_mails()
+        self.assertIn('First slot', first.body)
+        self.assertNotIn('Second slot', first.body)
+        self.assertIn('Second slot', second.body)
+        self.assertNotIn('First slot', second.body)
+
     def test_send_once(self):
         self.finish(self.slot)
         self.slot.start = now() + timedelta(days=2)

@@ -172,7 +172,7 @@ def _message_cases():
             'label': 'registration_rejected',
             'factory': DateRegistrationFactory,
             'message': UserRegistrationRejectedNotification,
-            'default_snippet': 'you have not been selected for the activity',
+            'default_snippet': "won't be able to participate in an activity",
         }
     ]
 

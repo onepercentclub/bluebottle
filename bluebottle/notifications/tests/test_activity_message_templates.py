@@ -3,7 +3,9 @@ from datetime import date, timedelta
 
 from django.contrib.auth.models import Group
 from django.core import mail
+from django.template import defaultfilters
 from django.urls import reverse
+from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
@@ -907,10 +909,16 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
             'You have been selected for the activity "Clean the park"'
         )
         self.assertIn('Clean the park', previews['accept']['body'])
-        self.assertIn('Hi [name],', previews['accept']['body'])
+        self.assertIn('Hi [Participant&#x27;s first name],', previews['accept']['body'])
         self.assertNotIn('<html', previews['accept']['body'])
         self.assertEqual(previews['accept']['action-title'], 'View activity')
-        self.assertEqual(previews['reject']['action-title'], 'View all activities')
+        self.assertEqual(previews['reject']['action-title'], 'View activity')
+        self.assertEqual(
+            previews['reject']['subject'],
+            'You have been rejected from the activity "Clean the park"'
+        )
+        self.assertIn("Unfortunately you won't be able to participate", previews['reject']['body'])
+        self.assertIn('Clean the park', previews['reject']['body'])
 
     def test_deed(self):
         activity = DeedFactory.create(owner=self.owner, title='Plant a tree')
@@ -934,10 +942,46 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         previews = self.previews(self.get(activity))
         self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
 
+    def test_date_single_slot(self):
+        activity = DateActivityFactory.create(owner=self.owner, slots=[])
+        slot = DateActivitySlotFactory.create(
+            activity=activity, start=now() + timedelta(weeks=2), is_online=True
+        )
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn(defaultfilters.date(slot.start), body)
+        self.assertIn('Anywhere/Online', body)
+        self.assertNotIn('[Date]', body)
+
+    def test_date_single_slot_without_date(self):
+        activity = DateActivityFactory.create(owner=self.owner, slots=[])
+        DateActivitySlotFactory.create(activity=activity, start=None, location=None)
+        body = self.previews(self.get(activity))['join']['body']
+
+        for placeholder in ('[Date]', '[Time]', '[Location]'):
+            self.assertIn(placeholder, body)
+        self.assertNotIn('to ()', body)
+
+    def test_date_multiple_slots(self):
+        activity = DateActivityFactory.create(owner=self.owner)
+        DateActivitySlotFactory.create(activity=activity, title='Second slot')
+        body = self.previews(self.get(activity))['join']['body']
+
+        for placeholder in ('[Date]', '[Time]', '[Location]'):
+            self.assertIn(placeholder, body)
+        self.assertNotIn('Second slot', body)
+
     def test_schedule_teams(self):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
         previews = self.previews(self.get(activity))
         self.assertIn('team', previews['accept']['subject'])
+        self.assertEqual(
+            previews['reject']['subject'],
+            'Your team has been rejected from the activity "{}"'.format(activity.title)
+        )
+        self.assertIn("Unfortunately your team won't be able to participate", previews['reject']['body'])
+        self.assertEqual(previews['reject']['action-title'], 'View activity')
+        self.assertIn('Hi [Team captain&#x27;s first name],', previews['accept']['body'])
 
     def test_unsupported_type(self):
         response = self.get(RegisteredDateActivityFactory.create(owner=self.owner))
@@ -1007,7 +1051,7 @@ class RegistrationReviewMessageTestCase(BluebottleTestCase):
     def test_reject_appends_message(self):
         message = self.transition('reject', '<p>Maybe next time</p>')
 
-        self.assertIn('Unfortunately, you have not been selected', message.body)
+        self.assertIn("Unfortunately you won't be able to participate", message.body)
         self.assertIn('Maybe next time', message.body)
 
     def test_message_replaces_activity_template(self):

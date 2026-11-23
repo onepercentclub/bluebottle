@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class PreviewMember:
 
-  def __init__(self, member=None):
+    def __init__(self, member=None, team=None):
         if team:
             placeholder = pgettext('platform-email', "[Team captain's first name]")
         else:
@@ -97,7 +97,7 @@ def get_preview_slot(activity, slot):
         'timezone': '',
     }
 
-  
+
 def add_placeholders(activity, context):
     if 'slot' in context:
         context['slot'] = get_preview_slot(activity, context['slot'])

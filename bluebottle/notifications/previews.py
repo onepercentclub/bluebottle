@@ -6,7 +6,7 @@ from django.template.loader_tags import BLOCK_CONTEXT_KEY, BlockContext, BlockNo
 from django.utils.translation import pgettext
 
 from bluebottle.notifications.activity_messages import get_activity_actions
-from bluebottle.time_based.models import ScheduleActivity
+from bluebottle.time_based.models import PeriodicActivity, ScheduleActivity
 from bluebottle.utils.utils import get_current_language
 
 logger = logging.getLogger(__name__)
@@ -77,6 +77,13 @@ def render_block(template_name, block_name, context):
         return re.sub(r'\s*\n\s*', '\n', html).strip()
 
 
+def add_placeholders(activity, context):
+    if 'duration' in context and not activity.duration:
+        context['duration'] = pgettext('platform-email', '(x)')
+    if isinstance(activity, PeriodicActivity) and not context.get('period'):
+        context['period'] = pgettext('platform-email', '(period)')
+
+
 def get_message_class(activity, message_classes):
     if isinstance(activity, ScheduleActivity) and activity.team_activity == 'teams':
         return message_classes[1]
@@ -92,6 +99,7 @@ def get_message_previews(activity):
         message.attachments = lambda recipient=None: None
         try:
             context = message.get_context(obj.user)
+            add_placeholders(activity, context)
             previews.append(MessagePreview(
                 activity,
                 action,

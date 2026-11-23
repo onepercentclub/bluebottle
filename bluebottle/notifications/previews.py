@@ -81,6 +81,27 @@ def render_block(template_name, block_name, context):
         return re.sub(r'\s*\n\s*', '\n', html).strip()
 
 
+def get_preview_slot(activity, slot):
+    if slot and activity.slots.count() == 1:
+        return {**slot, 'location': slot['location'] or pgettext('platform-email', '[Location]')}
+    return {
+        'title': '',
+        'is_online': False,
+        'online_meeting_url': None,
+        'location': pgettext('platform-email', '[Location]'),
+        'location_hint': '',
+        'start_date': pgettext('platform-email', '[Date]'),
+        'start_time': pgettext('platform-email', '[Time]'),
+        'end_time': '',
+        'timezone': '',
+    }
+
+  
+def add_placeholders(activity, context):
+    if 'slot' in context:
+        context['slot'] = get_preview_slot(activity, context['slot'])
+
+
 def is_team_activity(activity):
     return isinstance(activity, ScheduleActivity) and activity.team_activity == 'teams'
 
@@ -100,6 +121,7 @@ def get_message_previews(activity):
         message.attachments = lambda recipient=None: None
         try:
             context = message.get_context(obj.user)
+            add_placeholders(activity, context)
             previews.append(MessagePreview(
                 activity,
                 action,

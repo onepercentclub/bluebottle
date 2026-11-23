@@ -5,7 +5,7 @@
         <br/>
     {% endif %}
     {{ slot.start_date }} <br/>
-    {{ slot.start_time }} to {{ slot.end_time }} ({{slot.timezone}})
+    {{ slot.start_time }}{% if slot.end_time %} to {{ slot.end_time }} ({{ slot.timezone }}){% endif %}
     <br/>
     {% if slot.is_online %}
         {% if slot.online_meeting_url %}

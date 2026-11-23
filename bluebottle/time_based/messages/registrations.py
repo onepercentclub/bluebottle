@@ -123,10 +123,9 @@ class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
 
 
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
-    subject = pgettext('platform-email', 'You have not been selected for the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been rejected from the activity "{title}"')
     template = 'messages/registrations/user_rejected'
     append_custom_message = True
-    link_to_overview = True
 
 
 class UserRegistrationRemovedNotification(UserRegistrationNotification):
@@ -137,11 +136,10 @@ class UserRegistrationRemovedNotification(UserRegistrationNotification):
 
 class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext(
-        "platform-email", 'Your team has not been selected for the activity "{title}"'
+        "platform-email", 'Your team has been rejected from the activity "{title}"'
     )
     template = "messages/registrations/team_rejected"
     append_custom_message = True
-    link_to_overview = True
 
 
 class UserRegistrationStoppedNotification(UserRegistrationNotification):
@@ -246,5 +244,7 @@ class TeamAppliedNotification(UserRegistrationNotification):
 
 
 class TeamJoinedNotification(UserRegistrationNotification):
-    subject = pgettext("platform-email", 'You have registered your team on "{site_name}"')
+    subject = pgettext(
+        "platform-email", 'You have registered your team to the activity "{title}"'
+    )
     template = "messages/registrations/schedule/team_joined"

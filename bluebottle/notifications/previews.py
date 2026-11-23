@@ -13,9 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 class PreviewMember:
-    def __init__(self):
-        self.first_name = pgettext('platform-email', "[name]")
-        self.full_name = pgettext('platform-email', "[name]")
+    def __init__(self, team=False):
+        if team:
+            placeholder = pgettext('platform-email', "[Team captain's first name]")
+        else:
+            placeholder = pgettext('platform-email', "[Participant's first name]")
+        self.first_name = placeholder
+        self.full_name = placeholder
         self.primary_language = get_current_language()
         self.email = ''
 
@@ -34,9 +38,9 @@ class PreviewContributor:
     team = None
     answer = None
 
-    def __init__(self, activity):
+    def __init__(self, activity, team=False):
         self.activity = activity
-        self.user = PreviewMember()
+        self.user = PreviewMember(team=team)
         self.participants = EmptyQuery()
         slots = getattr(activity, 'slots', None)
         self.slot = slots.order_by('start').first() if slots is not None else None
@@ -92,14 +96,18 @@ def get_preview_slot(activity, slot):
         'timezone': '',
     }
 
-
+  
 def add_placeholders(activity, context):
     if 'slot' in context:
         context['slot'] = get_preview_slot(activity, context['slot'])
 
 
+def is_team_activity(activity):
+    return isinstance(activity, ScheduleActivity) and activity.team_activity == 'teams'
+
+
 def get_message_class(activity, message_classes):
-    if isinstance(activity, ScheduleActivity) and activity.team_activity == 'teams':
+    if is_team_activity(activity):
         return message_classes[1]
     return message_classes[0]
 
@@ -108,7 +116,7 @@ def get_message_previews(activity):
     previews = []
     for action, message_classes in get_activity_actions(activity).items():
         message_class = get_message_class(activity, message_classes)
-        obj = PreviewContributor(activity)
+        obj = PreviewContributor(activity, team=is_team_activity(activity))
         message = message_class(obj)
         message.attachments = lambda recipient=None: None
         try:

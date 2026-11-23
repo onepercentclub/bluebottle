@@ -909,7 +909,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
             'You have been selected for the activity "Clean the park"'
         )
         self.assertIn('Clean the park', previews['accept']['body'])
-        self.assertIn('Hi [name],', previews['accept']['body'])
+        self.assertIn('Hi [Participant&#x27;s first name],', previews['accept']['body'])
         self.assertNotIn('<html', previews['accept']['body'])
         self.assertEqual(previews['accept']['action-title'], 'View activity')
         self.assertEqual(previews['reject']['action-title'], 'View all activities')
@@ -969,6 +969,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
         previews = self.previews(self.get(activity))
         self.assertIn('team', previews['accept']['subject'])
+        self.assertIn('Hi [Team captain&#x27;s first name],', previews['accept']['body'])
 
     def test_unsupported_type(self):
         response = self.get(RegisteredDateActivityFactory.create(owner=self.owner))

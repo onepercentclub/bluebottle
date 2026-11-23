@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 12:35+0100\n"
+"POT-Creation-Date: 2026-11-23 17:11+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,7 +59,7 @@ msgstr ""
 
 #: bluebottle/activities/admin.py:238 bluebottle/activities/models.py:197
 #: bluebottle/activities/models.py:283 bluebottle/collect/admin.py:98
-#: bluebottle/funding/models.py:353 bluebottle/time_based/admin.py:1158
+#: bluebottle/funding/models.py:354 bluebottle/time_based/admin.py:1158
 #: bluebottle/updates/models.py:28
 msgid "Activity"
 msgstr ""
@@ -644,7 +644,7 @@ msgid "Highlight this activity to show it on homepage"
 msgstr ""
 
 #: bluebottle/activities/models.py:73 bluebottle/bb_accounts/models.py:261
-#: bluebottle/funding/models.py:706 bluebottle/notifications/admin.py:151
+#: bluebottle/funding/models.py:707 bluebottle/notifications/admin.py:151
 msgid "Partner organisation"
 msgstr ""
 
@@ -680,7 +680,7 @@ msgstr ""
 
 #: bluebottle/activities/models.py:119 bluebottle/cms/models.py:51
 #: bluebottle/cms/models.py:131 bluebottle/cms/models.py:148
-#: bluebottle/funding/models.py:350 bluebottle/news/models.py:22
+#: bluebottle/funding/models.py:351 bluebottle/news/models.py:22
 #: bluebottle/pages/models.py:234 bluebottle/pages/models.py:328
 #: bluebottle/slides/models.py:46 bluebottle/statistics/models.py:237
 msgid "Title"
@@ -695,7 +695,7 @@ msgstr ""
 #: bluebottle/activities/models.py:121 bluebottle/activity_links/models.py:57
 #: bluebottle/activity_pub/admin.py:833 bluebottle/cms/models.py:53
 #: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:26
-#: bluebottle/cms/utils/color_contrast.py:291 bluebottle/funding/models.py:351
+#: bluebottle/cms/utils/color_contrast.py:291 bluebottle/funding/models.py:352
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
 #: bluebottle/grant_management/models.py:498
 msgid "Description"
@@ -788,7 +788,7 @@ msgid "Contribution"
 msgstr ""
 
 #: bluebottle/activities/models.py:395 bluebottle/activities/models.py:458
-#: bluebottle/funding/models.py:601 bluebottle/time_based/models.py:1130
+#: bluebottle/funding/models.py:602 bluebottle/time_based/models.py:1130
 msgid "Contributions"
 msgstr ""
 
@@ -1458,7 +1458,7 @@ msgid "committed hours"
 msgstr ""
 
 #: bluebottle/activities/templates/admin/activity-stats.html:29
-#: bluebottle/funding/models.py:433
+#: bluebottle/funding/models.py:434
 msgid "amount"
 msgstr ""
 
@@ -2287,7 +2287,7 @@ msgid "Collect campaigns"
 msgstr ""
 
 #: bluebottle/activity_pub/models.py:360 bluebottle/activity_pub/models.py:361
-#: bluebottle/funding/models.py:229 bluebottle/impact/models.py:28
+#: bluebottle/funding/models.py:230 bluebottle/impact/models.py:28
 #: bluebottle/initiatives/models.py:338
 #: bluebottle/settings/admin_dashboard.py:121
 msgid "Funding"
@@ -2842,7 +2842,7 @@ msgid "date joined"
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:163 bluebottle/clients/models.py:15
-#: bluebottle/funding/models.py:689 bluebottle/organizations/models.py:162
+#: bluebottle/funding/models.py:690 bluebottle/organizations/models.py:162
 #: bluebottle/terms/models.py:14 bluebottle/voting/models.py:165
 msgid "updated"
 msgstr ""
@@ -3465,7 +3465,7 @@ msgid "name"
 msgstr ""
 
 #: bluebottle/categories/models.py:48 bluebottle/categories/models.py:92
-#: bluebottle/funding/models.py:398 bluebottle/funding/models.py:429
+#: bluebottle/funding/models.py:399 bluebottle/funding/models.py:430
 #: bluebottle/geo/models.py:123 bluebottle/geo/models.py:161
 #: bluebottle/initiatives/models.py:648 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/time_based/models.py:1151
@@ -3481,7 +3481,7 @@ msgstr ""
 msgid "categories"
 msgstr ""
 
-#: bluebottle/categories/models.py:87 bluebottle/funding/models.py:428
+#: bluebottle/categories/models.py:87 bluebottle/funding/models.py:429
 #: bluebottle/initiatives/models.py:38 bluebottle/pages/models.py:58
 #: bluebottle/time_based/models.py:297 bluebottle/voting/models.py:16
 #: bluebottle/voting/models.py:76
@@ -3525,7 +3525,7 @@ msgid "content blocks"
 msgstr ""
 
 #: bluebottle/clients/models.py:14 bluebottle/files/models.py:26
-#: bluebottle/funding/models.py:688 bluebottle/organizations/models.py:161
+#: bluebottle/funding/models.py:689 bluebottle/organizations/models.py:161
 #: bluebottle/terms/models.py:13 bluebottle/updates/models.py:59
 #: bluebottle/voting/models.py:164
 msgid "created"
@@ -3704,7 +3704,7 @@ msgid "Funding activities online"
 msgstr ""
 
 #: bluebottle/cms/models.py:177 bluebottle/funding/admin.py:317
-#: bluebottle/funding/models.py:584 bluebottle/statistics/models.py:94
+#: bluebottle/funding/models.py:585 bluebottle/statistics/models.py:94
 msgid "Donations"
 msgstr ""
 
@@ -4925,6 +4925,18 @@ msgstr ""
 msgid "Model has changed status"
 msgstr ""
 
+#: bluebottle/funding/adapters/rabobank.py:56
+msgid ""
+"The bank could not check this account. Please verify the IBAN and the "
+"account holder name and try again."
+msgstr ""
+
+#: bluebottle/funding/adapters/rabobank.py:61
+#: bluebottle/funding/adapters/rabobank.py:67
+msgid ""
+"The bank account check is temporarily unavailable. Please try again later."
+msgstr ""
+
 #: bluebottle/funding/admin.py:97
 msgid "Payment"
 msgstr ""
@@ -4972,7 +4984,7 @@ msgstr ""
 msgid "donations"
 msgstr ""
 
-#: bluebottle/funding/admin.py:408 bluebottle/funding/models.py:349
+#: bluebottle/funding/admin.py:408 bluebottle/funding/models.py:350
 #: bluebottle/funding/templates/dashboard/grant_applications_ready_for_review.html:14
 #: bluebottle/funding/templates/dashboard/grantpayouts_ready_for_approval.html:14
 #: bluebottle/funding/templates/dashboard/payouts_ready_for_approval.html:14
@@ -5318,247 +5330,247 @@ msgctxt "platform-email"
 msgid "A new crowdfunding campaign is ready to be reviewed on {site_name}"
 msgstr ""
 
-#: bluebottle/funding/models.py:55
+#: bluebottle/funding/models.py:56
 msgid "Payment currency"
 msgstr ""
 
-#: bluebottle/funding/models.py:56
+#: bluebottle/funding/models.py:57
 msgid "Payment currencies"
 msgstr ""
 
-#: bluebottle/funding/models.py:142 bluebottle/funding/models.py:434
+#: bluebottle/funding/models.py:143 bluebottle/funding/models.py:435
 msgid "deadline"
 msgstr ""
 
-#: bluebottle/funding/models.py:145
+#: bluebottle/funding/models.py:146
 msgid ""
 "If you enter a deadline, leave the duration field empty. This will override "
 "the duration."
 msgstr ""
 
-#: bluebottle/funding/models.py:149 bluebottle/time_based/models.py:454
+#: bluebottle/funding/models.py:150 bluebottle/time_based/models.py:454
 #: bluebottle/time_based/models.py:1998 bluebottle/time_based/models.py:2022
 msgid "duration"
 msgstr ""
 
-#: bluebottle/funding/models.py:152
+#: bluebottle/funding/models.py:153
 msgid ""
 "If you enter a duration, leave the deadline field empty for it to be "
 "automatically calculated."
 msgstr ""
 
-#: bluebottle/funding/models.py:170 bluebottle/funding/models.py:480
+#: bluebottle/funding/models.py:171 bluebottle/funding/models.py:481
 #: bluebottle/funding/states.py:495 bluebottle/grant_management/models.py:313
 #: bluebottle/grant_management/models.py:407
 msgid "started"
 msgstr ""
 
-#: bluebottle/funding/models.py:188
+#: bluebottle/funding/models.py:189
 msgid "Crowdfunding campaign"
 msgstr ""
 
-#: bluebottle/funding/models.py:230
+#: bluebottle/funding/models.py:231
 msgid "Funding Activities"
 msgstr ""
 
-#: bluebottle/funding/models.py:356
+#: bluebottle/funding/models.py:357
 msgid "Limit"
 msgstr ""
 
-#: bluebottle/funding/models.py:359
+#: bluebottle/funding/models.py:360
 msgid "How many of this rewards are available"
 msgstr ""
 
-#: bluebottle/funding/models.py:377
+#: bluebottle/funding/models.py:378
 msgid "Gift"
 msgstr ""
 
-#: bluebottle/funding/models.py:378
+#: bluebottle/funding/models.py:379
 msgid "Gifts"
 msgstr ""
 
-#: bluebottle/funding/models.py:385
+#: bluebottle/funding/models.py:386
 msgid "Not allowed to delete a reward with successful donations."
 msgstr ""
 
-#: bluebottle/funding/models.py:409
+#: bluebottle/funding/models.py:410
 msgid "budget line"
 msgstr ""
 
-#: bluebottle/funding/models.py:410
+#: bluebottle/funding/models.py:411
 msgid "budget lines"
 msgstr ""
 
-#: bluebottle/funding/models.py:423 bluebottle/funding/models.py:470
+#: bluebottle/funding/models.py:424 bluebottle/funding/models.py:471
 #: bluebottle/impact/models.py:111
 msgid "activity"
 msgstr ""
 
-#: bluebottle/funding/models.py:462
+#: bluebottle/funding/models.py:463
 msgid "fundraiser"
 msgstr ""
 
-#: bluebottle/funding/models.py:463
+#: bluebottle/funding/models.py:464
 msgid "fundraisers"
 msgstr ""
 
-#: bluebottle/funding/models.py:479 bluebottle/funding/states.py:485
+#: bluebottle/funding/models.py:480 bluebottle/funding/states.py:485
 #: bluebottle/grant_management/models.py:312 bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr ""
 
-#: bluebottle/funding/models.py:481 bluebottle/grant_management/models.py:314
+#: bluebottle/funding/models.py:482 bluebottle/grant_management/models.py:314
 msgid "completed"
 msgstr ""
 
-#: bluebottle/funding/models.py:528
+#: bluebottle/funding/models.py:529
 msgid "Funding payout"
 msgstr ""
 
-#: bluebottle/funding/models.py:529
+#: bluebottle/funding/models.py:530
 msgid "Funding payouts"
 msgstr ""
 
-#: bluebottle/funding/models.py:532 bluebottle/grant_management/models.py:387
+#: bluebottle/funding/models.py:533 bluebottle/grant_management/models.py:387
 msgid "Payout"
 msgstr ""
 
-#: bluebottle/funding/models.py:551
+#: bluebottle/funding/models.py:552
 msgid "Fake name"
 msgstr ""
 
-#: bluebottle/funding/models.py:552
+#: bluebottle/funding/models.py:553
 msgid "Override donor name / Name for guest donation"
 msgstr ""
 
-#: bluebottle/funding/models.py:553
+#: bluebottle/funding/models.py:554
 msgid "anonymous"
 msgstr ""
 
-#: bluebottle/funding/models.py:583 bluebottle/funding/models.py:600
+#: bluebottle/funding/models.py:584 bluebottle/funding/models.py:601
 msgid "Donation"
 msgstr ""
 
-#: bluebottle/funding/models.py:690
+#: bluebottle/funding/models.py:691
 msgid "reviewed"
 msgstr ""
 
-#: bluebottle/funding/models.py:693
+#: bluebottle/funding/models.py:694
 msgid "Public payout account"
 msgstr ""
 
-#: bluebottle/funding/models.py:737
+#: bluebottle/funding/models.py:738
 msgid "IP address"
 msgstr ""
 
-#: bluebottle/funding/models.py:744
+#: bluebottle/funding/models.py:745
 msgid "Plain KYC account"
 msgstr ""
 
-#: bluebottle/funding/models.py:745
+#: bluebottle/funding/models.py:746
 msgid "Plain KYC accounts"
 msgstr ""
 
-#: bluebottle/funding/models.py:825
+#: bluebottle/funding/models.py:826
 msgid "Individual person"
 msgstr ""
 
-#: bluebottle/funding/models.py:829
+#: bluebottle/funding/models.py:830
 msgid "Non-profit organization"
 msgstr ""
 
-#: bluebottle/funding/models.py:834
+#: bluebottle/funding/models.py:835
 msgid "Commercial company"
 msgstr ""
 
-#: bluebottle/funding/models.py:841
+#: bluebottle/funding/models.py:842
 msgid "Hide names from all donations"
 msgstr ""
 
-#: bluebottle/funding/models.py:844
+#: bluebottle/funding/models.py:845
 msgid "Crowdfunding for verified organisations"
 msgstr ""
 
-#: bluebottle/funding/models.py:847
+#: bluebottle/funding/models.py:848
 msgid ""
 "When enabled, campaign initiators must select from a list of organisations "
 "with a public payout account that will receive the raised money, rather than "
 "providing the bank account details themselves."
 msgstr ""
 
-#: bluebottle/funding/models.py:854
+#: bluebottle/funding/models.py:855
 msgid "Do IBAN bank account number vs. name checks"
 msgstr ""
 
-#: bluebottle/funding/models.py:857
+#: bluebottle/funding/models.py:858
 msgid ""
 "In the KYC flow do a check to see if bank account number and name match. "
 "This will be done by the Surepay API, and only Dutch IBANs are supported. "
 msgstr ""
 
-#: bluebottle/funding/models.py:863
+#: bluebottle/funding/models.py:864
 msgid "Limit donations"
 msgstr ""
 
-#: bluebottle/funding/models.py:866
+#: bluebottle/funding/models.py:867
 msgid "Automatically stop accepting donations once the target is reached."
 msgstr ""
 
-#: bluebottle/funding/models.py:871
+#: bluebottle/funding/models.py:872
 msgid "Name to use for match funding"
 msgstr ""
 
-#: bluebottle/funding/models.py:875
+#: bluebottle/funding/models.py:876
 msgid ""
 "Change this if you want to use something else then the platform name for "
 "matching amounts."
 msgstr ""
 
-#: bluebottle/funding/models.py:879
+#: bluebottle/funding/models.py:880
 msgid "verification types"
 msgstr ""
 
-#: bluebottle/funding/models.py:894 bluebottle/funding/models.py:895
+#: bluebottle/funding/models.py:895 bluebottle/funding/models.py:896
 msgid "funding settings"
 msgstr ""
 
-#: bluebottle/funding/models.py:901
+#: bluebottle/funding/models.py:902
 msgid "Match"
 msgstr ""
 
-#: bluebottle/funding/models.py:902
+#: bluebottle/funding/models.py:903
 msgid "Mistype"
 msgstr ""
 
-#: bluebottle/funding/models.py:903
+#: bluebottle/funding/models.py:904
 msgid "Close match"
 msgstr ""
 
-#: bluebottle/funding/models.py:904
+#: bluebottle/funding/models.py:905
 msgid "No match"
 msgstr ""
 
-#: bluebottle/funding/models.py:905
+#: bluebottle/funding/models.py:906
 msgid "Could not match"
 msgstr ""
 
-#: bluebottle/funding/models.py:916
+#: bluebottle/funding/models.py:917
 msgid "Hashed IBAN to check against"
 msgstr ""
 
-#: bluebottle/funding/models.py:919
+#: bluebottle/funding/models.py:920
 msgid "Result of the IBAN check"
 msgstr ""
 
-#: bluebottle/funding/models.py:927
+#: bluebottle/funding/models.py:928
 msgid "Name of the account holder"
 msgstr ""
 
-#: bluebottle/funding/models.py:959
+#: bluebottle/funding/models.py:962
 msgid "The name does not match the account number."
 msgstr ""
 
-#: bluebottle/funding/models.py:966
+#: bluebottle/funding/models.py:969
 msgid "Unknown error"
 msgstr ""
 

@@ -11280,8 +11280,8 @@ msgstr "Je bent geselecteerd voor de activiteit \"{title}\" 🎉"
 #: bluebottle/time_based/messages/registrations.py:109
 #, python-brace-format
 msgctxt "platform-email"
-msgid "You have not been selected for the activity \"{title}\""
-msgstr "Je bent niet geselecteerd voor de activiteit \"{title}\""
+msgid "You have been rejected from the activity \"{title}\""
+msgstr "Je bent afgewezen voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/messages/messages.py:658
 #: bluebottle/time_based/messages/participants.py:69
@@ -11424,8 +11424,8 @@ msgstr "Je bent verwijderd van de activiteit \"{title}\""
 #: bluebottle/time_based/messages/registrations.py:122
 #, python-brace-format
 msgctxt "platform-email"
-msgid "Your team has not been selected for the activity \"{title}\""
-msgstr "Je team is niet geaccepteerd voor de activiteit \"{title}\""
+msgid "Your team has been rejected from the activity \"{title}\""
+msgstr "Je team is afgewezen voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/messages/registrations.py:130
 #, python-brace-format
@@ -13687,7 +13687,6 @@ msgstr "\n"
 "Je neemt deel aan een activiteit op <b>%(site_name)s!</b>        "
 
 #: bluebottle/time_based/templates/mails/messages/participant_rejected.html:4
-#: bluebottle/time_based/templates/mails/messages/registrations/user_rejected.html:4
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
@@ -14152,15 +14151,23 @@ msgstr "\n"
 "        <p>Als je team niet kan deelnemen, meld je dan af via de activiteitpagina zodat een ander team jullie plaats kan innemen.</p>\n"
 "    "
 
-#: bluebottle/time_based/templates/mails/messages/registrations/team_rejected.html:4
+#: bluebottle/time_based/templates/mails/messages/registrations/team_rejected.html:6
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"<p>Unfortunately, your team has not been selected for the activity ‘%(title)s’.</p>\n\n"
-"<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>\n"
+"            Unfortunately your team won't be able to participate in an activity on <b>%(site_name)s</b>.\n"
+"        "
 msgstr "\n"
-"<p>Je team is helaas niet geselecteerd voor de activiteit \"%(title)s\".</p>\n\n"
-"<p>Geen zorgen, er zijn meer activiteiten die je hulp nodig hebben. Ga naar de overzichtspagina van activiteiten om te kijken of er iets voor jou tussen zit.</p>\n"
+"Helaas kan je team niet deelnemen aan een activiteit op <b>%(site_name)s</b>.        "
+
+#: bluebottle/time_based/templates/mails/messages/registrations/user_rejected.html:6
+#, python-format
+msgctxt "platform-email"
+msgid "\n"
+"            Unfortunately you won't be able to participate in an activity on <b>%(site_name)s</b>.\n"
+"        "
+msgstr "\n"
+"Helaas kun je niet deelnemen aan een activiteit op <b>%(site_name)s</b>.        "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/user_accepted.html:6
 #, python-format

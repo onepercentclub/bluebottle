@@ -912,7 +912,13 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         self.assertIn('Hi [Participant&#x27;s first name],', previews['accept']['body'])
         self.assertNotIn('<html', previews['accept']['body'])
         self.assertEqual(previews['accept']['action-title'], 'View activity')
-        self.assertEqual(previews['reject']['action-title'], 'View all activities')
+        self.assertEqual(previews['reject']['action-title'], 'View activity')
+        self.assertEqual(
+            previews['reject']['subject'],
+            'You have been rejected from the activity "Clean the park"'
+        )
+        self.assertIn("Unfortunately you won't be able to participate", previews['reject']['body'])
+        self.assertIn('Clean the park', previews['reject']['body'])
 
     def test_deed(self):
         activity = DeedFactory.create(owner=self.owner, title='Plant a tree')
@@ -969,6 +975,12 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
         previews = self.previews(self.get(activity))
         self.assertIn('team', previews['accept']['subject'])
+        self.assertEqual(
+            previews['reject']['subject'],
+            'Your team has been rejected from the activity "{}"'.format(activity.title)
+        )
+        self.assertIn("Unfortunately your team won't be able to participate", previews['reject']['body'])
+        self.assertEqual(previews['reject']['action-title'], 'View activity')
         self.assertIn('Hi [Team captain&#x27;s first name],', previews['accept']['body'])
 
     def test_unsupported_type(self):
@@ -1039,7 +1051,7 @@ class RegistrationReviewMessageTestCase(BluebottleTestCase):
     def test_reject_appends_message(self):
         message = self.transition('reject', '<p>Maybe next time</p>')
 
-        self.assertIn('Unfortunately, you have not been selected', message.body)
+        self.assertIn("Unfortunately you won't be able to participate", message.body)
         self.assertIn('Maybe next time', message.body)
 
     def test_message_replaces_activity_template(self):

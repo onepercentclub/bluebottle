@@ -13,9 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class PreviewMember:
-    def __init__(self):
-        self.first_name = pgettext('platform-email', "[name]")
-        self.full_name = pgettext('platform-email', "[name]")
+    def __init__(self, member=None):
+        placeholder = pgettext('platform-email', "[name]")
+        self.first_name = member.first_name if member else placeholder
+        self.full_name = member.full_name if member else placeholder
         self.primary_language = get_current_language()
         self.email = ''
 
@@ -34,9 +35,9 @@ class PreviewContributor:
     team = None
     answer = None
 
-    def __init__(self, activity):
+    def __init__(self, activity, recipient=None):
         self.activity = activity
-        self.user = PreviewMember()
+        self.user = PreviewMember(recipient)
         self.participants = EmptyQuery()
         slots = getattr(activity, 'slots', None)
         self.slot = slots.order_by('start').first() if slots is not None else None
@@ -83,11 +84,11 @@ def get_message_class(activity, message_classes):
     return message_classes[0]
 
 
-def get_message_previews(activity):
+def get_message_previews(activity, recipient=None):
     previews = []
     for action, message_classes in get_activity_actions(activity).items():
         message_class = get_message_class(activity, message_classes)
-        obj = PreviewContributor(activity)
+        obj = PreviewContributor(activity, recipient)
         message = message_class(obj)
         message.attachments = lambda recipient=None: None
         try:

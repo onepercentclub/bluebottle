@@ -12,6 +12,7 @@ from collections import namedtuple
 from importlib import import_module
 
 import html2text
+from bs4 import BeautifulSoup
 
 from html_sanitizer import Sanitizer
 from pytz import timezone
@@ -23,6 +24,7 @@ from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import TimestampSigner
 from django.urls import reverse
+from django.utils.safestring import SafeData, mark_safe
 from django.utils.timezone import get_current_timezone
 from django.db import connection
 from django_tools.middlewares import ThreadLocal
@@ -57,6 +59,37 @@ def clean_html(content):
     if not content:
         return ''
     return sanitizer.sanitize(content)
+
+
+def quill_lists_to_html(content):
+    """
+    Quill puts bulleted and numbered items in a single <ol>, marked with
+    data-list. Email clients ignore that attribute, so split into <ul>/<ol>.
+    """
+    if not content or 'data-list' not in content:
+        return content
+
+    soup = BeautifulSoup(content, 'html.parser')
+    for container in soup.find_all(['ol', 'ul']):
+        items = container.find_all('li', recursive=False)
+        if not any(item.has_attr('data-list') for item in items):
+            continue
+
+        lists = []
+        for item in items:
+            default = 'ordered' if container.name == 'ol' else 'bullet'
+            name = 'ol' if item.get('data-list', default) == 'ordered' else 'ul'
+            if not lists or lists[-1].name != name:
+                lists.append(soup.new_tag(name))
+            del item['data-list']
+            lists[-1].append(item.extract())
+
+        for new_list in reversed(lists):
+            container.insert_after(new_list)
+        container.decompose()
+
+    result = str(soup)
+    return mark_safe(result) if isinstance(content, SafeData) else result
 
 
 def get_languages():

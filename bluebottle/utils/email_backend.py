@@ -19,7 +19,7 @@ from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.mails.models import MailPlatformSettings
-from bluebottle.utils.utils import to_text
+from bluebottle.utils.utils import quill_lists_to_html, to_text
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +156,10 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
     # contains more languages than the rest of the platform
     if 'language' in kwargs:
         language = kwargs['language']
+
+    for key in ('body_html', 'custom_message'):
+        if kwargs.get(key):
+            kwargs[key] = quill_lists_to_html(kwargs[key])
 
     with TenantLanguage(language):
         ctx = Context(kwargs)

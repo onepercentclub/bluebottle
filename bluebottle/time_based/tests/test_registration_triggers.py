@@ -138,7 +138,7 @@ class RegistrationTriggerTestCase:
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'You have not been selected for the activity "{}"'.format(
+            'You have been rejected from the activity "{}"'.format(
                 self.activity.title
             ),
         )
@@ -668,7 +668,7 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has not been selected for the activity "{}"'.format(
+            'Your team has been rejected from the activity "{}"'.format(
                 self.activity.title
             ),
         )

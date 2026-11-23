@@ -16,7 +16,6 @@ from django.db import connection
 from django.test import TestCase, RequestFactory
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
-from django.utils.safestring import SafeData, mark_safe
 from django.utils.timezone import get_current_timezone
 from moneyed import Money
 from parler import appsettings
@@ -39,8 +38,7 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.storage import TenantFileSystemStorage
 from bluebottle.utils.utils import (
-    clean_for_hashtag, get_client_ip, get_current_timezone_for_location,
-    quill_lists_to_html
+    clean_for_hashtag, get_client_ip, get_current_timezone_for_location, to_text
 )
 from ..email_backend import send_mail, create_message
 
@@ -173,36 +171,28 @@ class TenantAwareStorageTest(unittest.TestCase):
         self.assertRaises(SuspiciousFileOperation, storage.path, name=name)
 
 
-class QuillListsToHtmlTestCase(unittest.TestCase):
-    def test_bullets(self):
+class ToTextTestCase(unittest.TestCase):
+    def lines(self, html):
+        return [line.strip() for line in to_text.handle(html).splitlines() if line.strip()]
+
+    def test_quill_bullets(self):
         html = '<ol><li data-list="bullet">One</li><li data-list="bullet">Two</li></ol>'
-        self.assertEqual(quill_lists_to_html(html), '<ul><li>One</li><li>Two</li></ul>')
+        self.assertEqual(self.lines(html), ['* One', '* Two'])
 
-    def test_ordered(self):
+    def test_quill_ordered(self):
         html = '<ol><li data-list="ordered">One</li><li data-list="ordered">Two</li></ol>'
-        self.assertEqual(quill_lists_to_html(html), '<ol><li>One</li><li>Two</li></ol>')
+        self.assertEqual(self.lines(html), ['1. One', '2. Two'])
 
-    def test_mixed_in_one_list(self):
+    def test_quill_mixed_keeps_numbering(self):
         html = (
-            '<p>Intro</p><ol><li data-list="bullet">A</li><li data-list="ordered">B</li>'
-            '<li data-list="ordered">C</li></ol><p>Outro</p>'
+            '<ol><li data-list="ordered">A</li><li data-list="bullet">B</li>'
+            '<li data-list="ordered">C</li></ol>'
         )
-        self.assertEqual(
-            quill_lists_to_html(html),
-            '<p>Intro</p><ul><li>A</li></ul><ol><li>B</li><li>C</li></ol><p>Outro</p>'
-        )
+        self.assertEqual(self.lines(html), ['1. A', '* B', '2. C'])
 
-    def test_plain_lists_untouched(self):
+    def test_plain_lists(self):
         html = '<ul><li>One</li></ul><ol><li>Two</li></ol>'
-        self.assertEqual(quill_lists_to_html(html), html)
-
-    def test_empty(self):
-        self.assertEqual(quill_lists_to_html(''), '')
-        self.assertIsNone(quill_lists_to_html(None))
-
-    def test_safe_string_stays_safe(self):
-        html = mark_safe('<ol><li data-list="bullet">One</li></ol>')
-        self.assertIsInstance(quill_lists_to_html(html), SafeData)
+        self.assertEqual(self.lines(html), ['* One', '1. Two'])
 
 
 class SendMailTestCase(BluebottleTestCase):

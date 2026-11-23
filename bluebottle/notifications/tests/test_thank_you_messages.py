@@ -80,6 +80,9 @@ class SharedThankYouTests:
     def succeed(self):
         raise NotImplementedError
 
+    def test_on_by_default(self):
+        self.assertTrue(self.activity.send_thank_you_message)
+
     def test_sent(self):
         self.succeed()
 
@@ -104,7 +107,7 @@ class DeadlineThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     def setUp(self):
         super().setUp()
         self.activity = self.publish(DeadlineActivityFactory.create(
-            initiative=self.initiative, owner=self.owner, send_thank_you_message=True, review=False,
+            initiative=self.initiative, owner=self.owner, review=False,
             registration_deadline=None,
             start=date.today() - timedelta(days=5),
             deadline=date.today() + timedelta(days=5),
@@ -162,7 +165,7 @@ class PeriodicThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     def setUp(self):
         super().setUp()
         self.activity = self.publish(PeriodicActivityFactory.create(
-            initiative=self.initiative, owner=self.owner, send_thank_you_message=True, review=False,
+            initiative=self.initiative, owner=self.owner, review=False,
             registration_deadline=None,
             start=date.today() - timedelta(days=14),
             deadline=date.today() + timedelta(days=14),
@@ -225,7 +228,7 @@ class DateThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     def setUp(self):
         super().setUp()
         self.activity = DateActivityFactory.create(
-            initiative=self.initiative, owner=self.owner, send_thank_you_message=True, review=False,
+            initiative=self.initiative, owner=self.owner, review=False,
             registration_deadline=None, slots=[],
         )
         self.slot = DateActivitySlotFactory.create(
@@ -285,7 +288,7 @@ class ScheduleThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     def setUp(self):
         super().setUp()
         self.activity = self.publish(ScheduleActivityFactory.create(
-            initiative=self.initiative, owner=self.owner, send_thank_you_message=True, review=False,
+            initiative=self.initiative, owner=self.owner, review=False,
             registration_deadline=None,
         ))
         self.participant = ScheduleParticipantFactory.create(activity=self.activity, user=self.user)
@@ -311,7 +314,7 @@ class TeamScheduleThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     def setUp(self):
         super().setUp()
         self.activity = self.publish(ScheduleActivityFactory.create(
-            initiative=self.initiative, owner=self.owner, send_thank_you_message=True, review=False,
+            initiative=self.initiative, owner=self.owner, review=False,
             registration_deadline=None, team_activity='teams',
         ))
         self.team = self.create_team()
@@ -355,7 +358,7 @@ class DeedThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     def setUp(self):
         super().setUp()
         self.activity = self.publish(DeedFactory.create(
-            initiative=self.initiative, owner=self.owner, send_thank_you_message=True,
+            initiative=self.initiative, owner=self.owner,
             start=date.today() - timedelta(days=5), end=None,
         ))
         DeedParticipantFactory.create(activity=self.activity, user=self.user)
@@ -386,7 +389,7 @@ class CollectThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
     def setUp(self):
         super().setUp()
         self.activity = self.publish(CollectActivityFactory.create(
-            initiative=self.initiative, owner=self.owner, send_thank_you_message=True,
+            initiative=self.initiative, owner=self.owner,
             start=date.today() - timedelta(days=5), end=None,
         ))
         CollectContributorFactory.create(activity=self.activity, user=self.user)

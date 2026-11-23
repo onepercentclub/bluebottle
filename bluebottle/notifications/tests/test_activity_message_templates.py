@@ -960,6 +960,20 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
 
         self.assertIn('around 2 hour(s) every week', body)
 
+    def test_periodic_accept_without_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(owner=self.owner, duration=None, period=None)
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertIn('expected to contribute (x) hours every (period)', body)
+
+    def test_periodic_accept_with_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(
+            owner=self.owner, duration=timedelta(hours=2), period='weeks'
+        )
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertIn('expected to contribute 2 hours every week', body)
+
     def test_schedule_teams(self):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
         previews = self.previews(self.get(activity))

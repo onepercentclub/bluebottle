@@ -3,7 +3,9 @@ from datetime import date, timedelta
 
 from django.contrib.auth.models import Group
 from django.core import mail
+from django.template import defaultfilters
 from django.urls import reverse
+from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
@@ -907,7 +909,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
             'You have been selected for the activity "Clean the park"'
         )
         self.assertIn('Clean the park', previews['accept']['body'])
-        self.assertIn('Hi [name],', previews['accept']['body'])
+        self.assertIn('Hi [Participant&#x27;s first name],', previews['accept']['body'])
         self.assertNotIn('<html', previews['accept']['body'])
         self.assertEqual(previews['accept']['action-title'], 'View activity')
         self.assertEqual(previews['reject']['action-title'], 'View activity')
@@ -940,6 +942,35 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         previews = self.previews(self.get(activity))
         self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
 
+    def test_date_single_slot(self):
+        activity = DateActivityFactory.create(owner=self.owner, slots=[])
+        slot = DateActivitySlotFactory.create(
+            activity=activity, start=now() + timedelta(weeks=2), is_online=True
+        )
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn(defaultfilters.date(slot.start), body)
+        self.assertIn('Anywhere/Online', body)
+        self.assertNotIn('[Date]', body)
+
+    def test_date_single_slot_without_date(self):
+        activity = DateActivityFactory.create(owner=self.owner, slots=[])
+        DateActivitySlotFactory.create(activity=activity, start=None, location=None)
+        body = self.previews(self.get(activity))['join']['body']
+
+        for placeholder in ('[Date]', '[Time]', '[Location]'):
+            self.assertIn(placeholder, body)
+        self.assertNotIn('to ()', body)
+
+    def test_date_multiple_slots(self):
+        activity = DateActivityFactory.create(owner=self.owner)
+        DateActivitySlotFactory.create(activity=activity, title='Second slot')
+        body = self.previews(self.get(activity))['join']['body']
+
+        for placeholder in ('[Date]', '[Time]', '[Location]'):
+            self.assertIn(placeholder, body)
+        self.assertNotIn('Second slot', body)
+
     def test_schedule_teams(self):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
         previews = self.previews(self.get(activity))
@@ -950,6 +981,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         )
         self.assertIn("Unfortunately your team won't be able to participate", previews['reject']['body'])
         self.assertEqual(previews['reject']['action-title'], 'View activity')
+        self.assertIn('Hi [Team captain&#x27;s first name],', previews['accept']['body'])
 
     def test_unsupported_type(self):
         response = self.get(RegisteredDateActivityFactory.create(owner=self.owner))

@@ -942,6 +942,45 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         previews = self.previews(self.get(activity))
         self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
 
+    def test_deadline_without_duration(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, duration=None)
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn('around (x) hours', body)
+
+    def test_deadline_with_duration(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, duration=timedelta(hours=3))
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn('around 3 hours', body)
+
+    def test_periodic_without_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(owner=self.owner, duration=None, period=None)
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn('around (x) hour(s) every (period)', body)
+
+    def test_periodic_with_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(
+            owner=self.owner, duration=timedelta(hours=2), period='weeks'
+        )
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn('around 2 hour(s) every week', body)
+
+    def test_periodic_accept_without_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(owner=self.owner, duration=None, period=None)
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertIn('expected to contribute (x) hours every (period)', body)
+
+    def test_periodic_accept_with_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(
+            owner=self.owner, duration=timedelta(hours=2), period='weeks'
+        )
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertIn('expected to contribute 2 hours every week', body)
     def test_date_single_slot(self):
         activity = DateActivityFactory.create(owner=self.owner, slots=[])
         slot = DateActivitySlotFactory.create(

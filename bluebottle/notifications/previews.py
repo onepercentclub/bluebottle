@@ -6,6 +6,7 @@ from django.template.loader_tags import BLOCK_CONTEXT_KEY, BlockContext, BlockNo
 from django.utils.translation import pgettext
 
 from bluebottle.notifications.activity_messages import get_activity_actions
+from bluebottle.time_based.messages import get_slot_info
 from bluebottle.time_based.models import PeriodicActivity, ScheduleActivity
 from bluebottle.utils.utils import get_current_language
 
@@ -98,9 +99,17 @@ def get_preview_slot(activity, slot):
     }
 
 
+def get_first_slot_info(activity):
+    slots = getattr(activity, 'slots', None)
+    slot = slots.order_by('start').first() if slots is not None else None
+    return get_slot_info(slot) if slot else None
+
+
 def add_placeholders(activity, context):
     if 'slot' in context:
         context['slot'] = get_preview_slot(activity, context['slot'])
+    if 'slots' in context:
+        context['slots'] = [get_preview_slot(activity, get_first_slot_info(activity))]
     if 'duration' in context and not activity.duration:
         context['duration'] = pgettext('platform-email', '(x)')
     if isinstance(activity, PeriodicActivity) and not context.get('period'):

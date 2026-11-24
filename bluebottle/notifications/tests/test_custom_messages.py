@@ -166,7 +166,7 @@ def _message_cases():
             'label': 'registration_accepted',
             'factory': DateRegistrationFactory,
             'message': UserRegistrationAcceptedNotification,
-            'default_snippet': 'Good news, you have been accepted for the activity',
+            'default_snippet': 'Good news! You have been accepted to an activity',
         },
         {
             'label': 'registration_rejected',

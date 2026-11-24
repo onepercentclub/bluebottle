@@ -1,0 +1,8 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% include 'mails/messages/partial/accepted_intro.html' %}
+
+    {% include 'mails/messages/partial/whats_next_deadline.html' %}
+{% endblock %}

@@ -53,6 +53,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     RegisteredDateActivityFactory,
     ScheduleActivityFactory,
+    ScheduleRegistrationFactory,
     TeamScheduleRegistrationFactory,
 )
 
@@ -347,7 +348,7 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
     def assertDefaultSubject(self, message):
         self.assertEqual(
             message.subject,
-            'You have been selected for the activity "{}"'.format(self.activity.title)
+            'You have been accepted to the activity "{}"'.format(self.activity.title)
         )
 
     def test_accepted(self):
@@ -358,7 +359,7 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
         message = self.user_mails()[0]
         self.assertDefaultSubject(message)
         self.assertIn('Hi there, see you soon!', message.body)
-        self.assertNotIn('Good news, you have been accepted', message.body)
+        self.assertNotIn('Good news! You have been accepted', message.body)
 
     def test_rejected(self):
         create_template(self.activity, action='reject')
@@ -429,7 +430,7 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
 
         message = self.user_mails()[0]
         self.assertIn('Hi there, see you soon!', message.body)
-        self.assertIn('Good news, you have been accepted', message.body)
+        self.assertIn('Good news! You have been accepted', message.body)
 
     def test_template_subject_is_ignored(self):
         create_template(self.activity, subject='Custom {title}')
@@ -459,7 +460,7 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
 
         message = self.user_mails()[0]
         self.assertIn('a { b', message.body)
-        self.assertIn('Good news, you have been accepted', message.body)
+        self.assertIn('Good news! You have been accepted', message.body)
 
     def test_quill_lists_keep_their_type(self):
         html = (
@@ -597,6 +598,113 @@ class TimeBasedMessageTemplateSendTestCase(BluebottleTestCase):
         ParticipantSlotParticipantRegisteredNotification(participant).compose_and_send()
 
         self.assertIn('Hi there, see you soon!', mail.outbox[0].body)
+
+
+class AcceptedWelcomeEmailTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create(first_name='Henk')
+
+    def send(self, message_class, registration):
+        mail.outbox = []
+        message_class(registration).compose_and_send()
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertIn('Hi Henk,', message.body)
+        self.assertIn(registration.activity.title, message.body)
+        self.assertNotIn('counting on your participation', message.body)
+        self.assertNotIn('Good news, you have been accepted', message.body)
+        return message
+
+    def assertSubject(self, message, activity):
+        self.assertEqual(
+            message.subject,
+            'You have been accepted to the activity "{}"'.format(activity.title)
+        )
+        self.assertIn('Good news! You have been accepted to an activity on', message.body)
+
+    def test_date(self):
+        activity = DateActivityFactory.create(slots=[])
+        slot = DateActivitySlotFactory.create(
+            activity=activity, start=now() + timedelta(weeks=2), is_online=True
+        )
+        registration = DateRegistrationFactory.create(activity=activity, user=self.user)
+        DateParticipantFactory.create(registration=registration, slot=slot, activity=activity)
+
+        message = self.send(UserRegistrationAcceptedNotification, registration)
+
+        self.assertSubject(message, activity)
+        self.assertIn(defaultfilters.date(slot.start), message.body)
+        self.assertIn('Anywhere/Online', message.body)
+        self.assertNotIn('indicated below', message.body)
+        self.assertNotIn("What's next", message.body)
+
+    def test_date_multiple_slots(self):
+        activity = DateActivityFactory.create(slots=[])
+        slots = [
+            DateActivitySlotFactory.create(
+                activity=activity, title='Slot {}'.format(i), start=now() + timedelta(weeks=i + 1)
+            )
+            for i in range(2)
+        ]
+        registration = DateRegistrationFactory.create(activity=activity, user=self.user)
+        for slot in slots:
+            DateParticipantFactory.create(registration=registration, slot=slot, activity=activity)
+
+        message = self.send(UserRegistrationAcceptedNotification, registration)
+
+        self.assertSubject(message, activity)
+        self.assertIn('Slot 0', message.body)
+        self.assertIn('Slot 1', message.body)
+
+    def test_deadline(self):
+        activity = DeadlineActivityFactory.create(duration=timedelta(hours=3))
+        registration = DeadlineRegistrationFactory.create(activity=activity, user=self.user)
+
+        message = self.send(UserRegistrationAcceptedNotification, registration)
+
+        self.assertSubject(message, activity)
+        self.assertIn("What's next", message.body)
+        self.assertIn('Expect to spend around 3 hours', message.body)
+        self.assertNotIn('specific date, time and location', message.body)
+
+    def test_periodic(self):
+        activity = PeriodicActivityFactory.create(duration=timedelta(hours=2), period='weeks')
+        registration = PeriodicRegistrationFactory.create(activity=activity, user=self.user)
+
+        message = self.send(UserRegistrationAcceptedNotification, registration)
+
+        self.assertSubject(message, activity)
+        self.assertIn("What's next", message.body)
+        self.assertIn('Expect to spend around 2 hour(s) every week', message.body)
+        self.assertIn('If you would like to stop contributing', message.body)
+        self.assertNotIn('You can always stop your contributions', message.body)
+
+    def test_schedule_participant(self):
+        activity = ScheduleActivityFactory.create()
+        registration = ScheduleRegistrationFactory.create(activity=activity, user=self.user)
+
+        message = self.send(UserRegistrationAcceptedNotification, registration)
+
+        self.assertSubject(message, activity)
+        self.assertIn("What's next", message.body)
+        self.assertIn('The activity manager will contact you', message.body)
+        self.assertNotIn('invite people', message.body)
+
+    def test_schedule_team(self):
+        activity = ScheduleActivityFactory.create(team_activity='teams')
+        registration = TeamScheduleRegistrationFactory.create(activity=activity, user=self.user)
+
+        message = self.send(UserTeamRegistrationAcceptedNotification, registration)
+
+        self.assertEqual(
+            message.subject,
+            'Your team has been accepted to the activity "{}"'.format(activity.title)
+        )
+        self.assertIn('Good news! Your team has been accepted to an activity on', message.body)
+        self.assertIn('The activity manager will contact you', message.body)
+        self.assertIn('You can invite people to your team', message.body)
+        self.assertNotIn('unable to participate', message.body)
 
 
 class DateReviewJoinMessageTemplateTestCase(BluebottleTestCase):
@@ -1041,7 +1149,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         )
         self.assertEqual(
             previews['accept']['subject'],
-            'You have been selected for the activity "Clean the park"'
+            'You have been accepted to the activity "Clean the park"'
         )
         self.assertIn('Clean the park', previews['accept']['body'])
         self.assertIn('Hi [Participant&#x27;s first name],', previews['accept']['body'])
@@ -1107,7 +1215,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         activity = PeriodicActivityFactory.create(owner=self.owner, duration=None, period=None)
         body = self.previews(self.get(activity))['accept']['body']
 
-        self.assertIn('expected to contribute (x) hours every (period)', body)
+        self.assertIn('Expect to spend around (x) hour(s) every (period)', body)
 
     def test_periodic_accept_with_duration_and_period(self):
         activity = PeriodicActivityFactory.create(
@@ -1115,7 +1223,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         )
         body = self.previews(self.get(activity))['accept']['body']
 
-        self.assertIn('expected to contribute 2 hours every week', body)
+        self.assertIn('Expect to spend around 2 hour(s) every week', body)
 
     def test_date_single_slot(self):
         activity = DateActivityFactory.create(owner=self.owner, slots=[])
@@ -1145,6 +1253,77 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         for placeholder in ('[Date]', '[Time]', '[Location]'):
             self.assertIn(placeholder, body)
         self.assertNotIn('Second slot', body)
+
+    def assertAcceptIntro(self, body):
+        self.assertIn('Good news! You have been accepted to an activity on', body)
+        self.assertNotIn('counting on your participation', body)
+
+    def test_date_accept_single_slot(self):
+        activity = DateActivityFactory.create(owner=self.owner, slots=[])
+        slot = DateActivitySlotFactory.create(
+            activity=activity, start=now() + timedelta(weeks=2), is_online=True
+        )
+        previews = self.previews(self.get(activity))
+        accept = previews['accept']
+
+        self.assertEqual(
+            accept['subject'], 'You have been accepted to the activity "{}"'.format(activity.title)
+        )
+        self.assertAcceptIntro(accept['body'])
+        self.assertIn(defaultfilters.date(slot.start), accept['body'])
+        self.assertIn(defaultfilters.date(slot.start), previews['apply']['body'])
+        self.assertIn('Anywhere/Online', accept['body'])
+        self.assertNotIn('[Date]', accept['body'])
+        self.assertNotIn('indicated below', accept['body'])
+
+    def test_date_accept_multiple_slots(self):
+        activity = DateActivityFactory.create(owner=self.owner)
+        DateActivitySlotFactory.create(activity=activity, title='Second slot')
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertAcceptIntro(body)
+        for placeholder in ('[Date]', '[Time]', '[Location]'):
+            self.assertIn(placeholder, body)
+        self.assertNotIn('Second slot', body)
+
+    def test_deadline_accept_whats_next(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, duration=timedelta(hours=3))
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertAcceptIntro(body)
+        self.assertIn("What's next:", body)
+        self.assertIn('Expect to spend around 3 hours', body)
+
+    def test_periodic_accept_whats_next(self):
+        activity = PeriodicActivityFactory.create(
+            owner=self.owner, duration=timedelta(hours=2), period='weeks'
+        )
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertAcceptIntro(body)
+        self.assertIn('Expect to spend around 2 hour(s) every week', body)
+        self.assertIn('stop your participation from the activity detail page', body)
+        self.assertNotIn('You can always stop your contributions', body)
+
+    def test_schedule_accept_whats_next(self):
+        activity = ScheduleActivityFactory.create(owner=self.owner)
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertAcceptIntro(body)
+        self.assertIn('The activity manager will contact you to discuss a specific date', body)
+        self.assertNotIn('Invite', body)
+
+    def test_schedule_team_accept_whats_next(self):
+        activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
+        accept = self.previews(self.get(activity))['accept']
+
+        self.assertEqual(
+            accept['subject'], 'Your team has been accepted to the activity "{}"'.format(activity.title)
+        )
+        self.assertIn('Good news! Your team has been accepted to an activity on', accept['body'])
+        self.assertIn('The activity manager will contact you to discuss a specific date', accept['body'])
+        self.assertIn('Invite', accept['body'])
+        self.assertNotIn('unable to participate', accept['body'])
 
     def test_schedule_teams(self):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
@@ -1255,7 +1434,7 @@ class RegistrationReviewMessageTestCase(BluebottleTestCase):
     def test_accept_appends_message(self):
         message = self.transition('accept', '<p>Bring gloves</p>')
 
-        self.assertIn('Good news, you have been accepted', message.body)
+        self.assertIn('Good news! You have been accepted', message.body)
         self.assertIn('Bring gloves', message.body)
         self.assertLess(
             message.body.index('Good news'), message.body.index('Bring gloves')
@@ -1275,7 +1454,7 @@ class RegistrationReviewMessageTestCase(BluebottleTestCase):
         self.assertNotIn('see you soon', message.body)
         self.assertEqual(
             message.subject,
-            'You have been selected for the activity "{}"'.format(self.activity.title)
+            'You have been accepted to the activity "{}"'.format(self.activity.title)
         )
 
 

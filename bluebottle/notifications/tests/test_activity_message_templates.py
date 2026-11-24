@@ -461,6 +461,27 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
         self.assertIn('a { b', message.body)
         self.assertIn('Good news, you have been accepted', message.body)
 
+    def test_quill_lists_keep_their_type(self):
+        html = (
+            '<ol><li data-list="bullet">Bring water</li><li data-list="bullet">Wear boots</li></ol>'
+            '<ol><li data-list="ordered">First</li><li data-list="ordered">Second</li></ol>'
+        )
+        create_template(
+            self.activity,
+            body_html=json.dumps({'html': html, 'delta': ''})
+        )
+        registration = self.register()
+        registration.states.accept(save=True)
+
+        message = self.user_mails()[0]
+        self.assertIn('* Bring water', message.body)
+        self.assertIn('* Wear boots', message.body)
+        self.assertIn('1. First', message.body)
+        self.assertIn('2. Second', message.body)
+        self.assertNotIn('1. Bring water', message.body)
+        self.assertIn('<ul><li>Bring water</li><li>Wear boots</li></ul>', message.alternatives[0][0])
+        self.assertIn('<ol><li>First</li><li>Second</li></ol>', message.alternatives[0][0])
+
     def test_message_block_html_is_literal(self):
         create_template(
             self.activity,

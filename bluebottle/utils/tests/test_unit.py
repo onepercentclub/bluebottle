@@ -38,7 +38,8 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.storage import TenantFileSystemStorage
 from bluebottle.utils.utils import (
-    clean_for_hashtag, get_client_ip, get_current_timezone_for_location
+    clean_for_hashtag, get_client_ip, get_current_timezone_for_location,
+    quill_lists_to_html
 )
 from ..email_backend import send_mail, create_message
 
@@ -171,9 +172,55 @@ class TenantAwareStorageTest(unittest.TestCase):
         self.assertRaises(SuspiciousFileOperation, storage.path, name=name)
 
 
+class QuillListsToHtmlTestCase(unittest.TestCase):
+    def test_bullets(self):
+        html = '<ol><li data-list="bullet">One</li><li data-list="bullet">Two</li></ol>'
+        self.assertEqual(quill_lists_to_html(html), '<ul><li>One</li><li>Two</li></ul>')
+
+    def test_ordered(self):
+        html = '<ol><li data-list="ordered">One</li><li data-list="ordered">Two</li></ol>'
+        self.assertEqual(quill_lists_to_html(html), '<ol><li>One</li><li>Two</li></ol>')
+
+    def test_mixed_in_one_list(self):
+        html = (
+            '<p>Intro</p><ol><li data-list="bullet">A</li><li data-list="ordered">B</li>'
+            '<li data-list="ordered">C</li></ol><p>Outro</p>'
+        )
+        self.assertEqual(
+            quill_lists_to_html(html),
+            '<p>Intro</p><ul><li>A</li></ul><ol><li>B</li><li>C</li></ol><p>Outro</p>'
+        )
+
+    def test_plain_lists_untouched(self):
+        html = '<ul><li>One</li></ul><ol><li>Two</li></ol>'
+        self.assertEqual(quill_lists_to_html(html), html)
+
+    def test_empty(self):
+        self.assertEqual(quill_lists_to_html(''), '')
+        self.assertIsNone(quill_lists_to_html(None))
+
+
 class SendMailTestCase(BluebottleTestCase):
     def setUp(self):
         self.user = BlueBottleUserFactory.create(email="testuser@example.com")
+
+    @mock.patch('bluebottle.utils.email_backend.get_template')
+    def test_create_message_splits_quill_lists(self, get_template):
+        get_template.return_value.render.return_value = (
+            '<html><body><ol>'
+            '<li data-list="bullet">Bullet</li>'
+            '<li data-list="ordered">First</li>'
+            '<li data-list="ordered">Second</li>'
+            '</ol></body></html>'
+        )
+        message = create_message(template_name='utils/test', to=self.user, subject='Test')
+
+        html = message.alternatives[0][0]
+        self.assertIn('<ul><li>Bullet</li></ul>', html)
+        self.assertIn('<ol><li>First</li><li>Second</li></ol>', html)
+        self.assertIn('* Bullet', message.body)
+        self.assertIn('1. First', message.body)
+        self.assertIn('2. Second', message.body)
 
     @mock.patch('bluebottle.utils.email_backend.logger')
     def test_no_recipient(self, logger):

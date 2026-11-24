@@ -13,13 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 class PreviewMember:
-    def __init__(self, team=False):
+
+    def __init__(self, member=None, team=None):
         if team:
             placeholder = pgettext('platform-email', "[Team captain's first name]")
         else:
             placeholder = pgettext('platform-email', "[Participant's first name]")
-        self.first_name = placeholder
-        self.full_name = placeholder
+        self.first_name = member.first_name if member else placeholder
+        self.full_name = member.full_name if member else placeholder
         self.primary_language = get_current_language()
         self.email = ''
 
@@ -38,9 +39,9 @@ class PreviewContributor:
     team = None
     answer = None
 
-    def __init__(self, activity, team=False):
+    def __init__(self, activity, recipient=None, team=False):
         self.activity = activity
-        self.user = PreviewMember(team=team)
+        self.user = PreviewMember(recipient, team=team)
         self.participants = EmptyQuery()
         slots = getattr(activity, 'slots', None)
         self.slot = slots.order_by('start').first() if slots is not None else None
@@ -81,13 +82,6 @@ def render_block(template_name, block_name, context):
         return re.sub(r'\s*\n\s*', '\n', html).strip()
 
 
-def add_placeholders(activity, context):
-    if 'duration' in context and not activity.duration:
-        context['duration'] = pgettext('platform-email', '(x)')
-    if isinstance(activity, PeriodicActivity) and not context.get('period'):
-        context['period'] = pgettext('platform-email', '(period)')
-        
-        
 def get_preview_slot(activity, slot):
     if slot and activity.slots.count() == 1:
         return {**slot, 'location': slot['location'] or pgettext('platform-email', '[Location]')}
@@ -103,10 +97,14 @@ def get_preview_slot(activity, slot):
         'timezone': '',
     }
 
-  
+
 def add_placeholders(activity, context):
     if 'slot' in context:
         context['slot'] = get_preview_slot(activity, context['slot'])
+    if 'duration' in context and not activity.duration:
+        context['duration'] = pgettext('platform-email', '(x)')
+    if isinstance(activity, PeriodicActivity) and not context.get('period'):
+        context['period'] = pgettext('platform-email', '(period)')
 
 
 def is_team_activity(activity):
@@ -119,11 +117,11 @@ def get_message_class(activity, message_classes):
     return message_classes[0]
 
 
-def get_message_previews(activity):
+def get_message_previews(activity, recipient=None):
     previews = []
     for action, message_classes in get_activity_actions(activity).items():
         message_class = get_message_class(activity, message_classes)
-        obj = PreviewContributor(activity, team=is_team_activity(activity))
+        obj = PreviewContributor(activity, recipient, team=is_team_activity(activity))
         message = message_class(obj)
         message.attachments = lambda recipient=None: None
         try:

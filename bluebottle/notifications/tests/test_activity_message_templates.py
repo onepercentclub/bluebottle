@@ -883,10 +883,11 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         self.owner = BlueBottleUserFactory.create()
         self.url = reverse('activity-message-default-list')
 
-    def get(self, activity, user=None):
-        return self.client.get(
-            self.url, {'filter[activity]': activity.pk}, user=user or self.owner
-        )
+    def get(self, activity, user=None, recipient=None):
+        params = {'filter[activity]': activity.pk}
+        if recipient:
+            params['filter[recipient]'] = recipient.pk
+        return self.client.get(self.url, params, user=user or self.owner)
 
     def previews(self, response):
         return {
@@ -981,6 +982,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         body = self.previews(self.get(activity))['accept']['body']
 
         self.assertIn('expected to contribute 2 hours every week', body)
+
     def test_date_single_slot(self):
         activity = DateActivityFactory.create(owner=self.owner, slots=[])
         slot = DateActivitySlotFactory.create(
@@ -1021,6 +1023,44 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         self.assertIn("Unfortunately your team won't be able to participate", previews['reject']['body'])
         self.assertEqual(previews['reject']['action-title'], 'View activity')
         self.assertIn('Hi [Team captain&#x27;s first name],', previews['accept']['body'])
+
+    def test_recipient_first_name(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner)
+        registration = DeadlineRegistrationFactory.create(
+            activity=activity, user=BlueBottleUserFactory.create(first_name='Emory')
+        )
+        previews = self.previews(self.get(activity, recipient=registration.user))
+
+        for action in ('accept', 'reject'):
+            self.assertIn('Hi Emory,', previews[action]['body'])
+
+    def test_recipient_first_name_team(self):
+        activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
+        registration = TeamScheduleRegistrationFactory.create(
+            activity=activity, user=BlueBottleUserFactory.create(first_name='Emory')
+        )
+        previews = self.previews(self.get(activity, recipient=registration.user))
+
+        self.assertIn('Hi Emory,', previews['accept']['body'])
+
+    def test_recipient_not_registered(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner)
+        stranger = BlueBottleUserFactory.create(first_name='Stranger')
+        previews = self.previews(self.get(activity, recipient=stranger))
+
+        self.assertNotIn('Stranger', previews['accept']['body'])
+        self.assertIn('Hi [Participant&#x27;s first name],', previews['accept']['body'])
+
+    def test_invalid_recipient(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner)
+        response = self.client.get(
+            self.url,
+            {'filter[activity]': activity.pk, 'filter[recipient]': 'abc'},
+            user=self.owner,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Hi [Participant&#x27;s first name],', self.previews(response)['accept']['body'])
 
     def test_unsupported_type(self):
         response = self.get(RegisteredDateActivityFactory.create(owner=self.owner))

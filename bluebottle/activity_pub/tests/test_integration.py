@@ -2606,6 +2606,21 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.assert_activity_manager_not_notified()
 
+    def test_readd_supplier(self):
+        self.test_remove_supplier()
+        mail.outbox = []
+
+        self.synced_team.states.readd(save=True)
+        self.assertStatus(self.synced_team, 'accepted')
+        self.assertEqual(len(Join.objects.filter(object=self.model.activity_pub_model)), 2)
+
+        with LocalTenant(self.consumer):
+            self.assertEqual(len(Join.objects.filter(object=self.adopted.origin)), 2)
+            self.team.refresh_from_db()
+            self.assertStatus(self.team, 'accepted')
+
+        self.assert_activity_manager_not_notified()
+
     def test_remove_consumer(self):
         self.test_member_join()
         mail.outbox = []

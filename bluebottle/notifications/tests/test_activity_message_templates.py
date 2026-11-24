@@ -897,6 +897,119 @@ class BulkAddedParticipantMessageTemplateTestCase(BluebottleAdminTestCase):
         self.assertCustomMessageAppended(self.bulk_add(activity))
 
 
+class InlineAddedParticipantMessageTemplateTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+    custom = 'see you soon!'
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.user = BlueBottleUserFactory.create(first_name='Henk')
+
+    def add_inline(self, obj, form_id, prefix='contributors', send_messages=None):
+        url = reverse(
+            'admin:{}_{}_change'.format(obj._meta.app_label, obj._meta.model_name),
+            args=(obj.pk,)
+        )
+        page = self.app.get(url)
+        form = page.forms[form_id]
+        self.admin_add_inline_form_entry(form, prefix)
+        form[f'{prefix}-0-user'] = self.user.pk
+        mail.outbox = []
+        page = form.submit()
+        if 'confirm' in page.forms:
+            confirm = page.forms['confirm']
+            if send_messages is not None and 'send_messages' in confirm.fields:
+                confirm['send_messages'] = send_messages
+            confirm.submit()
+        return [m for m in mail.outbox if m.to == [self.user.email]]
+
+    def assertCustomMessageAppended(self, messages):
+        self.assertEqual(len(messages), 1)
+        message = messages[0]
+        default_text = 'You have been added to the activity'
+        self.assertIn(default_text, message.body)
+        self.assertIn('Hi there, see you soon!', message.body)
+        self.assertLess(message.body.index(default_text), message.body.index(self.custom))
+
+    def test_schedule(self):
+        activity = ScheduleActivityFactory.create(status='open')
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        messages = self.add_inline(activity, 'scheduleactivity_form')
+
+        self.assertEqual(activity.registrations.count(), 1)
+        self.assertCustomMessageAppended(messages)
+
+    def test_deed(self):
+        activity = DeedFactory.create(status='open')
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        messages = self.add_inline(activity, 'deed_form')
+
+        self.assertEqual(activity.participants.count(), 1)
+        self.assertCustomMessageAppended(messages)
+
+    def test_deed_without_custom_message(self):
+        activity = DeedFactory.create(status='open')
+
+        messages = self.add_inline(activity, 'deed_form')
+
+        self.assertEqual(len(messages), 1)
+        self.assertIn('You have been added to the activity', messages[0].body)
+        self.assertNotIn(self.custom, messages[0].body)
+
+    def test_date_slot(self):
+        activity = DateActivityFactory.create(slots=[], status='open')
+        slot = DateActivitySlotFactory.create(activity=activity)
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        messages = self.add_inline(slot, 'dateactivityslot_form', prefix='participants')
+
+        self.assertEqual(slot.participants.count(), 1)
+        self.assertCustomMessageAppended(messages)
+
+    def test_deadline(self):
+        activity = DeadlineActivityFactory.create(status='open')
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        self.assertCustomMessageAppended(self.add_inline(activity, 'deadlineactivity_form'))
+
+    def test_collect(self):
+        activity = CollectActivityFactory.create(status='open')
+        create_template(activity, action='join', subject='', insert_method='append')
+
+        self.assertCustomMessageAppended(self.add_inline(activity, 'collectactivity_form'))
+
+    def test_existing_participants_are_not_mailed(self):
+        activity = DeedFactory.create(status='open')
+        DeedParticipantFactory.create(activity=activity, user=self.user)
+        url = reverse('admin:deeds_deed_change', args=(activity.pk,))
+        form = self.app.get(url).forms['deed_form']
+        form['title'] = 'A new title'
+        mail.outbox = []
+        page = form.submit()
+        if 'confirm' in page.forms:
+            page.forms['confirm'].submit()
+
+        self.assertEqual([m for m in mail.outbox if m.to == [self.user.email]], [])
+
+    def test_empty_added_row_is_ignored(self):
+        activity = DeedFactory.create(status='open')
+        url = reverse('admin:deeds_deed_change', args=(activity.pk,))
+        form = self.app.get(url).forms['deed_form']
+        self.admin_add_inline_form_entry(form, 'contributors')
+        mail.outbox = []
+        page = form.submit()
+        if 'confirm' in page.forms:
+            page.forms['confirm'].submit()
+
+        self.assertEqual(activity.participants.count(), 0)
+        self.assertEqual(mail.outbox, [])
+
+
 class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()

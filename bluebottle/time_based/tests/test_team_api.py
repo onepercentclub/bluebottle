@@ -328,3 +328,50 @@ class TeamMemberListAPIViewTestCase(APITestCase):
         self.assertEqual(self.model.team, self.team)
         self.assertIn(self.manager, self.activity.owners)
         self.assertNotEqual(self.manager, self.captain)
+
+    def add_member_by_email(self, **attributes):
+        data = {
+            'data': {
+                'type': 'contributors/time-based/team-members',
+                'attributes': dict(email=self.existing_member.email, **attributes),
+                'relationships': {
+                    'team': {
+                        'data': {
+                            'id': str(self.team.pk),
+                            'type': 'contributors/time-based/teams'
+                        }
+                    }
+                }
+            }
+        }
+        mail.outbox = []
+        self.perform_create(user=self.captain, data=data)
+        self.assertStatus(201)
+
+    def test_add_team_member_without_sending_messages(self):
+        self.add_member_by_email(**{'send-messages': False})
+
+        self.assertEqual(self.model.user, self.existing_member)
+        self.assertEqual(
+            [message for message in mail.outbox if self.existing_member.email in message.to],
+            []
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_add_team_member_sending_messages(self):
+        self.add_member_by_email(**{'send-messages': True})
+
+        self.assertEqual(self.model.user, self.existing_member)
+        subjects = [
+            message.subject for message in mail.outbox
+            if self.existing_member.email in message.to
+        ]
+        self.assertEqual(len(subjects), 1)
+        self.assertIn("You are now part of", subjects[0])
+
+    def test_add_team_member_sends_messages_by_default(self):
+        self.add_member_by_email()
+
+        self.assertTrue(
+            any(self.existing_member.email in message.to for message in mail.outbox)
+        )

@@ -288,3 +288,18 @@ class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
         self.assertEqual(participant.status, 'new')
         self.assertEqual(participant.contributions.count(), 1)
         self.assertEqual(participant.contributions.first().status, 'new')
+
+    def test_review_transitions_have_passed_label(self):
+        self.activity.review = True
+        self.activity.save()
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+        )
+        transitions = {
+            transition.field: transition
+            for transition in registration.states.possible_transitions(user=self.user)
+        }
+
+        self.assertEqual(str(transitions['accept'].passed_label), 'accepted')
+        self.assertEqual(str(transitions['reject'].passed_label), 'rejected')

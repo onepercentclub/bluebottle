@@ -82,13 +82,6 @@ def render_block(template_name, block_name, context):
         return re.sub(r'\s*\n\s*', '\n', html).strip()
 
 
-def add_placeholders(activity, context):
-    if 'duration' in context and not activity.duration:
-        context['duration'] = pgettext('platform-email', '(x)')
-    if isinstance(activity, PeriodicActivity) and not context.get('period'):
-        context['period'] = pgettext('platform-email', '(period)')
-        
-        
 def get_preview_slot(activity, slot):
     if slot and activity.slots.count() == 1:
         return {**slot, 'location': slot['location'] or pgettext('platform-email', '[Location]')}
@@ -108,6 +101,10 @@ def get_preview_slot(activity, slot):
 def add_placeholders(activity, context):
     if 'slot' in context:
         context['slot'] = get_preview_slot(activity, context['slot'])
+    if 'duration' in context and not activity.duration:
+        context['duration'] = pgettext('platform-email', '(x)')
+    if isinstance(activity, PeriodicActivity) and not context.get('period'):
+        context['period'] = pgettext('platform-email', '(period)')
 
 
 def is_team_activity(activity):

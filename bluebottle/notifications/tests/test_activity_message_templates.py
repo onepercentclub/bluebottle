@@ -982,6 +982,7 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         body = self.previews(self.get(activity))['accept']['body']
 
         self.assertIn('expected to contribute 2 hours every week', body)
+
     def test_date_single_slot(self):
         activity = DateActivityFactory.create(owner=self.owner, slots=[])
         slot = DateActivitySlotFactory.create(

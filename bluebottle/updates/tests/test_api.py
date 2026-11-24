@@ -117,7 +117,7 @@ class UpdateListTestCase(APITestCase):
         self.assertAttribute('created')
         self.assertEqual(len(mail.outbox), 2)
         title = self.defaults['activity'].title
-        self.assertEqual(mail.outbox[0].subject, f"New update from '{title}'")
+        self.assertEqual(mail.outbox[0].subject, f'New update from "{title}"')
 
     def test_create_notify_rate_limit(self):
         self.defaults['notify'] = True

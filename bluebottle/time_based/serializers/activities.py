@@ -258,7 +258,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         related_link_view_name="deadline-participants",
         related_link_url_kwarg="activity_id",
         statuses={
-            "active": ["succeeded"],
+            "active": ["accepted", "succeeded"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
         participating_statuses=PARTICIPATING_DEADLINE_PARTICIPANT_STATUSES,
@@ -708,6 +708,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         )
 
         is_online = len(slots) > 0 and len(slots.filter(is_online=True)) == len(slots)
+        hints = {slot.location_hint or None for slot in slots}
+        location_hint = hints.pop() if len(hints) == 1 else None
 
         if not len(slots):
             return {
@@ -744,7 +746,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
                 'is_online': is_online,
                 'online_meeting_url': meeting_url,
                 'location': None,
-                'location_hint': slot.location_hint if slot else None,
+                'location_hint': location_hint,
             }
 
         has_multiple = len(unique_locations) > 1 and not is_online
@@ -778,7 +780,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             'is_online': is_online,
             'online_meeting_url': meeting_url,
             'location': location,
-            'location_hint': slot.location_hint,
+            'location_hint': location_hint,
         }
 
     class Meta(TimeBasedBaseSerializer.Meta):

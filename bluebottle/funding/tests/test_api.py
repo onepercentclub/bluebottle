@@ -4,6 +4,7 @@ from io import BytesIO
 
 import mock
 import munch
+import requests
 import stripe
 from django.contrib.auth.models import Group
 from django.test.utils import override_settings
@@ -2093,6 +2094,88 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
         )
         create_token.assert_not_called()
         self.assertEqual(IbanCheck.objects.get().matched, 'no_match')
+
+    def test_rabobank_bad_request(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL91ABNA0417164300',
+                    'name': 'Test Persoon'
+                }
+            }
+        }
+
+        error_response = mock.Mock(status_code=400, text='{"httpMessage": "Bad Request"}')
+        with mock.patch(
+                "bluebottle.funding.adapters.rabobank.requests.post"
+        ) as mock_rabobank:
+            mock_rabobank.return_value.raise_for_status.side_effect = requests.HTTPError(
+                '400 Client Error', response=error_response
+            )
+            with mock.patch('bluebottle.funding.adapters.rabobank.logger') as logger:
+                self.perform_create(user=self.user, data=data)
+
+        self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['source']['pointer'], '/data/attributes/name')
+        self.assertIn('verify the IBAN', error['detail'])
+        logger.error.assert_called_once()
+        log_message = logger.error.call_args[0][0] % logger.error.call_args[0][1:]
+        self.assertIn('status=400', log_message)
+        self.assertIn('Bad Request', log_message)
+        self.assertNotIn('NL91ABNA0417164300', log_message)
+
+    def test_rabobank_unavailable(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL91ABNA0417164300',
+                    'name': 'Test Persoon'
+                }
+            }
+        }
+
+        with mock.patch(
+                "bluebottle.funding.adapters.rabobank.requests.post",
+                side_effect=requests.ConnectionError('boom')
+        ):
+            with mock.patch('bluebottle.funding.adapters.rabobank.logger') as logger:
+                self.perform_create(user=self.user, data=data)
+        logger.error.assert_called_once()
+
+        self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['source']['pointer'], '/data/attributes/name')
+        self.assertIn('temporarily unavailable', error['detail'])
+
+    def test_rabobank_server_error(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL91ABNA0417164300',
+                    'name': 'Test Persoon'
+                }
+            }
+        }
+
+        error_response = mock.Mock(status_code=503, text='Service Unavailable')
+        with mock.patch(
+                "bluebottle.funding.adapters.rabobank.requests.post"
+        ) as mock_rabobank:
+            mock_rabobank.return_value.raise_for_status.side_effect = requests.HTTPError(
+                '503 Server Error', response=error_response
+            )
+            with mock.patch('bluebottle.funding.adapters.rabobank.logger') as logger:
+                self.perform_create(user=self.user, data=data)
+
+        logger.error.assert_called_once()
+        self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['source']['pointer'], '/data/attributes/name')
+        self.assertIn('temporarily unavailable', error['detail'])
 
     def test_close_match(self):
         # Mock ABN Amro API response for close match

@@ -110,5 +110,7 @@ class CollectThankYouNotification(ThankYouMessageMixin, TransitionMessage):
         return self.obj.get_absolute_url()
 
     def get_thank_you_recipients(self):
-        """contributors with a succeeded contribution"""
-        return self.get_succeeded_contributors(self.obj)
+        """active contributors"""
+        return [
+            contributor.user for contributor in self.obj.active_contributors.select_related('user')
+        ]

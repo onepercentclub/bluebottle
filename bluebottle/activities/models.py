@@ -147,7 +147,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     send_thank_you_message = models.BooleanField(
         _("Send thank you email"),
-        default=False,
+        default=True,
         help_text=_("Send participants a thank you email when their contribution succeeds."),
     )
 

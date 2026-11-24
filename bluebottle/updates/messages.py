@@ -25,7 +25,7 @@ class UpdateMessage(TransitionMessage):
 
 
 class FollowersNotification(UpdateMessage):
-    subject = pgettext('platform-email', "New update from '{title}'")
+    subject = pgettext('platform-email', 'New update from "{title}"')
     template = 'messages/update_followers'
 
     def get_recipients(self):
@@ -43,7 +43,7 @@ class FollowersNotification(UpdateMessage):
 
 
 class OwnerNotification(UpdateMessage):
-    subject = pgettext('platform-email', "A new message is posted on '{title}'")
+    subject = pgettext('platform-email', 'A new message is posted on "{title}"')
     template = 'messages/update_owner'
 
     def get_recipients(self):
@@ -55,7 +55,7 @@ class OwnerNotification(UpdateMessage):
 
 
 class ParentNotification(UpdateMessage):
-    subject = pgettext('platform-email', "You have a reply on '{title}'")
+    subject = pgettext('platform-email', 'You have a reply on "{title}"')
     template = 'messages/update_parent'
 
     def get_recipients(self):

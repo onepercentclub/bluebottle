@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import RelatedActivityOwnerPermission
+from bluebottle.members.models import Member
 from bluebottle.notifications.models import ActivityMessageTemplate
 from bluebottle.notifications.previews import get_message_previews
 from bluebottle.notifications.serializers import (
@@ -69,4 +70,10 @@ class ActivityMessageDefaultList(JsonApiViewMixin, generics.ListAPIView):
         user = self.request.user
         if not (user.is_staff or user.is_superuser or user in activity.owners):
             raise PermissionDenied()
-        return get_message_previews(activity)
+        recipient_id = self.request.query_params.get('filter[recipient]')
+        recipient = None
+        if recipient_id and recipient_id.isdigit():
+            recipient = Member.objects.filter(
+                pk=recipient_id, registrations__activity=activity
+            ).first()
+        return get_message_previews(activity, recipient)

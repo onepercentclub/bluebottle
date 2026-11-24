@@ -246,6 +246,12 @@ class TeamMemberTriggerTestCase(BluebottleTestCase):
             f"You are now part of {self.team.user.full_name}'s team on Test",
         )
 
+    def test_initiate_member_message_text(self):
+        body = mail.outbox[-2].body
+
+        self.assertIn(f"You have joined {self.team.user.full_name}", body)
+        self.assertNotIn("Your have joined", body)
+
     def test_withdraw(self):
         self.team_member.states.withdraw(save=True)
 

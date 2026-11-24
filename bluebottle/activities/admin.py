@@ -58,7 +58,7 @@ from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.models import Follow
-from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
+from bluebottle.fsm.admin import SendMessagesOnAddInlineMixin, StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
 from bluebottle.funding.models import Donor, Funding, MoneyContribution
 from bluebottle.geo.models import Location
@@ -144,7 +144,7 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
     contributor_link.short_description = _('Edit')
 
 
-class BaseContributorInline(TabularInlinePaginated):
+class BaseContributorInline(SendMessagesOnAddInlineMixin, TabularInlinePaginated):
     model = Contributor
     raw_id_fields = ['user']
     readonly_fields = ['edit', 'created', 'status_label']

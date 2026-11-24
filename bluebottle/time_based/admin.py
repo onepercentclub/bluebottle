@@ -35,6 +35,7 @@ from bluebottle.activities.admin import (
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.files.widgets import PrivateDocumentWidget
 from bluebottle.fsm.admin import (
+    SendMessagesOnAddInlineMixin,
     StateMachineAdmin,
     StateMachineAdminMixin,
     StateMachineFilter,
@@ -434,6 +435,7 @@ class TeamAdmin(
     PolymorphicInlineSupportMixin,
     RegionManagerAdminMixin,
     BulkAddMixin,
+    SendMessagesOnAddInlineMixin,
     StateMachineAdmin,
 ):
     model = Team
@@ -1105,7 +1107,7 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
     duration_string.short_description = _('Duration')
 
 
-class DateParticipantInline(admin.TabularInline):
+class DateParticipantInline(SendMessagesOnAddInlineMixin, admin.TabularInline):
     model = DateParticipant
     readonly_fields = ['participant_link', 'smart_status', 'registration_status']
     fields = ['participant_link', 'user', 'smart_status', 'registration_status']

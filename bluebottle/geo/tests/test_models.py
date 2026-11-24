@@ -1,11 +1,12 @@
 from builtins import object
 from django.core.exceptions import ValidationError
+from django.utils import translation
 
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.geo.models import Region, SubRegion, Country, Location
+from bluebottle.geo.models import Region, SubRegion, Country, Location, GeoFeature, Geolocation
 
 
 class GeoTestsMixin(object):
@@ -169,3 +170,50 @@ class LocationTestCase(BluebottleTestCase):
         self.assertRaises(
             Location.DoesNotExist, Location.objects.get, pk=self.to_be_merged.pk
         )
+
+
+class GeolocationPlaceNameTestCase(BluebottleTestCase):
+    def create_geolocation(self, geofeature=None, **kwargs):
+        geolocation = Geolocation(geofeature=geofeature, **kwargs)
+        geolocation.save(skip_mapbox_sync=True)
+        return geolocation
+
+    def create_geofeature(self, language, name='', place_name=''):
+        feature = GeoFeature.objects.create(mapbox_id='dXJu-test-feature', feature_type='place')
+        feature.set_current_language(language)
+        feature.name = name
+        feature.place_name = place_name
+        feature.save()
+        return feature
+
+    def test_without_geofeature_uses_address(self):
+        geolocation = self.create_geolocation(formatted_address='Dorpsstraat 1', locality='Assendelft')
+        self.assertEqual(geolocation.place_name, 'Dorpsstraat 1')
+
+    def test_without_geofeature_falls_back_to_locality(self):
+        geolocation = self.create_geolocation(locality='Assendelft')
+        self.assertEqual(geolocation.place_name, 'Assendelft')
+
+    def test_without_geofeature_or_address_returns_placeholder(self):
+        self.assertEqual(self.create_geolocation().place_name, '-')
+
+    def test_geofeature_place_name(self):
+        feature = self.create_geofeature('en', name='Assendelft', place_name='Assendelft, Netherlands')
+        geolocation = self.create_geolocation(geofeature=feature)
+        self.assertEqual(geolocation.place_name, 'Assendelft, Netherlands')
+
+    def test_geofeature_falls_back_to_name(self):
+        feature = self.create_geofeature('en', name='Assendelft')
+        geolocation = self.create_geolocation(geofeature=feature)
+        self.assertEqual(geolocation.place_name, 'Assendelft')
+
+    def test_geofeature_falls_back_to_other_language(self):
+        feature = self.create_geofeature('fr', name='Assendelft', place_name='Assendelft, France')
+        geolocation = Geolocation.objects.get(pk=self.create_geolocation(geofeature=feature).pk)
+        with translation.override('en'):
+            self.assertEqual(geolocation.place_name, 'Assendelft, France')
+
+    def test_geofeature_without_names_returns_none(self):
+        feature = self.create_geofeature('en')
+        geolocation = self.create_geolocation(geofeature=feature, locality='Assendelft')
+        self.assertFalse(geolocation.place_name)

@@ -1,3 +1,4 @@
+from django.db.migrations.loader import MigrationLoader
 from django.test import TestCase
 
 from bluebottle.activities.models import Activity
@@ -30,6 +31,29 @@ class ActivityModelTestCase(TestCase):
         self.assertEqual(
             len(deed.categories.all()),
             0
+        )
+
+
+class ThankYouMessageDefaultTestCase(TestCase):
+    def setUp(self):
+        self.initiative = InitiativeFactory.create()
+
+    def thank_you_default(self, migration):
+        state = MigrationLoader(None).project_state(('activities', migration))
+        field = state.apps.get_model('activities', 'Activity')._meta.get_field('send_thank_you_message')
+        return field.default
+
+    def test_new_activity_sends_thank_you_message(self):
+        deed = Deed.objects.create(initiative=self.initiative)
+        self.assertTrue(deed.send_thank_you_message)
+
+    def test_existing_activities_stay_off(self):
+        # 0104 backfills rows that existed before the default flipped; it must stay a separate migration
+        self.assertFalse(self.thank_you_default('0104_activity_send_thank_you_message'))
+
+    def test_new_activities_default_on(self):
+        self.assertTrue(
+            self.thank_you_default('0105_alter_activity_send_thank_you_message_default')
         )
 
 

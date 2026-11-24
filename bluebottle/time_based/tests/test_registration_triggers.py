@@ -138,7 +138,7 @@ class RegistrationTriggerTestCase:
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'You have not been selected for the activity "{}"'.format(
+            'You have been rejected from the activity "{}"'.format(
                 self.activity.title
             ),
         )
@@ -618,8 +618,15 @@ class TeamScheduleRegistrationTriggerTestCase(
         )
         self.assertEqual(
             mail.outbox[1].subject,
-            'You have registered your team on "Test"',
+            'You have registered your team to the activity "{}"'.format(
+                self.activity.title
+            ),
         )
+        self.assertIn(
+            "You registered your team to an activity on Test!",
+            mail.outbox[1].body,
+        )
+        self.assertIn(self.activity.title, mail.outbox[1].body)
 
     def test_initial_review(self):
         self.activity.review = True
@@ -668,7 +675,7 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has not been selected for the activity "{}"'.format(
+            'Your team has been rejected from the activity "{}"'.format(
                 self.activity.title
             ),
         )

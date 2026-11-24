@@ -2523,6 +2523,34 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_participant.refresh_from_db()
         self.assertStatus(self.synced_team, self.expected_participant_status)
 
+    def test_withdraw_captain(self):
+        self.test_join()
+
+        with LocalTenant(self.consumer):
+            member = self.team.team_members.get()
+            member.states.withdraw(save=True)
+
+            self.assertEqual(member.status, 'withdrawn')
+            self.team.refresh_from_db()
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.team.status, 'accepted')
+
+        self.synced_registration = TeamScheduleRegistration.objects.get()
+        self.synced_team = Team.objects.get()
+        self.assertEqual(self.team.status, 'accepted')
+        synced_member = self.synced_team.team_members.get()
+        self.assertEqual(synced_member.status, 'withdrawn')
+
+        self.synced_registration = TeamScheduleRegistration.objects.get()
+        self.synced_team = Team.objects.get()
+
+        self.assertEqual(self.email, self.synced_registration.remote_user.email)
+        self.assertEqual(self.synced_registration.status, self.expected_participant_status)
+        self.assertEqual(self.synced_team.remote_user.email, self.email)
+        self.assertEqual(self.synced_team.team_members.count(), 1)
+        self.assertIsNone(self.synced_team.user)
+        self.synced_participant = self.synced_registration
+
     def test_join(self):
         self.test_adopt()
 

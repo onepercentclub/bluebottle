@@ -660,7 +660,7 @@ class SendTeamMemberLeaveEffect(Effect):
     Member leaves a team — Leave targeting the Team object.
     """
     template = 'admin/activity_pub/send_leave_effect.html'
-    conditions = [team_member_activity_is_synced, team_member_is_local, team_member_is_not_captain]
+    conditions = [team_member_activity_is_synced, team_member_is_local]
 
     def post_save(self, **kwargs):
         team = self.instance.team
@@ -707,7 +707,7 @@ class SendTeamMemberRemoveEffect(Effect):
         else:
             return adapter.sync(self.instance.user)
 
-    conditions = [has_target, transition_is_not_local, team_member_is_not_captain]
+    conditions = [has_target, transition_is_not_local]
 
     def post_save(self, **kwargs):
         Remove.objects.create(

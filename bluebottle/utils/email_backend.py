@@ -157,18 +157,16 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
     if 'language' in kwargs:
         language = kwargs['language']
 
-    for key in ('body_html', 'custom_message'):
-        if kwargs.get(key):
-            kwargs[key] = quill_lists_to_html(kwargs[key])
-
     with TenantLanguage(language):
         ctx = Context(kwargs)
         ctx['to'] = to  # Add the recipient to the context
         html_content = premailer.transform(
-            get_template(
-                '{0}.html'.format(template_name)
-            ).render(
-                ctx.flatten()
+            quill_lists_to_html(
+                get_template(
+                    '{0}.html'.format(template_name)
+                ).render(
+                    ctx.flatten()
+                )
             ),
             base_url=tenant_url()
         )

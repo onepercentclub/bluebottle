@@ -24,7 +24,6 @@ from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import TimestampSigner
 from django.urls import reverse
-from django.utils.safestring import SafeData, mark_safe
 from django.utils.timezone import get_current_timezone
 from django.db import connection
 from django_tools.middlewares import ThreadLocal
@@ -88,8 +87,7 @@ def quill_lists_to_html(content):
             container.insert_after(new_list)
         container.decompose()
 
-    result = str(soup)
-    return mark_safe(result) if isinstance(content, SafeData) else result
+    return str(soup)
 
 
 def get_languages():

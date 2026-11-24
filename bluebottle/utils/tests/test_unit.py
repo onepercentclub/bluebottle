@@ -16,7 +16,6 @@ from django.db import connection
 from django.test import TestCase, RequestFactory
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
-from django.utils.safestring import SafeData, mark_safe
 from django.utils.timezone import get_current_timezone
 from moneyed import Money
 from parler import appsettings
@@ -200,14 +199,28 @@ class QuillListsToHtmlTestCase(unittest.TestCase):
         self.assertEqual(quill_lists_to_html(''), '')
         self.assertIsNone(quill_lists_to_html(None))
 
-    def test_safe_string_stays_safe(self):
-        html = mark_safe('<ol><li data-list="bullet">One</li></ol>')
-        self.assertIsInstance(quill_lists_to_html(html), SafeData)
-
 
 class SendMailTestCase(BluebottleTestCase):
     def setUp(self):
         self.user = BlueBottleUserFactory.create(email="testuser@example.com")
+
+    @mock.patch('bluebottle.utils.email_backend.get_template')
+    def test_create_message_splits_quill_lists(self, get_template):
+        get_template.return_value.render.return_value = (
+            '<html><body><ol>'
+            '<li data-list="bullet">Bullet</li>'
+            '<li data-list="ordered">First</li>'
+            '<li data-list="ordered">Second</li>'
+            '</ol></body></html>'
+        )
+        message = create_message(template_name='utils/test', to=self.user, subject='Test')
+
+        html = message.alternatives[0][0]
+        self.assertIn('<ul><li>Bullet</li></ul>', html)
+        self.assertIn('<ol><li>First</li><li>Second</li></ol>', html)
+        self.assertIn('* Bullet', message.body)
+        self.assertIn('1. First', message.body)
+        self.assertIn('2. Second', message.body)
 
     @mock.patch('bluebottle.utils.email_backend.logger')
     def test_no_recipient(self, logger):

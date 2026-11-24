@@ -1,11 +1,15 @@
 import json
 from datetime import date, timedelta
 
+import mock
 from django.contrib.admin import site
 from django.core import mail
+from django.db import connection
 from django.utils.timezone import now
 
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.collect.models import CollectActivity
+from bluebottle.collect.tasks import collect_tasks
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.deeds.models import Deed
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
@@ -433,6 +437,90 @@ class CollectThankYouTestCase(SharedThankYouTests, ThankYouTestCase):
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'succeeded')
+        self.assertEqual(len(self.thank_you_mails()), 1)
+
+
+class CollectEndDateThankYouTestCase(ThankYouTestCase):
+    activity_type = 'collectactivity'
+
+    def setUp(self):
+        super().setUp()
+        self.activity = self.publish(CollectActivityFactory.create(
+            initiative=self.initiative, owner=self.owner,
+            start=date.today(), end=date.today() + timedelta(days=10),
+        ))
+        self.contributor = CollectContributorFactory.create(activity=self.activity, user=self.user)
+        self.contributor.refresh_from_db()
+        mail.outbox = []
+
+    def run_tasks(self, when):
+        with mock.patch('bluebottle.collect.periodic_tasks.date') as periodic_date, \
+                mock.patch('bluebottle.collect.triggers.date') as trigger_date:
+            for mock_date in (periodic_date, trigger_date):
+                mock_date.today.return_value = when
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+            collect_tasks()
+
+        with LocalTenant(connection.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+            self.contributor.refresh_from_db()
+
+    def test_participant_waits_for_end_date(self):
+        self.assertEqual(self.contributor.status, 'accepted')
+
+    def test_end_moved_into_the_past(self):
+        self.activity.end = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.activity.refresh_from_db()
+        self.contributor.refresh_from_db()
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assertEqual(self.contributor.status, 'succeeded')
+        self.assertEqual(len(self.thank_you_mails()), 1)
+
+    def test_end_moved_into_the_past_custom_message(self):
+        self.add_template(self.activity)
+        self.activity.end = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(len(self.thank_you_mails()), 1)
+        self.assertIn('Drinks are on us!', self.thank_you_mails()[0].body)
+
+    def test_end_moved_into_the_past_disabled(self):
+        self.disable()
+        self.activity.end = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(len(self.thank_you_mails()), 0)
+
+    def test_periodic_task(self):
+        self.run_tasks(self.activity.end + timedelta(days=1))
+
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assertEqual(self.contributor.status, 'succeeded')
+        self.assertEqual(len(self.thank_you_mails()), 1)
+
+    def test_periodic_task_custom_message(self):
+        self.add_template(self.activity)
+        self.run_tasks(self.activity.end + timedelta(days=1))
+
+        self.assertIn('Drinks are on us!', self.thank_you_mails()[0].body)
+
+    def test_periodic_task_withdrawn_participant_not_thanked(self):
+        self.contributor.states.withdraw(save=True)
+        other = BlueBottleUserFactory.create()
+        CollectContributorFactory.create(activity=self.activity, user=other)
+        mail.outbox = []
+
+        self.run_tasks(self.activity.end + timedelta(days=1))
+
+        self.assertEqual(len(self.thank_you_mails()), 0)
+        self.assertEqual(len(self.thank_you_mails(other)), 1)
+
+    def test_periodic_task_thanks_once(self):
+        self.run_tasks(self.activity.end + timedelta(days=1))
+        self.run_tasks(self.activity.end + timedelta(days=2))
+
         self.assertEqual(len(self.thank_you_mails()), 1)
 
 

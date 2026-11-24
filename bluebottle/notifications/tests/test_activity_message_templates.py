@@ -477,14 +477,8 @@ class ActivityMessageTemplateSendTestCase(BluebottleTestCase):
         self.assertIn('1. First', message.body)
         self.assertIn('2. Second', message.body)
         self.assertNotIn('1. Bring water', message.body)
-        self.assertIn(
-            '<li data-list="bullet" style="list-style-type:disc">Bring water</li>',
-            message.alternatives[0][0]
-        )
-        self.assertIn(
-            '<li data-list="ordered" style="list-style-type:decimal">First</li>',
-            message.alternatives[0][0]
-        )
+        self.assertIn('<ul><li>Bring water</li><li>Wear boots</li></ul>', message.alternatives[0][0])
+        self.assertIn('<ol><li>First</li><li>Second</li></ol>', message.alternatives[0][0])
 
     def test_message_block_html_is_literal(self):
         create_template(

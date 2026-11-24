@@ -65,6 +65,7 @@ from bluebottle.time_based.tests.factories import (
     ScheduleRegistrationFactory,
     TeamFactory,
     TeamMemberFactory,
+    TeamScheduleRegistrationFactory,
 )
 
 _real_geolocation_save = Geolocation.save
@@ -2522,6 +2523,45 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.synced_participant.refresh_from_db()
         self.assertStatus(self.synced_team, self.expected_participant_status)
+
+    def test_join_after_registration(self):
+        self.test_adopt()
+
+        with LocalTenant(self.consumer):
+            mail.outbox = []
+            captain = BlueBottleUserFactory.create()
+            self.participant = TeamScheduleRegistrationFactory.create(
+                activity=self.adopted,
+                user=captain,
+                as_user=captain
+            )
+            team = TeamFactory.create(
+                activity=self.adopted,
+                user=captain,
+                registration=self.participant,
+            )
+            self.email = captain.email
+            self.participant.refresh_from_db()
+            team.refresh_from_db()
+            self.assertEqual(self.participant.status, 'accepted')
+            self.assertEqual(team.status, 'accepted')
+            self.assert_activity_manager_not_notified()
+
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(
+                self.adopted.origin.contributor_count,
+                [{'count': 1, 'source': self.follow.actor.pub_url}]
+            )
+
+        self.synced_registration = TeamScheduleRegistration.objects.get()
+        self.synced_team = Team.objects.get()
+
+        self.assertEqual(self.email, self.synced_registration.remote_user.email)
+        self.assertEqual(self.synced_registration.status, self.expected_participant_status)
+        self.assertEqual(self.synced_team.remote_user.email, self.email)
+        self.assertEqual(self.synced_team.team_members.count(), 1)
+        self.assertIsNone(self.synced_team.user)
+        self.synced_participant = self.synced_registration
 
     def test_join(self):
         self.test_adopt()

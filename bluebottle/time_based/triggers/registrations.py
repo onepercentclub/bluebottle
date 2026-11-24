@@ -92,7 +92,9 @@ def is_local_activity(effect):
 
 def is_user_or_remote(effect):
     """Registration was submitted by the participant (local or remote)"""
-    return is_user(effect) or is_remote(effect)
+    return (
+        is_user(effect) and not effect.instance.activity.is_adopted
+    ) or is_remote(effect)
 
 
 def is_admin(effect):

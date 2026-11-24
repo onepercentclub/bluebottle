@@ -234,7 +234,7 @@ class TeamJoin(BaseJoin):
     def remote_contributor(self):
         """ Return the remote contributor, since the Join was created by the consumer"""
         adapter.adopt(self.actor.captain)
-        return self.actor.adopted
+        return self.actor.origin
 
     @property
     def local_contributor(self):
@@ -264,7 +264,10 @@ class TeamJoin(BaseJoin):
     @property
     def default_recipients(self):
         if not self.actor.is_local:
-            yield self.actor.adopted.activity.activity_pub_model.source
+            if not self.actor.adopted.activity.activity_pub_model.source.is_local:
+                yield self.actor.adopted.activity.activity_pub_model.source
+            else:
+                yield self.actor.captain.source
         else:
             yield self.object.source
 
@@ -314,7 +317,7 @@ class TeamMemberJoin(BaseJoin):
     def reapply(self):
         if self.contributor.status == 'withdrawn':
             self.contributor.states.reapply(save=True, local=True)
-        else:
+        elif self.contributor.status in ('removed', 'cancelled'):
             self.contributor.states.readd(save=True, local=True)
 
     class Meta:

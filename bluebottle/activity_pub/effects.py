@@ -607,7 +607,6 @@ class SendSupplierTeamJoinEffect(Effect):
         return (
             not self.options.get('local') and
             getattr(self.instance.activity, 'activity_pub_model', None) and
-            self.instance.user is None and
             self.instance.user is None
         )
 

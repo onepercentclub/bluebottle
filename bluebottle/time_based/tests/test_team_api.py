@@ -109,10 +109,8 @@ class TeamListAPIViewTestCase(APITestCase):
         count = Message.objects.filter(
             template='messages/registrations/schedule/team_joined'
         ).count()
-        mails = [
-            message for message in mail.outbox
-            if message.subject == 'You have registered your team on "Test"'
-        ]
+        subject = 'You have registered your team to the activity "{}"'.format(self.activity.title)
+        mails = [message for message in mail.outbox if message.subject == subject]
         self.assertEqual(count, len(mails))
         return mails
 

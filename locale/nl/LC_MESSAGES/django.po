@@ -14473,7 +14473,7 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"<p>Your have joined %(name)s's team for the activity \"%(title)s\".</p>\n"
+"<p>You have joined %(name)s's team for the activity \"%(title)s\".</p>\n"
 msgstr "\n"
 "<p>Je neemt deel aan het team van %(name)s voor de activiteit \"%(title)s\".</p>\n"
 

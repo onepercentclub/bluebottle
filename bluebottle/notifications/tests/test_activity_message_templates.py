@@ -913,7 +913,13 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         self.assertIn('Hi [Participant&#x27;s first name],', previews['accept']['body'])
         self.assertNotIn('<html', previews['accept']['body'])
         self.assertEqual(previews['accept']['action-title'], 'View activity')
-        self.assertEqual(previews['reject']['action-title'], 'View all activities')
+        self.assertEqual(previews['reject']['action-title'], 'View activity')
+        self.assertEqual(
+            previews['reject']['subject'],
+            'You have been rejected from the activity "Clean the park"'
+        )
+        self.assertIn("Unfortunately you won't be able to participate", previews['reject']['body'])
+        self.assertIn('Clean the park', previews['reject']['body'])
 
     def test_deed(self):
         activity = DeedFactory.create(owner=self.owner, title='Plant a tree')
@@ -937,6 +943,45 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         previews = self.previews(self.get(activity))
         self.assertEqual(set(previews), {'join', 'apply', 'accept', 'reject', 'succeed'})
 
+    def test_deadline_without_duration(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, duration=None)
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn('around (x) hours', body)
+
+    def test_deadline_with_duration(self):
+        activity = DeadlineActivityFactory.create(owner=self.owner, duration=timedelta(hours=3))
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn('around 3 hours', body)
+
+    def test_periodic_without_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(owner=self.owner, duration=None, period=None)
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn('around (x) hour(s) every (period)', body)
+
+    def test_periodic_with_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(
+            owner=self.owner, duration=timedelta(hours=2), period='weeks'
+        )
+        body = self.previews(self.get(activity))['join']['body']
+
+        self.assertIn('around 2 hour(s) every week', body)
+
+    def test_periodic_accept_without_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(owner=self.owner, duration=None, period=None)
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertIn('expected to contribute (x) hours every (period)', body)
+
+    def test_periodic_accept_with_duration_and_period(self):
+        activity = PeriodicActivityFactory.create(
+            owner=self.owner, duration=timedelta(hours=2), period='weeks'
+        )
+        body = self.previews(self.get(activity))['accept']['body']
+
+        self.assertIn('expected to contribute 2 hours every week', body)
     def test_date_single_slot(self):
         activity = DateActivityFactory.create(owner=self.owner, slots=[])
         slot = DateActivitySlotFactory.create(
@@ -970,6 +1015,12 @@ class ActivityMessageDefaultListAPITestCase(BluebottleTestCase):
         activity = ScheduleActivityFactory.create(owner=self.owner, team_activity='teams')
         previews = self.previews(self.get(activity))
         self.assertIn('team', previews['accept']['subject'])
+        self.assertEqual(
+            previews['reject']['subject'],
+            'Your team has been rejected from the activity "{}"'.format(activity.title)
+        )
+        self.assertIn("Unfortunately your team won't be able to participate", previews['reject']['body'])
+        self.assertEqual(previews['reject']['action-title'], 'View activity')
         self.assertIn('Hi [Team captain&#x27;s first name],', previews['accept']['body'])
 
     def test_recipient_first_name(self):
@@ -1078,7 +1129,7 @@ class RegistrationReviewMessageTestCase(BluebottleTestCase):
     def test_reject_appends_message(self):
         message = self.transition('reject', '<p>Maybe next time</p>')
 
-        self.assertIn('Unfortunately, you have not been selected', message.body)
+        self.assertIn("Unfortunately you won't be able to participate", message.body)
         self.assertIn('Maybe next time', message.body)
 
     def test_message_replaces_activity_template(self):
@@ -1101,29 +1152,29 @@ class SendThankYouMessageAPITestCase(BluebottleTestCase):
         self.activity = DeadlineActivityFactory.create(owner=self.owner)
         self.url = reverse('deadline-detail', args=(self.activity.pk,))
 
-    def test_default_off(self):
+    def test_default_on(self):
         response = self.client.get(self.url, user=self.owner)
-        self.assertFalse(response.json()['data']['attributes']['send-thank-you-message'])
+        self.assertTrue(response.json()['data']['attributes']['send-thank-you-message'])
 
-    def enable(self, user):
+    def disable(self, user):
         data = {
             'data': {
                 'type': 'activities/time-based/deadlines',
                 'id': self.activity.pk,
-                'attributes': {'send-thank-you-message': True},
+                'attributes': {'send-thank-you-message': False},
             }
         }
         response = self.client.patch(self.url, json.dumps(data), user=user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.activity.refresh_from_db()
-        self.assertTrue(self.activity.send_thank_you_message)
+        self.assertFalse(self.activity.send_thank_you_message)
 
-    def test_owner_enables(self):
-        self.enable(self.owner)
+    def test_owner_disables(self):
+        self.disable(self.owner)
 
-    def test_staff_enables(self):
-        self.enable(create_staff_user())
+    def test_staff_disables(self):
+        self.disable(create_staff_user())
 
-    def test_superuser_enables(self):
-        self.enable(BlueBottleUserFactory.create(is_superuser=True))
+    def test_superuser_disables(self):
+        self.disable(BlueBottleUserFactory.create(is_superuser=True))

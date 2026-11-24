@@ -100,7 +100,7 @@ class RegistrationTriggerTestCase:
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'You have been selected for the activity "{}"'.format(self.activity.title),
+            'You have been accepted to the activity "{}"'.format(self.activity.title),
         )
 
     def test_fill(self):
@@ -214,7 +214,7 @@ class DateRegistrationTriggerTestCase(
             subjects
         )
         self.assertEqual(
-            subjects.count('You have been selected for the activity "{}"'.format(self.activity.title)),
+            subjects.count('You have been accepted to the activity "{}"'.format(self.activity.title)),
             1
         )
 
@@ -279,7 +279,9 @@ class DateRegistrationTriggerTestCase(
 
         self.assertEqual(len(mail.outbox), 1)
         body = mail.outbox[0].body
-        self.assertIn('You can participate at the place and time indicated below', body)
+        self.assertIn('Good news! You have been accepted to an activity', body)
+        self.assertNotIn('indicated below', body)
+        self.assertNotIn('counting on your participation', body)
         self.assertIn(self.slot.title, body)
         self.assertIn(other_slot.title, body)
         self.assertNotIn('will be in contact', body)
@@ -696,7 +698,7 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has been selected for the activity "{}"'.format(
+            'Your team has been accepted to the activity "{}"'.format(
                 self.activity.title
             ),
         )

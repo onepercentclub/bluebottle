@@ -103,9 +103,19 @@ class UserRegistrationNotification(BaseParticipantNotification):
 
 
 class UserRegistrationAcceptedNotification(UserRegistrationNotification):
-    subject = pgettext('platform-email', 'You have been selected for the activity "{title}"')
-    template = 'messages/registrations/user_accepted'
+    subject = pgettext('platform-email', 'You have been accepted to the activity "{title}"')
     append_custom_message = True
+
+    @property
+    def template(self):
+        activity = self.obj.activity
+        if isinstance(activity, DateActivity):
+            return 'messages/registrations/date/user_accepted'
+        if isinstance(activity, DeadlineActivity):
+            return 'messages/registrations/deadline/user_accepted'
+        if isinstance(activity, PeriodicActivity):
+            return 'messages/registrations/periodic/user_accepted'
+        return 'messages/registrations/schedule/user_accepted'
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
@@ -116,9 +126,9 @@ class UserRegistrationAcceptedNotification(UserRegistrationNotification):
 
 class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
     subject = pgettext(
-        "platform-email", 'Your team has been selected for the activity "{title}"'
+        "platform-email", 'Your team has been accepted to the activity "{title}"'
     )
-    template = "messages/registrations/team_accepted"
+    template = "messages/registrations/schedule/team_accepted"
     append_custom_message = True
 
 

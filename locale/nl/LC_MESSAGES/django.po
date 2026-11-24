@@ -11415,14 +11415,26 @@ msgstr "maand"
 #: bluebottle/time_based/messages/registrations.py:97
 #, python-brace-format
 msgctxt "platform-email"
-msgid "You have been selected for the activity \"{title}\""
-msgstr "Je bent geselecteerd voor de activiteit \"{title}\""
+msgid "You have been accepted to the activity \"{title}\""
+msgstr "Je bent geaccepteerd voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/messages/registrations.py:103
 #, python-brace-format
 msgctxt "platform-email"
-msgid "Your team has been selected for the activity \"{title}\""
+msgid "Your team has been accepted to the activity \"{title}\""
 msgstr "Je team is geaccepteerd voor de activiteit \"{title}\""
+
+#: bluebottle/time_based/templates/mails/messages/partial/accepted_intro.html:4
+#, python-format
+msgctxt "platform-email"
+msgid "Good news! You have been accepted to an activity on <b>%(site_name)s</b>"
+msgstr "Goed nieuws! Je bent geaccepteerd voor een activiteit op <b>%(site_name)s</b>"
+
+#: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_accepted.html:6
+#, python-format
+msgctxt "platform-email"
+msgid "Good news! Your team has been accepted to an activity on <b>%(site_name)s</b>"
+msgstr "Goed nieuws! Je team is geaccepteerd voor een activiteit op <b>%(site_name)s</b>"
 
 #: bluebottle/time_based/messages/registrations.py:115
 #, python-brace-format

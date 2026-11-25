@@ -2622,6 +2622,24 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.assert_activity_manager_not_notified()
 
+    def test_join_full(self):
+        self.test_adopt()
+        print('setting capacity')
+        self.model.capacity = 1
+        self.model.save()
+
+        with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.adopted.capacity, 1)
+            self.join()
+
+        self.model.refresh_from_db()
+        self.assertStatus(self.model, 'full')
+
+        with LocalTenant(self.consumer):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'full')
+
     def test_join_with_review(self):
         self.test_adopt()
         self.model.review = True

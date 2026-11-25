@@ -11,7 +11,7 @@ from builtins import range
 from urllib.parse import quote_plus
 from urllib.parse import urlparse
 
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
 
@@ -137,3 +137,21 @@ class LookerEmbedViewTest(BluebottleAdminTestCase):
         self.client.force_login(staff_user)
         response = self.client.get(self.embed_url)
         self.assertEqual(response.status_code, 403)
+
+
+class ReportingGroupTest(BluebottleAdminTestCase):
+    def setUp(self):
+        super().setUp()
+        self.reporter = BlueBottleUserFactory.create(is_staff=True)
+        Group.objects.get(name='Reporting').user_set.add(self.reporter)
+
+    def test_permissions(self):
+        self.assertTrue(self.reporter.has_perm('looker.access_looker_embeds'))
+        self.assertFalse(self.reporter.has_perm('pages.view_page'))
+        self.assertFalse(self.reporter.has_perm('members.view_member'))
+
+    def test_menu(self):
+        self.client.force_login(self.reporter)
+        response = self.client.get(reverse('admin:index'))
+        self.assertContains(response, 'Reporting')
+        self.assertNotContains(response, 'Pages')

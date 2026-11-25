@@ -472,8 +472,8 @@ class ContentEditorPageAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue(self.editor.has_perms([
             'pages.add_page', 'pages.change_page', 'pages.delete_page', 'pages.view_page',
             'text.add_textitem', 'cms.add_person', 'fluent_contents.change_placeholder',
-            'looker.access_looker_embeds',
         ]))
+        self.assertFalse(self.editor.has_perm('looker.access_looker_embeds'))
         self.assertFalse(self.editor.has_perm('members.view_member'))
         self.assertFalse(self.editor.has_perm('activities.view_activity'))
 

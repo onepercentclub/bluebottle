@@ -648,6 +648,18 @@ class InterestDetailAPITestCase(APITestCase):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
 
+    def test_get_contact_email_hidden_for_non_manager(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertIsNone(
+            self.response.json()['data']['attributes']['contact-email']
+        )
+
+    def test_get_contact_email_manager(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('contact-email', self.model.user.email)
+
     def test_get_other_user(self):
         other = BlueBottleUserFactory.create()
         self.perform_get(user=other)
@@ -1319,6 +1331,24 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
         self.perform_get(user=manager)
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(3)
+
+    def test_manager_sees_contact_email(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        emails = {
+            resource['attributes']['contact-email']
+            for resource in self.response.json()['data']
+        }
+        self.assertEqual(
+            emails, {interest.user.email for interest in self.interests}
+        )
+
+    def test_staff_sees_contact_email(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        self.perform_get(user=staff)
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertIsNotNone(resource['attributes']['contact-email'])
 
     def test_unrelated_user_cannot_list_interests(self):
         other = BlueBottleUserFactory.create()

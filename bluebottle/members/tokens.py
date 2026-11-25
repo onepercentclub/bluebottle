@@ -3,6 +3,13 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator as BasePasswo
 
 
 class PasswordResetTokenGenerator(BasePasswordResetTokenGenerator):
+    def check_token(self, user, token):
+        # Users without a password (e.g. SSO only) should not be able to set one
+        if user is None or not user.has_usable_password():
+            return False
+
+        return super().check_token(user, token)
+
     def _make_hash_value(self, user, timestamp):
         # Same as Django's implementation, except for the source of the last login
         # Looked up lazily: importing members.models here would be circular

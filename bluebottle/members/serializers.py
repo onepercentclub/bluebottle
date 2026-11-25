@@ -57,8 +57,7 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
 
             if user:
                 if not user.is_active:
-                    msg = _('User account is disabled.')
-                    raise serializers.ValidationError(msg)
+                    raise serializers.ValidationError(_('User account is disabled.'), code='inactive')
 
                 AuthenticationLog.log(user, PasswordAuthentication.load())
 
@@ -69,10 +68,22 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
                     'user': user
                 }
             else:
-                msg = _(
-                    'We are unable to log you in with the provided email address and password combination.'
+                user = Member.objects.filter(email__iexact=credentials[self.username_field]).first()
+
+                if user:
+                    if not user.is_active:
+                        raise serializers.ValidationError(_('User account is disabled.'), code='inactive')
+
+                    if not user.has_usable_password():
+                        raise serializers.ValidationError(
+                            _('This account does not have a password. Please log in using a different login method.'),
+                            code='no_usable_password'
+                        )
+
+                raise serializers.ValidationError(
+                    _('We are unable to log you in with the provided email address and password combination.'),
+                    code='invalid_credentials'
                 )
-                raise serializers.ValidationError(msg)
         else:
             msg = _('Must include "{username_field}" and "password".')
             msg = msg.format(username_field=self.username_field)

@@ -125,6 +125,21 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(reset_mail.to, [user.email])
         self.assertTrue('Seems you\'ve requested a password reset for' in reset_mail.body)
 
+    def test_password_mail_without_password(self):
+        user = BlueBottleUserFactory.create()
+        user.set_unusable_password()
+        user.save()
+
+        member_url = reverse('admin:members_member_change', args=(user.id,))
+        response = self.client.get(member_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Send reset password mail')
+
+        reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_password_mail_anonymous(self):
         user = BlueBottleUserFactory.create()
         self.client.logout()

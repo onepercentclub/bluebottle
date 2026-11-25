@@ -7,7 +7,7 @@ import string
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.admin import GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group
 from django.db import connection, models
@@ -794,6 +794,9 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
             member_settings = MemberPlatformSettings.load()
 
+            if not obj.has_usable_password():
+                fieldsets[0][1]['fields'].remove('reset_password')
+
             if member_settings.enable_gender:
                 fieldsets[0][1]['fields'].append('gender')
             if member_settings.enable_birthdate:
@@ -1158,6 +1161,14 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     def send_password_reset_mail(self, request, user):
         if not request.user.has_perm('members.change_member'):
             return HttpResponseForbidden('Not allowed to change user')
+
+        if not user.has_usable_password():
+            self.message_user(
+                request,
+                _('User {name} has no password, so it cannot be reset.').format(name=user.full_name),
+                level=messages.ERROR
+            )
+            return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)))
 
         PasswordResetMessage(user).compose_and_send()
 

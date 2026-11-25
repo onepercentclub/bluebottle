@@ -14,7 +14,7 @@ from django.test.utils import override_settings
 from django.utils.http import int_to_base36
 from rest_framework import status
 
-from bluebottle.members.models import MemberPlatformSettings, UserSegment
+from bluebottle.members.models import AuthenticationLog, MemberPlatformSettings, UserSegment
 from bluebottle.members.tests.factories import PasswordAuthenticationFactory
 
 from bluebottle.segments.tests.factories import SegmentFactory
@@ -466,6 +466,38 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEqual(len(mail.outbox), 0)
 
+    @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
+    def test_password_reset_without_password(self):
+        user = BlueBottleUserFactory.create()
+        user.set_unusable_password()
+        user.save()
+        mail.outbox = []
+
+        response = self.client.post(
+            self.user_password_reset_api_url,
+            {'data': {'attributes': {'email': user.email}, 'type': 'reset-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_password_reset_confirm_without_password(self):
+        user = BlueBottleUserFactory.create()
+        user.set_unusable_password()
+        user.save()
+
+        token = password_reset_token_generator.make_token(user)
+        attributes = {'password': 'test-password', 'token': f'{int_to_base36(user.pk)}-{token}'}
+
+        response = self.client.post(
+            reverse('password-reset-confirm'),
+            {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        user.refresh_from_db()
+        self.assertFalse(user.has_usable_password())
+        self.assertFalse(user.check_password('test-password'))
+
     def test_password_reset_validation(self):
         client = JSONAPITestClient()
         token = password_reset_token_generator.make_token(self.user_1)  # Setup: create a user.
@@ -606,22 +638,65 @@ class LoginJsonApiTestCase(BluebottleTestCase):
             },
         }
 
+    def assertLoginError(self, response, code, detail):
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                'errors': [{
+                    'code': code,
+                    'detail': detail,
+                    'source': {'pointer': '/data'},
+                    'status': '400'
+                }]
+            }
+        )
+        self.assertEqual(AuthenticationLog.objects.filter(user=self.user).count(), 0)
+
     def test_login_wrong_pwd(self):
-        expected = {
-            'errors': [{
-                'code': 'invalid',
-                'detail': 'We are unable to log you in with the provided email address and password combination.',
-                'source': {
-                    'pointer': '/data'
-                },
-                'status': '400'
-            }]
-        }
         self.data['data']['attributes']['password'] = 'awildguess'
         response = self.client.post(self.url, self.data)
-        self.assertEqual(response.status_code, 400)
-        data = response.json()
-        self.assertEqual(expected, data)
+        self.assertLoginError(
+            response,
+            'invalid_credentials',
+            'We are unable to log you in with the provided email address and password combination.'
+        )
+
+    def test_login_unknown_email(self):
+        self.data['data']['attributes']['email'] = 'unknown@example.com'
+        response = self.client.post(self.url, self.data)
+        self.assertLoginError(
+            response,
+            'invalid_credentials',
+            'We are unable to log you in with the provided email address and password combination.'
+        )
+
+    def test_login_inactive(self):
+        self.user.is_active = False
+        self.user.save()
+
+        response = self.client.post(self.url, self.data)
+        self.assertLoginError(response, 'inactive', 'User account is disabled.')
+
+    def test_login_without_usable_password(self):
+        # E.g. a user provisioned through SAML
+        self.user.set_unusable_password()
+        self.user.save()
+
+        response = self.client.post(self.url, self.data)
+        self.assertLoginError(
+            response,
+            'no_usable_password',
+            'This account does not have a password. Please log in using a different login method.'
+        )
+
+    def test_login_without_usable_password_inactive(self):
+        self.user.set_unusable_password()
+        self.user.is_active = False
+        self.user.save()
+
+        response = self.client.post(self.url, self.data)
+        self.assertLoginError(response, 'inactive', 'User account is disabled.')
 
     def test_login_pwd_null(self):
         expected = {

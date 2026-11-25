@@ -308,7 +308,8 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         try:
             user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'], is_active=True)
-            PasswordResetMessage(user).compose_and_send()
+            if user.has_usable_password():
+                PasswordResetMessage(user).compose_and_send()
         except USER_MODEL.DoesNotExist:
             pass
 

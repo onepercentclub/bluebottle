@@ -31,6 +31,7 @@ class TestBaseTokenAuthentication(TestCase):
         self.assertEqual(authenticate_request.call_count, 1)
         self.assertTrue(created)
         self.assertEqual(user.email, 'test@example.com')
+        self.assertFalse(user.has_usable_password())
 
     @patch.object(
         BaseTokenAuthentication,

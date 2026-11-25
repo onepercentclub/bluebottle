@@ -14153,20 +14153,20 @@ msgstr "Последни актуализации на стената"
 #: bluebottle/updates/messages.py:21
 #, python-brace-format
 msgctxt "platform-email"
-msgid "New update from '{title}'"
-msgstr "Нова актуализация от '{title}'"
+msgid "New update from \"{title}\""
+msgstr "Нова актуализация от \"{title}\""
 
 #: bluebottle/updates/messages.py:37
 #, python-brace-format
 msgctxt "platform-email"
-msgid "A new message is posted on '{title}'"
-msgstr "Новото съобщение е публикувано в '{title}'"
+msgid "A new message is posted on \"{title}\""
+msgstr "Новото съобщение е публикувано в \"{title}\""
 
 #: bluebottle/updates/messages.py:49
 #, python-brace-format
 msgctxt "platform-email"
-msgid "You have a reply on '{title}'"
-msgstr "Имате отговор на '{title}'"
+msgid "You have a reply on \"{title}\""
+msgstr "Имате отговор на \"{title}\""
 
 #: bluebottle/updates/models.py:15
 msgid "Author"

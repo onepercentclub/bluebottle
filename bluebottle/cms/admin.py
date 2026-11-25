@@ -65,7 +65,7 @@ class LinkGroupAdmin(NonSortableParentAdmin):
 
 class LinkGroupInline(SortableTabularInline):
     model = LinkGroup
-    readonly_fields = ('title', 'edit_url',)
+    readonly_fields = ('edit_url',)
     fields = ('name', 'title', 'edit_url',)
     extra = 0
 
@@ -375,7 +375,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
         css = {
             'all': ('admin/css/platform_color_contrast.css',)
         }
-        js = ('admin/js/platform_color_contrast.js',)
+        js = ('admin/js/color_contrast_base.js', 'admin/js/platform_color_contrast.js')
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

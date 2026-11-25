@@ -119,11 +119,11 @@ class SiteLinks(models.Model):
 
 class LinkGroup(SortableMixin):
     GROUP_CHOICES = (
-        ('main', _('Main')),
-        ('about', _('About')),
-        ('info', _('Info')),
-        ('discover', _('Discover')),
-        ('social', _('Social')),
+        ('main', _('Header')),
+        ('about', _('Footer - Column 1')),
+        ('info', _('Footer - Column 2')),
+        ('discover', _('Footer - Column 3')),
+        ('social', _('Footer - Column 4')),
     )
 
     site_links = models.ForeignKey(SiteLinks, related_name='link_groups', on_delete=models.CASCADE)
@@ -945,6 +945,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             self.organization = Organization.objects.create(
                 name=tenant.name,
                 logo=self.logo,
+                slogan='',
             )
 
         if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):

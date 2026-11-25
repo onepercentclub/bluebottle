@@ -113,6 +113,7 @@ class MemberSerializer(ModelSerializer):
         if (
             self.context.get('display_member_names') in ['first_name', 'first_name_strict'] and
             instance not in self.context.get('owners', []) and
+            user not in self.context.get('owners', []) and
             not user.is_staff and
             not user.is_superuser
         ):
@@ -583,6 +584,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'team_activities',
             'contact_method',
             'enable_impact',
+            'enable_reviewing',
             'enable_office_regions',
             'enable_office_restrictions',
             'available_office_restrictions',

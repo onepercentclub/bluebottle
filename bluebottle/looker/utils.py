@@ -99,6 +99,7 @@ class LookerSSOEmbed(object):
                 'user_base': analytics_settings.user_base,
                 'language': get_default_language(),
                 'region_manager': subregions,
+                'display_names_in_reporting': member_settings.display_names_in_reporting,
             }),
             ('force_logout_login', True),
         ])

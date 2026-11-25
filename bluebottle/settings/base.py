@@ -256,7 +256,6 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
     'bluebottle.auth.utils.set_language',
-    'bluebottle.auth.utils.set_last_login',
 )
 
 AFOM_ENABLED = False
@@ -773,7 +772,6 @@ LOGIN_REDIRECT_URL = 'admin:index'
 TINYMCE_INCLUDE_JQUERY = False
 
 LOOKER_SESSION_LENGTH = 60 * 60
-TOKEN_LOGIN_TIMEOUT = 30
 
 JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True

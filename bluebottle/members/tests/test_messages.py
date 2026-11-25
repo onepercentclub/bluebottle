@@ -1,11 +1,13 @@
 from urllib.parse import urlparse, parse_qs
 
-from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from django.utils.http import base36_to_int
 from rest_framework import status
 
 from bluebottle.members.messages import PasswordResetMessage
+from bluebottle.members.models import AuthenticationLog
+from bluebottle.members.tests.factories import PasswordAuthenticationFactory
+from bluebottle.members.tokens import password_reset_token_generator
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase, JSONAPITestClient
 
@@ -46,9 +48,10 @@ class PasswordResetMessageTestCase(NotificationTestCase):
         uid, token = self.get_uid_and_token()
 
         self.assertEqual(base36_to_int(uid), self.obj.pk)
-        self.assertTrue(default_token_generator.check_token(self.obj, token))
+        self.assertTrue(password_reset_token_generator.check_token(self.obj, token))
 
     def test_reset_password_with_token(self):
+        method = PasswordAuthenticationFactory.create()
         uid, token = self.get_uid_and_token()
         client = JSONAPITestClient()
         url = reverse('password-reset-confirm')
@@ -70,6 +73,35 @@ class PasswordResetMessageTestCase(NotificationTestCase):
         self.assertTrue(self.obj.check_password('some-new-password'))
         self.assertFalse(self.obj.check_password('old-password'))
 
+        log = AuthenticationLog.objects.get()
+        self.assertEqual(log.user, self.obj)
+        self.assertEqual(log.method.pk, method.pk)
+        self.assertFalse(log.admin)
+
         # The token can only be used once
         response = client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(AuthenticationLog.objects.count(), 1)
+
+    def test_login_invalidates_token(self):
+        uid, token = self.get_uid_and_token()
+
+        response = JSONAPITestClient().post(
+            reverse('auth'),
+            {'data': {'type': 'auth/token', 'attributes': {'email': self.obj.email, 'password': 'old-password'}}},
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = JSONAPITestClient().post(
+            reverse('password-reset-confirm'),
+            {
+                'data': {
+                    'type': 'reset-token-confirmations',
+                    'attributes': {'token': f'{uid}-{token}', 'password': 'some-new-password'},
+                }
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.obj.refresh_from_db()
+        self.assertTrue(self.obj.check_password('old-password'))

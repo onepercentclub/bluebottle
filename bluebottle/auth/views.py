@@ -2,13 +2,6 @@ import logging
 from datetime import timedelta
 
 from django import forms
-from django.contrib.auth.forms import PasswordResetForm
-from django.contrib.auth.tokens import default_token_generator
-from django.db import connection
-from django.http import HttpResponseRedirect
-from django.shortcuts import resolve_url
-from django.template.response import TemplateResponse
-from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -23,7 +16,9 @@ from social_django.utils import psa, STORAGE
 from two_factor.views import LoginView, SetupView
 
 from bluebottle.auth.serializers import SocialLoginSerializer
-from bluebottle.members.models import SAMLAuthentication
+from bluebottle.members.models import (
+    AuthenticationLog, PasswordAuthentication, SAMLAuthentication
+)
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import CreateAPIView, JsonApiViewMixin
 
@@ -69,6 +64,12 @@ def complete(request, backend):
         )
     if not user.is_active:
         raise AuthenticationFailed(_('User account is disabled'), code="account_disabled")
+
+    AuthenticationLog.log(
+        user,
+        request.backend.strategy.get_authentication_method(request.backend.name)
+    )
+
     return user
 
 
@@ -79,62 +80,10 @@ class SocialLoginView(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         user = complete(self.request, serializer.validated_data['backend'])
 
-        user.last_login = now()
-        user.save()
-
         serializer.instance = type('obj', (object,), {
             'pk': user.id,
             'token': user.get_jwt_token()
         })
-
-
-@csrf_protect
-def admin_password_reset(
-    request,
-    is_admin_site=False,
-    template_name='registration/password_reset_form.html',
-    email_template_name='registration/password_reset_email.html',
-    subject_template_name='registration/password_reset_subject.txt',
-    password_reset_form=PasswordResetForm,
-    token_generator=default_token_generator,
-    post_reset_redirect=None,
-    from_email=None,
-    extra_context=None
-):
-    """
-    This is a copy of django.contrib.auth.views.password_reset but this
-    forces the domain to the one specified in current tenant.
-    """
-
-    if post_reset_redirect is None:
-        post_reset_redirect = reverse('password_reset_done')
-    else:
-        post_reset_redirect = resolve_url(post_reset_redirect)
-
-    if request.method == "POST":
-        form = password_reset_form(request.POST)
-        if form.is_valid():
-            opts = {
-                'use_https': request.is_secure(),
-                'token_generator': token_generator,
-                'from_email': from_email,
-                'email_template_name': email_template_name,
-                'subject_template_name': subject_template_name,
-                'request': request,
-            }
-            tenant = connection.get_tenant()
-            domain_override = tenant.domain_url
-            opts = dict(opts, domain_override=domain_override)
-            form.save(**opts)
-            return HttpResponseRedirect(post_reset_redirect)
-    else:
-        form = password_reset_form()
-    context = {
-        'form': form,
-    }
-    if extra_context is not None:
-        context.update(extra_context)
-    return TemplateResponse(request, template_name, context)
 
 
 @never_cache
@@ -218,6 +167,11 @@ class AdminLoginView(LoginView):
         context = super().get_context_data(form, **kwargs)
         context['sso_methods'] = self.get_sso_methods()
         return context
+
+    def done(self, form_list, **kwargs):
+        response = super().done(form_list, **kwargs)
+        AuthenticationLog.log(self.get_user(), PasswordAuthentication.load(), admin=True)
+        return response
 
 
 class TwoFactorSetupView(SetupView):

@@ -1,6 +1,8 @@
 import re
 from datetime import datetime, timezone
-from bluebottle.members.models import PasswordAuthentication
+from bluebottle.members.models import AuthenticationLog, PasswordAuthentication
+from bluebottle.members.tokens import password_reset_token_generator
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 from django.core.exceptions import ValidationError
@@ -310,3 +312,34 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
 
         self.assertNotIn('idp', settings)
         self.assertEqual(settings['sp'], method.metadata['sp'])
+
+
+class AuthenticationLogTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.method = PasswordAuthenticationFactory.create()
+
+    def log(self, user, created):
+        log = AuthenticationLog.log(user, self.method)
+        AuthenticationLog.objects.filter(pk=log.pk).update(created=created)
+        return created
+
+    def test_last_login_never_logged_in(self):
+        self.assertIsNone(AuthenticationLog.last_login(self.user))
+
+    def test_last_login(self):
+        self.log(self.user, datetime(2026, 1, 1, tzinfo=timezone.utc))
+        latest = self.log(self.user, datetime(2026, 3, 1, tzinfo=timezone.utc))
+        self.log(self.user, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        self.log(BlueBottleUserFactory.create(), datetime(2026, 4, 1, tzinfo=timezone.utc))
+
+        self.assertEqual(AuthenticationLog.last_login(self.user), latest)
+
+    def test_reset_token_invalidated_by_login(self):
+        self.log(self.user, datetime(2026, 1, 1, tzinfo=timezone.utc))
+        token = password_reset_token_generator.make_token(self.user)
+        self.assertTrue(password_reset_token_generator.check_token(self.user, token))
+
+        self.log(self.user, datetime(2026, 1, 2, tzinfo=timezone.utc))
+        self.assertFalse(password_reset_token_generator.check_token(self.user, token))

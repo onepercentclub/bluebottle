@@ -1,4 +1,3 @@
-from django.utils.timezone import now
 
 from django.shortcuts import redirect
 
@@ -29,11 +28,6 @@ def set_language(user, response, *args, **kwargs):
             user.save()
     except KeyError:
         pass
-
-
-def set_last_login(user, response, *args, **kwargs):
-    user.last = now()
-    user.save()
 
 
 class AdminSiteOTPRequired(BaseAdminSiteOTPRequired):

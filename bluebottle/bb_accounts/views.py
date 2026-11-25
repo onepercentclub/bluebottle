@@ -5,7 +5,6 @@ from datetime import timedelta
 from axes.utils import reset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
 from django.http import Http404
 from django.utils import timezone
@@ -28,15 +27,18 @@ from bluebottle.files.views import ImageContentView
 from bluebottle.initiatives.serializers import (
     MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
 )
-from bluebottle.members.models import AuthenticationMethod, SAMLAuthentication, PasswordAuthentication
+from bluebottle.members.models import (
+    AuthenticationLog, AuthenticationMethod, SAMLAuthentication, PasswordAuthentication
+)
 from bluebottle.members.messages import SignUpTokenMessage, PasswordResetMessage
 from bluebottle.members.models import UserActivity
+from bluebottle.members.tokens import password_reset_token_generator
 from bluebottle.members.serializers import (
     PasswordResetSerializer,
     UserDataExportSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
-    CaptchaSerializer, AxesJSONWebTokenSerializer, MemberSignUpSerializer,
+    CaptchaSerializer, AxesJSONWebTokenSerializer,
     PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer,
     MemberProfileSerializer, AuthenticationMethodSerializer
 )
@@ -160,20 +162,6 @@ class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
     permission_classes = [IsAuthenticatedOrOpenPermission]
 
 
-class MemberSignUp(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
-    """
-    Retrieve details about the member
-    """
-    queryset = USER_MODEL.objects.all()
-    serializer_class = MemberSignUpSerializer
-
-    permission_classes = []
-
-    def perform_create(self, serializer):
-        serializer.validated_data['is_active'] = True
-        super().perform_create(serializer)
-
-
 class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):
     serializer_class = PasswordStrengthSerializer
 
@@ -255,6 +243,8 @@ class SignUpTokenConfirmation(JsonApiViewMixin, CreateAPIView):
         serializer.save(is_active=True)
         send_welcome_mail(serializer.instance)
 
+        AuthenticationLog.log(serializer.instance, PasswordAuthentication.load())
+
 
 class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
     """
@@ -276,10 +266,12 @@ class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
         except (ValueError, OverflowError, USER_MODEL.DoesNotExist):
             raise ValidationError('Token expired')
 
-        if default_token_generator.check_token(user, token):
+        if password_reset_token_generator.check_token(user, token):
 
             user.set_password(serializer.validated_data['password'])
             user.save()
+
+            AuthenticationLog.log(user, PasswordAuthentication.load())
 
             # return a jwt token so the user can be logged in immediately
             serializer.validated_data['jwt_token'] = user.get_jwt_token()
@@ -298,8 +290,7 @@ class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
         user = self._get_user(self.kwargs.get('uidb36'))
         token = self.kwargs.get('token')
 
-        if user is not None and default_token_generator.check_token(user,
-                                                                    token):
+        if user is not None and password_reset_token_generator.check_token(user, token):
             return response.Response(status=status.HTTP_200_OK)
         return response.Response({'message': 'Token expired'},
                                  status=status.HTTP_400_BAD_REQUEST)

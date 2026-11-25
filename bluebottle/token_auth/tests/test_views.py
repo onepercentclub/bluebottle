@@ -12,7 +12,7 @@ from django.urls import reverse
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
 from bluebottle.members.models import (
-    Member, MemberPlatformSettings, SAMLGroupMapping, SAMLSegmentMapping
+    AuthenticationLog, Member, MemberPlatformSettings, SAMLGroupMapping, SAMLSegmentMapping
 )
 from bluebottle.members.tests.factories import SAMLAuthenticationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
@@ -302,6 +302,24 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
         self.assertEqual(user.remote_id, 'smartin')
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
 
+        log = AuthenticationLog.objects.get()
+        self.assertEqual(log.user, user)
+        self.assertEqual(log.method.pk, self.method.pk)
+
+    def test_frontend_login_creates_authentication_log(self):
+        response = self.client.post(
+            self.url,
+            urlencode({'SAMLResponse': self.saml_response, 'RelayState': '/en/initiatives'}),
+            format=None,
+            content_type='application/x-www-form-urlencoded',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        log = AuthenticationLog.objects.get()
+        self.assertEqual(log.user, Member.objects.get(email='smartin@yaco.es'))
+        self.assertEqual(log.method.pk, self.method.pk)
+
     def test_existing_user_by_remote_id_logs_in(self):
         user = BlueBottleUserFactory.create(
             remote_id='smartin',
@@ -354,6 +372,7 @@ class SAMLLoginViewTestCase(BluebottleTestCase):
         self.assertIn('Account%20not%20found', response['Location'])
         self.assertFalse(Member.objects.filter(email__iexact='smartin@yaco.es').exists())
         self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertFalse(AuthenticationLog.objects.exists())
 
     def test_disabled_method_new_user_cannot_log_in(self):
         self.method.enabled = False

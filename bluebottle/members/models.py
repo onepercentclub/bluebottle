@@ -828,4 +828,34 @@ class SAMLGroupMapping(models.Model):
         verbose_name = _('SAML group mapping')
 
 
+class AuthenticationLog(models.Model):
+    method = models.ForeignKey(
+        AuthenticationMethod, on_delete=models.CASCADE, null=True, related_name="logs"
+    )
+    user = models.ForeignKey(
+        Member, on_delete=models.CASCADE, related_name="logs"
+    )
+    admin = models.BooleanField(_('Admin'), default=False)
+    created = models.DateTimeField(_('Date'), auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = _('Authentication logs')
+        verbose_name = _('Authentication log')
+        ordering = ['-created']
+        indexes = [
+            models.Index(fields=['user', '-created'], name='members_authlog_user_created'),
+        ]
+
+    @classmethod
+    def log(cls, user, method, admin=False):
+        return cls.objects.create(user=user, method=method, admin=admin)
+
+    @classmethod
+    def last_login(cls, user):
+        """
+        Return the time of the most recent login of `user`, or None if they never logged in
+        """
+        return cls.objects.filter(user=user).order_by('-created').values_list('created', flat=True).first()
+
+
 from . import signals  # noqa

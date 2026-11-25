@@ -24,7 +24,6 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
@@ -64,14 +63,12 @@ class BlueBottleUserManager(UserManager):
         Creates and saves a User with the given email and password.
         """
         now = timezone.now()
-        extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
         extra_fields['is_active'] = True
         return super().create_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username=None, email=None, password=None, **extra_fields):
         now = timezone.now()
-        extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
         extra_fields['is_active'] = True
         if not username:
@@ -354,9 +351,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         payload = jwt_payload_handler(self)
         token = jwt_encode_handler(payload)
         return token
-
-    def get_login_token(self):
-        return login_token_generator.make_token(self)
 
     @property
     def short_name(self):

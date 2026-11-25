@@ -56,7 +56,7 @@ mails/++
 mails/*
 
 # Misc stuff
-data
+/data
 env
 docs/_build
 .idea

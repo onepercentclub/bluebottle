@@ -1,11 +1,11 @@
 import re
 
-from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import int_to_base36
 
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.members.messages import AccountActivationMessage
+from bluebottle.members.tokens import password_reset_token_generator
 
 
 def send_welcome_mail(user=None):
@@ -28,7 +28,7 @@ def send_welcome_mail(user=None):
     # welcome + password template, and then set a random password
     if not user.password and not user.remote_id:
         context.update({
-            'token': default_token_generator.make_token(user),
+            'token': password_reset_token_generator.make_token(user),
             'uid': int_to_base36(user.pk),
         })
 

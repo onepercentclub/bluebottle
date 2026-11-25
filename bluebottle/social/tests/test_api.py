@@ -1,6 +1,6 @@
 from future import standard_library
 
-from bluebottle.members.models import FacebookAuthentication
+from bluebottle.members.models import AuthenticationLog, FacebookAuthentication
 
 standard_library.install_aliases()
 import json
@@ -74,6 +74,10 @@ class SocialTokenAPITestCase(BluebottleTestCase):
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             self.assertTrue("token" in response.json()["data"]["attributes"])
+
+            log = AuthenticationLog.objects.get()
+            self.assertEqual(log.user.email, "test@goodup.com")
+            self.assertEqual(log.method.pk, self.authentication_method.pk)
 
             authenticated_response = self.client.get(
                 reverse("current-member-detail"),

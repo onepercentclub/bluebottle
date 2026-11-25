@@ -12032,6 +12032,10 @@ msgstr "Interesse van {user} in {activity}"
 msgid "Close registration when the registration date has passed."
 msgstr "Sluit registratie wanneer de registratiedatum is verstreken."
 
+#: bluebottle/time_based/periodic_tasks.py:75
+msgid "Succeed the accepted participants when the start date has passed."
+msgstr "Zet de geaccepteerde deelnemers op succesvol wanneer de startdatum is verstreken."
+
 #: bluebottle/time_based/periodic_tasks.py:76
 msgid "Finish an activity when all slots are completed."
 msgstr "Voltooi een activiteit wanneer alle slots zijn voltooid."

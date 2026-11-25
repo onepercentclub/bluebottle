@@ -12348,6 +12348,10 @@ msgstr ""
 msgid "Close registration when the registration date has passed."
 msgstr ""
 
+#: bluebottle/time_based/periodic_tasks.py:75
+msgid "Succeed the accepted participants when the start date has passed."
+msgstr ""
+
 #: bluebottle/time_based/periodic_tasks.py:76
 msgid "Finish an activity when all slots are completed."
 msgstr ""

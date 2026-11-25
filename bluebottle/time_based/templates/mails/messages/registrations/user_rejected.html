@@ -1,8 +1,14 @@
 {% extends "mails/messages/participant_base.html" %}
 {% load i18n %}
 
-{% block message%}{% blocktrans context 'platform-email' %}
-<p>Unfortunately, you have not been selected for the activity ‘{{ title }}’.</p>
+{% block message %}
+    <p>
+        {% blocktrans context 'platform-email' %}
+            Unfortunately you won't be able to participate in an activity on <b>{{ site_name }}</b>.
+        {% endblocktrans %}
+    </p>
 
-<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>
-{% endblocktrans %}{% endblock %}
+    <p>
+        <b>{{ title }}</b>
+    </p>
+{% endblock %}

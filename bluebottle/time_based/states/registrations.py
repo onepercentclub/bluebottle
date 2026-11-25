@@ -85,6 +85,7 @@ class RegistrationStateMachine(ModelStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant of this activity."),
+        passed_label=_('rejected'),
         automatic=False,
         permission=can_accept_registration,
     )

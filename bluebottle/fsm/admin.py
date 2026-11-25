@@ -26,6 +26,15 @@ def get_effects(effects):
     return [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
 
 
+class SendMessagesOnAddInlineMixin(object):
+    """Inline whose newly added objects send their notifications by default."""
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        formset.send_messages_on_add = True
+        return formset
+
+
 class StateMachineAdminMixin(object):
     form = StateMachineModelForm
 
@@ -111,11 +120,26 @@ class StateMachineAdminMixin(object):
         """
         send_messages = request.POST.get('send_messages') == 'on'
         for form in formset.forms:
-            if isinstance(form.instance, TriggerMixin):
-                send_messages = form.cleaned_data.get('send_messages', send_messages)
-                form.instance.execute_triggers(user=request.user, send_messages=send_messages)
+            if not isinstance(form.instance, TriggerMixin):
+                continue
+            is_new = not form.instance.pk
+            if is_new and (not form.has_changed() or form.cleaned_data.get('DELETE')):
+                continue
+
+            if is_new and getattr(formset, 'send_messages_on_add', False):
+                form_send_messages = self.send_messages_for_added(request)
+            else:
+                form_send_messages = send_messages
+            form_send_messages = form.cleaned_data.get('send_messages', form_send_messages)
+            form.instance.execute_triggers(user=request.user, send_messages=form_send_messages)
 
         formset.save()
+
+    def send_messages_for_added(self, request):
+        # Without a confirmation page there was no way to opt out, so added objects notify.
+        if request.POST.get('send_messages_offered'):
+            return request.POST.get('send_messages') == 'on'
+        return True
 
     def get_transition(self, instance, name, field_name):
         transitions = getattr(instance, field_name).all_transitions

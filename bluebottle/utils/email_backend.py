@@ -19,7 +19,7 @@ from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.mails.models import MailPlatformSettings
-from bluebottle.utils.utils import to_text
+from bluebottle.utils.utils import quill_lists_to_html, to_text
 
 logger = logging.getLogger(__name__)
 
@@ -161,10 +161,12 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         ctx = Context(kwargs)
         ctx['to'] = to  # Add the recipient to the context
         html_content = premailer.transform(
-            get_template(
-                '{0}.html'.format(template_name)
-            ).render(
-                ctx.flatten()
+            quill_lists_to_html(
+                get_template(
+                    '{0}.html'.format(template_name)
+                ).render(
+                    ctx.flatten()
+                )
             ),
             base_url=tenant_url()
         )

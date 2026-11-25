@@ -35,6 +35,10 @@ from bluebottle.time_based.messages.activity_manager import (
     PastActivitySubmittedNotification
 )
 from bluebottle.time_based.messages.messages import SpotOpenedNotification
+from bluebottle.time_based.messages.thank_you import (
+    PeriodicActivityThankYouNotification,
+    RegistrationActivityThankYouNotification,
+)
 from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.models import (
     DateActivity,
@@ -634,6 +638,18 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
                 CreateEffect
             ]
         ),
+        TransitionTrigger(
+            RegistrationActivityStateMachine.succeed,
+            effects=[
+                NotificationEffect(RegistrationActivityThankYouNotification),
+            ]
+        ),
+        TransitionTrigger(
+            RegistrationActivityStateMachine.succeed_manually,
+            effects=[
+                NotificationEffect(RegistrationActivityThankYouNotification),
+            ]
+        ),
     ]
 
 
@@ -713,7 +729,19 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
             effects=[
                 UpdateEventEffect,
             ]
-        )
+        ),
+        TransitionTrigger(
+            PeriodicActivityStateMachine.succeed,
+            effects=[
+                NotificationEffect(PeriodicActivityThankYouNotification),
+            ]
+        ),
+        TransitionTrigger(
+            PeriodicActivityStateMachine.succeed_manually,
+            effects=[
+                NotificationEffect(PeriodicActivityThankYouNotification),
+            ]
+        ),
     ]
 
 

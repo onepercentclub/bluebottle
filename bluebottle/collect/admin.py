@@ -8,6 +8,7 @@ from bluebottle.activities.admin import (
     ActivityChildAdmin, ContributorChildAdmin, TeamInline, BaseContributorInline
 )
 from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType, CollectContribution
+from bluebottle.notifications.admin import ActivityMessageTemplateAdminInline
 from bluebottle.utils.admin import export_as_csv_action
 
 
@@ -39,7 +40,9 @@ class CollectContributorInline(BaseContributorInline):
 @admin.register(CollectActivity)
 class CollectActivityAdmin(ActivityChildAdmin):
     base_model = CollectActivity
-    inlines = (TeamInline, CollectContributorInline,) + ActivityChildAdmin.inlines
+    inlines = (
+        TeamInline, CollectContributorInline, ActivityMessageTemplateAdminInline,
+    ) + ActivityChildAdmin.inlines
     list_filter = ['status', 'collect_type']
     search_fields = ['title', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']

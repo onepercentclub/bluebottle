@@ -1,0 +1,10 @@
+{% extends "mails/messages/participant_base.html" %}
+
+{% block message %}
+    {% include "mails/messages/partials/thank_you.html" %}
+    {% if slot %}
+        <div>
+            {% include "mails/messages/partial/slot.html" %}
+        </div>
+    {% endif %}
+{% endblock %}

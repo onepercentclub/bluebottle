@@ -17,7 +17,7 @@ from bluebottle.activity_pub.effects import (
 )
 from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
-    CollectActivityDateChangedNotification, ParticipantJoinedNotification
+    CollectActivityDateChangedNotification, CollectThankYouNotification, ParticipantJoinedNotification
 )
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectContribution
 from bluebottle.collect.states import (
@@ -175,7 +175,15 @@ class CollectActivityTriggers(ActivityTriggers):
                     CollectContributorStateMachine.succeed,
                 ),
                 NotificationEffect(ActivitySucceededNotification),
+                NotificationEffect(CollectThankYouNotification),
                 FinishEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            CollectActivityStateMachine.succeed_manually,
+            effects=[
+                NotificationEffect(CollectThankYouNotification),
             ]
         ),
 

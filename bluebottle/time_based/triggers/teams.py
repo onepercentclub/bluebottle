@@ -26,12 +26,15 @@ from bluebottle.time_based.messages.teams import (
     CaptainTeamMemberRemovedNotification,
     UserTeamMemberRemovedNotification,
 )
+from bluebottle.time_based.messages.registrations import TeamJoinedNotification
+from bluebottle.time_based.messages.thank_you import TeamThankYouNotification
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.states.participants import (
     TeamScheduleParticipantStateMachine,
 )
 from bluebottle.time_based.states.slots import TeamScheduleSlotStateMachine
 from bluebottle.time_based.states.teams import TeamStateMachine, TeamMemberStateMachine
+from bluebottle.time_based.triggers.registrations import is_user, no_review_needed
 
 
 @register(Team)
@@ -54,7 +57,20 @@ class TeamTriggers(TriggerManager):
             is_admin
         )
 
+    def captain_has_other_team(effect):
+        """Captain already started another team"""
+        return Team.objects.filter(
+            activity=effect.instance.activity,
+            user=effect.instance.user
+        ).exclude(pk=effect.instance.pk).exists()
+
     triggers = [
+        TransitionTrigger(
+            TeamStateMachine.succeed,
+            effects=[
+                NotificationEffect(TeamThankYouNotification),
+            ],
+        ),
         TransitionTrigger(
             TeamStateMachine.initiate,
             effects=[
@@ -63,6 +79,10 @@ class TeamTriggers(TriggerManager):
                 CreateTeamRegistrationEffect,
                 TransitionEffect(
                     TeamStateMachine.accept, conditions=[should_auto_accept]
+                ),
+                NotificationEffect(
+                    TeamJoinedNotification,
+                    conditions=[no_review_needed, is_user, captain_has_other_team]
                 ),
             ],
         ),

@@ -100,7 +100,7 @@ class RegistrationTriggerTestCase:
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'You have been selected for the activity "{}"'.format(self.activity.title),
+            'You have been accepted to the activity "{}"'.format(self.activity.title),
         )
 
     def test_fill(self):
@@ -138,7 +138,7 @@ class RegistrationTriggerTestCase:
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'You have not been selected for the activity "{}"'.format(
+            'You have been rejected from the activity "{}"'.format(
                 self.activity.title
             ),
         )
@@ -195,6 +195,50 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.registration, "new")
         self.assertStatus(self.participant, "new")
 
+    def test_initial_review_multiple_slots(self):
+        self.activity.review = True
+        self.activity.save()
+        self.create()
+        DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=DateActivitySlotFactory.create(activity=self.activity),
+            activity=self.activity,
+            as_user=self.user,
+        )
+        self.registration.states.accept(save=True)
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title),
+            subjects
+        )
+        self.assertEqual(
+            subjects.count('You have been accepted to the activity "{}"'.format(self.activity.title)),
+            1
+        )
+
+    def test_join_slot_after_accept(self):
+        self.test_accept()
+        mail.outbox = []
+
+        participant = DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=DateActivitySlotFactory.create(activity=self.activity),
+            activity=self.activity,
+            as_user=self.user,
+        )
+
+        self.assertStatus(participant, "accepted")
+        self.assertEqual(participant.registration, self.registration)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.user.email])
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title),
+        )
+
     def test_initial_past(self):
         self.test_initial()
         self.slot.start = now() - timedelta(days=3)
@@ -214,6 +258,33 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.registration, "new")
         self.assertStatus(self.participant, "succeeded")
         self.assertStatus(self.contribution, "succeeded")
+
+    def test_accept_multiple_slots(self):
+        other_slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=5),
+            title='Second slot',
+        )
+        self.test_initial_review()
+        DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=other_slot,
+            activity=self.activity,
+            as_user=self.user,
+        )
+        mail.outbox = []
+
+        self.registration.states.accept(save=True)
+
+        self.assertEqual(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertIn('Good news! You have been accepted to an activity', body)
+        self.assertNotIn('indicated below', body)
+        self.assertNotIn('counting on your participation', body)
+        self.assertIn(self.slot.title, body)
+        self.assertIn(other_slot.title, body)
+        self.assertNotIn('will be in contact', body)
 
     def test_accept_past(self):
         super().test_accept()
@@ -549,8 +620,15 @@ class TeamScheduleRegistrationTriggerTestCase(
         )
         self.assertEqual(
             mail.outbox[1].subject,
-            'You have registered your team on "Test"',
+            'You have registered your team to the activity "{}"'.format(
+                self.activity.title
+            ),
         )
+        self.assertIn(
+            "You registered your team to an activity on Test!",
+            mail.outbox[1].body,
+        )
+        self.assertIn(self.activity.title, mail.outbox[1].body)
 
     def test_initial_review(self):
         self.activity.review = True
@@ -599,7 +677,7 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has not been selected for the activity "{}"'.format(
+            'Your team has been rejected from the activity "{}"'.format(
                 self.activity.title
             ),
         )
@@ -620,7 +698,7 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has been selected for the activity "{}"'.format(
+            'Your team has been accepted to the activity "{}"'.format(
                 self.activity.title
             ),
         )

@@ -7,8 +7,17 @@ from bluebottle.activities.messages.base import BaseParticipantNotification
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
-from bluebottle.time_based.models import PeriodicActivity, DeadlineActivity
+from bluebottle.time_based.models import DateActivity, PeriodicActivity, DeadlineActivity
 from bluebottle.time_based.utils import duration_to_hours
+
+
+def get_upcoming_slots(registration):
+    return [
+        get_slot_info(p.slot) for p in registration.participants.filter(
+            status__in=['new', 'accepted', 'succeeded'],
+            slot__start__gte=now(),
+        ).all()
+    ]
 
 
 class ManagerRegistrationNotification(TransitionMessage):
@@ -94,21 +103,39 @@ class UserRegistrationNotification(BaseParticipantNotification):
 
 
 class UserRegistrationAcceptedNotification(UserRegistrationNotification):
-    subject = pgettext('platform-email', 'You have been selected for the activity "{title}"')
-    template = 'messages/registrations/user_accepted'
+    subject = pgettext('platform-email', 'You have been accepted to the activity "{title}"')
+    append_custom_message = True
+
+    @property
+    def template(self):
+        activity = self.obj.activity
+        if isinstance(activity, DateActivity):
+            return 'messages/registrations/date/user_accepted'
+        if isinstance(activity, DeadlineActivity):
+            return 'messages/registrations/deadline/user_accepted'
+        if isinstance(activity, PeriodicActivity):
+            return 'messages/registrations/periodic/user_accepted'
+        return 'messages/registrations/schedule/user_accepted'
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj.activity, DateActivity):
+            context['slots'] = get_upcoming_slots(self.obj)
+        return context
 
 
 class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
     subject = pgettext(
-        "platform-email", 'Your team has been selected for the activity "{title}"'
+        "platform-email", 'Your team has been accepted to the activity "{title}"'
     )
-    template = "messages/registrations/team_accepted"
+    template = "messages/registrations/schedule/team_accepted"
+    append_custom_message = True
 
 
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
-    subject = pgettext('platform-email', 'You have not been selected for the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been rejected from the activity "{title}"')
     template = 'messages/registrations/user_rejected'
-    link_to_overview = True
+    append_custom_message = True
 
 
 class UserRegistrationRemovedNotification(UserRegistrationNotification):
@@ -119,10 +146,10 @@ class UserRegistrationRemovedNotification(UserRegistrationNotification):
 
 class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext(
-        "platform-email", 'Your team has not been selected for the activity "{title}"'
+        "platform-email", 'Your team has been rejected from the activity "{title}"'
     )
     template = "messages/registrations/team_rejected"
-    link_to_overview = True
+    append_custom_message = True
 
 
 class UserRegistrationStoppedNotification(UserRegistrationNotification):
@@ -188,12 +215,7 @@ class PeriodicUserAppliedNotification(UserRegistrationNotification):
 class DateUserBaseNotification(UserRegistrationNotification):
     def get_context(self, recipient):
         context = super(DateUserBaseNotification, self).get_context(recipient)
-        context['slots'] = [
-            get_slot_info(p.slot) for p in self.obj.participants.filter(
-                status__in=['new', 'accepted', 'succeeded'],
-                slot__start__gte=now(),
-            ).all()
-        ]
+        context['slots'] = get_upcoming_slots(self.obj)
         return context
     delay = 60
 
@@ -232,5 +254,7 @@ class TeamAppliedNotification(UserRegistrationNotification):
 
 
 class TeamJoinedNotification(UserRegistrationNotification):
-    subject = pgettext("platform-email", 'You have registered your team on "{site_name}"')
+    subject = pgettext(
+        "platform-email", 'You have registered your team to the activity "{title}"'
+    )
     template = "messages/registrations/schedule/team_joined"

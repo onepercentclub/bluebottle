@@ -743,7 +743,7 @@ class TimeBasedRegistrationTransitionListAPITestCase:
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have been selected for the activity "{}"'.format(
+            'You have been accepted to the activity "{}"'.format(
                 self.activity.title
             ),
         )
@@ -779,7 +779,7 @@ class TimeBasedRegistrationTransitionListAPITestCase:
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have not been selected for the activity "{}"'.format(
+            'You have been rejected from the activity "{}"'.format(
                 self.activity.title
             ),
         )

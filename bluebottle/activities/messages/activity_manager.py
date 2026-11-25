@@ -192,6 +192,11 @@ class TermsOfServiceNotification(OwnerActivityNotification):
     template = 'messages/activity_manager/terms_of_service'
     send_once = False
 
+    def __init__(self, obj, **options):
+        # A message typed for the transition (e.g. approval) must not replace the terms of service
+        options.pop('custom_message', None)
+        super().__init__(obj, **options)
+
     def get_bcc_addresses(self):
         settings = InitiativePlatformSettings.load()
         if settings.bcc_terms_of_service:

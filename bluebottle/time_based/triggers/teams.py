@@ -295,4 +295,22 @@ class TeamMemberTriggers(TriggerManager):
                 ),
             ],
         ),
+        TransitionTrigger(
+            TeamMemberStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.reject,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.accept,
+                ),
+            ],
+        ),
     ]

@@ -92,6 +92,28 @@ class CollectPeriodicTasksTestCase(BluebottleTestCase):
 
         self.assertEqual(self.activity.status, 'succeeded')
 
+    def test_succeed_contributors(self):
+        accepted = CollectContributorFactory.create(activity=self.activity)
+        withdrawn = CollectContributorFactory.create(activity=self.activity)
+        withdrawn.states.withdraw(save=True)
+        for contributor in (accepted, withdrawn):
+            contributor.refresh_from_db()
+        self.assertEqual(accepted.status, 'accepted')
+
+        self.run_tasks(self.activity.start + timedelta(days=1))
+        self.run_tasks(self.activity.end + timedelta(days=1))
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+            accepted.refresh_from_db()
+            withdrawn.refresh_from_db()
+
+            self.assertEqual(self.activity.status, 'succeeded')
+            self.assertEqual(accepted.status, 'succeeded')
+            self.assertEqual(accepted.contributions.get().status, 'succeeded')
+            self.assertEqual(withdrawn.status, 'withdrawn')
+            self.assertEqual(withdrawn.contributions.get().status, 'failed')
+
     def test_succeed_same_day(self):
         day = date.today() + timedelta(days=1)
         self.activity.start = day

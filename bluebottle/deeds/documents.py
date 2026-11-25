@@ -49,3 +49,6 @@ class DeedDocument(ActivityDocument):
 
     def prepare_is_online(self, instance):
         return True
+
+    def prepare_capacity(self, instance):
+        return instance.target

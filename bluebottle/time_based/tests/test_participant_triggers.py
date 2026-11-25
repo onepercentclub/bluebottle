@@ -715,6 +715,47 @@ class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.participant, "scheduled")
         self.assertStatus(self.participant.contributions.get(), "new")
 
+    def test_reject_team_member(self):
+        self.create()
+        self.schedule(now() + timedelta(days=1))
+
+        self.team_member.states.reject(save=True)
+
+        self.assertStatus(self.participant, "rejected")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+
+    def test_accept_rejected_team_member(self):
+        self.test_reject_team_member()
+
+        self.team_member.states.accept(save=True)
+
+        self.assertStatus(self.participant, "scheduled")
+        self.assertStatus(self.participant.contributions.get(), "new")
+
+    def test_accept_rejected_team_member_unscheduled_slot(self):
+        self.create()
+
+        self.team_member.states.reject(save=True)
+        self.assertStatus(self.participant, "rejected")
+
+        self.team_member.states.accept(save=True)
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+
+    def test_accept_rejected_team_member_finished_slot(self):
+        self.create()
+        self.schedule(now())
+        self.schedule(now() - timedelta(days=2))
+        self.assertStatus(self.participant, "succeeded")
+
+        self.team_member.states.reject(save=True)
+        self.assertStatus(self.participant, "rejected")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+
+        self.team_member.states.accept(save=True)
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.participant.contributions.get(), "succeeded")
+
     def test_succeed(self):
         self.create()
         self.schedule(now())

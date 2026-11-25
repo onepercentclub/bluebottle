@@ -18,7 +18,7 @@ changes = ''
 install_requires = [
     'Babel==2.16.0',
     'Django==5.2.15',
-    'Pillow==10.4.0',
+    'Pillow==13.0.0',
     'PyLD==2.0.4',
     'South==1.0.2',
     'South==1.0.2',
@@ -104,7 +104,7 @@ install_requires = [
     'py-moneyed==3.0',
     'pyasn1==0.4.2',
     'pygeoip==0.3.2',
-    'pyjwt==2.8.0',
+    'pyjwt==2.15.1',
     'pyparsing==3.0.9',
     'python-dateutil==2.8.2',
     'python-magic==0.4.15',

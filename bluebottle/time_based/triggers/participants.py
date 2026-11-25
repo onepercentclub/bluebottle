@@ -58,6 +58,7 @@ from bluebottle.time_based.states import (
     RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
     RegistrationStateMachine
 )
+from bluebottle.time_based.triggers.registrations import is_manager
 
 
 def activity_is_expired(effect):
@@ -933,6 +934,10 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
         """Team is accepted"""
         return effect.instance.team_member and effect.instance.team_member.team.status != "new"
 
+    def slot_is_finished(effect):
+        """Slot is finished"""
+        return effect.instance.slot and effect.instance.slot.status == "finished"
+
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.initiate,
@@ -976,6 +981,21 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
+            TeamScheduleParticipantStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.succeed, conditions=[slot_is_finished]
+                ),
+            ],
+        ),
+        TransitionTrigger(
             TeamScheduleParticipantStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
@@ -991,6 +1011,15 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
         ),
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.reset,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.schedule,
             effects=[
                 RelatedTransitionEffect(
                     "contributions",
@@ -1110,6 +1139,12 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         if effect.instance.slot:
             return effect.instance.slot.status == 'finished'
 
+    def participant_slot_is_not_finished(effect):
+        """
+        Slot has not ended yet
+        """
+        return effect.instance.slot and effect.instance.slot.status != 'finished'
+
     def applicant_is_accepted(effect):
         return effect.instance.registration and effect.instance.registration.status == 'accepted'
 
@@ -1205,6 +1240,16 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 DeleteInterestEffect,
                 CreateDateRegistrationEffect,
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.restore,
+                    conditions=[is_participant],
+                ),
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.add,
+                    conditions=[is_manager],
+                ),
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.add,
@@ -1273,6 +1318,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     'registration',
                     RegistrationStateMachine.restore,
                     conditions=[registration_is_withdrawn]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                    conditions=[participant_slot_is_not_finished]
                 ),
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(

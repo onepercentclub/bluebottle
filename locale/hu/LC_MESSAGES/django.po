@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-25 11:05+0100\n"
-"PO-Revision-Date: 2026-11-25 10:11\n"
+"PO-Revision-Date: 2026-11-25 10:13\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -14677,19 +14677,19 @@ msgstr "Legutolsó fal frissítések"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "New update from \"{title}\""
-msgstr "'{{title}}' – Friss hírek"
+msgstr "'{title}' – Friss hírek"
 
 #: bluebottle/updates/messages.py:46
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new message is posted on \"{title}\""
-msgstr "Új üzenet jelent meg '<b>{{title}}</b>' témára"
+msgstr "Új üzenet jelent meg '{title}' témára"
 
 #: bluebottle/updates/messages.py:58
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have a reply on \"{title}\""
-msgstr "Válaszod érkezett '<b>{{title}}</b>' témában"
+msgstr "Válaszod érkezett '{title}' témában"
 
 #: bluebottle/updates/models.py:21
 msgid "Author"

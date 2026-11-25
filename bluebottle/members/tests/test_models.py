@@ -5,9 +5,12 @@ from bluebottle.members.tokens import password_reset_token_generator
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
+from cryptography.hazmat.primitives import hashes
+
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.urls import reverse
+
 
 from bluebottle.members.models import SAMLAuthentication
 from bluebottle.members.tests.factories import (
@@ -168,8 +171,8 @@ class SAMLAuthenticationTestCase(BluebottleTestCase):
 
     def test_certificate(self):
         self.assertEqual(
-            str(self.method.certificate.subject),
-            '<Name(C=NO,ST=Andreas Solberg,L=Foo,O=UNINETT,CN=feide.erlang.no,1.2.840.113549.1.9.1=andreas@uninett.no)>'
+            self.method.certificate.fingerprint(hashes.MD5()),
+            b'\xd1\xba\xb0\x17fm\x7fB{\x91\x1e"~:\'\xd2'
         )
 
     def test_idp_certificate_expiration(self):

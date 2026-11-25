@@ -9,6 +9,7 @@ from bluebottle.bluebottle_dashboard.utils import get_menu_items
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, ApiClient
 
 
@@ -29,6 +30,29 @@ class MainDashboardTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.admin_url)
         self.assertContains(response, 'Recently joined users')
         self.assertContains(response, 'Recently submitted initiatives')
+
+
+class RecentActionsDashboardTestCase(BluebottleAdminTestCase):
+    """
+    Recent actions are only shown to superusers and the Staff group
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.other_staff = BlueBottleUserFactory.create(is_staff=True)
+        self.admin_url = reverse('admin:index')
+
+    def test_superuser(self):
+        self.client.force_login(self.superuser)
+        self.assertContains(self.client.get(self.admin_url), 'Recent Actions')
+
+    def test_staff_group(self):
+        self.client.force_login(self.staff_member)
+        self.assertContains(self.client.get(self.admin_url), 'Recent Actions')
+
+    def test_other_staff(self):
+        self.client.force_login(self.other_staff)
+        self.assertNotContains(self.client.get(self.admin_url), 'Recent Actions')
 
 
 class CustomAppDashboardTestCase(BluebottleAdminTestCase):

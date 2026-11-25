@@ -44,6 +44,8 @@ MODULE_PERMISSIONS = [
 
 
 def can_view_module(user, module):
+    if isinstance(module, modules.RecentActions):
+        return user.is_superuser or user.groups.filter(name='Staff').exists()
     for module_class, (app_label, model_name) in MODULE_PERMISSIONS:
         if isinstance(module, module_class):
             return can_view(user, app_label, model_name)

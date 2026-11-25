@@ -203,6 +203,7 @@ class MemberPlatformSettingsAdmin(
                     'consent_link',
                     'disable_cookie_consent',
                     'display_member_names',
+                    'display_names_in_reporting',
                     'gtm_code',
                 )
             }

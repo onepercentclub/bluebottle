@@ -1309,6 +1309,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.accept,
             effects=[
+                RelatedTransitionEffect(
+                    'slot_contributions',
+                    TimeContributionStateMachine.reset,
+                ),
                 TransitionEffect(
                     RegistrationParticipantStateMachine.succeed,
                     conditions=[participant_slot_is_finished]

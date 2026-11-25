@@ -1,15 +1,13 @@
 from django.urls import path
 from django.urls import include, re_path
 from django.contrib import admin
-from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView
 from django.urls import reverse_lazy
 from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
 from bluebottle.utils.views import NoopView
-from bluebottle.auth.views import admin_password_reset, admin_logout, TwoFactorSetupView, AdminLoginView
+from bluebottle.auth.views import admin_logout, TwoFactorSetupView, AdminLoginView
 from bluebottle.auth.utils import AdminSiteOTPRequired
-from bluebottle.members.tokens import password_reset_token_generator
 from bluebottle.bluebottle_dashboard.views import locked_out
 from bluebottle.looker.dashboard_views import LookerEmbedView # noqa This has to be imported early so that custom urls will work
 from bluebottle.analytics.views import PlausibleEmbedView # noqa This has to be imported early so that custom urls will work
@@ -46,27 +44,6 @@ urlpatterns = [
 
     re_path('admin/logout/', admin_logout),
 
-    # Django Admin, docs and password reset
-    path(
-        'admin/password_reset/',
-        admin_password_reset,
-        name='admin_password_reset'
-    ),
-    path(
-        'admin/password_reset/done/',
-        PasswordResetDoneView.as_view(),
-        name='password_reset_done'
-    ),
-    re_path(
-        r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        PasswordResetConfirmView.as_view(token_generator=password_reset_token_generator),
-        name='password_reset_confirm'
-    ),
-    re_path(
-        r'^admin/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        PasswordResetConfirmView.as_view(token_generator=password_reset_token_generator),
-        {'post_reset_redirect': '/admin'}, name='password_reset_confirm'
-    ),
     re_path(r'^admin/', admin.site.urls),
 
     path('admin/utils/tinymce/', include('tinymce.urls')),

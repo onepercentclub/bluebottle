@@ -923,5 +923,5 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'application_deadline',
             'event_attendance_mode', 'duration', 'join_mode', 'participation_mode',
-            'slot_mode'
+            'slot_mode', 'capacity'
         )

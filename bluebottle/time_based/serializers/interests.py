@@ -17,6 +17,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.serializers.interest_validators import (
     UserAlreadyInvolvedValidator,
 )
+from bluebottle.time_based.serializers.registrations import ContactEmailField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -36,6 +37,7 @@ class InterestSerializer(ModelSerializer):
         default=None,
     )
     created = serializers.DateTimeField(read_only=True)
+    contact_email = ContactEmailField()
 
     class Meta:
         model = Interest
@@ -46,6 +48,7 @@ class InterestSerializer(ModelSerializer):
             'slot',
             'permissions',
             'created',
+            'contact_email',
         )
         meta_fields = ('permissions',)
         validators = []

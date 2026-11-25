@@ -9,6 +9,7 @@ from bluebottle.views import HomeView
 from bluebottle.utils.views import NoopView
 from bluebottle.auth.views import admin_password_reset, admin_logout, TwoFactorSetupView, AdminLoginView
 from bluebottle.auth.utils import AdminSiteOTPRequired
+from bluebottle.members.tokens import password_reset_token_generator
 from bluebottle.bluebottle_dashboard.views import locked_out
 from bluebottle.looker.dashboard_views import LookerEmbedView # noqa This has to be imported early so that custom urls will work
 from bluebottle.analytics.views import PlausibleEmbedView # noqa This has to be imported early so that custom urls will work
@@ -58,12 +59,12 @@ urlpatterns = [
     ),
     re_path(
         r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        PasswordResetConfirmView.as_view(),
+        PasswordResetConfirmView.as_view(token_generator=password_reset_token_generator),
         name='password_reset_confirm'
     ),
     re_path(
         r'^admin/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        PasswordResetConfirmView.as_view(),
+        PasswordResetConfirmView.as_view(token_generator=password_reset_token_generator),
         {'post_reset_redirect': '/admin'}, name='password_reset_confirm'
     ),
     re_path(r'^admin/', admin.site.urls),

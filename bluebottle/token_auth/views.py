@@ -13,7 +13,7 @@ from rest_framework.generics import get_object_or_404
 
 from onelogin.saml2.response import OneLogin_Saml2_Response
 
-from bluebottle.members.models import SAMLAuthentication as SAMLAuthenticationMethod
+from bluebottle.members.models import AuthenticationLog, SAMLAuthentication as SAMLAuthenticationMethod
 from bluebottle.token_auth.models import SAMLDevice
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
@@ -111,7 +111,10 @@ class SAMLLoginView(View):
             (device, _created) = SAMLDevice.objects.get_or_create(user=user)
             django_otp.login(request, device)
 
+            AuthenticationLog.log(user, method, admin=True)
             return HttpResponseRedirect(target_url)
+
+        AuthenticationLog.log(user, method, admin=False)
 
         template = loader.get_template('utils/login_with.html')
         context = {'token': user.get_jwt_token(), 'link': target_url}

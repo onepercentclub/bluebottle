@@ -24,7 +24,7 @@ from bluebottle.geo.serializers import OldPlaceSerializer
 from bluebottle.initiatives.models import Theme
 from bluebottle.members.models import (
     MemberPlatformSettings, UserActivity, UserSegment, Member,
-    AuthenticationMethod, PasswordAuthentication, FacebookAuthentication,
+    AuthenticationLog, AuthenticationMethod, PasswordAuthentication, FacebookAuthentication,
     GoogleAuthentication, SAMLAuthentication
 )
 from bluebottle.segments.models import Segment
@@ -59,6 +59,8 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
                 if not user.is_active:
                     msg = _('User account is disabled.')
                     raise serializers.ValidationError(msg)
+
+                AuthenticationLog.log(user, PasswordAuthentication.load())
 
                 payload = jwt_payload_handler(user)
 
@@ -570,56 +572,6 @@ class UniqueEmailValidator(validators.UniqueValidator):
                 code = 'email_unique'
 
             raise serializers.ValidationError(self.message, code=code)
-
-
-class MemberSignUpSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating users. This can only be used for creating
-    users (POST) and should not be used for listing,
-    editing or viewing users.
-    """
-    email = serializers.EmailField(
-        max_length=254,
-        validators=[
-            UniqueEmailValidator(
-                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
-            )
-        ]
-    )
-    password = PasswordField(required=True, max_length=128)
-    token = serializers.CharField(source='get_jwt_token', read_only=True)
-
-    @property
-    def errors(self):
-        return super(MemberSignUpSerializer, self).errors
-
-    def validate(self, data):
-        settings = MemberPlatformSettings.load()
-        if not PasswordAuthentication.is_enabled():
-            raise serializers.ValidationError(
-                {'email': _('Signing up with email and password is not enabled.')}
-            )
-
-        if PasswordAuthentication.confirm_signup_enabled():
-            raise serializers.ValidationError(
-                {'email': _('Signup requires a confirmation token.')}
-            )
-
-        if settings.closed:
-            raise serializers.ValidationError(
-                {'email': _('The platform is closed.')}
-            )
-
-        passwordmeter.test(data['password'])
-        data['password'] = make_password(data['password'])
-        return data
-
-    class Meta(object):
-        model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'token',)
-
-    class JSONAPIMeta:
-        resource_name = 'auth/signup'
 
 
 class PasswordResetSerializer(serializers.Serializer):

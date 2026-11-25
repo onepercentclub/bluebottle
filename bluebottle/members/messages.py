@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import int_to_base36
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.members.tokens import password_reset_token_generator
 
 
 class AccountActivationMessage(TransitionMessage):
@@ -33,6 +33,6 @@ class PasswordResetMessage(TransitionMessage):
         context = super().get_context(recipient)
         context.update({
             'uid': int_to_base36(self.obj.pk),
-            'token': default_token_generator.make_token(self.obj),
+            'token': password_reset_token_generator.make_token(self.obj),
         })
         return context

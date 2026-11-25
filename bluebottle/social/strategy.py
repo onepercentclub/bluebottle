@@ -17,12 +17,15 @@ class DRFStrategy(DjangoStrategy):
     def request_data(self, merge=True):
         return self.request.data
 
+    def get_authentication_method(self, name):
+        return self.authentication_methods[name.lower()].load()
+
     def get_setting(self, name):
         try:
             match = re.match(r'^SOCIAL_AUTH_(FACEBOOK|GOOGLE)_(\w+)$', name)
 
             (backend, matched_name) = match.groups()
-            authentication_method = self.authentication_methods[backend.lower()].load()
+            authentication_method = self.get_authentication_method(backend)
 
             matched_name = self.name_mapping.get(matched_name, 'invalid')
 

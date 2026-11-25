@@ -17,9 +17,9 @@ from rest_framework_jwt.settings import api_settings
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
 from bluebottle.members.models import (
-    MemberPlatformSettings, UserActivity, Member
+    AuthenticationLog, MemberPlatformSettings, UserActivity, Member
 )
-from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
+from bluebottle.members.serializers import MemberProfileSerializer
 from bluebottle.members.tests.factories import (
     PasswordAuthenticationFactory, FacebookAuthenticationFactory,
     GoogleAuthenticationFactory, SAMLAuthenticationFactory
@@ -61,6 +61,40 @@ class LoginTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+    def test_login_creates_authentication_log(self):
+        method = PasswordAuthenticationFactory.create()
+
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        log = AuthenticationLog.objects.get()
+        self.assertEqual(log.user, self.user)
+        self.assertEqual(log.method.pk, method.pk)
+
+    def test_login_jsonapi_creates_authentication_log(self):
+        method = PasswordAuthenticationFactory.create()
+
+        response = JSONAPITestClient().post(
+            reverse('auth'),
+            {'data': {'type': 'auth/token', 'attributes': {'email': self.email, 'password': self.password}}},
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        log = AuthenticationLog.objects.get()
+        self.assertEqual(log.user, self.user)
+        self.assertEqual(log.method.pk, method.pk)
+
+    def test_login_failed_no_authentication_log(self):
+        PasswordAuthenticationFactory.create()
+
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(AuthenticationLog.objects.exists())
 
     def test_login_formencoded(self):
         response = self.client.post(
@@ -441,12 +475,25 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Welcome to Test!')
 
+    def test_confirm_creates_authentication_log(self):
+        method = PasswordAuthenticationFactory.create()
+
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        log = AuthenticationLog.objects.get()
+        self.assertEqual(log.user, self.member)
+        self.assertEqual(log.method.pk, method.pk)
+
     def test_confirm_twice(self):
+        PasswordAuthenticationFactory.create()
+
         response = self.client.post(self.url, self.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response = self.client.post(self.url, self.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(AuthenticationLog.objects.count(), 1)
         self.assertEqual(
             response.json()['errors'][0]['detail'],
             'The link to activate your account has already been used.'
@@ -1131,126 +1178,6 @@ class MemberProfileJSONAPITestCase(APITestCase):
         self.assertEqual(len(self.response.json()['data']['attributes']['required']), 0)
 
 
-class MemberSignUpAPITestCase(APITestCase):
-    def setUp(self):
-        super().setUp()
-        self.url = reverse('member-signup')
-        self.password_authentication = PasswordAuthenticationFactory.create()
-
-        self.serializer = MemberSignUpSerializer
-
-        self.defaults = {
-            'first_name': 'Test',
-            'last_name': 'Tester',
-            'email': 'test@example.com',
-            'password': '32940udsonde!0f09hf'
-        }
-        self.fields = self.defaults.keys()
-
-    def test_signup(self):
-        self.perform_create()
-
-        self.assertStatus(status.HTTP_201_CREATED)
-
-        self.assertAttribute('first-name', self.defaults['first_name'])
-        self.assertAttribute('last-name', self.defaults['last_name'])
-        self.assertAttribute('email', self.defaults['email'])
-
-        token = self.response.json()['data']['attributes']['token']
-        current_user_response = self.client.get(
-            reverse('current-member-detail'), HTTP_AUTHORIZATION=f'JWT {token}'
-        )
-        self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
-
-        user = Member.objects.get(email=self.defaults['email'])
-        self.assertTrue(
-            user.check_password(self.defaults['password'])
-        )
-
-    def test_create_short_password(self):
-        self.defaults['password'] = 'blabla'
-        self.perform_create()
-
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-        error = self.response.json()['errors'][0]
-        self.assertEqual(
-            error['detail'],
-            'Password should at least be 10 characters.'
-        )
-        self.assertEqual(
-            error['source']['pointer'],
-            '/data/attributes/password'
-        )
-
-    def test_create_common_password(self):
-        self.defaults['password'] = 'welcome123'
-        self.perform_create()
-
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-        error = self.response.json()['errors'][0]
-        self.assertEqual(
-            error['detail'],
-            'This password is too common, be adventurous!'
-        )
-        self.assertEqual(
-            error['source']['pointer'],
-            '/data/attributes/password'
-        )
-
-    def test_conflict(self):
-        BlueBottleUserFactory.create(email=self.defaults['email'])
-        self.perform_create()
-
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-        error = self.response.json()['errors'][0]
-        self.assertEqual(error['code'], 'email_unique')
-
-    def test_conflict_facebook(self):
-        user = BlueBottleUserFactory.create(email=self.defaults['email'])
-        user.social_auth.create(provider='facebook')
-        self.perform_create()
-
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-        error = self.response.json()['errors'][0]
-        self.assertEqual(error['code'], 'social_account_unique')
-
-    def test_conflict_case_insensitive(self):
-        BlueBottleUserFactory.create(email=self.defaults['email'].title())
-        self.perform_create()
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-        error = self.response.json()['errors'][0]
-        self.assertEqual(error['code'], 'email_unique')
-
-    def test_create_closed(self):
-        with self.closed_site():
-            self.perform_create()
-
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-        error = self.response.json()['errors'][0]
-        self.assertEqual(
-            error['detail'],
-            'The platform is closed.'
-        )
-
-    def test_create_confirmation_enabled(self):
-        self.password_authentication.confirm_signup = True
-        self.password_authentication.save()
-        with self.closed_site():
-            self.perform_create()
-
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
-        error = self.response.json()['errors'][0]
-        self.assertEqual(error['detail'], 'Signup requires a confirmation token.')
-        self.assertEqual(error['source']['pointer'], '/data/attributes/email')
-
-
-@override_settings(SEND_WELCOME_MAIL=True)
 class AccountCreationRulesTestCase(BluebottleTestCase):
     """
     Test account creation with different account_creation_rules settings

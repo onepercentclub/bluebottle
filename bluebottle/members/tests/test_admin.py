@@ -19,8 +19,8 @@ from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.admin import MemberAdmin, MemberCreationForm
-from bluebottle.members.models import Member, MemberPlatformSettings
-from bluebottle.members.tests.factories import SAMLAuthenticationFactory
+from bluebottle.members.models import AuthenticationLog, Member, MemberPlatformSettings
+from bluebottle.members.tests.factories import PasswordAuthenticationFactory, SAMLAuthenticationFactory
 from bluebottle.notifications.models import MessageTemplate
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
@@ -255,7 +255,6 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
         expected_fields = {
             "date_joined",
-            "last_login",
             "updated",
             "deleted",
             "login_as_link",
@@ -287,7 +286,6 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         fields = self.member_admin.get_readonly_fields(self.request)
         expected_fields = {
             "date_joined",
-            "last_login",
             "updated",
             "deleted",
             "login_as_link",
@@ -758,3 +756,116 @@ class AdminLoginViewTestCase(BluebottleTestCase):
         response = self.client.get(self.url)
         self.assertContains(response, first.organization.name)
         self.assertContains(response, second.organization.name)
+
+    def test_password_login_creates_authentication_log(self):
+        method = PasswordAuthenticationFactory.create()
+        user = BlueBottleUserFactory.create(is_staff=True, password='test-password-123')
+
+        response = self.client.post(self.url, {
+            'auth-username': user.email,
+            'auth-password': 'test-password-123',
+            'admin_login_view-current_step': 'auth',
+        }, format='multipart')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
+
+        log = AuthenticationLog.objects.get()
+        self.assertEqual(log.user, user)
+        self.assertEqual(log.method.pk, method.pk)
+
+    def test_failed_password_login_no_authentication_log(self):
+        PasswordAuthenticationFactory.create()
+        user = BlueBottleUserFactory.create(is_staff=True, password='test-password-123')
+
+        response = self.client.post(self.url, {
+            'auth-username': user.email,
+            'auth-password': 'wrong',
+            'admin_login_view-current_step': 'auth',
+        }, format='multipart')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertFalse(AuthenticationLog.objects.exists())
+
+
+class AuthenticationLogInlineTestCase(BluebottleAdminTestCase):
+    csrf_checks = False
+
+    def assert_latest_logins(self, method, url):
+        logs = [
+            AuthenticationLog.log(user, method)
+            for user in BlueBottleUserFactory.create_batch(25)
+        ]
+
+        page = self.app.get(url, user=self.superuser)
+        self.assertEqual(page.status, '200 OK')
+        self.assertContains(page, 'Latest logins')
+
+        form = page.forms['{}_form'.format(method._meta.model_name)]
+        self.assertEqual(form['logs-TOTAL_FORMS'].value, '20')
+        self.assertEqual(
+            [int(form['logs-{}-id'.format(index)].value) for index in range(20)],
+            [log.pk for log in reversed(logs[5:])]
+        )
+
+        response = form.submit()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(AuthenticationLog.objects.count(), 25)
+
+    def test_password_authentication(self):
+        method = PasswordAuthenticationFactory.create()
+        self.assert_latest_logins(
+            method, reverse('admin:members_passwordauthentication_change', args=(method.pk,))
+        )
+
+    def test_saml_authentication(self):
+        method = SAMLAuthenticationFactory.create()
+        self.assert_latest_logins(
+            method, reverse('admin:members_samlauthentication_change', args=(method.pk,))
+        )
+
+    def test_saml_authentication_add(self):
+        AuthenticationLog.log(BlueBottleUserFactory.create(), None)
+
+        page = self.app.get(reverse('admin:members_samlauthentication_add'), user=self.superuser)
+        self.assertEqual(page.status, '200 OK')
+
+        form = page.forms['samlauthentication_form']
+        self.assertEqual(form['logs-TOTAL_FORMS'].value, '0')
+
+    def test_member(self):
+        member = BlueBottleUserFactory.create()
+        password = PasswordAuthenticationFactory.create()
+        saml = SAMLAuthenticationFactory.create()
+
+        AuthenticationLog.log(member, None)
+        AuthenticationLog.log(member, saml, admin=True)
+        logs = [AuthenticationLog.log(member, password) for _ in range(20)]
+        AuthenticationLog.log(BlueBottleUserFactory.create(), saml)
+
+        page = self.app.get(
+            reverse('admin:members_member_change', args=(member.pk,)), user=self.superuser
+        )
+        self.assertEqual(page.status, '200 OK')
+        self.assertContains(page, 'Latest logins')
+        self.assertContains(page, 'Email/Password')
+
+        form = page.forms['member_form']
+        self.assertEqual(form['logs-TOTAL_FORMS'].value, '20')
+        self.assertEqual(
+            [int(form['logs-{}-id'.format(index)].value) for index in range(20)],
+            [log.pk for log in reversed(logs)]
+        )
+
+        AuthenticationLog.objects.filter(pk__in=[log.pk for log in logs]).delete()
+        page = self.app.get(
+            reverse('admin:members_member_change', args=(member.pk,)), user=self.superuser
+        )
+        self.assertEqual(page.forms['member_form']['logs-TOTAL_FORMS'].value, '2')
+        self.assertContains(page, 'SAML for {}'.format(saml.organization.name))
+        self.assertNotContains(page, 'Email/Password')
+
+        response = page.forms['member_form'].submit()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(AuthenticationLog.objects.filter(user=member).count(), 2)

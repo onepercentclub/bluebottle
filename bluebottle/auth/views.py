@@ -3,7 +3,6 @@ from datetime import timedelta
 
 from django import forms
 from django.contrib.auth.forms import PasswordResetForm
-from django.contrib.auth.tokens import default_token_generator
 from django.db import connection
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
@@ -23,7 +22,10 @@ from social_django.utils import psa, STORAGE
 from two_factor.views import LoginView, SetupView
 
 from bluebottle.auth.serializers import SocialLoginSerializer
-from bluebottle.members.models import SAMLAuthentication
+from bluebottle.members.models import (
+    AuthenticationLog, PasswordAuthentication, SAMLAuthentication
+)
+from bluebottle.members.tokens import password_reset_token_generator
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import CreateAPIView, JsonApiViewMixin
 
@@ -69,6 +71,12 @@ def complete(request, backend):
         )
     if not user.is_active:
         raise AuthenticationFailed(_('User account is disabled'), code="account_disabled")
+
+    AuthenticationLog.log(
+        user,
+        request.backend.strategy.get_authentication_method(request.backend.name)
+    )
+
     return user
 
 
@@ -78,9 +86,6 @@ class SocialLoginView(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         user = complete(self.request, serializer.validated_data['backend'])
-
-        user.last_login = now()
-        user.save()
 
         serializer.instance = type('obj', (object,), {
             'pk': user.id,
@@ -96,7 +101,7 @@ def admin_password_reset(
     email_template_name='registration/password_reset_email.html',
     subject_template_name='registration/password_reset_subject.txt',
     password_reset_form=PasswordResetForm,
-    token_generator=default_token_generator,
+    token_generator=password_reset_token_generator,
     post_reset_redirect=None,
     from_email=None,
     extra_context=None
@@ -218,6 +223,11 @@ class AdminLoginView(LoginView):
         context = super().get_context_data(form, **kwargs)
         context['sso_methods'] = self.get_sso_methods()
         return context
+
+    def done(self, form_list, **kwargs):
+        response = super().done(form_list, **kwargs)
+        AuthenticationLog.log(self.get_user(), PasswordAuthentication.load(), admin=True)
+        return response
 
 
 class TwoFactorSetupView(SetupView):

@@ -1,35 +1,20 @@
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core import signing
-
-from bluebottle.clients import properties
+from django.apps import apps
+from django.contrib.auth.tokens import PasswordResetTokenGenerator as BasePasswordResetTokenGenerator
 
 
-class LoginTokenGenerator(PasswordResetTokenGenerator):
-    def make_token(self, user):
-        data = {
-            'user_id': user.pk,
-            'last_login': user.last_login.strftime('%s') if user.last_login else None
-        }
-        return signing.dumps(data)
-
-    def check_token(self, user, token):
-        """
-        Check that a login token is correct for a given user.
-
-        Adds a check for properties.LOGIN_TOKEN_TIMEOUT_SECONDS
-        """
-        try:
-            data = signing.loads(token, max_age=properties.TOKEN_LOGIN_TIMEOUT)
-        except signing.BadSignature:
-            return False
-
-        return (
-            (
-                (data['last_login'] is None and user.last_login is None) or
-                data['last_login'] == user.last_login.strftime('%s')
-            ) and
-            data['user_id'] == user.pk
+class PasswordResetTokenGenerator(BasePasswordResetTokenGenerator):
+    def _make_hash_value(self, user, timestamp):
+        # Same as Django's implementation, except for the source of the last login
+        # Looked up lazily: importing members.models here would be circular
+        last_login = apps.get_model('members', 'AuthenticationLog').last_login(user)
+        login_timestamp = (
+            ''
+            if last_login is None
+            else last_login.replace(microsecond=0, tzinfo=None)
         )
+        email_field = user.get_email_field_name()
+        email = getattr(user, email_field, '') or ''
+        return f'{user.pk}{user.password}{login_timestamp}{timestamp}{email}'
 
 
-login_token_generator = LoginTokenGenerator()
+password_reset_token_generator = PasswordResetTokenGenerator()

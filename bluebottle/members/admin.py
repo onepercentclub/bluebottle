@@ -69,7 +69,8 @@ from bluebottle.utils.admin import (
 from bluebottle.members.messages import PasswordResetMessage
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import (
-    AuthenticationMethod, FacebookAuthentication, GoogleAuthentication, Member, PasswordAuthentication,
+    AuthenticationLog, AuthenticationMethod, FacebookAuthentication, GoogleAuthentication, Member,
+    PasswordAuthentication,
     SAMLAuthentication, SAMLSegmentMapping, SAMLGroupMapping, UserSegment
 )
 from ..grant_management.models import GrantApplication
@@ -152,7 +153,57 @@ class AuthenticationMethodChildAdmin(PolymorphicChildModelAdmin):
     list_display = ['method', 'enabled']
 
 
+class LimitModelFormset(BaseInlineFormSet):
+    """ Base Inline formset to limit inline Model query results. """
+    LIMIT = 20
+
+    def __init__(self, *args, **kwargs):
+        super(LimitModelFormset, self).__init__(*args, **kwargs)
+        if self.instance.pk is None:
+            # Unsaved instances (add view) cannot be used in related filters
+            self.queryset = kwargs['queryset'].none()
+        else:
+            _kwargs = {self.fk.name: self.instance}
+            self.queryset = kwargs['queryset'].filter(**_kwargs).order_by('-id')[:self.LIMIT]
+
+
+class BaseAuthenticationLogInline(admin.TabularInline):
+    model = AuthenticationLog
+    formset = LimitModelFormset
+    verbose_name_plural = _('Latest logins')
+
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class AuthenticationLogInline(BaseAuthenticationLogInline):
+    """ Logins with an authentication method, shown on that method """
+    fields = readonly_fields = ['user', 'admin', 'created']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+
+
+class MemberAuthenticationLogInline(BaseAuthenticationLogInline):
+    """ Logins of a member, shown on that member """
+    fields = readonly_fields = ['authentication_method', 'admin', 'created']
+
+    def authentication_method(self, obj):
+        # The foreign key points to the polymorphic base class, which has no name
+        return obj.method.get_real_instance().method if obj.method else '-'
+
+    authentication_method.short_description = _('Method')
+
+
 class SingletonAuthenticationMethodAdminMixin:
+    inlines = [AuthenticationLogInline]
+
     def has_add_permission(self, request, obj=None):
         if self.model.objects.exists():
             return False
@@ -262,7 +313,7 @@ class SAMLGroupMappingInline(admin.TabularInline):
 class SAMLAuthenticationAdmin(AuthenticationMethodChildAdmin):
     model = SAMLAuthentication
 
-    inlines = [SAMLSegmentMappingInline, SAMLGroupMappingInline]
+    inlines = [SAMLSegmentMappingInline, SAMLGroupMappingInline, AuthenticationLogInline]
 
     raw_id_fields = ['organization']
     readonly_fields = ('idp_certificate_expiration', 'single_signon_url', 'redirect_url', 'metadata_url', )
@@ -569,16 +620,6 @@ class MemberChangeForm(MemberForm):
         return member
 
 
-class LimitModelFormset(BaseInlineFormSet):
-    """ Base Inline formset to limit inline Model query results. """
-    LIMIT = 20
-
-    def __init__(self, *args, **kwargs):
-        super(LimitModelFormset, self).__init__(*args, **kwargs)
-        _kwargs = {self.fk.name: kwargs['instance']}
-        self.queryset = kwargs['queryset'].filter(**_kwargs).order_by('-id')[:self.LIMIT]
-
-
 class UserActivityInline(admin.TabularInline):
     readonly_fields = ['created', 'user', 'path']
     extra = 0
@@ -703,7 +744,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                             'login_as_link',
                             'reset_password',
                             'resend_welcome_link',
-                            'last_login',
                             'date_joined',
                             'deleted',
                             'partner_organization',
@@ -783,7 +823,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = [
             "date_joined",
-            "last_login",
             "updated",
             "deleted",
             "login_as_link",
@@ -924,7 +963,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                     'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
-    inlines = (UserActivityInline, MemberMessagesInline)
+    inlines = (MemberAuthenticationLogInline, UserActivityInline, MemberMessagesInline)
 
     def initiatives(self, obj):
         initiatives = []

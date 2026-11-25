@@ -236,6 +236,14 @@ class DateActivity(TimeBasedActivity):
         ).order_by('start', 'id')
 
     @property
+    def upcoming_slots(self):
+        if not self.pk:
+            return DateActivitySlot.objects.none()
+        return self.slots.filter(
+            models.Q(start__gt=timezone.now()) | models.Q(start__isnull=True)
+        )
+
+    @property
     def active_durations(self):
         # Avoid the effects of activity setting duration status directly, participants should do that
         return []

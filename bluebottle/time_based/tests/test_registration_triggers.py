@@ -332,7 +332,7 @@ class DateRegistrationTriggerTestCase(
         self.registration.states.accept(save=True)
 
         self.assertStatus(self.participant, "accepted")
-        self.assertStatus(preparation, "succeeded")
+        self.assertStatus(preparation, "new")
         self.assertStatus(self.contribution, "new")
 
     def test_initial_keeps_single_new_contribution(self):

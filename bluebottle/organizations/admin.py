@@ -48,9 +48,13 @@ class OrganizationActivityInline(admin.TabularInline):
     fk_name = 'organization'
 
     def activity_url(self, obj):
-        url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,
-                                                    obj._meta.model_name),
-                      args=[obj.id])
+        url = reverse(
+            'admin:{0}_{1}_change'.format(
+                obj._meta.app_label,
+                obj._meta.model_name
+            ),
+            args=[obj.id]
+        )
         return format_html(u"<a href='{}'>{}</a>", str(url), obj.title)
 
     def has_delete_permission(self, request, obj=None):
@@ -92,9 +96,9 @@ class OrganizationLinkedActivityInline(admin.TabularInline):
 
 @admin.register(OrganizationContact)
 class OrganizationContactAdmin(admin.ModelAdmin):
-    inlines = (OrganizationInitiativeInline, )
-    fields = ('name', 'email', 'phone', )
-    list_display = ('name', 'email', 'phone', )
+    inlines = (OrganizationInitiativeInline,)
+    fields = ('name', 'email', 'phone',)
+    list_display = ('name', 'email', 'phone',)
 
     export_fields = [
         ('name', 'name'),
@@ -102,7 +106,7 @@ class OrganizationContactAdmin(admin.ModelAdmin):
         ('phone', 'Phone Number'),
     ]
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = (export_as_csv_action(fields=export_fields),)
 
 
 class OrganizationForm(TranslatableModelForm):
@@ -259,4 +263,4 @@ class OrganizationAdmin(
             return []
         return super(OrganizationAdmin, self).get_inline_instances(request, obj)
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = (export_as_csv_action(fields=export_fields),)

@@ -1,5 +1,10 @@
+from django.contrib.admin.sites import site
 from django.urls import reverse
 
+from bluebottle.activity_pub.models import Accept
+from bluebottle.activity_pub.tests.factories import FollowFactory
+from bluebottle.activity_pub.tests.factories import OrganizationFactory as ActorFactory
+from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.organizations.models import Organization
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -70,3 +75,69 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue(page.html.find(attrs={'data-field-id': 'id_color'}))
         self.assertTrue(page.html.find(id='id_color'))
         self.assertIn('solid_color_contrast.js', page.text)
+
+
+class OrganizationAdminConnectTabTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.admin = site._registry[Organization]
+        self.local_actor = ActorFactory.create()
+        self.remote_actor = ActorFactory.create(iri='https://partner.example/organization/1')
+
+    def page(self, organization):
+        return self.app.get(
+            reverse('admin:organizations_organization_change', args=(organization.pk,))
+        )
+
+    def test_no_tab_without_connect(self):
+        organization = OrganizationFactory.create(website='http://dharma.in')
+        page = self.page(organization)
+        self.assertNotIn('field-connect_supplier', page.text)
+
+    def test_local_actor(self):
+        organization = self.local_actor.organization
+        page = self.page(organization)
+        self.assertIn('field-connect_supplier', page.text)
+        self.assertEqual(str(self.admin.connect_local_actor(organization)), 'Yes')
+        self.assertEqual(str(self.admin.connect_supplier(organization)), 'No')
+        self.assertEqual(str(self.admin.connect_consumer(organization)), 'No')
+
+    def test_remote_partner_without_connection(self):
+        organization = self.remote_actor.organization
+        self.assertEqual(str(self.admin.connect_local_actor(organization)), 'No')
+        self.assertEqual(str(self.admin.connect_supplier(organization)), 'No')
+        self.assertEqual(str(self.admin.connect_consumer(organization)), 'No')
+
+    def test_supplier(self):
+        organization = self.remote_actor.organization
+        follow = FollowFactory.create(actor=self.local_actor, object=self.remote_actor)
+        self.assertEqual(
+            str(self.admin.connect_supplier(organization)), 'Yes, waiting for acceptance'
+        )
+        Accept.objects.create(object=follow, actor=self.remote_actor, iri='https://partner.example/accept/1')
+        self.assertEqual(str(self.admin.connect_supplier(organization)), 'Yes')
+        self.assertEqual(str(self.admin.connect_consumer(organization)), 'No')
+        self.assertIn('field-connect_supplier', self.page(organization).text)
+
+    def test_consumer(self):
+        organization = self.remote_actor.organization
+        follow = FollowFactory.create(
+            actor=self.remote_actor, object=self.local_actor, iri='https://partner.example/follow/1'
+        )
+        Accept.objects.create(object=follow, actor=self.local_actor)
+        self.assertEqual(str(self.admin.connect_consumer(organization)), 'Yes')
+        self.assertEqual(str(self.admin.connect_supplier(organization)), 'No')
+
+    def test_shared_and_adopted_activities(self):
+        organization = self.remote_actor.organization
+        self.assertEqual(self.admin.connect_shared_activities(organization), 0)
+        self.assertEqual(self.admin.connect_adopted_activities(organization), 0)
+
+        DeedFactory.create(host_organization=organization)
+        self.assertEqual(self.admin.connect_adopted_activities(organization), 1)
+        self.assertEqual(self.admin.connect_partner_activities(organization), 0)

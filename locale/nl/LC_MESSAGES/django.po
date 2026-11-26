@@ -8940,6 +8940,11 @@ msgstr "Kantoor"
 msgid "Front-end"
 msgstr "Front-end"
 
+#: bluebottle/members/admin.py:1056
+#: bluebottle/members/templates/admin/members/impersonate.html:6
+msgid "Impersonate"
+msgstr "Imiteren"
+
 #: bluebottle/members/admin.py:1093 bluebottle/members/forms.py:6
 #: bluebottle/members/templates/admin/members/login_as.html:9
 msgid "Login as"

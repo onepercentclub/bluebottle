@@ -465,19 +465,23 @@ class MemberAdminImpersonateLinksTest(BluebottleAdminTestCase):
     def front_end_url(self, obj):
         return reverse('admin:members_member_login_as', args=(obj.pk,))
 
+    def back_office_url(self, obj):
+        return reverse('admin:members_member_impersonate', args=(obj.pk,))
+
     def test_list_has_no_impersonation_columns(self):
         self.client.force_login(self.superuser)
         response = self.client.get(reverse('admin:members_member_changelist'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'data-hijack-user')
+        self.assertNotContains(response, self.back_office_url(self.staff))
         self.assertNotContains(response, self.front_end_url(self.staff))
         self.assertNotContains(response, 'column-login_as_link')
 
     def test_staff_detail_has_back_office_and_front_end(self):
         response = self.change_page(self.staff)
 
-        self.assertContains(response, 'data-hijack-user="{}"'.format(self.staff.pk))
+        self.assertContains(response, self.back_office_url(self.staff))
+        self.assertNotContains(response, 'data-hijack-user')
         self.assertContains(response, 'Back-office')
         self.assertContains(response, self.front_end_url(self.staff))
         self.assertContains(response, 'Front-end')
@@ -485,7 +489,7 @@ class MemberAdminImpersonateLinksTest(BluebottleAdminTestCase):
     def test_member_detail_has_only_front_end(self):
         response = self.change_page(self.member)
 
-        self.assertNotContains(response, 'data-hijack-user')
+        self.assertNotContains(response, self.back_office_url(self.member))
         self.assertContains(response, self.front_end_url(self.member))
 
     def test_inactive_member_detail_has_no_links(self):
@@ -493,15 +497,66 @@ class MemberAdminImpersonateLinksTest(BluebottleAdminTestCase):
         self.staff.save()
         response = self.change_page(self.staff)
 
-        self.assertNotContains(response, 'data-hijack-user')
+        self.assertNotContains(response, self.back_office_url(self.staff))
         self.assertNotContains(response, self.front_end_url(self.staff))
 
     def test_staff_viewer_gets_no_links(self):
         response = self.change_page(self.member, user=self.staff_member)
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'data-hijack-user')
+        self.assertNotContains(response, self.back_office_url(self.member))
         self.assertNotContains(response, self.front_end_url(self.member))
+
+
+class ImpersonateConfirmationTest(BluebottleAdminTestCase):
+    def setUp(self):
+        super().setUp()
+        self.staff = BlueBottleUserFactory.create(is_staff=True, is_superuser=False)
+        self.member = BlueBottleUserFactory.create(is_staff=False)
+        self.other_superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
+        self.url = reverse('admin:members_member_impersonate', args=(self.staff.pk,))
+
+    def test_confirmation_page_posts_to_acquire_without_impersonating(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'method="post"')
+        self.assertContains(response, 'action="{}"'.format(reverse('hijack:acquire')))
+        self.assertContains(response, 'name="user_pk" value="{}"'.format(self.staff.pk))
+        self.assertContains(response, 'csrfmiddlewaretoken')
+
+        index = self.client.get(reverse('admin:index'))
+        self.assertNotContains(index, 'Stop impersonating')
+
+    def test_acquire_does_not_accept_get(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(
+            reverse('hijack:acquire'), {'user_pk': str(self.staff.pk)}
+        )
+
+        self.assertIn(response.status_code, (400, 405))
+        index = self.client.get(reverse('admin:index'))
+        self.assertNotContains(index, 'Stop impersonating')
+
+    def test_cannot_confirm_for_member(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(
+            reverse('admin:members_member_impersonate', args=(self.member.pk,))
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_cannot_confirm_for_superuser(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(
+            reverse('admin:members_member_impersonate', args=(self.other_superuser.pk,))
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_cannot_confirm(self):
+        self.client.force_login(self.staff_member)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
 
 
 class LoginAsAdminTest(BluebottleAdminTestCase):

@@ -45,6 +45,11 @@ class Organization(ValidatedModelMixin, TranslatableModel, models.Model):
     updated = models.DateTimeField(_('Updated'), auto_now=True)
 
     verified = models.BooleanField(_('Verified'), default=False)
+    archived = models.BooleanField(
+        _('Archived'),
+        default=False,
+        help_text=_('Archived organisations are hidden from the default organisation list in the back office.')
+    )
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE

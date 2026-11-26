@@ -10,6 +10,8 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from bluebottle.activities.models import Activity
+from bluebottle.activity_links.models import LinkedActivity
+from bluebottle.activity_pub.models import Accept, Event, Follow
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.cms.utils.color_contrast import render_solid_preview
 from bluebottle.initiatives.models import Initiative
@@ -46,10 +48,44 @@ class OrganizationActivityInline(admin.TabularInline):
     fk_name = 'organization'
 
     def activity_url(self, obj):
-        url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,
-                                                    obj._meta.model_name),
-                      args=[obj.id])
+        url = reverse(
+            'admin:{0}_{1}_change'.format(
+                obj._meta.app_label,
+                obj._meta.model_name
+            ),
+            args=[obj.id]
+        )
         return format_html(u"<a href='{}'>{}</a>", str(url), obj.title)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class OrganizationLinkedActivityInline(admin.TabularInline):
+    model = LinkedActivity
+    verbose_name_plural = _('Linked activities')
+    readonly_fields = ('activity_url', 'activity_type', 'status')
+    fields = ('activity_url', 'activity_type', 'status')
+    fk_name = 'host_organization'
+    extra = 0
+
+    def activity_url(self, obj):
+        model = obj.get_real_instance_class()
+        url = reverse(
+            'admin:{0}_{1}_change'.format(model._meta.app_label, model._meta.model_name),
+            args=[obj.id]
+        )
+        return format_html(u"<a href='{}'>{}</a>", str(url), obj.title)
+
+    activity_url.short_description = _('Title')
+
+    def activity_type(self, obj):
+        return obj.get_real_instance_class().activity_type
+
+    activity_type.short_description = _('Type')
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -60,9 +96,9 @@ class OrganizationActivityInline(admin.TabularInline):
 
 @admin.register(OrganizationContact)
 class OrganizationContactAdmin(admin.ModelAdmin):
-    inlines = (OrganizationInitiativeInline, )
-    fields = ('name', 'email', 'phone', )
-    list_display = ('name', 'email', 'phone', )
+    inlines = (OrganizationInitiativeInline,)
+    fields = ('name', 'email', 'phone',)
+    list_display = ('name', 'email', 'phone',)
 
     export_fields = [
         ('name', 'name'),
@@ -70,7 +106,7 @@ class OrganizationContactAdmin(admin.ModelAdmin):
         ('phone', 'Phone Number'),
     ]
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = (export_as_csv_action(fields=export_fields),)
 
 
 class ArchivedListFilter(admin.SimpleListFilter):
@@ -115,11 +151,24 @@ class OrganizationAdmin(
     TranslatableLabelAdminMixin,
     TranslatableAdmin,
 ):
-    inlines = (OrganizationInitiativeInline, OrganizationActivityInline)
+    inlines = (
+        OrganizationInitiativeInline, OrganizationActivityInline, OrganizationLinkedActivityInline
+    )
     form = OrganizationForm
     ordering = ('name',)
     view_on_site = True
-    readonly_fields = ('color_contrast_panel',)
+    readonly_fields = (
+        'color_contrast_panel',
+        'connect_local_actor', 'connect_supplier', 'connect_consumer',
+        'connect_shared_activities', 'connect_adopted_activities',
+        'connect_partner_activities',
+    )
+
+    connect_fields = (
+        'connect_local_actor', 'connect_supplier', 'connect_consumer',
+        'connect_shared_activities', 'connect_adopted_activities',
+        'connect_partner_activities',
+    )
 
     class Media:
         css = {
@@ -150,7 +199,7 @@ class OrganizationAdmin(
 
     def activities_count(self, obj):
         if obj and obj.id:
-            return obj.activities.count()
+            return obj.activities.count() + obj.linked_activities.count()
         return '-'
 
     def color_contrast_panel(self, obj):
@@ -160,6 +209,77 @@ class OrganizationAdmin(
         )
 
     color_contrast_panel.short_description = _('Colour preview')
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [[None, {'fields': self.get_fields(request, obj)}]]
+        if obj and obj.pk and (
+            self.get_connect_actor(obj) or SitePlatformSettings.load().is_sharing_activities
+        ):
+            fieldsets[0][0] = _('Main')
+            fieldsets.append([_('GoodUp Connect'), {'fields': self.connect_fields}])
+        return fieldsets
+
+    def get_fields(self, request, obj=None):
+        return [
+            field for field in super().get_fields(request, obj)
+            if field not in self.connect_fields
+        ]
+
+    def get_connect_actor(self, obj):
+        return getattr(obj, 'activity_pub_organization', None)
+
+    def connection_status(self, follows):
+        follow = follows.first()
+        if not follow:
+            return _('No')
+        if Accept.objects.filter(object=follow).exists():
+            return _('Yes')
+        return _('Yes, waiting for acceptance')
+
+    def connect_local_actor(self, obj):
+        actor = self.get_connect_actor(obj)
+        if actor and actor.is_local:
+            return _('Yes')
+        return _('No')
+
+    connect_local_actor.short_description = _('Local actor')
+
+    def connect_supplier(self, obj):
+        actor = self.get_connect_actor(obj)
+        if not actor or actor.is_local:
+            return _('No')
+        return self.connection_status(Follow.objects.filter(object=actor))
+
+    connect_supplier.short_description = _('Connected supplier')
+
+    def connect_consumer(self, obj):
+        actor = self.get_connect_actor(obj)
+        if not actor or actor.is_local:
+            return _('No')
+        return self.connection_status(Follow.objects.filter(actor=actor))
+
+    connect_consumer.short_description = _('Connected consumer')
+
+    def connect_shared_activities(self, obj):
+        actor = self.get_connect_actor(obj)
+        if not actor:
+            return 0
+        return Event.objects.filter(create__actor=actor).distinct().count()
+
+    connect_shared_activities.short_description = _('Activities shared via GoodUp Connect')
+
+    def connect_adopted_activities(self, obj):
+        return obj.hosted_activities.count() + obj.linked_activities.count()
+
+    connect_adopted_activities.short_description = _('Adopted activities')
+
+    def connect_partner_activities(self, obj):
+        actor = self.get_connect_actor(obj)
+        if not actor:
+            return 0
+        return Event.objects.filter(organization=actor).count()
+
+    connect_partner_activities.short_description = _('Partner organisation of shared activities')
 
     def has_delete_permission(self, request, obj=None):
         settings = SitePlatformSettings.load()
@@ -173,4 +293,4 @@ class OrganizationAdmin(
             return []
         return super(OrganizationAdmin, self).get_inline_instances(request, obj)
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = (export_as_csv_action(fields=export_fields),)

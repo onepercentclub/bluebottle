@@ -15040,6 +15040,30 @@ msgstr "Je hebt al gestemd in deze peiling"
 msgid "Nederlands"
 msgstr "Nederlands"
 
-#: bluebottle/organizations/models.py
-msgid "Archived organisations are hidden from the default organisation list in the back office."
-msgstr "Gearchiveerde organisaties worden standaard niet getoond in de organisatielijst in de back-office."
+#: bluebottle/organizations/admin.py
+msgid "Local actor"
+msgstr "Lokale actor"
+
+#: bluebottle/organizations/admin.py
+msgid "Connected supplier"
+msgstr "Verbonden leverancier"
+
+#: bluebottle/organizations/admin.py
+msgid "Connected consumer"
+msgstr "Verbonden consument"
+
+#: bluebottle/organizations/admin.py
+msgid "Activities shared via GoodUp Connect"
+msgstr "Activiteiten gedeeld via GoodUp Connect"
+
+#: bluebottle/organizations/admin.py
+msgid "Adopted activities"
+msgstr "Geadopteerde activiteiten"
+
+#: bluebottle/organizations/admin.py
+msgid "Partner organisation of shared activities"
+msgstr "Partnerorganisatie van gedeelde activiteiten"
+
+#: bluebottle/organizations/admin.py
+msgid "Yes, waiting for acceptance"
+msgstr "Ja, wacht op acceptatie"

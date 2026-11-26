@@ -15437,6 +15437,30 @@ msgstr ""
 msgid "Nederlands"
 msgstr ""
 
-#: bluebottle/organizations/models.py
-msgid "Archived organisations are hidden from the default organisation list in the back office."
+#: bluebottle/organizations/admin.py
+msgid "Local actor"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Connected supplier"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Connected consumer"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Activities shared via GoodUp Connect"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Adopted activities"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Partner organisation of shared activities"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Yes, waiting for acceptance"
 msgstr ""

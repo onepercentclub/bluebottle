@@ -173,6 +173,15 @@ class CleanupOrganizationsScriptTestCase(BluebottleTestCase):
         actor_organization.refresh_from_db()
         self.assertEqual(actor_organization.origin_id, remote.pk)
 
+    def test_args_in_one_string(self):
+        unused = OrganizationFactory.create(name='Unused')
+
+        output = io.StringIO()
+        with redirect_stdout(output):
+            run('fix tenant=test')
+
+        self.assertFalse(self.exists(unused))
+
     def test_unknown_tenant_does_nothing(self):
         unused = OrganizationFactory.create(name='Unused')
         output = io.StringIO()

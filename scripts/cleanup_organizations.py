@@ -9,7 +9,7 @@ Dry-run by default, add `fix` to actually change things.
 
   ./manage.py runscript cleanup_organizations
   ./manage.py runscript cleanup_organizations --script-args=fix
-  ./manage.py runscript cleanup_organizations --script-args="fix tenant=pggm"
+  ./manage.py runscript cleanup_organizations --script-args fix tenant=pggm
 """
 from django.db import transaction
 
@@ -20,6 +20,10 @@ from bluebottle.organizations.models import Organization
 from scripts.cleanup_geolocations import suppress_elasticsearch_signals
 
 COPY_FIELDS = ('website', 'logo', 'image', 'color')
+
+
+def split_args(args):
+    return [part for arg in args for part in str(arg).split()]
 
 
 def get_clients(args):
@@ -192,6 +196,7 @@ def cleanup_tenant(fix=False):
 
 
 def run(*args):
+    args = split_args(args)
     fix = 'fix' in args
 
     for client in get_clients(args):

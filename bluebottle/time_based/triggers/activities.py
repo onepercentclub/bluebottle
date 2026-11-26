@@ -776,6 +776,16 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
                 CreateFirstSlotEffect,
             ]
         ),
+        TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                # Participants in the current period are still 'new', so also cancel those
+                RelatedTransitionEffect(
+                    'participants',
+                    ParticipantStateMachine.cancel
+                ),
+            ],
+        ),
         ModelChangedTrigger(
             ['title', 'description', 'start', 'deadline', 'location', 'duration', 'period', 'image'],
             effects=[

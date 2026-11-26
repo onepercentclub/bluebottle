@@ -9,6 +9,7 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
+from bluebottle.time_based.models import PeriodicParticipant
 
 
 class CreateEffect(Effect):
@@ -124,6 +125,8 @@ class PublishAdoptionEffect(Effect):
         event = self.get_event()
         actor = get_platform_actor()
         Accept.objects.create(actor=actor, object=event)
+
+        Start.objects.filter(object=event, transitioned=False).update(transitioned=True)
 
     @property
     def is_valid(self):
@@ -476,11 +479,14 @@ class SendLeaveEffect(Effect):
     conditions = [can_send_leave]
 
     def post_save(self, **kwargs):
-        activity = (
-            self.instance.slot
-            if hasattr(self.instance, 'slot') and self.instance.slot else
-            self.instance.activity
-        )
+        if (
+            hasattr(self.instance, 'slot') and self.instance.slot and
+            # Periodic slots are not synced as sub events; the leave applies to the registration
+            not isinstance(self.instance, PeriodicParticipant)
+        ):
+            activity = self.instance.slot
+        else:
+            activity = self.instance.activity
 
         Leave.objects.create(
             actor=self.instance.user.activity_pub_model,

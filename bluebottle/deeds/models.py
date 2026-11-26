@@ -107,6 +107,15 @@ class Deed(Activity):
             return []
 
     @property
+    def cancelled_participants(self):
+        if self.pk:
+            return self.contributors.instance_of(DeedParticipant).filter(
+                status='cancelled'
+            )
+        else:
+            return []
+
+    @property
     def failed_participants(self):
         if self.pk:
             return self.contributors.instance_of(DeedParticipant).filter(

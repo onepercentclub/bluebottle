@@ -148,6 +148,7 @@ class TeamTriggers(TriggerManager):
                     "team_members",
                     TeamMemberStateMachine.cancel,
                 ),
+                SendTeamLeaveEffect,
             ],
         ),
         TransitionTrigger(

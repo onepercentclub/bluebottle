@@ -15,6 +15,7 @@ from djmoney.money import Money
 from pytz import UTC
 from requests import Request, Response
 
+from bluebottle.activities.models import Contributor, Organizer
 from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, LinkedGrantApplication
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
@@ -445,6 +446,21 @@ class TemplateTestCase(ActivityPubTestCase):
 
 
 class SyncTestCase(ActivityPubTestCase):
+    def get_participants(self, activity):
+        return Contributor.objects.filter(activity=activity).not_instance_of(Organizer)
+
+    def assert_consumer_participants_cancelled(self):
+        participants = self.get_participants(self.adopted)
+        self.assertTrue(participants)
+        for participant in participants:
+            self.assertStatus(participant, 'cancelled')
+
+    def assert_supplier_participants_cancelled(self):
+        participants = self.get_participants(self.model)
+        self.assertTrue(participants)
+        for participant in participants:
+            self.assertStatus(participant, 'withdrawn')
+
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
         with LocalTenant(self.consumer):
@@ -752,6 +768,41 @@ class SyncTestCase(ActivityPubTestCase):
         self.assertFalse(
             Accept.objects.filter(object=self.model.activity_pub_model).exists()
         )
+
+    def test_cancel_consumer_with_participant(self):
+        self.test_join()
+        mail.outbox = []
+
+        with LocalTenant(self.consumer):
+            self.adopted.states.cancel(save=True)
+
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'cancelled')
+            self.assertTrue(
+                Reject.objects.filter(object=self.adopted.origin).exists()
+            )
+            self.assertFalse(
+                Accept.objects.filter(object=self.adopted.origin).exists()
+            )
+
+            self.assert_consumer_participants_cancelled()
+
+        self.model.refresh_from_db()
+        self.assertStatus(self.model, 'open')
+        self.assertFalse(
+            Accept.objects.filter(object=self.model.activity_pub_model).exists()
+        )
+
+        self.assert_supplier_participants_cancelled()
+
+        mails = [
+            message for message in mail.outbox
+            if self.model.owner.email in message.to and
+            'has been cancelled on' in message.subject
+        ]
+        self.assertEqual(len(mails), 1)
+        self.assertIn(self.model.title, mails[0].subject)
+        self.assertIn(self.follow.actor.name, mails[0].subject)
 
     def test_restore_supplier(self):
         self.test_cancel_supplier()
@@ -1127,6 +1178,11 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     participant_factory = PeriodicRegistrationFactory
     expected_participant_status = 'accepted'
     removed_status = 'removed'
+
+    def assert_supplier_participants_cancelled(self):
+        # Periodic participants cannot withdraw; a leave stops the registration instead
+        self.synced_participant.refresh_from_db()
+        self.assertStatus(self.synced_participant, 'stopped')
 
     def create(self, **kwargs):
         super().create(
@@ -2478,6 +2534,25 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
     expected_participant_status = 'accepted'
     removed_status = 'removed'
+
+    def assert_consumer_participants_cancelled(self):
+        teams = self.adopted.teams.all()
+        self.assertTrue(teams)
+        for team in teams:
+            self.assertStatus(team, 'cancelled')
+            for member in team.team_members.all():
+                self.assertStatus(member, 'cancelled')
+
+    def assert_supplier_participants_cancelled(self):
+        teams = self.model.teams.all()
+        self.assertTrue(teams)
+        for team in teams:
+            self.assertStatus(team, 'withdrawn')
+            for member in team.team_members.all():
+                self.assertStatus(member, 'withdrawn')
+
+        for participant in self.get_participants(self.model):
+            self.assertStatus(participant, 'withdrawn')
 
     def create(self, **kwargs):
         super().create(

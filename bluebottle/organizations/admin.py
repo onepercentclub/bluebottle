@@ -127,7 +127,7 @@ class OrganizationAdmin(
         }
         js = ('admin/js/color_contrast_base.js', 'admin/js/solid_color_contrast.js')
 
-    list_display = ('name', 'website', 'activities_count', 'verified', 'created')
+    list_display = ('name', 'activities_count', 'archived', 'verified', 'created')
     list_filter = (
         ArchivedListFilter,
         ('initiatives__theme', admin.RelatedOnlyFieldListFilter),

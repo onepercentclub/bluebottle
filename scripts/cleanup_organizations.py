@@ -56,14 +56,6 @@ def is_used(organization, ignore_origin=False):
     return False
 
 
-def has_actor(organization):
-    """
-    Organizations that are the organization of a GoodUp Connect actor. These are never
-    merged: they stay as they are, and are neither kept nor removed as a duplicate.
-    """
-    return hasattr(organization, 'activity_pub_organization')
-
-
 def remove_unused(fix=False):
     used = set(
         Organization.objects.exclude(origin__isnull=True).values_list('pk', flat=True)
@@ -129,7 +121,7 @@ def merge_duplicates(skip_ids=(), fix=False):
     groups = {}
     left_out = 0
     for organization in Organization.objects.exclude(pk__in=skip_ids).order_by('pk'):
-        if has_actor(organization):
+        if hasattr(organization, 'activity_pub_organization'):
             left_out += 1
             continue
         groups.setdefault(organization.name.strip().lower(), []).append(organization)

@@ -110,7 +110,10 @@ class BaseTokenAuthentication():
                     user = user_model.objects.get(email__iexact=user_data['email'])
                 except (KeyError, user_model.DoesNotExist):
                     if self.settings.get('provision', True):
-                        user = user_model.objects.create(**user_data)
+                        user = user_model(**user_data)
+                        # Users provisioned through SSO should not be able to log in with a password
+                        user.set_unusable_password()
+                        user.save()
                         created = True
                     else:
                         logger.error('Login error: User not found, and provisioning is disabled')

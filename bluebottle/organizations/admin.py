@@ -73,6 +73,35 @@ class OrganizationContactAdmin(admin.ModelAdmin):
     actions = (export_as_csv_action(fields=export_fields), )
 
 
+class ArchivedListFilter(admin.SimpleListFilter):
+    title = _('Archived')
+    parameter_name = 'archived'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('0', _('No')),
+            ('1', _('Yes')),
+            ('all', _('All')),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value in (None, '0'):
+            return queryset.filter(archived=False)
+        if value == '1':
+            return queryset.filter(archived=True)
+        return queryset
+
+    def choices(self, changelist):
+        value = self.value() or '0'
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': value == lookup,
+                'query_string': changelist.get_query_string({self.parameter_name: lookup}),
+                'display': title,
+            }
+
+
 class OrganizationForm(TranslatableModelForm):
     website = forms.CharField(required=True)
 
@@ -100,11 +129,12 @@ class OrganizationAdmin(
 
     list_display = ('name', 'website', 'activities_count', 'verified', 'created')
     list_filter = (
+        ArchivedListFilter,
         ('initiatives__theme', admin.RelatedOnlyFieldListFilter),
         ('initiatives__location', admin.RelatedOnlyFieldListFilter),
     )
     fields = (
-        'name', 'website', 'slogan', 'story', 'verified',
+        'name', 'website', 'slogan', 'story', 'verified', 'archived',
         'logo', 'image', 'color', 'color_contrast_panel',
     )
     search_fields = ('name',)

@@ -56,6 +56,41 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
             ),
         )
 
+    def changelist(self, **params):
+        return self.app.get(
+            reverse('admin:organizations_organization_changelist'), params
+        )
+
+    def test_changelist_hides_archived_by_default(self):
+        OrganizationFactory.create(name='Active org', website='http://active.org')
+        OrganizationFactory.create(name='Archived org', website='http://archived.org', archived=True)
+
+        page = self.changelist()
+        self.assertIn('Active org', page.text)
+        self.assertNotIn('Archived org', page.text)
+
+    def test_changelist_filter_archived(self):
+        OrganizationFactory.create(name='Active org', website='http://active.org')
+        OrganizationFactory.create(name='Archived org', website='http://archived.org', archived=True)
+
+        page = self.changelist(archived='1')
+        self.assertNotIn('Active org', page.text)
+        self.assertIn('Archived org', page.text)
+
+    def test_changelist_filter_all(self):
+        OrganizationFactory.create(name='Active org', website='http://active.org')
+        OrganizationFactory.create(name='Archived org', website='http://archived.org', archived=True)
+
+        page = self.changelist(archived='all')
+        self.assertIn('Active org', page.text)
+        self.assertIn('Archived org', page.text)
+
+    def test_archived_filter_defaults_to_no(self):
+        page = self.changelist()
+        selected = page.html.find('li', {'class': 'selected'})
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected.text.strip(), 'No')
+
     def test_color_contrast_preview(self):
         organization = OrganizationFactory.create(
             name='Dharma Initiative',

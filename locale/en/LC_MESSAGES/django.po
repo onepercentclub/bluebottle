@@ -15436,3 +15436,7 @@ msgstr ""
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr ""
+
+#: bluebottle/organizations/models.py
+msgid "Archived organisations are hidden from the default organisation list in the back office."
+msgstr ""

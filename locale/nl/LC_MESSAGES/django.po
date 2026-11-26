@@ -15040,3 +15040,6 @@ msgstr "Je hebt al gestemd in deze peiling"
 msgid "Nederlands"
 msgstr "Nederlands"
 
+#: bluebottle/organizations/models.py
+msgid "Archived organisations are hidden from the default organisation list in the back office."
+msgstr "Gearchiveerde organisaties worden standaard niet getoond in de organisatielijst in de back-office."

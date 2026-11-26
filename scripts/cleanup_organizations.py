@@ -3,7 +3,7 @@ Clean up organizations:
 
 1. Remove organizations that are not used by anything (activities, initiatives,
    linked activities, GoodUp Connect, members, payout accounts, ...).
-2. Merge organizations that have the same name (case insensitive).
+2. Merge organizations that have the same name (case insensitive) into the oldest one.
 
 Dry-run by default, add `fix` to actually change things.
 
@@ -44,27 +44,6 @@ def get_relations():
     ]
 
 
-def get_used_ids():
-    """
-    Ids of all organizations that are referenced by any other record. This is
-    deliberately broader than activities, initiatives and linked activities:
-    deleting an organization would cascade to e.g. members or empty out the
-    platform settings.
-    """
-    used = set(
-        Organization.objects.exclude(origin__isnull=True).values_list('pk', flat=True)
-    )
-    for relation in get_relations():
-        field = relation.field.name
-        used.update(
-            relation.related_model._base_manager
-            .exclude(**{'{}__isnull'.format(field): True})
-            .values_list(field, flat=True)
-            .distinct()
-        )
-    return used
-
-
 def is_used(organization, ignore_origin=False):
     if organization.origin_id and not ignore_origin:
         return True
@@ -85,19 +64,20 @@ def has_actor(organization):
     return hasattr(organization, 'activity_pub_organization')
 
 
-def usage_count(organization):
-    return sum(
-        relation.related_model._base_manager.filter(
-            **{relation.field.name: organization}
-        ).count()
-        for relation in get_relations()
-        if not relation.one_to_one
-    )
-
-
 def remove_unused(fix=False):
-    used_ids = get_used_ids()
-    unused = list(Organization.objects.exclude(pk__in=used_ids).order_by('name'))
+    used = set(
+        Organization.objects.exclude(origin__isnull=True).values_list('pk', flat=True)
+    )
+    for relation in get_relations():
+        field = relation.field.name
+        used.update(
+            relation.related_model._base_manager
+            .exclude(**{'{}__isnull'.format(field): True})
+            .values_list(field, flat=True)
+            .distinct()
+        )
+
+    unused = list(Organization.objects.exclude(pk__in=used).order_by('name'))
     removed_ids = set()
     for organization in unused:
         print('  remove unused: {} (id {})'.format(organization.name, organization.pk))
@@ -105,18 +85,6 @@ def remove_unused(fix=False):
         if fix:
             organization.delete()
     return removed_ids
-
-
-def pick_canonical(organizations):
-    return sorted(
-        organizations,
-        key=lambda organization: (
-            not has_actor(organization),
-            not organization.verified,
-            -usage_count(organization),
-            organization.pk,
-        )
-    )[0]
 
 
 def merge_organizations(sources, target, fix=False):
@@ -176,7 +144,8 @@ def merge_duplicates(skip_ids=(), fix=False):
             skipped += 1
             continue
 
-        target = pick_canonical(organizations)
+        # Organizations are ordered by pk. The one belonging to a Connect actor has to stay.
+        target = next((organization for organization in organizations if has_actor(organization)), organizations[0])
         sources = [organization for organization in organizations if organization.pk != target.pk]
         print('  merge {} into "{}" (id {})'.format(
             ', '.join('"{}" (id {})'.format(source.name, source.pk) for source in sources),

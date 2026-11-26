@@ -73,52 +73,50 @@ class CleanupOrganizationsScriptTestCase(BluebottleTestCase):
     def test_merges_same_name_case_insensitive(self):
         first = OrganizationFactory.create(name='Dharma Initiative')
         second = OrganizationFactory.create(name='dharma initiative ')
+        DeedFactory.create(organization=first)
         deed = DeedFactory.create(organization=second)
         initiative = InitiativeFactory.create(organization=second, has_organization=True)
         link = LinkedDeedFactory.create(host_organization=second)
 
         self.run_script('fix')
 
-        self.assertFalse(self.exists(first))
-        self.assertTrue(self.exists(second))
+        self.assertTrue(self.exists(first))
+        self.assertFalse(self.exists(second))
         deed.refresh_from_db()
         initiative.refresh_from_db()
         link.refresh_from_db()
-        self.assertEqual(deed.organization, second)
-        self.assertEqual(initiative.organization, second)
-        self.assertEqual(link.host_organization, second)
+        self.assertEqual(deed.organization, first)
+        self.assertEqual(initiative.organization, first)
+        self.assertEqual(link.host_organization, first)
 
-    def test_merge_repoints_to_the_used_organization(self):
-        used = OrganizationFactory.create(name='Used twice')
+    def test_merge_keeps_the_oldest_and_repoints_everything(self):
+        oldest = OrganizationFactory.create(name='Used twice')
         other = OrganizationFactory.create(name='USED TWICE')
         deeds = DeedFactory.create_batch(2, organization=other)
-        DeedFactory.create(organization=used)
+        DeedFactory.create(organization=oldest)
         initiative = InitiativeFactory.create(organization=other, has_organization=True)
 
         self.run_script('fix')
 
-        self.assertEqual(Organization.objects.count(), 1)
-        target = Organization.objects.get()
-        self.assertEqual(target.pk, other.pk)
+        self.assertEqual(Organization.objects.get().pk, oldest.pk)
         for deed in deeds:
             deed.refresh_from_db()
-            self.assertEqual(deed.organization, target)
+            self.assertEqual(deed.organization, oldest)
         initiative.refresh_from_db()
-        self.assertEqual(initiative.organization, target)
-        self.assertFalse(self.exists(used))
+        self.assertEqual(initiative.organization, oldest)
 
-    def test_merge_prefers_verified_and_copies_missing_fields(self):
-        plain = OrganizationFactory.create(name='Same', website='', verified=False)
+    def test_merge_copies_missing_fields_and_verified(self):
+        oldest = OrganizationFactory.create(name='Same', website='', verified=False)
         verified = OrganizationFactory.create(name='SAME', website='https://same.org', verified=True)
-        InitiativeFactory.create(organization=plain, has_organization=True)
+        InitiativeFactory.create(organization=oldest, has_organization=True)
         InitiativeFactory.create(organization=verified, has_organization=True)
 
         self.run_script('fix')
 
-        self.assertEqual(Organization.objects.count(), 1)
         target = Organization.objects.get()
-        self.assertEqual(target.pk, verified.pk)
+        self.assertEqual(target.pk, oldest.pk)
         self.assertTrue(target.verified)
+        self.assertEqual(target.website, 'https://same.org')
         self.assertEqual(Initiative.objects.filter(organization=target).count(), 2)
 
     def test_does_not_merge_two_connect_organizations(self):

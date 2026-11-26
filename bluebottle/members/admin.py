@@ -13,6 +13,7 @@ from django.forms import BaseInlineFormSet
 from django.forms.widgets import Select
 from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.template.response import TemplateResponse
 from django.urls import NoReverseMatch, reverse
@@ -1000,6 +1001,11 @@ class MemberAdmin(HijackUserAdminMixin, RegionManagerAdminMixin, MemberSegmentAd
                 name='members_member_login_as'
             ),
             path(
+                'impersonate/<int:pk>/',
+                self.admin_site.admin_view(self.impersonate_view),
+                name='members_member_impersonate'
+            ),
+            path(
                 'password-reset/<int:pk>/',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
@@ -1043,6 +1049,22 @@ class MemberAdmin(HijackUserAdminMixin, RegionManagerAdminMixin, MemberSegmentAd
 
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)))
 
+    def impersonate_view(self, request, pk):
+        member = get_object_or_404(Member, pk=pk)
+        if not can_hijack(hijacker=request.user, hijacked=member):
+            return HttpResponseForbidden('Not allowed to impersonate user')
+        context = dict(
+            self.admin_site.each_context(request),
+            title=_('Impersonate'),
+            opts=self.model._meta,
+            obj=member,
+            hijack_url=reverse('hijack:acquire'),
+            next_url=self.get_hijack_success_url(request, member),
+        )
+        response = TemplateResponse(request, 'admin/members/impersonate.html', context)
+        response['cache-control'] = "no-store, no-cache, private"
+        return response
+
     def login_as_view(self, request, pk):
         if not request.user.is_superuser:
             return HttpResponseForbidden('Not allowed to login as user')
@@ -1074,11 +1096,8 @@ class MemberAdmin(HijackUserAdminMixin, RegionManagerAdminMixin, MemberSegmentAd
         links = []
         if can_hijack(hijacker=request.user, hijacked=obj):
             links.append(format_html(
-                '<a style="margin-right:16px" class="button" data-hijack-user="{}" '
-                'data-hijack-next="{}" data-hijack-url="{}">{}</a>',
-                obj.pk,
-                self.get_hijack_success_url(request, obj),
-                reverse('hijack:acquire'),
+                '<a style="margin-right:16px" class="button" href="{}">{}</a>',
+                reverse('admin:members_member_impersonate', args=(obj.pk,)),
                 _('Back-office'),
             ))
         if request.user.is_superuser and obj.is_active:

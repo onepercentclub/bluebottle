@@ -1,0 +1,16 @@
+{% extends "admin/confirmation.html" %}
+{% load i18n l10n admin_urls %}
+
+{% block content %}
+  <p>{% trans "Are you sure you want to: " %}</p>
+  <h2>{% trans "Impersonate" %}</h2>
+  <p>{{ obj }}</p>
+  <form action="{{ hijack_url }}" method="post">{% csrf_token %}
+    <input type="hidden" name="user_pk" value="{{ obj.pk }}"/>
+    <input type="hidden" name="next" value="{{ next_url }}"/>
+    <div class="submit-row">
+      <input type="submit" class="button danger" value="{% trans "Yes, I am sure" %}"/>
+      <a href="{% url 'admin:members_member_change' obj.pk %}" class="button cancel-link">{% trans "No, take me back" %}</a>
+    </div>
+  </form>
+{% endblock %}

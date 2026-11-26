@@ -98,7 +98,7 @@ class OrganizationAdmin(
         }
         js = ('admin/js/color_contrast_base.js', 'admin/js/solid_color_contrast.js')
 
-    list_display = ('name', 'website', 'verified', 'created')
+    list_display = ('name', 'website', 'activities_count', 'verified', 'created')
     list_filter = (
         ('initiatives__theme', admin.RelatedOnlyFieldListFilter),
         ('initiatives__location', admin.RelatedOnlyFieldListFilter),
@@ -117,6 +117,11 @@ class OrganizationAdmin(
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
+
+    def activities_count(self, obj):
+        if obj and obj.id:
+            return obj.activities.count()
+        return '-'
 
     def color_contrast_panel(self, obj):
         return render_solid_preview(

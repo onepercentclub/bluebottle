@@ -19,7 +19,6 @@ from django.template.response import TemplateResponse
 from django.urls import NoReverseMatch, reverse
 from django.urls import path
 from django.utils.html import format_html, format_html_join
-from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin

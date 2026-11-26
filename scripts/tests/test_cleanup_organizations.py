@@ -131,15 +131,17 @@ class CleanupOrganizationsScriptTestCase(BluebottleTestCase):
         self.assertTrue(self.exists(second))
         self.assertIn('skip merge', output)
 
-    def test_keeps_the_connect_organization_when_merging(self):
+    def test_moves_the_actor_to_the_organization_it_is_merged_into(self):
         plain = OrganizationFactory.create(name='Partner')
         connected = OrganizationFactory.create(name='partner')
         InitiativeFactory.create(organization=plain, has_organization=True)
-        ActorFactory.create(organization=connected)
+        actor = ActorFactory.create(organization=connected)
 
         self.run_script('fix')
 
-        self.assertEqual(Organization.objects.get().pk, connected.pk)
+        self.assertEqual(Organization.objects.get().pk, plain.pk)
+        actor.refresh_from_db()
+        self.assertEqual(actor.organization_id, plain.pk)
 
     def test_merges_organizations_that_only_have_an_origin(self):
         remote = ActorFactory.create(iri='https://partner.example/organization/1')
@@ -155,21 +157,23 @@ class CleanupOrganizationsScriptTestCase(BluebottleTestCase):
         deed.refresh_from_db()
         self.assertEqual(deed.organization, first)
 
-    def test_merge_keeps_the_actor_and_repoints_origin_only_copies(self):
+    def test_merge_moves_the_actor_and_repoints_origin_only_copies(self):
         remote = ActorFactory.create(iri='https://partner.example/organization/1')
         copy = OrganizationFactory.create(name='Bag that Banner', origin=remote)
         actor_organization = OrganizationFactory.create(name='BAG THAT BANNER')
-        ActorFactory.create(organization=actor_organization)
-        deed = DeedFactory.create(organization=copy)
+        actor = ActorFactory.create(organization=actor_organization)
+        deed = DeedFactory.create(organization=actor_organization)
 
         self.run_script('fix')
 
-        self.assertFalse(self.exists(copy))
-        self.assertTrue(self.exists(actor_organization))
+        self.assertTrue(self.exists(copy))
+        self.assertFalse(self.exists(actor_organization))
         deed.refresh_from_db()
-        self.assertEqual(deed.organization, actor_organization)
-        actor_organization.refresh_from_db()
-        self.assertEqual(actor_organization.origin_id, remote.pk)
+        self.assertEqual(deed.organization, copy)
+        actor.refresh_from_db()
+        self.assertEqual(actor.organization_id, copy.pk)
+        copy.refresh_from_db()
+        self.assertEqual(copy.origin_id, remote.pk)
 
     def test_args_in_one_string(self):
         unused = OrganizationFactory.create(name='Unused')

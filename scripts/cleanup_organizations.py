@@ -57,9 +57,11 @@ def is_used(organization, ignore_origin=False):
 
 def has_actor(organization):
     """
-    Organizations that are the organization of a GoodUp Connect actor. Only one of
-    these can be kept when merging. The `origin` link (the remote organization an
-    organization was created from) is just a back reference and can be dropped.
+    Organizations that are the organization of a GoodUp Connect actor. An organization
+    can only have one actor, so a group with more than one of these is not merged. The
+    actor of a single one is moved to the organization we merge into. The `origin` link
+    (the remote organization an organization was created from) is just a back reference
+    and can be dropped.
     """
     return hasattr(organization, 'activity_pub_organization')
 
@@ -97,6 +99,14 @@ def merge_organizations(sources, target, fix=False):
         relation.related_model._base_manager.filter(
             **{'{}__in'.format(relation.field.name): sources}
         ).update(**{relation.field.name: target})
+
+    if not has_actor(target):
+        for source in sources:
+            if has_actor(source):
+                actor = source.activity_pub_organization
+                actor.organization = target
+                actor.save(update_fields=['organization'])
+                break
 
     changed = []
     if not target.origin_id:
@@ -144,9 +154,7 @@ def merge_duplicates(skip_ids=(), fix=False):
             skipped += 1
             continue
 
-        # Organizations are ordered by pk. The one belonging to a Connect actor has to stay.
-        target = next((organization for organization in organizations if has_actor(organization)), organizations[0])
-        sources = [organization for organization in organizations if organization.pk != target.pk]
+        target, *sources = organizations
         print('  merge {} into "{}" (id {})'.format(
             ', '.join('"{}" (id {})'.format(source.name, source.pk) for source in sources),
             target.name,

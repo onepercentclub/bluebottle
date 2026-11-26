@@ -119,19 +119,18 @@ class CleanupOrganizationsScriptTestCase(BluebottleTestCase):
         self.assertEqual(target.website, 'https://same.org')
         self.assertEqual(Initiative.objects.filter(organization=target).count(), 2)
 
-    def test_does_not_merge_two_connect_organizations(self):
+    def test_leaves_connect_actor_organizations_alone(self):
         first = OrganizationFactory.create(name='Partner')
         second = OrganizationFactory.create(name='PARTNER')
         ActorFactory.create(organization=first)
         ActorFactory.create(organization=second)
 
-        output = self.run_script('fix')
+        self.run_script('fix')
 
         self.assertTrue(self.exists(first))
         self.assertTrue(self.exists(second))
-        self.assertIn('skip merge', output)
 
-    def test_moves_the_actor_to_the_organization_it_is_merged_into(self):
+    def test_actor_organization_is_not_merged_with_a_plain_one(self):
         plain = OrganizationFactory.create(name='Partner')
         connected = OrganizationFactory.create(name='partner')
         InitiativeFactory.create(organization=plain, has_organization=True)
@@ -139,9 +138,10 @@ class CleanupOrganizationsScriptTestCase(BluebottleTestCase):
 
         self.run_script('fix')
 
-        self.assertEqual(Organization.objects.get().pk, plain.pk)
+        self.assertTrue(self.exists(plain))
+        self.assertTrue(self.exists(connected))
         actor.refresh_from_db()
-        self.assertEqual(actor.organization_id, plain.pk)
+        self.assertEqual(actor.organization_id, connected.pk)
 
     def test_merges_organizations_that_only_have_an_origin(self):
         remote = ActorFactory.create(iri='https://partner.example/organization/1')
@@ -157,23 +157,22 @@ class CleanupOrganizationsScriptTestCase(BluebottleTestCase):
         deed.refresh_from_db()
         self.assertEqual(deed.organization, first)
 
-    def test_merge_moves_the_actor_and_repoints_origin_only_copies(self):
+    def test_merges_copies_but_not_the_actor_organization(self):
         remote = ActorFactory.create(iri='https://partner.example/organization/1')
+        other_remote = ActorFactory.create(iri='https://partner.example/organization/2')
         copy = OrganizationFactory.create(name='Bag that Banner', origin=remote)
+        other_copy = OrganizationFactory.create(name='bag that banner', origin=other_remote)
         actor_organization = OrganizationFactory.create(name='BAG THAT BANNER')
-        actor = ActorFactory.create(organization=actor_organization)
-        deed = DeedFactory.create(organization=actor_organization)
+        ActorFactory.create(organization=actor_organization)
+        deed = DeedFactory.create(organization=other_copy)
 
         self.run_script('fix')
 
         self.assertTrue(self.exists(copy))
-        self.assertFalse(self.exists(actor_organization))
+        self.assertFalse(self.exists(other_copy))
+        self.assertTrue(self.exists(actor_organization))
         deed.refresh_from_db()
         self.assertEqual(deed.organization, copy)
-        actor.refresh_from_db()
-        self.assertEqual(actor.organization_id, copy.pk)
-        copy.refresh_from_db()
-        self.assertEqual(copy.origin_id, remote.pk)
 
     def test_args_in_one_string(self):
         unused = OrganizationFactory.create(name='Unused')

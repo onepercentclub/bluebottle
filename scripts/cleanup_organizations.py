@@ -4,6 +4,7 @@ Clean up organizations:
 1. Remove organizations that are not used by anything (activities, initiatives,
    linked activities, GoodUp Connect, members, payout accounts, ...).
 2. Merge organizations that have the same name (case insensitive) into the oldest one.
+   Organizations that belong to a GoodUp Connect actor are left alone.
 
 Dry-run by default, add `fix` to actually change things.
 
@@ -57,11 +58,8 @@ def is_used(organization, ignore_origin=False):
 
 def has_actor(organization):
     """
-    Organizations that are the organization of a GoodUp Connect actor. An organization
-    can only have one actor, so a group with more than one of these is not merged. The
-    actor of a single one is moved to the organization we merge into. The `origin` link
-    (the remote organization an organization was created from) is just a back reference
-    and can be dropped.
+    Organizations that are the organization of a GoodUp Connect actor. These are never
+    merged: they stay as they are, and are neither kept nor removed as a duplicate.
     """
     return hasattr(organization, 'activity_pub_organization')
 
@@ -100,14 +98,6 @@ def merge_organizations(sources, target, fix=False):
             **{'{}__in'.format(relation.field.name): sources}
         ).update(**{relation.field.name: target})
 
-    if not has_actor(target):
-        for source in sources:
-            if has_actor(source):
-                actor = source.activity_pub_organization
-                actor.organization = target
-                actor.save(update_fields=['organization'])
-                break
-
     changed = []
     if not target.origin_id:
         for source in sources:
@@ -137,21 +127,16 @@ def merge_organizations(sources, target, fix=False):
 
 def merge_duplicates(skip_ids=(), fix=False):
     groups = {}
+    left_out = 0
     for organization in Organization.objects.exclude(pk__in=skip_ids).order_by('pk'):
+        if has_actor(organization):
+            left_out += 1
+            continue
         groups.setdefault(organization.name.strip().lower(), []).append(organization)
 
     merged = 0
-    skipped = 0
     for organizations in groups.values():
         if len(organizations) < 2:
-            continue
-
-        if sum(has_actor(organization) for organization in organizations) > 1:
-            print('  skip merge, multiple GoodUp Connect actors: {} ({})'.format(
-                organizations[0].name,
-                ', '.join(str(organization.pk) for organization in organizations)
-            ))
-            skipped += 1
             continue
 
         target, *sources = organizations
@@ -163,13 +148,13 @@ def merge_duplicates(skip_ids=(), fix=False):
         merge_organizations(sources, target, fix=fix)
         merged += len(sources)
 
-    return merged, skipped
+    return merged, left_out
 
 
 def cleanup_tenant(fix=False):
     removed_ids = remove_unused(fix=fix)
-    merged, skipped = merge_duplicates(skip_ids=removed_ids, fix=fix)
-    return len(removed_ids), merged, skipped
+    merged, left_out = merge_duplicates(skip_ids=removed_ids, fix=fix)
+    return len(removed_ids), merged, left_out
 
 
 def run(*args):
@@ -186,15 +171,15 @@ def run(*args):
             if fix:
                 with suppress_elasticsearch_signals():
                     with transaction.atomic():
-                        removed, merged, skipped = cleanup_tenant(fix=True)
+                        removed, merged, left_out = cleanup_tenant(fix=True)
             else:
-                removed, merged, skipped = cleanup_tenant(fix=False)
+                removed, merged, left_out = cleanup_tenant(fix=False)
 
-            print('{}: {} removed, {} merged, {} skipped{}'.format(
+            print('{}: {} removed, {} merged, {} Connect organizations left alone{}'.format(
                 client.name,
                 removed,
                 merged,
-                skipped,
+                left_out,
                 '' if fix else ' (not saved)'
             ))
 

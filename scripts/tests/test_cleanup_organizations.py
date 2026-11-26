@@ -143,6 +143,36 @@ class CleanupOrganizationsScriptTestCase(BluebottleTestCase):
 
         self.assertEqual(Organization.objects.get().pk, connected.pk)
 
+    def test_merges_organizations_that_only_have_an_origin(self):
+        remote = ActorFactory.create(iri='https://partner.example/organization/1')
+        other_remote = ActorFactory.create(iri='https://partner.example/organization/2')
+        first = OrganizationFactory.create(name='Bag that Banner', origin=remote)
+        second = OrganizationFactory.create(name='bag that banner', origin=other_remote)
+        deed = DeedFactory.create(organization=first)
+
+        self.run_script('fix')
+
+        self.assertTrue(self.exists(first))
+        self.assertFalse(self.exists(second))
+        deed.refresh_from_db()
+        self.assertEqual(deed.organization, first)
+
+    def test_merge_keeps_the_actor_and_repoints_origin_only_copies(self):
+        remote = ActorFactory.create(iri='https://partner.example/organization/1')
+        copy = OrganizationFactory.create(name='Bag that Banner', origin=remote)
+        actor_organization = OrganizationFactory.create(name='BAG THAT BANNER')
+        ActorFactory.create(organization=actor_organization)
+        deed = DeedFactory.create(organization=copy)
+
+        self.run_script('fix')
+
+        self.assertFalse(self.exists(copy))
+        self.assertTrue(self.exists(actor_organization))
+        deed.refresh_from_db()
+        self.assertEqual(deed.organization, actor_organization)
+        actor_organization.refresh_from_db()
+        self.assertEqual(actor_organization.origin_id, remote.pk)
+
     def test_unknown_tenant_does_nothing(self):
         unused = OrganizationFactory.create(name='Unused')
         output = io.StringIO()

@@ -61,8 +61,8 @@ def get_used_ids():
     return used
 
 
-def is_used(organization):
-    if organization.origin_id:
+def is_used(organization, ignore_origin=False):
+    if organization.origin_id and not ignore_origin:
         return True
     for relation in get_relations():
         if relation.related_model._base_manager.filter(
@@ -72,8 +72,13 @@ def is_used(organization):
     return False
 
 
-def has_connect_relation(organization):
-    return bool(organization.origin_id) or hasattr(organization, 'activity_pub_organization')
+def has_actor(organization):
+    """
+    Organizations that are the organization of a GoodUp Connect actor. Only one of
+    these can be kept when merging. The `origin` link (the remote organization an
+    organization was created from) is just a back reference and can be dropped.
+    """
+    return hasattr(organization, 'activity_pub_organization')
 
 
 def usage_count(organization):
@@ -102,7 +107,7 @@ def pick_canonical(organizations):
     return sorted(
         organizations,
         key=lambda organization: (
-            not has_connect_relation(organization),
+            not has_actor(organization),
             not organization.verified,
             -usage_count(organization),
             organization.pk,
@@ -122,6 +127,12 @@ def merge_organizations(sources, target, fix=False):
         ).update(**{relation.field.name: target})
 
     changed = []
+    if not target.origin_id:
+        for source in sources:
+            if source.origin_id:
+                target.origin_id = source.origin_id
+                changed.append('origin')
+                break
     for field in COPY_FIELDS:
         if not getattr(target, field):
             for source in sources:
@@ -136,7 +147,7 @@ def merge_organizations(sources, target, fix=False):
         target.save(update_fields=changed)
 
     for source in sources:
-        if is_used(source):
+        if is_used(source, ignore_origin=True):
             print('  ! {} (id {}) is still in use, not deleting'.format(source.name, source.pk))
             continue
         source.delete()
@@ -153,8 +164,8 @@ def merge_duplicates(skip_ids=(), fix=False):
         if len(organizations) < 2:
             continue
 
-        if sum(has_connect_relation(organization) for organization in organizations) > 1:
-            print('  skip merge, multiple GoodUp Connect organizations: {} ({})'.format(
+        if sum(has_actor(organization) for organization in organizations) > 1:
+            print('  skip merge, multiple GoodUp Connect actors: {} ({})'.format(
                 organizations[0].name,
                 ', '.join(str(organization.pk) for organization in organizations)
             ))

@@ -1,6 +1,7 @@
 from django.contrib.admin.sites import site
 from django.urls import reverse
 
+from bluebottle.activity_links.tests.factories import LinkedDeedFactory
 from bluebottle.activity_pub.models import Accept
 from bluebottle.activity_pub.tests.factories import FollowFactory
 from bluebottle.activity_pub.tests.factories import OrganizationFactory as ActorFactory
@@ -60,6 +61,24 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
                 organization.slug,
             ),
         )
+
+    def test_linked_activities_inline(self):
+        self.app.set_user(self.superuser)
+        organization = OrganizationFactory.create(
+            name='Dharma Initiative',
+            website='http://dharma.in',
+        )
+        linked = LinkedDeedFactory.create(host_organization=organization, title='Linked hatch')
+        other = LinkedDeedFactory.create(title='Somebody else')
+        page = self.app.get(
+            reverse('admin:organizations_organization_change', args=(organization.pk,))
+        )
+        self.assertIn('Linked hatch', page.text)
+        self.assertNotIn('Somebody else', page.text)
+        self.assertIn(
+            reverse('admin:activity_links_linkeddeed_change', args=(linked.pk,)), page.text
+        )
+        self.assertNotEqual(linked.pk, other.pk)
 
     def test_color_contrast_preview(self):
         organization = OrganizationFactory.create(

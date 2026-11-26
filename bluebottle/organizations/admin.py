@@ -10,6 +10,7 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from bluebottle.activities.models import Activity
+from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.models import Accept, Event, Follow
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.cms.utils.color_contrast import render_solid_preview
@@ -59,6 +60,36 @@ class OrganizationActivityInline(admin.TabularInline):
         return False
 
 
+class OrganizationLinkedActivityInline(admin.TabularInline):
+    model = LinkedActivity
+    verbose_name_plural = _('Linked activities')
+    readonly_fields = ('activity_url', 'activity_type', 'status')
+    fields = ('activity_url', 'activity_type', 'status')
+    fk_name = 'host_organization'
+    extra = 0
+
+    def activity_url(self, obj):
+        model = obj.get_real_instance_class()
+        url = reverse(
+            'admin:{0}_{1}_change'.format(model._meta.app_label, model._meta.model_name),
+            args=[obj.id]
+        )
+        return format_html(u"<a href='{}'>{}</a>", str(url), obj.title)
+
+    activity_url.short_description = _('Title')
+
+    def activity_type(self, obj):
+        return obj.get_real_instance_class().activity_type
+
+    activity_type.short_description = _('Type')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(OrganizationContact)
 class OrganizationContactAdmin(admin.ModelAdmin):
     inlines = (OrganizationInitiativeInline, )
@@ -87,7 +118,9 @@ class OrganizationAdmin(
     TranslatableLabelAdminMixin,
     TranslatableAdmin,
 ):
-    inlines = (OrganizationInitiativeInline, OrganizationActivityInline)
+    inlines = (
+        OrganizationInitiativeInline, OrganizationActivityInline, OrganizationLinkedActivityInline
+    )
     form = OrganizationForm
     ordering = ('name',)
     view_on_site = True

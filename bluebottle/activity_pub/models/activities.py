@@ -13,6 +13,7 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import Registration
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
+from bluebottle.activity_pub.messages import AdoptionCancelledNotification
 
 
 class AdoptionTypeChoices(DjangoChoices):
@@ -339,10 +340,21 @@ class Reject(Activity):
                 )
             registration.states.reject(save=True)
         elif isinstance(self.object, (Event, SubEvent)):
-            self._unadopt()
+            was_adopted = Accept.objects.filter(actor=self.actor, object=self.object).exists()
 
-    def _unadopt(self):
-        Accept.objects.filter(actor=self.actor, object=self.object).delete()
+            Accept.objects.filter(actor=self.actor, object=self.object).delete()
+
+            if was_adopted and isinstance(self.object, Event):
+
+                activity = self.object.origin
+                if not activity or activity.status in ('cancelled', 'deleted', 'rejected'):
+                    # The partner only followed a cancellation that started on this platform
+                    return
+
+                AdoptionCancelledNotification(
+                    activity,
+                    context={'partner_name': getattr(self.actor, 'name', None)}
+                ).compose_and_send()
 
 
 class Create(Activity):

@@ -138,12 +138,30 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_cancel(self):
         self.create()
         self.model.states.publish(save=True)
-        DeedParticipantFactory.create(activity=self.model, status='accepted')
+        participant = DeedParticipantFactory.create(activity=self.model)
         self.model.states.cancel()
 
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
+            self.assertTransitionEffect(DeedParticipantStateMachine.cancel, participant)
             self.assertNotificationEffect(ActivityCancelledNotification)
+
+        self.model.save()
+        self.assertStatus(participant, 'cancelled')
+
+    def test_restore_cancelled(self):
+        self.create()
+        self.model.states.publish(save=True)
+        participant = DeedParticipantFactory.create(activity=self.model)
+        self.model.states.cancel(save=True)
+        self.model.states.restore()
+
+        with self.execute():
+            self.assertTransitionEffect(DeedParticipantStateMachine.restore, participant)
+            self.assertNotificationEffect(ActivityRestoredNotification)
+
+        self.model.save()
+        self.assertStatus(participant, 'accepted')
 
     def test_restored(self):
         self.create()
@@ -486,6 +504,39 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
             self.assertNotificationEffect(ParticipantWithdrewNotification)
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
+
+    def test_cancel(self):
+        self.create()
+
+        self.model.states.cancel()
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.fail, self.model.contributions.first()
+            )
+
+    def test_restore(self):
+        self.create()
+        self.model.states.cancel(save=True)
+
+        self.model.states.restore()
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.reset, self.model.contributions.first()
+            )
+            self.assertNoTransitionEffect(DeedParticipantStateMachine.succeed)
+
+    def test_restore_started(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=1)
+        self.defaults['activity'].save()
+        self.create()
+        self.model.states.cancel(save=True)
+
+        self.model.states.restore()
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.reset, self.model.contributions.first()
+            )
+            self.assertTransitionEffect(DeedParticipantStateMachine.succeed)
 
     def test_withdraw_synced_emits_leave_effect(self):
         self.make_synced('https://example.com/good-deed/1')

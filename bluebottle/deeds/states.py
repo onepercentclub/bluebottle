@@ -127,6 +127,11 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         'accepted',
         _('This person has been signed up for the activity and was accepted automatically.')
     )
+    cancelled = State(
+        _('Cancelled'),
+        'cancelled',
+        _("The activity has been cancelled. This person's contribution is removed.")
+    )
 
     def is_user(self, user):
         """is participant"""
@@ -222,4 +227,26 @@ class DeedParticipantStateMachine(ContributorStateMachine):
             ContributorStateMachine.failed,
             accepted
         ],
+    )
+
+    cancel = Transition(
+        [
+            ContributorStateMachine.new,
+            accepted,
+            ContributorStateMachine.succeeded,
+        ],
+        cancelled,
+        name=_('Cancel'),
+        passed_label=_('cancelled'),
+        description=_("Cancel the participant, because the activity was cancelled."),
+        automatic=True,
+    )
+
+    restore = Transition(
+        cancelled,
+        accepted,
+        name=_('Restore'),
+        passed_label=_('restored'),
+        description=_("Restore the participant, because the activity was restored."),
+        automatic=True,
     )

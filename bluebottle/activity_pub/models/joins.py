@@ -37,6 +37,7 @@ class Join(Activity):
 
 class BaseJoin(Join):
     readd_transition = 'readd'
+    active_statuses = ('new', 'accepted', 'succeeded', 'scheduled')
 
     @classmethod
     def matches(cls, object, actor):
@@ -48,6 +49,9 @@ class BaseJoin(Join):
         if not self.is_local:
             # The join is from a non-local platform. Adopt the actor
             if self.contributor:
+                if self.contributor.status in self.active_statuses:
+                    # Already participating, e.g. restored here before the join arrived
+                    return
                 # There already is a contributor. Reapply that contributor
                 self.reapply()
             else:

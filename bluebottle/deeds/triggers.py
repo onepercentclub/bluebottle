@@ -247,7 +247,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                RelatedTransitionEffect('participants', ContributorStateMachine.fail),
+                RelatedTransitionEffect('participants', DeedParticipantStateMachine.cancel),
                 NotificationEffect(ActivityCancelledNotification),
                 UnpublishAdoptionEffect,
                 CancelEffect
@@ -259,6 +259,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
                 RelatedTransitionEffect('failed_participants', ContributorStateMachine.reset),
+                RelatedTransitionEffect('cancelled_participants', DeedParticipantStateMachine.restore),
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),
@@ -447,6 +448,27 @@ class DeedParticipantTriggers(ContributorTriggers):
                 # Notify source platform of leave for synced deeds
                 SendLeaveEffect,
                 SyncRelatedEvent
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedParticipantStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
+                UnFollowActivityEffect,
+                SendLeaveEffect,
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedParticipantStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
+                TransitionEffect(
+                    DeedParticipantStateMachine.succeed,
+                    conditions=[activity_did_start]
+                ),
+                FollowActivityEffect,
             ]
         ),
 

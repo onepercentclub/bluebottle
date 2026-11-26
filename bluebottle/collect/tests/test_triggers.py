@@ -89,11 +89,30 @@ class CollectTriggersTestCase(TriggerTestCase):
     def test_cancel(self):
         self.create()
         self.model.states.publish(save=True)
+        contributor = CollectContributorFactory.create(activity=self.model)
         self.model.states.cancel()
 
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
+            self.assertTransitionEffect(CollectContributorStateMachine.cancel, contributor)
             self.assertNotificationEffect(ActivityCancelledNotification)
+
+        self.model.save()
+        self.assertStatus(contributor, 'cancelled')
+
+    def test_restore_cancelled(self):
+        self.create()
+        self.model.states.publish(save=True)
+        contributor = CollectContributorFactory.create(activity=self.model)
+        self.model.states.cancel(save=True)
+        self.model.states.restore()
+
+        with self.execute():
+            self.assertTransitionEffect(CollectContributorStateMachine.restore, contributor)
+            self.assertNotificationEffect(ActivityRestoredNotification)
+
+        self.model.save()
+        self.assertStatus(contributor, 'accepted')
 
     def test_restored(self):
         self.create()
@@ -318,6 +337,39 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ParticipantWithdrewNotification)
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
+
+    def test_cancel(self):
+        self.create()
+
+        self.model.states.cancel()
+        with self.execute():
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.fail, self.model.contributions.first()
+            )
+
+    def test_restore(self):
+        self.create()
+        self.model.states.cancel(save=True)
+
+        self.model.states.restore()
+        with self.execute():
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.reset, self.model.contributions.first()
+            )
+            self.assertNoTransitionEffect(CollectContributorStateMachine.succeed)
+
+    def test_restore_started(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=1)
+        self.defaults['activity'].save()
+        self.create()
+        self.model.states.cancel(save=True)
+
+        self.model.states.restore()
+        with self.execute():
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.reset, self.model.contributions.first()
+            )
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
 
     def test_reapply(self):
         self.defaults['activity'].start = date.today() - timedelta(days=1)

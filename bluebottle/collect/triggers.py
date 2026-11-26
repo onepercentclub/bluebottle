@@ -179,6 +179,7 @@ class CollectActivityTriggers(ActivityTriggers):
             CollectActivityStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                RelatedTransitionEffect('participants', CollectContributorStateMachine.cancel),
                 NotificationEffect(ActivityCancelledNotification),
                 UnpublishAdoptionEffect,
                 CancelEffect
@@ -189,6 +190,7 @@ class CollectActivityTriggers(ActivityTriggers):
             CollectActivityStateMachine.restore,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
+                RelatedTransitionEffect('cancelled_contributors', CollectContributorStateMachine.restore),
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),
@@ -366,6 +368,25 @@ class CollectContributorTriggers(ContributorTriggers):
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
                 SendLeaveEffect,
                 SyncRelatedEvent
+            ]
+        ),
+
+        TransitionTrigger(
+            CollectContributorStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
+                SendLeaveEffect,
+            ]
+        ),
+
+        TransitionTrigger(
+            CollectContributorStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect('contributions', CollectContributionStateMachine.reset),
+                TransitionEffect(
+                    CollectContributorStateMachine.succeed,
+                    conditions=[activity_has_started]
+                ),
             ]
         ),
 

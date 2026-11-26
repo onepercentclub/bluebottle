@@ -169,6 +169,10 @@ class CollectActivity(Activity):
             return CollectContributor.objects.none()
 
     @property
+    def cancelled_contributors(self):
+        return self.participants.filter(status='cancelled')
+
+    @property
     def active_contributors(self):
         return self.participants.filter(
             status__in=['succeeded', 'accepted']

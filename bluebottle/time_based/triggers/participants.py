@@ -958,6 +958,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
+                SendLeaveEffect,
             ],
         ),
         TransitionTrigger(
@@ -1473,6 +1474,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
+                SendLeaveEffect,
             ]
         ),
 

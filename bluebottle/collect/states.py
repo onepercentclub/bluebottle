@@ -109,6 +109,11 @@ class CollectContributorStateMachine(ContributorStateMachine):
         'accepted',
         _('This person has been signed up for the activity.')
     )
+    cancelled = State(
+        _('Cancelled'),
+        'cancelled',
+        _("The activity has been cancelled. This person's contribution is removed.")
+    )
 
     def is_user(self, user):
         """is contributor"""
@@ -194,6 +199,28 @@ class CollectContributorStateMachine(ContributorStateMachine):
         description=_("Remove contributor from the activity."),
         automatic=False,
         permission=is_owner,
+    )
+
+    cancel = Transition(
+        [
+            ContributorStateMachine.new,
+            accepted,
+            ContributorStateMachine.succeeded,
+        ],
+        cancelled,
+        name=_('Cancel'),
+        passed_label=_('cancelled'),
+        description=_("Cancel the contributor, because the activity was cancelled."),
+        automatic=True,
+    )
+
+    restore = Transition(
+        cancelled,
+        accepted,
+        name=_('Restore'),
+        passed_label=_('restored'),
+        description=_("Restore the contributor, because the activity was restored."),
+        automatic=True,
     )
 
 

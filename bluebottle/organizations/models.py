@@ -59,7 +59,7 @@ class Organization(ValidatedModelMixin, TranslatableModel, models.Model):
         'activity_pub.Organization', null=True, related_name="organizations", on_delete=models.SET_NULL
     )
 
-    website = models.URLField(_('website'), blank=True)
+    website = models.URLField(_('website'), blank=True, null=True)
     logo = ImageField(
         _('Logo'),
         blank=True,

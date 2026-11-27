@@ -181,6 +181,9 @@ class OrganizationMember(models.Model):
         verbose_name = _('organisation member')
         verbose_name_plural = _('organisation members')
 
+    class JSONAPIMeta:
+        resource_name = 'organization-members'
+
     def clean(self):
         if self.member_id is None:
             return

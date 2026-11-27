@@ -1,6 +1,7 @@
 from builtins import object
 
 from rest_framework import serializers
+from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.utils import get_stats_for_activities
@@ -8,7 +9,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer,
     SorlImageField,
 )
-from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.organizations.models import Organization, OrganizationContact, OrganizationMember
 from bluebottle.utils.fields import (
     RichTextField,
     ValidationErrorsField,
@@ -126,18 +127,57 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
         included_resources = ['owner', ]
 
 
+class OrganizationMemberSerializer(ModelSerializer):
+    included_serializers = {
+        'member': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    class Meta(object):
+        model = OrganizationMember
+        fields = ('id', 'member', 'role', 'created')
+
+    class JSONAPIMeta(object):
+        resource_name = 'organization-members'
+        included_resources = ['member']
+
+
 class OrganizationDetailSerializer(OrganizationSerializer):
     cover_image = SorlImageField(
         '1280x720', crop='center', source='image', read_only=True
     )
     stats = serializers.SerializerMethodField()
+    members = ResourceRelatedField(many=True, read_only=True)
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'members': 'bluebottle.organizations.serializers.OrganizationMemberSerializer',
+    }
 
     def get_stats(self, obj):
         return get_stats_for_activities(obj.activities.all())
 
+    def get_fields(self):
+        fields = super().get_fields()
+
+        user = self.context['request'].user
+        if not (
+            user.is_staff or
+            user.is_superuser or
+            (
+                self.instance and
+                user.is_authenticated and
+                self.instance.members.filter(member=user).exists()
+            )
+        ):
+            del fields['members']
+        return fields
+
     class Meta(OrganizationSerializer.Meta):
-        fields = OrganizationSerializer.Meta.fields + ('stats',)
+        fields = OrganizationSerializer.Meta.fields + ('stats', 'members')
         meta_fields = OrganizationSerializer.Meta.meta_fields + ['stats']
+
+    class JSONAPIMeta(OrganizationSerializer.JSONAPIMeta):
+        included_resources = ['owner', 'members', 'members.member']
 
 
 class OrganizationContactSerializer(NoCommitMixin, ModelSerializer):

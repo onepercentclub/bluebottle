@@ -24,7 +24,7 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
-    OrganizationContactFactory, OrganizationFactory
+    OrganizationContactFactory, OrganizationFactory, OrganizationMemberFactory
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
@@ -274,6 +274,64 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
         finally:
             MemberPlatformSettings.objects.update(closed=False)
+
+
+class OrganizationDetailMembersTestCase(OrganizationsEndpointTestCase):
+    def setUp(self):
+        super().setUp()
+        self.colleague = OrganizationMemberFactory.create(
+            organization=self.organization_1, role='manager'
+        )
+        self.member = OrganizationMemberFactory.create(organization=self.organization_1)
+        self.url = reverse('organization_detail', kwargs={'pk': self.organization_1.pk})
+
+    def get(self, user=None):
+        return self.client.get(self.url, user=user)
+
+    def assert_members_visible(self, response):
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(
+            len(data['data']['relationships']['members']['data']), 2
+        )
+        included = {(i['type'], i['id']): i for i in data['included']}
+        membership = included[('organization-members', str(self.colleague.pk))]
+        self.assertEqual(membership['attributes']['role'], 'manager')
+        self.assertIn(('members', str(self.colleague.member.pk)), included)
+
+    def assert_members_hidden(self, response):
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertNotIn('members', data['data']['relationships'])
+        self.assertNotIn(
+            'organization-members', [i['type'] for i in data.get('included', [])]
+        )
+
+    def test_member(self):
+        self.assert_members_visible(self.get(self.member.member))
+
+    def test_staff(self):
+        self.assert_members_visible(
+            self.get(BlueBottleUserFactory.create(is_staff=True))
+        )
+
+    def test_superuser(self):
+        self.assert_members_visible(
+            self.get(BlueBottleUserFactory.create(is_superuser=True))
+        )
+
+    def test_anonymous(self):
+        self.assert_members_hidden(self.get())
+
+    def test_other_user(self):
+        self.assert_members_hidden(self.get(self.user_2))
+
+    def test_owner_without_membership(self):
+        self.assert_members_hidden(self.get(self.user_1))
+
+    def test_member_of_other_organization(self):
+        other = OrganizationMemberFactory.create(organization=self.organization_2)
+        self.assert_members_hidden(self.get(other.member))
 
 
 class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):

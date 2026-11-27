@@ -7,11 +7,18 @@ var ChangeList = function($changelist) {
 ChangeList.prototype = {
     updateFixedHeaderVisibility: function($fixedTable, $originalHeader) {
         var show = $(window).scrollTop() > $originalHeader.offset().top;
-        $fixedTable.closest('table').toggle(show);
+        $fixedTable.toggle(show);
+
+        if (show) {
+            this.updateFixedHeaderWidth($fixedTable, $originalHeader);
+        }
     },
-    updateFixedHeaderWidth: function($fixedHeader, $originalHeader) {
+    updateFixedHeaderWidth: function($fixedTable, $originalHeader) {
         var $originalColumns = $originalHeader.find('th');
-        var $columns = $fixedHeader.find('th');
+        var $columns = $fixedTable.find('th');
+        var rect = $originalHeader.closest('table').get(0).getBoundingClientRect();
+
+        $fixedTable.css({left: rect.left, right: 'auto', width: rect.width});
 
         $originalColumns.each(function(i) {
             $columns.eq(i).css('width', $(this).width());
@@ -31,9 +38,9 @@ ChangeList.prototype = {
         $fixedTable.appendTo(document.body);
 
         $(window).on('scroll', $.proxy(this.updateFixedHeaderVisibility, this, $fixedTable, $originalHeader));
-        $(window).on('resize', $.proxy(this.updateFixedHeaderWidth, this, $fixedHeader, $originalHeader));
+        $(window).on('resize', $.proxy(this.updateFixedHeaderWidth, this, $fixedTable, $originalHeader));
 
-        this.updateFixedHeaderWidth($fixedHeader, $originalHeader);
+        this.updateFixedHeaderWidth($fixedTable, $originalHeader);
     },
     updateFixedFooter: function($results, $footer) {
         if ($(window).scrollTop() + $(window).height() < $results.offset().top + $results.outerHeight(false) + $footer.innerHeight()) {

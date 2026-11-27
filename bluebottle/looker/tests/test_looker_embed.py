@@ -66,6 +66,9 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
             json.loads(query['user_attributes'][0])['language'], 'en'
         )
         self.assertEqual(
+            json.loads(query['user_attributes'][0])['display_user_names'], True
+        )
+        self.assertEqual(
             int(query['session_length'][0]), settings.LOOKER_SESSION_LENGTH
         )
         self.assertEqual(

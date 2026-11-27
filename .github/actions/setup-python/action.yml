@@ -26,10 +26,15 @@ runs:
         fi
         # shellcheck source=/dev/null
         source "${venv_dir}/bin/activate"
+        # Reinstall whenever setup.py changes, so new dependencies reach the persistent venv
+        stamp="${venv_dir}/.setup-py.sha256"
+        setup_hash="$(sha256sum setup.py | cut -d' ' -f1)"
         if python -c "import django" 2>/dev/null && \
-           { [ "${pip_extra}" != "dev" ] || python -c "import flake8" 2>/dev/null; }; then
+           { [ "${pip_extra}" != "dev" ] || python -c "import flake8" 2>/dev/null; } && \
+           [ "$(cat "${stamp}" 2>/dev/null)" = "${setup_hash}" ]; then
           echo "venv ${venv_dir} ready"
         else
           pip install -e ".[${pip_extra}]"
+          echo "${setup_hash}" > "${stamp}"
         fi
         echo "VENV_DIR=${venv_dir}" >> "${GITHUB_ENV}"

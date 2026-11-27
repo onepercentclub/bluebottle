@@ -1,12 +1,44 @@
 import logging
 
+from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
+from hijack.signals import hijack_ended, hijack_started
 
 from bluebottle.members.models import Member
+from bluebottle.utils.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
+
+
+def log_impersonation(request, hijacker, hijacked, message):
+    LogEntry.objects.log_actions(
+        user_id=hijacker.pk,
+        queryset=Member.objects.filter(pk=hijacked.pk),
+        action_flag=CHANGE,
+        change_message=message,
+        single_object=True,
+    )
+    logger.info(
+        '%s: hijacker=%s hijacked=%s tenant=%s ip=%s',
+        message,
+        hijacker.pk,
+        hijacked.pk,
+        getattr(connection.tenant, 'schema_name', None),
+        get_client_ip(request),
+    )
+
+
+@receiver(hijack_started)
+def hijack_started_log(sender, request, hijacker, hijacked, **kwargs):
+    log_impersonation(request, hijacker, hijacked, 'Started impersonating')
+
+
+@receiver(hijack_ended)
+def hijack_ended_log(sender, request, hijacker, hijacked, **kwargs):
+    log_impersonation(request, hijacker, hijacked, 'Stopped impersonating')
 
 
 @receiver(post_save)

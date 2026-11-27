@@ -2,6 +2,7 @@ from django.utils.timezone import now
 
 from django.shortcuts import redirect
 
+from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 
 from two_factor.admin import AdminSiteOTPRequired as BaseAdminSiteOTPRequired
@@ -38,6 +39,8 @@ def set_last_login(user, response, *args, **kwargs):
 
 class AdminSiteOTPRequired(BaseAdminSiteOTPRequired):
     def login(self, request, extra_context=None):
+        if getattr(request.user, 'is_hijacked', False):
+            return AdminSite.login(self, request, extra_context)
 
         if request.user.is_authenticated and not request.user.is_verified():
             next = request.GET.get('next')

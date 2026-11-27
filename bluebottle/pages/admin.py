@@ -77,7 +77,6 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
     actions = ['make_published', 'export_selected']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
-    raw_id_fields = ('author', )
     readonly_fields = ('online', )
 
     # Reserved slugs for platform pages
@@ -90,7 +89,7 @@ class PageAdmin(CMSNestedPlaceholderFieldAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'author', 'language', 'full_page', 'show_title', 'body'),
+            'fields': ('title', 'slug', 'language', 'full_page', 'show_title', 'body'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date', 'online'),

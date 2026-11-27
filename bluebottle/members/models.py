@@ -330,6 +330,12 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         )
     )
 
+    hide_names_in_reporting = models.BooleanField(
+        _('Anonymise reporting'),
+        default=False,
+        help_text=_('Anonymise member data in the reporting dashboards.')
+    )
+
     retention_anonymize = models.PositiveIntegerField(
         _('Anonymise'),
         default=None,

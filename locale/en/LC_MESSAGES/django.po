@@ -15464,3 +15464,36 @@ msgstr ""
 #: bluebottle/organizations/admin.py
 msgid "Yes, waiting for acceptance"
 msgstr ""
+
+#: bluebottle/organizations/messages.py
+msgctxt "platform-email"
+msgid "You've been added to {organization_name}"
+msgstr ""
+
+#: bluebottle/organizations/messages.py
+msgctxt "platform-email"
+msgid "View organisation"
+msgstr ""
+
+#: bluebottle/organizations/messages.py
+msgctxt "platform-email"
+msgid "You've been removed from {organization_name}"
+msgstr ""
+
+#: bluebottle/organizations/templates/mails/messages/organization_member_added.html
+#, python-format
+msgctxt "platform-email"
+msgid "You've been added to the organisation %(organization_name)s on %(site_name)s."
+msgstr ""
+
+#: bluebottle/organizations/templates/mails/messages/organization_member_removed.html
+#, python-format
+msgctxt "platform-email"
+msgid "You've been removed from the organisation %(organization_name)s on %(site_name)s."
+msgstr ""
+
+#: bluebottle/organizations/templates/mails/messages/organization_member_removed.html
+#, python-format
+msgctxt "platform-email"
+msgid "If you think this is a mistake, please contact %(contact_email)s."
+msgstr ""

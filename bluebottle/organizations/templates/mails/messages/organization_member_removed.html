@@ -1,0 +1,14 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    <p>
+        {% blocktrans context 'platform-email' %}Hi {{ recipient_name }},{% endblocktrans %}
+    </p>
+    <p>
+        {% blocktrans context 'platform-email' %}You've been removed from the organisation {{ organization_name }} on {{ site_name }}.{% endblocktrans %}
+    </p>
+    <p>
+        {% blocktrans context 'platform-email' %}If you think this is a mistake, please contact {{ contact_email }}.{% endblocktrans %}
+    </p>
+{% endblock %}

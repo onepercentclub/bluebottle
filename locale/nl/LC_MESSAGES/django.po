@@ -15067,3 +15067,36 @@ msgstr "Partnerorganisatie van gedeelde activiteiten"
 #: bluebottle/organizations/admin.py
 msgid "Yes, waiting for acceptance"
 msgstr "Ja, wacht op acceptatie"
+
+#: bluebottle/organizations/messages.py
+msgctxt "platform-email"
+msgid "You've been added to {organization_name}"
+msgstr "Je bent toegevoegd aan {organization_name}"
+
+#: bluebottle/organizations/messages.py
+msgctxt "platform-email"
+msgid "View organisation"
+msgstr "Bekijk organisatie"
+
+#: bluebottle/organizations/messages.py
+msgctxt "platform-email"
+msgid "You've been removed from {organization_name}"
+msgstr "Je bent verwijderd uit {organization_name}"
+
+#: bluebottle/organizations/templates/mails/messages/organization_member_added.html
+#, python-format
+msgctxt "platform-email"
+msgid "You've been added to the organisation %(organization_name)s on %(site_name)s."
+msgstr "Je bent toegevoegd aan de organisatie %(organization_name)s op %(site_name)s."
+
+#: bluebottle/organizations/templates/mails/messages/organization_member_removed.html
+#, python-format
+msgctxt "platform-email"
+msgid "You've been removed from the organisation %(organization_name)s on %(site_name)s."
+msgstr "Je bent verwijderd uit de organisatie %(organization_name)s op %(site_name)s."
+
+#: bluebottle/organizations/templates/mails/messages/organization_member_removed.html
+#, python-format
+msgctxt "platform-email"
+msgid "If you think this is a mistake, please contact %(contact_email)s."
+msgstr "Als je denkt dat dit een vergissing is, neem dan contact op met %(contact_email)s."

@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+{% load message_url %}
+
+{% block content %}
+    <p>
+        {% blocktrans context 'platform-email' %}Hi {{ recipient_name }},{% endblocktrans %}
+    </p>
+    <p>
+        {% blocktrans context 'platform-email' %}You've been added to the organisation {{ organization_name }} on {{ site_name }}.{% endblocktrans %}
+    </p>
+{% endblock %}
+
+{% block action %}
+    <a href="{% message_url action_link %}" class="action-email">{{ action_title }}</a>
+{% endblock action %}

@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.organizations.models import OrganizationMember
 from bluebottle.test.factory_models.organizations import (
     OrganizationContactFactory, OrganizationFactory, OrganizationMemberFactory
 )
@@ -60,6 +61,11 @@ class InitiativeTestCase(TestCase):
         other = OrganizationFactory.create()
         initiative = InitiativeFactory(has_organization=True, organization=other, owner=membership.member)
         self.assertEqual(initiative.organization, other)
+
+    def test_organization_does_not_create_membership(self):
+        organization = OrganizationFactory.create()
+        InitiativeFactory(has_organization=True, organization=organization)
+        self.assertFalse(OrganizationMember.objects.exists())
 
     def test_owner_without_membership(self):
         initiative = InitiativeFactory(has_organization=None, organization=None)

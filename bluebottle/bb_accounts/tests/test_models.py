@@ -293,7 +293,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
             'facebook',
             'twitter',
             'skypename',
-            'partner_organization',
         ]:
             self.assertFalse(getattr(self.user, prop))
 

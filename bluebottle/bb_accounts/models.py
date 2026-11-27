@@ -252,16 +252,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     twitter = models.CharField(_('twitter profile'), blank=True, max_length=15)
     skypename = models.CharField(_('skype profile'), blank=True, max_length=32)
 
-    partner_organization = models.ForeignKey(
-        'organizations.Organization',
-        blank=True, null=True,
-        help_text=_('Users that are connected to a partner organisation '
-                    'will skip the organisation step in initiative create.'),
-        related_name='partner_organization_members',
-        verbose_name=_('Partner organisation'),
-        on_delete=models.CASCADE
-    )
-
     is_anonymized = models.BooleanField(_('Is anonymized'), default=False)
     welcome_email_is_sent = models.BooleanField(_('Welcome email is sent'), default=False)
 
@@ -353,7 +343,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.facebook = ''
         self.twitter = ''
         self.skypename = ''
-        self.partner_organization = None
 
         if self.avatar:
             self.avatar.delete()

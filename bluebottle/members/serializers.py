@@ -248,9 +248,35 @@ class UserPreviewSerializer(serializers.ModelSerializer):
         )
 
 
+ACTIVITY_PERMISSION_MODELS = (
+    'deeds.deed',
+    'funding.funding',
+    'collect.collectactivity',
+    'grant_management.grantapplication',
+    'time_based.dateactivity',
+    'time_based.deadlineactivity',
+    'time_based.scheduleactivity',
+    'time_based.periodicactivity',
+    'time_based.registereddateactivity',
+)
+
+
+def can_add(user, model):
+    app_label, model_name = model.split('.')
+    return any(
+        user.has_perm(f'{app_label}.api_add_{prefix}{model_name}')
+        for prefix in ('', 'own_')
+    )
+
+
 class UserPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
+
+    create_activity = serializers.SerializerMethodField()
+
+    def get_create_activity(self, obj):
+        return any(can_add(obj, model) for model in ACTIVITY_PERMISSION_MODELS)
 
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
@@ -262,7 +288,8 @@ class UserPermissionsSerializer(serializers.Serializer):
             'project_list',
             'project_manage_list',
             'homepage',
-            'review_activities'
+            'review_activities',
+            'create_activity',
         ]
 
 

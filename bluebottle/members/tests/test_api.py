@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
+from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.core.signing import TimestampSigner
 from django.test.client import RequestFactory
@@ -1447,6 +1448,45 @@ class CurrentMemberAPITestCase(APITestCase):
     def test_get_logged_out(self):
         self.perform_get()
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def create_permissions(self):
+        self.perform_get(user=self.user)
+        permissions = self.response.json()['data']['meta']['permissions']
+        return permissions['project_list']['POST'], permissions['create_activity']
+
+    def remove_permissions(self, codename_prefix):
+        group = Group.objects.get(name='Authenticated')
+        group.permissions.remove(
+            *Permission.objects.filter(codename__startswith=codename_prefix)
+        )
+
+    def test_create_permissions(self):
+        self.assertEqual(self.create_permissions(), (True, True))
+
+    def test_cannot_create_initiative(self):
+        self.remove_permissions('api_add_initiative')
+        self.remove_permissions('api_add_own_initiative')
+        self.assertEqual(self.create_permissions(), (False, True))
+
+    def test_cannot_create_activity(self):
+        for model in (
+            'deed', 'funding', 'collectactivity', 'grantapplication',
+            'dateactivity', 'deadlineactivity', 'scheduleactivity',
+            'periodicactivity', 'registereddateactivity',
+        ):
+            self.remove_permissions(f'api_add_{model}')
+            self.remove_permissions(f'api_add_own_{model}')
+        self.assertEqual(self.create_permissions(), (True, False))
+
+    def test_can_create_with_a_single_activity_type(self):
+        for model in (
+            'funding', 'collectactivity', 'grantapplication',
+            'dateactivity', 'deadlineactivity', 'scheduleactivity',
+            'periodicactivity', 'registereddateactivity',
+        ):
+            self.remove_permissions(f'api_add_{model}')
+            self.remove_permissions(f'api_add_own_{model}')
+        self.assertEqual(self.create_permissions(), (True, True))
 
     def test_has_votes_false(self):
         self.perform_get(user=self.user)

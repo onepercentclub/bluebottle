@@ -15067,3 +15067,7 @@ msgstr "Partnerorganisatie van gedeelde activiteiten"
 #: bluebottle/organizations/admin.py
 msgid "Yes, waiting for acceptance"
 msgstr "Ja, wacht op acceptatie"
+
+#: bluebottle/settings/admin_dashboard.py
+msgid "Organisations"
+msgstr "Organisaties"

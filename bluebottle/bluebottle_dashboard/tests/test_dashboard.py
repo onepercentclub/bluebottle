@@ -141,3 +141,36 @@ class AdminMenuTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.staff_member)
         response = self.client.get(self.admin_url)
         self.assertContains(response, 'Initiatives & Activities', html=True)
+
+    def test_organisations_have_own_menu_section(self):
+        request = RequestFactory().get(self.admin_url)
+        request.user = self.staff_member
+        menu_groups = get_menu_items({'user': self.staff_member, 'request': request})
+
+        organisations_menu = next(
+            group for group in menu_groups if group['app_label'] == 'organizations'
+        )
+        self.assertTrue(organisations_menu['has_perms'])
+        self.assertEqual(str(organisations_menu['label']), 'Organisations')
+        self.assertEqual(
+            [item['name'] for item in organisations_menu['items']],
+            ['organization']
+        )
+
+        initiatives_menu = next(
+            group for group in menu_groups if group['app_label'] == 'activities'
+        )
+        self.assertNotIn(
+            'organization', [item['name'] for item in initiatives_menu['items']]
+        )
+
+    def test_organisations_menu_requires_permission(self):
+        self.staff_member.groups.clear()
+        request = RequestFactory().get(self.admin_url)
+        request.user = self.staff_member
+        menu_groups = get_menu_items({'user': self.staff_member, 'request': request})
+
+        organisations_menu = next(
+            group for group in menu_groups if group['app_label'] == 'organizations'
+        )
+        self.assertFalse(organisations_menu['has_perms'])

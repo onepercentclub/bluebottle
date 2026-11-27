@@ -24,6 +24,7 @@ from bluebottle.notifications.models import MessageTemplate
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import OrganizationMemberFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DateParticipantFactory,
@@ -71,6 +72,25 @@ class MemberAdminTest(BluebottleAdminTestCase):
     def test_form(self):
         response = self.client.get(self.add_member_url)
         self.assertIn(b'Add member', response.content)
+
+    def test_add_form_has_no_organization_inline(self):
+        response = self.client.get(self.add_member_url)
+        self.assertNotContains(response, 'organization_memberships-TOTAL_FORMS')
+
+    def test_change_form_has_organization_inline(self):
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(reverse('admin:members_member_change', args=(user.id,)))
+        self.assertContains(response, 'organization_memberships-0-organization')
+        self.assertNotContains(response, 'partner_organization')
+
+    def test_change_form_shows_current_organization(self):
+        membership = OrganizationMemberFactory.create()
+        response = self.client.get(
+            reverse('admin:members_member_change', args=(membership.member.id,))
+        )
+        self.assertContains(response, 'organization_memberships-0-organization')
+        self.assertContains(response, f'value="{membership.organization.pk}"')
+        self.assertNotContains(response, 'organization_memberships-1-organization')
 
     def test_invalid_form(self):
         response = self.client.get(self.add_member_url)

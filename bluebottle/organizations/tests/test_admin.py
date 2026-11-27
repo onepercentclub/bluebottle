@@ -6,8 +6,11 @@ from bluebottle.activity_pub.models import Accept
 from bluebottle.activity_pub.tests.factories import FollowFactory
 from bluebottle.activity_pub.tests.factories import OrganizationFactory as ActorFactory
 from bluebottle.deeds.tests.factories import DeedFactory
-from bluebottle.organizations.models import Organization
-from bluebottle.test.factory_models.organizations import OrganizationFactory
+from bluebottle.organizations.models import Organization, OrganizationMember
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import (
+    OrganizationFactory, OrganizationMemberFactory
+)
 from bluebottle.test.utils import BluebottleAdminTestCase
 
 
@@ -146,6 +149,64 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue(page.html.find(attrs={'data-field-id': 'id_color'}))
         self.assertTrue(page.html.find(id='id_color'))
         self.assertIn('solid_color_contrast.js', page.text)
+
+    def change_page(self, organization):
+        return self.app.get(
+            reverse('admin:organizations_organization_change', args=(organization.pk,))
+        )
+
+    def test_no_members_inline_on_add_form(self):
+        page = self.app.get(reverse('admin:organizations_organization_add'))
+        self.assertNotIn('members-TOTAL_FORMS', page.text)
+
+    def test_members_inline_lists_members(self):
+        organization = OrganizationFactory.create(website='http://dharma.in')
+        membership = OrganizationMemberFactory.create(organization=organization)
+
+        form = self.change_page(organization).forms['organization_form']
+
+        self.assertEqual(form['members-0-member'].value, str(membership.member.pk))
+        self.assertEqual(form['members-0-role'].value, OrganizationMember.Roles.member)
+
+    def test_staff_can_add_member(self):
+        organization = OrganizationFactory.create(website='http://dharma.in')
+        member = BlueBottleUserFactory.create()
+
+        form = self.change_page(organization).forms['organization_form']
+        self.admin_add_inline_form_entry(form, 'members')
+        form['members-0-member'] = member.pk
+        form['members-0-role'] = OrganizationMember.Roles.member
+        form.submit().follow()
+
+        membership = OrganizationMember.objects.get()
+        self.assertEqual(membership.member, member)
+        self.assertEqual(membership.organization, organization)
+        self.assertEqual(member.organization, organization)
+
+    def test_staff_can_remove_member(self):
+        organization = OrganizationFactory.create(website='http://dharma.in')
+        membership = OrganizationMemberFactory.create(organization=organization)
+
+        form = self.change_page(organization).forms['organization_form']
+        form['members-0-DELETE'] = True
+        form.submit().follow()
+
+        self.assertEqual(OrganizationMember.objects.count(), 0)
+        self.assertIsNone(membership.member.organization)
+
+    def test_cannot_add_member_of_other_organization(self):
+        other = OrganizationMemberFactory.create()
+        organization = OrganizationFactory.create(website='http://dharma.in')
+
+        form = self.change_page(organization).forms['organization_form']
+        self.admin_add_inline_form_entry(form, 'members')
+        form['members-0-member'] = other.member.pk
+        form['members-0-role'] = OrganizationMember.Roles.member
+        page = form.submit()
+
+        self.assertIn('This member already belongs to another organisation.', page.text)
+        self.assertEqual(OrganizationMember.objects.filter(organization=organization).count(), 0)
+        self.assertEqual(OrganizationMember.objects.get(), other)
 
 
 class OrganizationAdminConnectTabTestCase(BluebottleAdminTestCase):

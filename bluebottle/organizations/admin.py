@@ -16,7 +16,9 @@ from bluebottle.activity_pub.models import Accept, Event, Follow
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.cms.utils.color_contrast import render_solid_preview
 from bluebottle.initiatives.models import Initiative
-from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.organizations.models import (
+    Organization, OrganizationContact, OrganizationMember
+)
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
@@ -95,6 +97,14 @@ class OrganizationLinkedActivityInline(admin.TabularInline):
         return False
 
 
+class OrganizationMemberInline(admin.TabularInline):
+    model = OrganizationMember
+    fields = ('member', 'role', 'created')
+    readonly_fields = ('created',)
+    raw_id_fields = ('member',)
+    extra = 0
+
+
 @admin.register(OrganizationContact)
 class OrganizationContactAdmin(admin.ModelAdmin):
     inlines = (OrganizationInitiativeInline,)
@@ -153,7 +163,10 @@ class OrganizationAdmin(
     TranslatableAdmin,
 ):
     inlines = (
-        OrganizationInitiativeInline, OrganizationActivityInline, OrganizationLinkedActivityInline
+        OrganizationMemberInline,
+        OrganizationInitiativeInline,
+        OrganizationActivityInline,
+        OrganizationLinkedActivityInline,
     )
     form = OrganizationForm
     ordering = ('name',)

@@ -1,11 +1,12 @@
 from builtins import str
 
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db import models
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
@@ -293,4 +294,17 @@ class OrganizationAdmin(
             return []
         return super(OrganizationAdmin, self).get_inline_instances(request, obj)
 
-    actions = (export_as_csv_action(fields=export_fields),)
+    actions = (export_as_csv_action(fields=export_fields), 'archive_organizations')
+
+    @admin.action(description=_('Archive selected organizations'))
+    def archive_organizations(self, request, queryset):
+        count = queryset.filter(archived=False).update(archived=True)
+        self.message_user(
+            request,
+            ngettext(
+                '%(count)d organization archived.',
+                '%(count)d organizations archived.',
+                count
+            ) % {'count': count},
+            messages.SUCCESS
+        )

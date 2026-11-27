@@ -97,6 +97,23 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
         self.assertIsNotNone(selected)
         self.assertEqual(selected.text.strip(), 'No')
 
+    def test_archive_action(self):
+        active = OrganizationFactory.create(name='Active org', website='http://active.org')
+        other = OrganizationFactory.create(name='Other org', website='http://other.org')
+
+        page = self.changelist()
+        form = page.forms['changelist-form']
+        form['action'] = 'archive_organizations'
+        form['_selected_action'] = [str(active.pk)]
+        response = form.submit().follow(extra_environ={'wsgi.url_scheme': 'https'})
+
+        active.refresh_from_db()
+        other.refresh_from_db()
+        self.assertTrue(active.archived)
+        self.assertFalse(other.archived)
+        messages = [str(message) for message in response.context['messages']]
+        self.assertEqual(messages, ['1 organization archived.'])
+
     def test_linked_activities_inline(self):
         self.app.set_user(self.superuser)
         organization = OrganizationFactory.create(

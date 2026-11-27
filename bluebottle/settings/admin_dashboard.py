@@ -43,10 +43,6 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["categories.change_category"],
             },
             {"name": "initiatives.theme", "permissions": ["initiatives.change_theme"]},
-            {
-                "name": "organizations.organization",
-                "permissions": ["organizations.change_organization"],
-            },
             {"name": "geo.location", "permissions": ["geo.change_location"]},
         ],
     },
@@ -216,6 +212,17 @@ JET_SIDE_MENU_ITEMS = [
         "items": [
             {"name": "members.member", "permissions": ["members.change_member"]},
             {"name": "auth.group", "permissions": ["auth.change_group"]},
+        ],
+    },
+    {
+        "label": _("Organisations"),
+        "app_label": "organizations",
+        "permissions": ["organizations.change_organization"],
+        "items": [
+            {
+                "name": "organizations.organization",
+                "permissions": ["organizations.change_organization"],
+            },
         ],
     },
     {

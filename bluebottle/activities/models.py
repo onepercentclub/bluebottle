@@ -305,6 +305,9 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         if not self.owner_id and self.initiative:
             self.owner = self.initiative.owner
 
+        if self._state.adding and not self.organization_id and self.owner_id:
+            self.organization = self.owner.organization
+
         super(Activity, self).save(**kwargs)
 
         if not self.segments.count():

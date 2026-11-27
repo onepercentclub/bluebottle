@@ -20,8 +20,7 @@ from bluebottle.utils.serializers import NoCommitMixin, ResourcePermissionField
 class OrganizationPreviewSerializer(ModelSerializer):
     image = serializers.SerializerMethodField()
     logo = serializers.SerializerMethodField()
-    open_activities_count = serializers.ReadOnlyField()
-    succeeded_activities_count = serializers.ReadOnlyField()
+    activity_count = serializers.SerializerMethodField()
     slogan = serializers.ReadOnlyField()
     story = serializers.ReadOnlyField()
 
@@ -29,6 +28,12 @@ class OrganizationPreviewSerializer(ModelSerializer):
     website = serializers.ReadOnlyField()
 
     created = serializers.ReadOnlyField()
+
+    def get_activity_count(self, obj):
+        return {
+            'succeeded': obj.succeeded_activities_count,
+            'open': obj.open_activities_count
+        }
 
     class Meta:
         model = Organization
@@ -41,8 +46,8 @@ class OrganizationPreviewSerializer(ModelSerializer):
             "slogan",
             "story",
             "website",
-            "open_activities_count",
-            "succeeded_activities_count",
+            "verified",
+            "activity_count",
         )
         meta_fields = (
             "created",

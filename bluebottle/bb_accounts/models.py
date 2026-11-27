@@ -354,6 +354,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.twitter = ''
         self.skypename = ''
         self.partner_organization = None
+        self.organization_memberships.all().delete()
 
         if self.avatar:
             self.avatar.delete()

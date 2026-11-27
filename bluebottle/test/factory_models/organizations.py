@@ -4,7 +4,9 @@ from builtins import object
 import factory
 from django.core.files import File
 
-from bluebottle.organizations.models import OrganizationContact, Organization
+from bluebottle.organizations.models import (
+    OrganizationContact, Organization, OrganizationMember
+)
 from .accounts import BlueBottleUserFactory
 
 
@@ -46,6 +48,14 @@ class OrganizationFactory(factory.DjangoModelFactory):
             obj.created = extracted
             if create:
                 obj.save(update_fields=['created'])
+
+
+class OrganizationMemberFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = OrganizationMember
+
+    member = factory.SubFactory(BlueBottleUserFactory)
+    organization = factory.SubFactory(OrganizationFactory)
 
 
 class OrganizationContactFactory(factory.DjangoModelFactory):

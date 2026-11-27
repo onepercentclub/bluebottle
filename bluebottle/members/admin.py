@@ -42,6 +42,7 @@ from bluebottle.members.forms import (
 )
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.notifications.models import Message
+from bluebottle.organizations.models import OrganizationMember
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
 from bluebottle.segments.filters import MemberSegmentAdminMixin
 from bluebottle.segments.models import Segment, SegmentType
@@ -510,9 +511,19 @@ class MemberMessagesInline(TabularInlinePaginated):
             return obj.content_object or 'Related object'
 
 
+class MemberOrganizationInline(admin.TabularInline):
+    model = OrganizationMember
+    verbose_name = _('organisation')
+    verbose_name_plural = _('Organisation')
+    fields = ('organization', 'role')
+    raw_id_fields = ('organization',)
+    max_num = 1
+    extra = 1
+
+
 @admin.register(Member)
 class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
-    raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
+    raw_id_fields = ('place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
 
     formfield_overrides = {
@@ -595,7 +606,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                             'last_login',
                             'date_joined',
                             'deleted',
-                            'partner_organization',
                             'primary_language',
                         ]
                     }
@@ -813,7 +823,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                     'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
-    inlines = (UserActivityInline, MemberMessagesInline)
+    inlines = (MemberOrganizationInline, UserActivityInline, MemberMessagesInline)
 
     def initiatives(self, obj):
         initiatives = []

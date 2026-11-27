@@ -279,9 +279,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     can_pledge = serializers.BooleanField(read_only=True)
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
     permissions = UserPermissionsSerializer(read_only=True)
-    organization = OrganizationSerializer(
-        read_only=True, source='partner_organization'
-    )
+    organization = OrganizationSerializer(read_only=True)
     segments = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Segment.objects
     )

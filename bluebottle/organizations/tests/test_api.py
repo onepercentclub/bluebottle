@@ -586,8 +586,8 @@ class OrganizationPreviewListAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['slug'], organization.slug)
         self.assertEqual(attributes['slogan'], 'Helping people in need')
         self.assertEqual(attributes['website'], 'https://example.com')
-        self.assertEqual(attributes['open-activities-count'], 0)
-        self.assertEqual(attributes['succeeded-activities-count'], 0)
+        self.assertEqual(attributes['verified'], False)
+        self.assertEqual(attributes['activity-count'], {'succeeded': 0, 'open': 0})
 
         image = attributes['image']
         self.assertTrue(image.startswith(settings.MEDIA_URL))
@@ -618,8 +618,7 @@ class OrganizationPreviewListAPITestCase(ESTestCase, BluebottleTestCase):
         self.search()
         attributes = self.get_result(organization)['attributes']
 
-        self.assertEqual(attributes['open-activities-count'], 3)
-        self.assertEqual(attributes['succeeded-activities-count'], 1)
+        self.assertEqual(attributes['activity-count'], {'succeeded': 1, 'open': 3})
 
     def test_activity_count_updates_index(self):
         organization = OrganizationFactory.create()
@@ -627,16 +626,14 @@ class OrganizationPreviewListAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search()
         attributes = self.get_result(organization)['attributes']
-        self.assertEqual(attributes['open-activities-count'], 1)
-        self.assertEqual(attributes['succeeded-activities-count'], 0)
+        self.assertEqual(attributes['activity-count'], {'succeeded': 0, 'open': 1})
 
         activity.status = 'succeeded'
         activity.save()
 
         self.search()
         attributes = self.get_result(organization)['attributes']
-        self.assertEqual(attributes['open-activities-count'], 0)
-        self.assertEqual(attributes['succeeded-activities-count'], 1)
+        self.assertEqual(attributes['activity-count'], {'succeeded': 1, 'open': 0})
 
     def test_update_organization_updates_index(self):
         organization = OrganizationFactory.create(name='Old name')

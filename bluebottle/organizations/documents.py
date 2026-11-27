@@ -32,6 +32,7 @@ class OrganizationsDocument(Document):
     story = TextField(attr='story.html')
     slogan = TextField()
     website = TextField()
+    verified = fields.BooleanField()
 
     created = fields.DateField()
 

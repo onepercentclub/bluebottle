@@ -2,8 +2,10 @@ from django.test import TestCase
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationContactFactory
+from bluebottle.organizations.models import OrganizationMember
+from bluebottle.test.factory_models.organizations import (
+    OrganizationContactFactory, OrganizationFactory, OrganizationMemberFactory
+)
 
 
 class InitiativeTestCase(TestCase):
@@ -40,18 +42,33 @@ class InitiativeTestCase(TestCase):
         self.assertEqual(initiative.get_absolute_url(), expected)
 
     def test_member_organization(self):
-        member = BlueBottleUserFactory.create(partner_organization=OrganizationFactory.create())
-        initiative = InitiativeFactory(has_organization=True, organization=None, owner=member)
-        self.assertEqual(initiative.organization, member.partner_organization)
+        membership = OrganizationMemberFactory.create()
+        initiative = InitiativeFactory(has_organization=True, organization=None, owner=membership.member)
+        self.assertEqual(initiative.organization, membership.organization)
 
     def test_member_preselect_organization(self):
-        member = BlueBottleUserFactory.create(partner_organization=OrganizationFactory.create())
-        initiative = InitiativeFactory(owner=member, has_organization=None)
-        self.assertEqual(initiative.organization, member.partner_organization)
+        membership = OrganizationMemberFactory.create()
+        initiative = InitiativeFactory(owner=membership.member, has_organization=None)
+        self.assertEqual(initiative.organization, membership.organization)
 
     def test_member_organization_no_organizatoin(self):
-        member = BlueBottleUserFactory.create(partner_organization=OrganizationFactory.create())
-        initiative = InitiativeFactory(has_organization=False, organization=None, owner=member)
+        membership = OrganizationMemberFactory.create()
+        initiative = InitiativeFactory(has_organization=False, organization=None, owner=membership.member)
+        self.assertIsNone(initiative.organization)
+
+    def test_member_organization_keeps_chosen_organization(self):
+        membership = OrganizationMemberFactory.create()
+        other = OrganizationFactory.create()
+        initiative = InitiativeFactory(has_organization=True, organization=other, owner=membership.member)
+        self.assertEqual(initiative.organization, other)
+
+    def test_organization_does_not_create_membership(self):
+        organization = OrganizationFactory.create()
+        InitiativeFactory(has_organization=True, organization=organization)
+        self.assertFalse(OrganizationMember.objects.exists())
+
+    def test_owner_without_membership(self):
+        initiative = InitiativeFactory(has_organization=None, organization=None)
         self.assertIsNone(initiative.organization)
 
     def test_organization_required(self):

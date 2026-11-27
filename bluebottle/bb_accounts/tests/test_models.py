@@ -9,6 +9,7 @@ from mock import patch
 from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
+from bluebottle.test.factory_models.organizations import OrganizationMemberFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -293,7 +294,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
             'facebook',
             'twitter',
             'skypename',
-            'partner_organization',
         ]:
             self.assertFalse(getattr(self.user, prop))
 
@@ -303,6 +303,13 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertEqual(self.user.last_name, 'Member')
         self.assertEqual(self.user.is_anonymized, True)
         self.assertFalse(self.user.has_usable_password())
+
+    def test_anonymize_removes_organization_membership(self):
+        OrganizationMemberFactory.create(member=self.user)
+
+        self.user.anonymize()
+
+        self.assertFalse(self.user.organization_memberships.exists())
 
     def test_anonymize_twice(self):
         self.user.anonymize()

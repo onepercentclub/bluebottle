@@ -5,6 +5,7 @@ from builtins import str
 
 from colorfield.fields import ColorField
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
@@ -45,6 +46,11 @@ class Organization(ValidatedModelMixin, TranslatableModel, models.Model):
     updated = models.DateTimeField(_('Updated'), auto_now=True)
 
     verified = models.BooleanField(_('Verified'), default=False)
+    archived = models.BooleanField(
+        _('Archived'),
+        default=False,
+        help_text=_('Archived organisations are hidden from the default organisation list in the back office.')
+    )
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
@@ -145,6 +151,50 @@ class Organization(ValidatedModelMixin, TranslatableModel, models.Model):
 
     class JSONAPIMeta:
         resource_name = 'organizations'
+
+
+class OrganizationMember(models.Model):
+    class Roles(models.TextChoices):
+        member = 'member', _('Member')
+        manager = 'manager', _('Manager')
+
+    member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('member'),
+        related_name='organization_memberships',
+        on_delete=models.CASCADE
+    )
+    organization = models.ForeignKey(
+        Organization,
+        verbose_name=_('organisation'),
+        related_name='members',
+        on_delete=models.CASCADE
+    )
+    role = models.CharField(
+        _('role'), max_length=20, choices=Roles.choices, default=Roles.member
+    )
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+
+    class Meta(object):
+        ordering = ['created', 'id']
+        unique_together = (('member', 'organization'),)
+        verbose_name = _('organisation member')
+        verbose_name_plural = _('organisation members')
+
+    def clean(self):
+        if self.member_id is None:
+            return
+
+        other = OrganizationMember.objects.filter(member_id=self.member_id)
+        if self.pk:
+            other = other.exclude(pk=self.pk)
+        if other.exists():
+            raise ValidationError(
+                _('This member already belongs to another organisation.')
+            )
+
+    def __str__(self):
+        return f'{self.member} - {self.organization}'
 
 
 class OrganizationContact(ValidatedModelMixin, models.Model):

@@ -23,7 +23,7 @@ from bluebottle.segments.tests.factories import SegmentFactory
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
-    OrganizationFactory, OrganizationContactFactory
+    OrganizationFactory, OrganizationContactFactory, OrganizationMemberFactory
 )
 
 from bluebottle.test.factory_models.geo import PlaceFactory, LocationFactory
@@ -60,8 +60,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
                                                        slug='partner-organization',
                                                        website='http://partnerorg.nl')
         self.organization_contact = OrganizationContactFactory.create()
-        self.user_with_partner_organization.partner_organization = self.organization
-        self.user_with_partner_organization.save()
+        OrganizationMemberFactory.create(
+            member=self.user_with_partner_organization, organization=self.organization
+        )
 
         self.current_user_api_url = reverse('user-current')
         self.profile_url = reverse('member-profile-detail', args=(self.user_1.pk,))
@@ -431,11 +432,15 @@ class UserApiIntegrationTest(BluebottleTestCase):
         Test retrieving the currently logged in user with partner organization
         """
         organization = OrganizationFactory.create(name='GoodUp')
-        self.user_1.partner_organization = organization
-        self.user_1.save()
+        OrganizationMemberFactory.create(member=self.user_1, organization=organization)
         response = self.client.get(self.current_user_api_url, HTTP_AUTHORIZATION=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['organization']['name'], 'GoodUp')
+
+    def test_current_user_without_organization(self):
+        response = self.client.get(self.current_user_api_url, HTTP_AUTHORIZATION=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertIsNone(response.data['organization'])
 
     @override_settings(SEND_WELCOME_MAIL=True)
     def test_user_create(self):

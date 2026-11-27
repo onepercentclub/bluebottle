@@ -121,7 +121,10 @@ class DateRangeFacet(Facet):
 
 
 class Search(FacetedSearch):
-    def __new__(cls, enabled_filters):
+    def __new__(cls, *args, enabled_filters=(), **kwargs):
+        # The positional/keyword arguments are the ones passed to __init__
+        # (query, filters, sort, user). Subclasses can pass the platform's
+        # enabled search filters to add their facets.
         result = super().__new__(cls)
 
         # Make sure that we copy the original facets, so that things do not add up

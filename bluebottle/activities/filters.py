@@ -646,7 +646,7 @@ class ActivitySearch(Search):
 
         # Create new instance with existing search filters from settings
         result = super().__new__(
-            cls, settings.search_filters_activities.distinct().all()
+            cls, enabled_filters=settings.search_filters_activities.distinct().all()
         )
 
         # get filters from the request

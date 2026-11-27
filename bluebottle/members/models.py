@@ -579,6 +579,13 @@ class Member(BlueBottleBaseUser):
     def hours_planned(self):
         return self.get_hours('new')
 
+    @property
+    def organization(self):
+        membership = self.organization_memberships.select_related(
+            'organization'
+        ).first()
+        return membership.organization if membership else None
+
 
 class UserSegment(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)

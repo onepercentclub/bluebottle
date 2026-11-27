@@ -15436,3 +15436,35 @@ msgstr ""
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Local actor"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Connected supplier"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Connected consumer"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Activities shared via GoodUp Connect"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Adopted activities"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Partner organisation of shared activities"
+msgstr ""
+
+#: bluebottle/organizations/admin.py
+msgid "Yes, waiting for acceptance"
+msgstr ""
+
+#: bluebottle/settings/admin_dashboard.py
+msgid "Organisations"
+msgstr ""

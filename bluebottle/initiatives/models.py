@@ -255,14 +255,12 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         except InitiativePlatformSettings.DoesNotExist:
             pass
 
-        if (
-            not self.organization
-            and self.owner
-            and self.owner.partner_organization
-            and self.has_organization is not False
-        ):
+        member_organization = (
+            self.owner.organization if self.owner and not self.organization else None
+        )
+        if member_organization and self.has_organization is not False:
             self.has_organization = True
-            self.organization = self.owner.partner_organization
+            self.organization = member_organization
 
         if self.has_organization is None and (
             self.organization or self.organization_contact

@@ -15464,3 +15464,7 @@ msgstr ""
 #: bluebottle/organizations/admin.py
 msgid "Yes, waiting for acceptance"
 msgstr ""
+
+#: bluebottle/settings/admin_dashboard.py
+msgid "Organisations"
+msgstr ""

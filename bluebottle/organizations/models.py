@@ -219,3 +219,6 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
 
     def __str__(self):
         return str(self.name)
+
+
+from . import signals  # noqa

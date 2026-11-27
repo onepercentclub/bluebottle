@@ -141,6 +141,11 @@ class CurrentMemberSerializer(MemberSerializer):
         related_link_view_name="member-profile-detail",
     )
     segments = ResourceRelatedField(many=True, read_only=True)
+    organization = SerializerMethodResourceRelatedField(
+        model=Organization,
+        many=False,
+        read_only=True,
+    )
     has_initiatives = serializers.SerializerMethodField()
     has_votes = serializers.SerializerMethodField()
     can_pledge = serializers.BooleanField(read_only=True)
@@ -155,6 +160,9 @@ class CurrentMemberSerializer(MemberSerializer):
     def get_payout_account(self, obj):
         return StripePayoutAccount.objects.filter(owner=obj).first()
 
+    def get_organization(self, obj):
+        return obj.organization
+
     def get_has_initiatives(self, obj):
         return obj.is_initiator
 
@@ -168,6 +176,7 @@ class CurrentMemberSerializer(MemberSerializer):
             "has_initiatives",
             "has_votes",
             "segments",
+            "organization",
             "profile",
             "can_pledge",
             "can_do_bank_transfer",
@@ -181,12 +190,13 @@ class CurrentMemberSerializer(MemberSerializer):
         resource_name = 'members'
         included_resources = MemberSerializer.JSONAPIMeta.included_resources + [
             'segments',
-
+            'organization',
         ]
 
     included_serializers = dict(
         **MemberSerializer.included_serializers,
         segments='bluebottle.segments.serializers.SegmentDetailSerializer',
+        organization='bluebottle.organizations.serializers.OrganizationSerializer',
     )
 
 

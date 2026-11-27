@@ -27,6 +27,7 @@ from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import PlaceFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationMemberFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
@@ -1462,6 +1463,30 @@ class CurrentMemberAPITestCase(APITestCase):
         self.assertEqual(
             self.response.json()['data']['attributes']['has-votes'],
             True
+        )
+
+    def test_organization(self):
+        organization = OrganizationFactory.create(name='GoodUp')
+        OrganizationMemberFactory.create(member=self.user, organization=organization)
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('organization', [organization])
+        included = [
+            item for item in self.response.json()['included']
+            if item['type'] == 'organizations'
+        ]
+        self.assertEqual(len(included), 1)
+        self.assertEqual(included[0]['id'], str(organization.pk))
+        self.assertEqual(included[0]['attributes']['name'], 'GoodUp')
+        self.assertEqual(included[0]['attributes']['slug'], organization.slug)
+
+    def test_without_organization(self):
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertIsNone(
+            self.response.json()['data']['relationships']['organization']['data']
         )
 
 

@@ -1,11 +1,16 @@
 from django.urls import path
 
 from bluebottle.organizations.views import (
-    OrganizationList, OrganizationDetail,
+    OrganizationList, OrganizationPreviewList, OrganizationDetail,
     OrganizationContactList, OrganizationContactDetail
 )
 
 urlpatterns = [
+    path(
+        '/search',
+        OrganizationPreviewList.as_view(),
+        name='organization-preview-list'
+    ),
     path('', OrganizationList.as_view(), name='organization_list'),
     path(
         '/<int:pk>',

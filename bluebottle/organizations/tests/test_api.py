@@ -4,9 +4,15 @@ standard_library.install_aliases()
 from urllib.parse import urlencode
 import datetime
 import json
+import os
+from datetime import timedelta
 
+from django.conf import settings
+from django.test import tag
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
+from django_elasticsearch_dsl.test import ESTestCase
 from moneyed import Money
 from rest_framework import status
 
@@ -465,3 +471,327 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('stats', response.json()['data']['meta'])
+
+
+TEST_IMAGE = os.path.join(
+    settings.PROJECT_ROOT, 'bluebottle', 'files', 'tests', 'files', 'test-image.png'
+)
+
+
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+@tag('elasticsearch')
+class OrganizationPreviewListAPITestCase(ESTestCase, BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.url = reverse('organization-preview-list')
+        self.user = BlueBottleUserFactory.create()
+
+    def search(self, search=None, sort=None, user=None, **params):
+        if search is not None:
+            params['filter[search]'] = search
+        if sort:
+            params['sort'] = sort
+
+        if user is None:
+            user = self.user
+
+        self.response = self.client.get(self.url, params, user=user)
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+        self.data = json.loads(self.response.content)
+        return self.data
+
+    def assertFound(self, matching, count=None):
+        self.assertEqual(
+            self.data['meta']['pagination']['count'],
+            len(matching) if count is None else count
+        )
+        self.assertEqual(
+            set(item['id'] for item in self.data['data']),
+            set(str(organization.pk) for organization in matching)
+        )
+
+    def get_result(self, organization):
+        for item in self.data['data']:
+            if item['id'] == str(organization.pk):
+                return item
+        self.fail(f'Organization {organization.pk} not found in results')
+
+    # Permissions
+
+    def test_anonymous(self):
+        OrganizationFactory.create()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_authenticated(self):
+        OrganizationFactory.create()
+        response = self.client.get(self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_closed_platform_anonymous(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        try:
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        finally:
+            MemberPlatformSettings.objects.update(closed=False)
+
+    def test_closed_platform_authenticated(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        try:
+            response = self.client.get(self.url, user=self.user)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        finally:
+            MemberPlatformSettings.objects.update(closed=False)
+
+    # Listing and serialization
+
+    def test_list(self):
+        organizations = OrganizationFactory.create_batch(3)
+
+        self.search()
+        self.assertFound(organizations)
+
+    def test_list_empty(self):
+        self.search()
+        self.assertFound([])
+        self.assertEqual(self.data['data'], [])
+
+    def test_attributes(self):
+        organization = OrganizationFactory.create(
+            name='Red Cross',
+            slogan='Helping people in need',
+            website='https://example.com',
+            image=TEST_IMAGE,
+            logo=TEST_IMAGE,
+        )
+
+        organization.refresh_from_db()
+        for field in (organization.image, organization.logo):
+            self.assertTrue(field.name.endswith('.png'))
+            self.assertTrue(field.storage.exists(field.name))
+
+        self.search()
+        result = self.get_result(organization)
+
+        self.assertEqual(result['type'], 'organizations/preview')
+        self.assertEqual(result['id'], str(organization.pk))
+
+        attributes = result['attributes']
+        self.assertEqual(attributes['name'], 'Red Cross')
+        self.assertEqual(attributes['slug'], organization.slug)
+        self.assertEqual(attributes['slogan'], 'Helping people in need')
+        self.assertEqual(attributes['website'], 'https://example.com')
+        self.assertEqual(attributes['open-activities-count'], 0)
+        self.assertEqual(attributes['succeeded-activities-count'], 0)
+
+        image = attributes['image']
+        self.assertTrue(image.startswith(settings.MEDIA_URL))
+        self.assertTrue(image.endswith('.png'))
+        self.assertNotEqual(image, settings.MEDIA_URL + organization.image.name)
+
+        logo = attributes['logo']
+        self.assertEqual(
+            set(logo.keys()),
+            {'full', 'large', 'small', 'square', 'wide', 'original'}
+        )
+        for url in logo.values():
+            self.assertTrue(url.startswith('http'), url)
+            self.assertIn(f'{settings.MEDIA_URL}cache/', url)
+
+        self.assertIn('created', result['meta'])
+
+    def test_activity_counts(self):
+        organization = OrganizationFactory.create()
+
+        DeadlineActivityFactory.create_batch(2, organization=organization, status='open')
+        DeadlineActivityFactory.create(organization=organization, status='running')
+        DeadlineActivityFactory.create(organization=organization, status='succeeded')
+        DeadlineActivityFactory.create(organization=organization, status='draft')
+        DeadlineActivityFactory.create(organization=organization, status='cancelled')
+        DeadlineActivityFactory.create(organization=OrganizationFactory.create(), status='open')
+
+        self.search()
+        attributes = self.get_result(organization)['attributes']
+
+        self.assertEqual(attributes['open-activities-count'], 3)
+        self.assertEqual(attributes['succeeded-activities-count'], 1)
+
+    def test_activity_count_updates_index(self):
+        organization = OrganizationFactory.create()
+        activity = DeadlineActivityFactory.create(organization=organization, status='open')
+
+        self.search()
+        attributes = self.get_result(organization)['attributes']
+        self.assertEqual(attributes['open-activities-count'], 1)
+        self.assertEqual(attributes['succeeded-activities-count'], 0)
+
+        activity.status = 'succeeded'
+        activity.save()
+
+        self.search()
+        attributes = self.get_result(organization)['attributes']
+        self.assertEqual(attributes['open-activities-count'], 0)
+        self.assertEqual(attributes['succeeded-activities-count'], 1)
+
+    def test_update_organization_updates_index(self):
+        organization = OrganizationFactory.create(name='Old name')
+
+        organization.name = 'New name'
+        organization.save()
+
+        self.search()
+        self.assertEqual(self.get_result(organization)['attributes']['name'], 'New name')
+
+    def test_delete_organization_removes_from_index(self):
+        organization = OrganizationFactory.create()
+        other = OrganizationFactory.create()
+
+        organization.delete()
+
+        self.search()
+        self.assertFound([other])
+
+    def test_search_name(self):
+        matching = OrganizationFactory.create(name='Red Cross')
+        OrganizationFactory.create(name='Salvation Army', slogan='Something else')
+
+        self.search('Red Cross')
+        self.assertFound([matching])
+
+    def test_search_name_prefix(self):
+        matching = OrganizationFactory.create(name='Greenpeace')
+        OrganizationFactory.create(name='Salvation Army', slogan='Something else')
+
+        self.search('Greenp')
+        self.assertFound([matching])
+
+    def test_search_name_case_insensitive(self):
+        matching = OrganizationFactory.create(name='Greenpeace')
+        OrganizationFactory.create(name='Salvation Army', slogan='Something else')
+
+        self.search('greenpeace')
+        self.assertFound([matching])
+
+    def test_search_slogan(self):
+        matching = OrganizationFactory.create(name='Foo', slogan='Saving the oceans')
+        OrganizationFactory.create(name='Bar', slogan='Something else')
+
+        self.search('oceans')
+        self.assertFound([matching])
+
+    def test_search_story(self):
+        matching = OrganizationFactory.create(
+            name='Foo',
+            story=json.dumps({'html': '<p>We plant trees in the rainforest</p>', 'delta': ''})
+        )
+        OrganizationFactory.create(name='Bar', slogan='Something else')
+
+        self.search('rainforest')
+        self.assertFound([matching])
+
+    def test_search_ranks_name_first(self):
+        in_slogan = OrganizationFactory.create(name='Foo', slogan='We love kittens')
+        in_name = OrganizationFactory.create(name='Kittens united', slogan='Something else')
+
+        self.search('kittens')
+        self.assertFound([in_slogan, in_name])
+        self.assertEqual(self.data['data'][0]['id'], str(in_name.pk))
+
+    def test_search_no_match(self):
+        OrganizationFactory.create(name='Red Cross')
+
+        self.search('nonexistent')
+        self.assertFound([])
+
+    def test_search_empty(self):
+        organizations = OrganizationFactory.create_batch(2)
+
+        self.search('')
+        self.assertFound(organizations)
+
+    def test_sort_default_created_descending(self):
+        newest = OrganizationFactory.create(created=now() - timedelta(days=1))
+        oldest = OrganizationFactory.create(created=now() - timedelta(days=10))
+        middle = OrganizationFactory.create(created=now() - timedelta(days=5))
+
+        self.search()
+        self.assertEqual(
+            [item['id'] for item in self.data['data']],
+            [str(newest.pk), str(middle.pk), str(oldest.pk)]
+        )
+
+    def test_sort_created(self):
+        newest = OrganizationFactory.create(created=now() - timedelta(days=1))
+        oldest = OrganizationFactory.create(created=now() - timedelta(days=10))
+        middle = OrganizationFactory.create(created=now() - timedelta(days=5))
+
+        self.search(sort='created')
+        self.assertEqual(
+            [item['id'] for item in self.data['data']],
+            [str(oldest.pk), str(middle.pk), str(newest.pk)]
+        )
+
+    def test_sort_created_descending(self):
+        newest = OrganizationFactory.create(created=now() - timedelta(days=1))
+        oldest = OrganizationFactory.create(created=now() - timedelta(days=10))
+        middle = OrganizationFactory.create(created=now() - timedelta(days=5))
+
+        self.search(sort='-created')
+        self.assertEqual(
+            [item['id'] for item in self.data['data']],
+            [str(newest.pk), str(middle.pk), str(oldest.pk)]
+        )
+
+    def test_sort_unknown_falls_back_to_default(self):
+        newest = OrganizationFactory.create(created=now() - timedelta(days=1))
+        oldest = OrganizationFactory.create(created=now() - timedelta(days=10))
+
+        self.search(sort='foo')
+        self.assertEqual(
+            [item['id'] for item in self.data['data']],
+            [str(newest.pk), str(oldest.pk)]
+        )
+
+    # Pagination
+
+    def test_pagination(self):
+        organizations = OrganizationFactory.create_batch(10)
+
+        self.search()
+        self.assertEqual(self.data['meta']['pagination']['count'], 10)
+        self.assertEqual(self.data['meta']['pagination']['pages'], 2)
+        self.assertEqual(len(self.data['data']), 8)
+        self.assertIsNotNone(self.data['links']['next'])
+
+        first_page = set(item['id'] for item in self.data['data'])
+
+        self.search(**{'page[number]': 2})
+        self.assertEqual(len(self.data['data']), 2)
+        self.assertIsNone(self.data['links']['next'])
+
+        second_page = set(item['id'] for item in self.data['data'])
+
+        self.assertFalse(first_page & second_page)
+        self.assertEqual(
+            first_page | second_page,
+            set(str(organization.pk) for organization in organizations)
+        )
+
+    def test_pagination_with_search(self):
+        matching = OrganizationFactory.create_batch(9, slogan='Saving the oceans')
+        OrganizationFactory.create_batch(3, slogan='Something else')
+
+        self.search('oceans')
+        self.assertEqual(self.data['meta']['pagination']['count'], len(matching))
+        self.assertEqual(len(self.data['data']), 8)
+
+    def test_facets_empty(self):
+        OrganizationFactory.create()
+
+        self.search()
+        self.assertEqual(self.data['meta']['facets'], {})

@@ -1,5 +1,6 @@
 from rest_framework import generics
 from rest_framework import filters
+from rest_framework import response
 
 from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
@@ -12,11 +13,16 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
+from bluebottle.utils.views import (
+    ListAPIView, JsonApiViewMixin, JsonApiElasticSearchPagination,
+)
 
-from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
+from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer, ElasticSearchJSONAPIRenderer
 
+from bluebottle.organizations.filters import OrganizationSearchFilter
 from bluebottle.organizations.serializers import (
-    OrganizationSerializer, OrganizationDetailSerializer, OrganizationContactSerializer
+    OrganizationSerializer, OrganizationDetailSerializer, OrganizationContactSerializer,
+    OrganizationPreviewSerializer
 )
 from bluebottle.organizations.models import (
     Organization, OrganizationContact
@@ -49,6 +55,33 @@ class OrganizationContactDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIVie
     permission_classes = (IsAuthenticated, IsOwner)
     authentication_classes = (
         JSONWebTokenAuthentication,
+    )
+
+
+class OrganizationPreviewList(JsonApiViewMixin, ListAPIView):
+    serializer_class = OrganizationPreviewSerializer
+    model = Organization
+    pagination_class = JsonApiElasticSearchPagination
+    renderer_classes = (ElasticSearchJSONAPIRenderer,)
+
+    def list(self, request, *args, **kwargs):
+        result = self.filter_queryset(None)
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(result, many=True)
+        return response.Response(serializer.data)
+
+    filter_backends = (
+        OrganizationSearchFilter,
+    )
+
+    permission_classes = (
+        TenantConditionalOpenClose,
+        OneOf(IsOwnerOrReadOnly, IsStaffMember),
     )
 
 

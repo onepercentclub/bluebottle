@@ -17,6 +17,64 @@ from bluebottle.utils.fields import (
 from bluebottle.utils.serializers import NoCommitMixin, ResourcePermissionField
 
 
+class OrganizationPreviewSerializer(ModelSerializer):
+    image = serializers.SerializerMethodField()
+    logo = serializers.SerializerMethodField()
+    open_activities_count = serializers.ReadOnlyField()
+    succeeded_activities_count = serializers.ReadOnlyField()
+    slogan = serializers.ReadOnlyField()
+    story = serializers.ReadOnlyField()
+
+    name = serializers.ReadOnlyField()
+    website = serializers.ReadOnlyField()
+
+    created = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Organization
+        fields = (
+            "id",
+            "slug",
+            "name",
+            "image",
+            "logo",
+            "slogan",
+            "story",
+            "website",
+            "open_activities_count",
+            "succeeded_activities_count",
+        )
+        meta_fields = (
+            "created",
+        )
+
+    def _get_file(self, obj, field_name):
+        # Elasticsearch only stores the file name; rebuild a FieldFile so we
+        # can reuse the regular image fields to generate the thumbnail urls.
+        value = getattr(obj, field_name, None)
+        name = getattr(value, 'file', None) if value else None
+        if not name:
+            return None
+
+        field = Organization._meta.get_field(field_name)
+        return field.attr_class(None, field, name)
+
+    def get_image(self, obj):
+        file = self._get_file(obj, 'image')
+        if file:
+            return SorlImageField('465x262', crop='center').to_representation(file) or None
+
+    def get_logo(self, obj):
+        file = self._get_file(obj, 'logo')
+        if file:
+            field = ImageSerializer()
+            field.bind('logo', self)
+            return field.to_representation(file)
+
+    class JSONAPIMeta:
+        resource_name = "organizations/preview"
+
+
 class OrganizationSerializer(NoCommitMixin, ModelSerializer):
     description = serializers.CharField(
         source='slogan', required=False, allow_blank=True, allow_null=True

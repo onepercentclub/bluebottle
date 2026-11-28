@@ -8,6 +8,7 @@ from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationMemberFactory
 from bluebottle.time_based.tests.factories import DeadlineActivityFactory
 
 
@@ -31,6 +32,60 @@ class ActivityModelTestCase(TestCase):
             len(deed.categories.all()),
             0
         )
+
+
+class ActivityOrganizationTestCase(TestCase):
+    def setUp(self):
+        self.membership = OrganizationMemberFactory.create()
+        self.member = self.membership.member
+
+    def test_member_organization(self):
+        deed = DeedFactory.create(owner=self.member)
+        self.assertEqual(deed.organization, self.membership.organization)
+
+    def test_member_organization_deadline(self):
+        activity = DeadlineActivityFactory.create(owner=self.member)
+        self.assertEqual(activity.organization, self.membership.organization)
+
+    def test_member_organization_takes_precedence_over_initiative(self):
+        initiative = InitiativeFactory.create(
+            has_organization=True, organization=OrganizationFactory.create()
+        )
+        deed = DeedFactory.create(initiative=initiative, owner=self.member)
+        self.assertEqual(deed.organization, self.membership.organization)
+
+    def test_no_membership(self):
+        initiative = InitiativeFactory.create(
+            has_organization=True, organization=OrganizationFactory.create()
+        )
+        deed = DeedFactory.create(initiative=initiative)
+        self.assertIsNone(deed.organization)
+
+    def test_keeps_explicit_organization(self):
+        other = OrganizationFactory.create()
+        deed = DeedFactory.create(owner=self.member, organization=other)
+        self.assertEqual(deed.organization, other)
+
+    def test_existing_activity_not_linked(self):
+        member = BlueBottleUserFactory.create()
+        deed = DeedFactory.create(owner=member)
+        OrganizationMemberFactory.create(member=member)
+        deed.title = 'Changed'
+        deed.save()
+        deed.refresh_from_db()
+        self.assertIsNone(deed.organization)
+
+    def test_cleared_organization_not_refilled(self):
+        deed = DeedFactory.create(owner=self.member)
+        deed.organization = None
+        deed.save()
+        deed.refresh_from_db()
+        self.assertIsNone(deed.organization)
+
+    def test_does_not_create_membership(self):
+        organization = OrganizationFactory.create()
+        DeedFactory.create(organization=organization)
+        self.assertEqual(organization.members.count(), 0)
 
 
 class ActivitySegmentsTestCase(TestCase):

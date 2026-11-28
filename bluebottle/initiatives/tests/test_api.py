@@ -26,7 +26,7 @@ from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFacto
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationMemberFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
 from bluebottle.time_based.tests.factories import (
@@ -85,6 +85,40 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
                 }
             }
         }
+
+    def create_with_organization(self, organization=None):
+        if organization:
+            self.data['data']['relationships']['organization'] = {
+                'data': {'type': 'organizations', 'id': organization.pk}
+            }
+            self.data['data']['attributes']['has_organization'] = True
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        return Initiative.objects.get(pk=json.loads(response.content)['data']['id'])
+
+    def test_create_member_organization(self):
+        membership = OrganizationMemberFactory.create(member=self.owner)
+        initiative = self.create_with_organization()
+        self.assertEqual(initiative.organization, membership.organization)
+        self.assertTrue(initiative.has_organization)
+
+    def test_create_member_organization_cannot_be_changed(self):
+        membership = OrganizationMemberFactory.create(member=self.owner)
+        initiative = self.create_with_organization(OrganizationFactory.create())
+        self.assertEqual(initiative.organization, membership.organization)
+
+    def test_create_without_membership_picks_organization(self):
+        other = OrganizationFactory.create()
+        initiative = self.create_with_organization(other)
+        self.assertEqual(initiative.organization, other)
+
+    def test_create_without_membership_no_organization(self):
+        initiative = self.create_with_organization()
+        self.assertIsNone(initiative.organization)
 
     def test_create(self):
         response = self.client.post(
@@ -256,6 +290,43 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['title'], 'Some title')
+
+    def patch_organization(self, organization):
+        self.data['data']['attributes']['has_organization'] = True
+        self.data['data']['relationships'] = {
+            'organization': {'data': {'type': 'organizations', 'id': organization.pk}}
+        }
+        response = self.client.patch(
+            self.url,
+            json.dumps(self.data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.initiative.refresh_from_db()
+
+    def test_patch_member_organization_cannot_be_changed(self):
+        membership = OrganizationMemberFactory.create(member=self.owner)
+        self.initiative.has_organization = True
+        self.initiative.organization = membership.organization
+        self.initiative.save()
+
+        self.patch_organization(OrganizationFactory.create())
+        self.assertEqual(self.initiative.organization, membership.organization)
+
+    def test_patch_member_other_organization_stays_editable(self):
+        OrganizationMemberFactory.create(member=self.owner)
+        other = OrganizationFactory.create()
+        self.initiative.has_organization = True
+        self.initiative.organization = OrganizationFactory.create()
+        self.initiative.save()
+
+        self.patch_organization(other)
+        self.assertEqual(self.initiative.organization, other)
+
+    def test_patch_without_membership_changes_organization(self):
+        other = OrganizationFactory.create()
+        self.patch_organization(other)
+        self.assertEqual(self.initiative.organization, other)
 
     def test_patch_activity_manager(self):
         manager = BlueBottleUserFactory.create()

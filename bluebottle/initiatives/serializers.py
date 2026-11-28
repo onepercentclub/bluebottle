@@ -333,6 +333,18 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     is_open = serializers.ReadOnlyField()
 
+    def validate(self, data):
+        data = super().validate(data)
+
+        owner = self.instance.owner if self.instance else self.context['request'].user
+        organization = getattr(owner, 'organization', None)
+
+        if organization and (not self.instance or self.instance.organization == organization):
+            data['organization'] = organization
+            data['has_organization'] = True
+
+        return data
+
     def get_activities(self, instance):
         user = self.context['request'].user
         activities = instance.activities.exclude(status='deleted').all()

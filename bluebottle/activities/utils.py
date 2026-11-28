@@ -336,6 +336,15 @@ class BaseActivitySerializer(ModelSerializer):
             url = reverse('admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name), args=[obj.id])
             return url
 
+    def validate_partner_organization(self, value):
+        owner = self.instance.owner if self.instance else self.context['request'].user
+        organization = getattr(owner, 'organization', None)
+
+        if organization and (not self.instance or self.instance.organization == organization):
+            return organization
+
+        return value
+
     def get_partner_organization(self, obj):
         if obj.organization:
             return obj.organization

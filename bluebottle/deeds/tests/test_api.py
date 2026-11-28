@@ -22,6 +22,7 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationMemberFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 
@@ -63,6 +64,45 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.assertTransition('publish')
         self.assertTransition('delete')
+
+    def test_create_member_organization(self):
+        membership = OrganizationMemberFactory.create(member=self.user)
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.organization, membership.organization)
+        self.assertRelationship('partner-organization', [membership.organization])
+
+    def test_create_member_organization_cannot_be_changed(self):
+        membership = OrganizationMemberFactory.create(member=self.user)
+        other = OrganizationFactory.create()
+        self.defaults['partner_organization'] = other
+        self.fields.append('partner_organization')
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.organization, membership.organization)
+
+    def test_create_member_organization_precedes_initiative(self):
+        membership = OrganizationMemberFactory.create(member=self.user)
+        initiative = self.defaults['initiative']
+        initiative.has_organization = True
+        initiative.organization = OrganizationFactory.create()
+        initiative.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.organization, membership.organization)
+
+    def test_create_without_membership_picks_organization(self):
+        other = OrganizationFactory.create()
+        self.defaults['partner_organization'] = other
+        self.fields.append('partner_organization')
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.organization, other)
+
+    def test_create_without_membership_no_organization(self):
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIsNone(self.model.organization)
 
     def test_custom_question_not_required(self):
         TextQuestionFactory.create(
@@ -376,6 +416,39 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertAttribute('description', new_description)
+
+    def test_put_member_organization_cannot_be_changed(self):
+        membership = OrganizationMemberFactory.create(member=self.model.owner)
+        self.model.organization = membership.organization
+        self.model.save()
+
+        self.perform_update(
+            {'partner_organization': OrganizationFactory.create()},
+            user=self.model.owner
+        )
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.organization, membership.organization)
+
+    def test_put_member_other_organization_stays_editable(self):
+        OrganizationMemberFactory.create(member=self.model.owner)
+        other = OrganizationFactory.create()
+
+        self.perform_update({'partner_organization': other}, user=self.model.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.organization, other)
+
+    def test_put_without_membership_changes_organization(self):
+        other = OrganizationFactory.create()
+
+        self.perform_update({'partner_organization': other}, user=self.model.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.organization, other)
 
     def test_put_start_after_end(self):
         self.model.status = 'open'
